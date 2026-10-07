@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Жалюзи-СПБ: расчёт</title>
+<style>
+:root{--bg:#F6F4F1;--card:#fff;--ink:#1d1b19;--m1:#7a746d;--line:#e4dfd9;--ac:#F1780F;--acink:#fff;--bad:#b3261e;--ok:#2e7d32}
+@media (prefers-color-scheme:dark){:root{--bg:#161412;--card:#221f1c;--ink:#f1ece6;--m1:#a39b92;--line:#38332e;--bad:#ff8a80;--ok:#81c784}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:0 16px 96px}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+h1{font-size:19px;margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.lbl{font-size:13px;color:var(--m1);margin:0 0 6px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer}
+.chip[aria-pressed=true]{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac);font-weight:600}
+.chip:disabled{opacity:.35}
+input,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%}
+.sz{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.price{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
+.sub{color:var(--m1);font-size:14px}
+.err{color:var(--bad)}
+.btn{background:var(--ac);color:var(--acink);border:0;border-radius:12px;padding:14px;font:inherit;font-weight:600;width:100%;cursor:pointer}
+.btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.4}
+.item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.x{background:none;border:0;color:var(--m1);font-size:20px;cursor:pointer}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
+nav button{flex:1}
+[hidden]{display:none!important}
+.bar{background:var(--ac);color:#fff;padding:10px 14px;border-radius:12px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat"></span></header>
+
+<section id="load" class="card" hidden>
+  <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
+  <input type="file" id="file" accept=".xlsx">
+</section>
+
+<main id="calc" hidden>
+  <div class="card"><p class="lbl">Коллекция</p><div class="row" id="sup"></div></div>
+  <div class="card"><p class="lbl">Материал и ламель</p><div class="row" id="mat"></div><div class="row" id="lam" style="margin-top:8px"></div></div>
+  <div class="card" id="colbox" hidden><p class="lbl">Цвет</p><select id="color"></select></div>
+  <div class="card"><p class="lbl">Размер, см</p>
+    <div class="sz"><input id="W" type="number" inputmode="numeric" placeholder="Ширина"><input id="H" type="number" inputmode="numeric" placeholder="Высота"></div></div>
+  <div class="card"><p class="lbl">Фиксация</p><div class="row" id="fix"></div>
+    <p class="lbl" style="margin-top:12px">Опции</p><div class="row" id="opt"></div></div>
+  <div class="card"><div class="price" id="price">—</div><div class="sub" id="note"></div>
+    <div class="sub" id="profit" hidden></div>
+    <div style="margin-top:12px"><button class="btn" id="add" disabled>В корзину</button></div></div>
+</main>
+
+<main id="cart" hidden>
+  <div class="card" id="cartList"></div>
+  <div class="card"><div class="sub">Итого</div><div class="price" id="total">0 ₽</div>
+    <div class="sub" id="totalProfit" hidden></div></div>
+  <button class="btn sec" id="clear">Очистить корзину</button>
+</main>
+
+<nav><button class="btn" id="tCalc">Расчёт</button><button class="btn sec" id="tCart">Корзина (0)</button></nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="src/calc.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>
