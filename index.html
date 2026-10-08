@@ -14,7 +14,7 @@ header{background:var(--dk);color:#fff;display:flex;align-items:center;justify-c
 h1{font-size:19px;margin:0}
 header .sub{color:#E8D8C4}
 section#load{margin:12px}
-main{padding:12px 12px calc(240px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+main{padding:12px 12px calc(260px * var(--zm,1) + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
 .card{background:var(--card);border-radius:18px;box-shadow:var(--sh);padding:14px}
 .card.flat{padding:0;overflow:hidden}
 .lbl{font-size:13px;color:var(--m1);margin:0 0 6px;font-weight:600}
@@ -132,7 +132,7 @@ html,body{overflow-x:clip}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v28</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v29</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -263,12 +263,12 @@ html,body{overflow-x:clip}
 <div style="font-size: 13px; color: var(--m1); font-weight: 600">Привод</div>
 <sc-for list="{{driveRows}}" as="d" hint-placeholder-count="1">
 <div style="{{d.style}}">
-<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px">
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px">
 <span style="font-size: 15px; font-weight: 600">{{d.name}}</span>
 <span style="font-size: 12px; color: var(--m1)">{{d.sub}}</span>
 </div>
-<span style="font-size: 15px; font-weight: 800; white-space: nowrap">{{d.price}}</span>
-<div style="display: flex; align-items: center; background: var(--bg); border-radius: 12px; overflow: hidden">
+<span style="font-size: 15px; font-weight: 800; white-space: nowrap; flex-shrink: 0">{{d.price}}</span>
+<div style="display: flex; align-items: center; flex-shrink: 0; background: var(--bg); border-radius: 12px; overflow: hidden">
 <button onClick="{{d.minus}}" aria-label="Меньше" style="width: 40px; height: 44px; border: 0; background: transparent; color: var(--dk); font-size: 22px; font-weight: 700">−</button>
 <div style="width: 26px; text-align: center; font-size: 18px; font-weight: 800">{{d.qty}}</div>
 <button onClick="{{d.plus}}" aria-label="Больше" style="width: 40px; height: 44px; border: 0; background: transparent; color: var(--dk); font-size: 22px; font-weight: 700">+</button>
@@ -280,12 +280,12 @@ html,body{overflow-x:clip}
 <div style="font-size: 13px; color: var(--m1); font-weight: 600">Пульты</div>
 <sc-for list="{{remoteRows}}" as="d" hint-placeholder-count="2">
 <div style="{{d.style}}">
-<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px">
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px">
 <span style="font-size: 15px; font-weight: 600">{{d.name}}</span>
 <span style="font-size: 12px; color: var(--m1)">{{d.sub}}</span>
 </div>
-<span style="font-size: 15px; font-weight: 800; white-space: nowrap">{{d.price}}</span>
-<div style="display: flex; align-items: center; background: var(--bg); border-radius: 12px; overflow: hidden">
+<span style="font-size: 15px; font-weight: 800; white-space: nowrap; flex-shrink: 0">{{d.price}}</span>
+<div style="display: flex; align-items: center; flex-shrink: 0; background: var(--bg); border-radius: 12px; overflow: hidden">
 <button onClick="{{d.minus}}" aria-label="Меньше" style="width: 40px; height: 44px; border: 0; background: transparent; color: var(--dk); font-size: 22px; font-weight: 700">−</button>
 <div style="width: 26px; text-align: center; font-size: 18px; font-weight: 800">{{d.qty}}</div>
 <button onClick="{{d.plus}}" aria-label="Больше" style="width: 40px; height: 44px; border: 0; background: transparent; color: var(--dk); font-size: 22px; font-weight: 700">+</button>
@@ -1602,26 +1602,26 @@ html,body{overflow-x:clip}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/look.js?v=28"></script>
-<script src="src/calc.js?v=28"></script>
-<script src="src/orders.js?v=28"></script>
-<script src="src/docs.js?v=28"></script>
-<script src="src/drive.js?v=28"></script>
-<script src="src/data.js?v=28"></script>
-<script src="src/limits.js?v=28"></script>
-<script src="src/tpl.js?v=28"></script>
-<script src="src/screen.js?v=28"></script>
-<script src="src/calcscreen.js?v=28"></script>
-<script src="src/cartscreen.js?v=28"></script>
-<script src="src/ordersscreen.js?v=28"></script>
-<script src="src/orderscreen.js?v=28"></script>
-<script src="src/comparescreen.js?v=28"></script>
-<script src="src/settingsscreen.js?v=28"></script>
-<script src="src/docscreens.js?v=28"></script>
-<script src="src/export.js?v=28"></script>
-<script src="src/sendscreen.js?v=28"></script>
-<script src="src/lock.js?v=28"></script>
-<script src="src/app.js?v=28"></script>
+<script src="src/look.js?v=29"></script>
+<script src="src/calc.js?v=29"></script>
+<script src="src/orders.js?v=29"></script>
+<script src="src/docs.js?v=29"></script>
+<script src="src/drive.js?v=29"></script>
+<script src="src/data.js?v=29"></script>
+<script src="src/limits.js?v=29"></script>
+<script src="src/tpl.js?v=29"></script>
+<script src="src/screen.js?v=29"></script>
+<script src="src/calcscreen.js?v=29"></script>
+<script src="src/cartscreen.js?v=29"></script>
+<script src="src/ordersscreen.js?v=29"></script>
+<script src="src/orderscreen.js?v=29"></script>
+<script src="src/comparescreen.js?v=29"></script>
+<script src="src/settingsscreen.js?v=29"></script>
+<script src="src/docscreens.js?v=29"></script>
+<script src="src/export.js?v=29"></script>
+<script src="src/sendscreen.js?v=29"></script>
+<script src="src/lock.js?v=29"></script>
+<script src="src/app.js?v=29"></script>
 <script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 </body>
 </html>
