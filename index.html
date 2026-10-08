@@ -1066,6 +1066,73 @@ html,body{overflow-x:hidden}
 
 </template>
 
+<div id="sendRoot" class="" hidden></div>
+<template id="tpl_sendRoot">
+<header style="background: var(--dk); color: #FFFFFF; padding: 18px 8px 14px 8px; display: flex; align-items: center; gap: 6px">
+<button onClick="{{back}}" aria-label="Назад" style="border: 0; background: transparent; width: 44px; height: 44px; border-radius: 22px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+</button>
+<h1 style="margin: 0; font-size: 19px; font-weight: 700; flex-grow: 1">Отправка клиенту</h1>
+</header>
+<main style="padding: 12px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 100px">
+
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Что отправляем</h2>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px"><sc-for list="{{kinds}}" as="k" hint-placeholder-count="5">
+<button onClick="{{k.pick}}" style="{{k.style}}">{{k.name}}</button>
+</sc-for></div>
+<sc-if value="{{showCatSwitch}}" hint-placeholder-val="{{true}}">
+<button onClick="{{toggleCat}}" role="switch" aria-checked="{{catOn}}" style="{{catRow}}">
+<span style="{{catBox}}">{{catMark}}</span>
+<span style="flex-grow: 1; font-size: 15px; text-align: left">Приложить каталог цветов</span>
+</button>
+<button onClick="{{toggleVar}}" role="switch" aria-checked="{{varOn}}" style="{{varRow}}">
+<span style="{{varBox}}">{{varMark}}</span>
+<span style="flex-grow: 1; font-size: 15px; text-align: left">КП на три варианта</span>
+</button>
+</sc-if>
+<sc-if value="{{showQr}}" hint-placeholder-val="{{false}}">
+<label style="display: flex; align-items: center; gap: 8px; font-size: 15px"><span style="flex-grow: 1">Сумма к оплате, ₽</span><input type="text" inputmode="numeric" value="{{qrSum}}" onInput="{{setQrSum}}" style="width: 130px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 12px; padding: 0 12px; font-size: 18px; font-weight: 700; box-sizing: border-box; text-align: right; color: var(--ink); background: var(--card)"></label>
+</sc-if>
+<sc-if value="{{hasKind}}" hint-placeholder-val="{{true}}"><div style="background: var(--bg); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 12px; color: var(--m1); font-weight: 700">ВЛОЖЕНИЯ</div>
+<div style="font-size: 12px; color: #8A4B00; line-height: 1.35">Файлы пока не прикладываются сами: сохрани PDF из документа и добавь в чат. Текст уйдёт сразу.</div>
+<sc-for list="{{files}}" as="f" hint-placeholder-count="2">
+<div style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="width: 28px; height: 28px; border-radius: 8px; background: var(--chip); color: #8A4B00; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{f.ext}}</span><span style="flex-grow: 1">{{f.name}}</span><span style="font-size: 12px; color: var(--m2)">{{f.size}}</span></div>
+</sc-for>
+</div>
+</sc-if>
+</section>
+
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Куда</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{channels}}" as="c" hint-placeholder-count="6">
+<button onClick="{{c.pick}}" style="{{c.style}}"><span style="{{c.dot}}">{{c.ic}}</span><span>{{c.name}}</span></button>
+</sc-for>
+</div>
+</section>
+
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: baseline; gap: 8px"><h2 style="margin: 0; font-size: 16px; font-weight: 700; flex-grow: 1">Сообщение клиенту</h2></div>
+<textarea onInput="{{setText}}" aria-label="Текст сообщения" style="{{taStyle}}">{{text}}</textarea>
+<sc-if value="{{empty}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; color: #B3261E; font-weight: 600">Без текста не отправится. Напиши пару слов или верни шаблон.</div></sc-if>
+<div style="display: flex; gap: 8px">
+<button onClick="{{resetText}}" style="flex: 1 1 0; height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 600">Вернуть шаблон</button>
+<button onClick="{{go.Settings}}" style="border: 0; background: transparent; flex: 1 1 0; height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Править шаблоны</button>
+</div>
+</section>
+
+</main>
+<div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="height: 64px; border-radius: 32px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; padding: 0 8px 0 22px; gap: 10px; box-shadow: 0 8px 20px rgba(40,20,10,0.35)">
+<div style="flex-grow: 1; min-width: 0"><div style="font-size: 12px; opacity: 0.75">Куда</div><div style="font-size: 15px; font-weight: 700">{{chName}}</div></div>
+<button onClick="{{doSend}}" style="{{sendStyle}}">{{sendLabel}}</button>
+</div>
+</div>
+
+</template>
+
 
 <main id="doc" hidden>
 <div id="docKpRoot" class="docp" hidden></div>
@@ -1372,6 +1439,7 @@ html,body{overflow-x:hidden}
 <script src="src/orderscreen.js?v=15"></script>
 <script src="src/settingsscreen.js?v=15"></script>
 <script src="src/docscreens.js?v=15"></script>
+<script src="src/sendscreen.js?v=15"></script>
 <script src="src/app.js?v=15"></script>
 </body>
 </html>

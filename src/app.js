@@ -54,6 +54,7 @@
   register('calc', { root: 'calcRoot', needP: true, render: () => JalCalcScreen.render() });
   register('cart', { root: 'cartRoot', needP: true, render: () => JalCart.render() });
   register('ord', { root: 'ordersRoot', render: n => JalOrdersScreen.render(n) });
+  register('send', { root: 'sendRoot', render: () => JalSendScreen.render() });
   register('set', { root: 'settingsRoot', render: () => JalSettingsScreen.render() });
   register('order', { root: 'orderRoot', needP: true, render: () => JalOrderScreen.render() });
   register('orderOpen', { root: 'orderOpenRoot', needP: true, render: n => JalOrdersScreen.render(n) });
@@ -61,6 +62,15 @@
   function go(k) {
     if (GO[k]) { tab(GO[k]); return; }
     if (k === 'Kp') { openKp(); return; }
+    if (k === 'Send') {
+      const cur = document.body.getAttribute('data-tab');
+      st.sendBack = cur;
+      if (cur === 'order') { const o = JalOrderScreen.saveNow(); if (!o) return; st.sendNo = o.no; }
+      else if (cur === 'orderOpen') st.sendNo = JalOrdersScreen.F.openNo;
+      else if (cur !== 'send') st.sendNo = null;
+      if (cur === 'send') return;
+      tab('send'); return;
+    }
     alert('Этот экран добавим следующим шагом.');
   }
 

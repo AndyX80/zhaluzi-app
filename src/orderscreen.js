@@ -163,7 +163,7 @@
       toHint: S.to === 'self' ? 'КП, замерник' + (co.needDog ? ' и договор' : '') + ' придут на ' + myMail() + ' в двух видах: Word (чтобы править руками) и PDF.' : 'Клиенту уходят PDF. Цены в замернике и договоре без доставки отдельной строкой.',
       needDog: co.needDog, docGrid: 'display: grid; gap: 8px; grid-template-columns: repeat(' + (co.needDog ? 3 : 2) + ', minmax(0, 1fr))',
       docKp: doc('kpHtml'), docZam: doc('zamernikHtml'), docDog: doc('dogovorHtml'),
-      goSend: () => alert('Отправку в мессенджер добавим следующим шагом.'),
+      goSend: () => App().go('Send'),
       copyOn: S.copy, toggleCopy: () => set({ copy: !S.copy }), myMail: myMail(),
       copyRow: 'height: 46px; border: 0; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 12px; font-size: 15px; color: var(--ink); width: 100%; box-sizing: border-box; background: ' + (S.copy ? 'var(--sel)' : '#FFFFFF') + '; font-weight: ' + (S.copy ? 700 : 400),
       copyBox: chk(S.copy), copyMark: S.copy ? '✓' : '',
@@ -179,5 +179,5 @@
     };
     scr.render(vm);
   }
-  window.JalOrderScreen = { render };
+  window.JalOrderScreen = { render, saveNow: () => { ensure(); return save(JalCart.toOrder()); } };
 })();
