@@ -85,7 +85,7 @@ body[data-own]>header,body[data-own] #bottom{display:none}
 .scr.p3{--dk:#6B2C3B;--ac:#FF6B5A}
 .scr.p4{--dk:#34306B;--ac:#8E7CF0}
 .scr.p1,.scr.p2,.scr.p3,.scr.p4{--bg:color-mix(in srgb,var(--dk) 7%,#fff);--ink:color-mix(in srgb,var(--dk) 14%,#101114);--m1:color-mix(in srgb,var(--dk) 30%,#6E727C);--m2:color-mix(in srgb,var(--dk) 24%,#7B7F89);--m3:color-mix(in srgb,var(--dk) 20%,#8E929B);--line:color-mix(in srgb,var(--dk) 22%,#fff);--sel:color-mix(in srgb,var(--ac) 12%,#fff);--chip:color-mix(in srgb,var(--dk) 10%,#fff);--track:color-mix(in srgb,var(--dk) 13%,#fff);--hd:color-mix(in srgb,var(--dk) 5%,#fff);--chk:color-mix(in srgb,var(--dk) 35%,#aaa);--bgA:color-mix(in srgb,var(--dk) 4%,#fff);--bgB:color-mix(in srgb,var(--dk) 8%,#fff);--bgC:color-mix(in srgb,var(--dk) 15%,#fff);--glow:color-mix(in srgb,var(--ac) 16%,#fff)}
-.scr .nt{--bg:color-mix(in srgb,var(--dk) 18%,#0b0807);--card:rgba(255,255,255,.07);--ink:#F2E7DB;--m1:#BBA791;--m2:#B09C86;--m3:#A38F7A;--line:rgba(255,255,255,.16);--sel:rgba(255,255,255,.11);--chip:rgba(255,255,255,.12);--track:rgba(255,255,255,.09);--hd:rgba(255,255,255,.06);--chk:#8F7C68;color:var(--ink)}
+.scr.nt,.scr .nt{--bg:color-mix(in srgb,var(--dk) 18%,#0b0807);--card:rgba(255,255,255,.07);--ink:#F2E7DB;--m1:#BBA791;--m2:#B09C86;--m3:#A38F7A;--line:rgba(255,255,255,.16);--sel:rgba(255,255,255,.11);--chip:rgba(255,255,255,.12);--track:rgba(255,255,255,.09);--hd:rgba(255,255,255,.06);--chk:#8F7C68;color:var(--ink)}
 .scr{zoom:var(--zm,1)}#jalStrip.scr{zoom:1!important;min-height:0!important;position:fixed!important}.scr,.scr *{font-family:var(--ff,Inter,-apple-system,"SF Pro Text","Segoe UI",system-ui,sans-serif)!important}
 .scr[style*="font-weight: 800"],.scr [style*="font-weight: 800"],.scr[style*="font-weight:800"],.scr [style*="font-weight:800"]{font-weight:500!important}
 .scr[style*="font-weight: 700"],.scr [style*="font-weight: 700"],.scr[style*="font-weight:700"],.scr [style*="font-weight:700"]{font-weight:500!important}
@@ -117,6 +117,8 @@ body[data-own]>header,body[data-own] #bottom{display:none}
 .scr.nt input,.scr.nt textarea{color:#F2E7DB!important;color-scheme:dark}
 .scr.nt [style*="color: #1E6B24"],.scr.nt [style*="color: rgb(30, 107, 36)"]{color:#7FD58A!important}
 .scr.nt [style*="color: #8A4B00"],.scr.nt [style*="color: rgb(138, 75, 0)"]{color:#FFB27A!important}
+.scr.nt [style*="background: #F1E4D4"],.scr.nt [style*="background: #FFF1DE"],.scr.nt [style*="background: #FFF6E6"],.scr.nt [style*="background: #FDEBDB"]{background:rgba(255,255,255,.14)!important;color:#F2E7DB!important}
+.scr.nt [style*="background: #FDECEA"]{background:rgba(255,120,110,.18)!important;color:#FFB4AB!important}
 .scr button:active{transform:translateY(1px) scale(.99)}
 .scr button{transition:transform .08s,box-shadow .15s}
 .scr input::placeholder{color:var(--m3);opacity:.55}
@@ -132,7 +134,7 @@ html,body{overflow-x:clip}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v41</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v42</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -203,26 +205,26 @@ html,body{overflow-x:clip}
   }, 5000);
 })();
 </script>
-<script src="src/look.js?v=41"></script>
-<script src="src/calc.js?v=41"></script>
-<script src="src/orders.js?v=41"></script>
-<script src="src/docs.js?v=41"></script>
-<script src="src/drive.js?v=41"></script>
-<script src="src/data.js?v=41"></script>
-<script src="src/limits.js?v=41"></script>
-<script src="src/tpl.js?v=41"></script>
-<script src="src/screen.js?v=41"></script>
-<script src="src/calcscreen.js?v=41"></script>
-<script src="src/cartscreen.js?v=41"></script>
-<script src="src/ordersscreen.js?v=41"></script>
-<script src="src/orderscreen.js?v=41"></script>
-<script src="src/comparescreen.js?v=41"></script>
-<script src="src/settingsscreen.js?v=41"></script>
-<script src="src/docscreens.js?v=41"></script>
-<script src="src/export.js?v=41"></script>
-<script src="src/sendscreen.js?v=41"></script>
-<script src="src/lock.js?v=41"></script>
-<script src="src/app.js?v=41"></script>
+<script src="src/look.js?v=42"></script>
+<script src="src/calc.js?v=42"></script>
+<script src="src/orders.js?v=42"></script>
+<script src="src/docs.js?v=42"></script>
+<script src="src/drive.js?v=42"></script>
+<script src="src/data.js?v=42"></script>
+<script src="src/limits.js?v=42"></script>
+<script src="src/tpl.js?v=42"></script>
+<script src="src/screen.js?v=42"></script>
+<script src="src/calcscreen.js?v=42"></script>
+<script src="src/cartscreen.js?v=42"></script>
+<script src="src/ordersscreen.js?v=42"></script>
+<script src="src/orderscreen.js?v=42"></script>
+<script src="src/comparescreen.js?v=42"></script>
+<script src="src/settingsscreen.js?v=42"></script>
+<script src="src/docscreens.js?v=42"></script>
+<script src="src/export.js?v=42"></script>
+<script src="src/sendscreen.js?v=42"></script>
+<script src="src/lock.js?v=42"></script>
+<script src="src/app.js?v=42"></script>
 <script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 </body>
 </html>
