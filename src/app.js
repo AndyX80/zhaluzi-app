@@ -7,13 +7,13 @@
   const FIXES = ['Ниж. фиксация', 'Струна', 'Магниты'];
   const OPTS = ['Тесьма', 'Цепочка', 'Окраска'];
   const rub = n => n.toLocaleString('ru-RU').replace(/ /g, ' ') + ' ₽';
-  const st = { sup: 'Амиго', mat: 'Дерево', lam: 50, fix: null, opts: [], cart: [], show: false, P: null, last: null };
+  const st = { qty: 1, sup: 'Амиго', mat: 'Дерево', lam: 50, fix: null, opts: [], cart: [], show: false, P: null, last: null };
   try { st.cart = JSON.parse(localStorage.getItem('jal_cart') || '[]'); } catch (e) {}
 
   function setPrices(sheets) {
     st.P = JalCalc.makePrice(sheets);
     $('load').hidden = true; $('calc').hidden = false;
-    $('pstat').textContent = 'цены загружены';
+    $('pstat').textContent = 'v8';
     draw();
   }
   window.JalSetPrices = setPrices; // для тестов
@@ -30,13 +30,24 @@
     rd.readAsArrayBuffer(file);
   }
 
-  function chips(box, items, isOn, onClick, isOff) {
+  function tabs(box, items, isOn, onClick) {
+    box.innerHTML = '';
+    box.style.setProperty('--n', items.length);
+    items.forEach(([val, label]) => {
+      const b = document.createElement('button');
+      b.className = 'tab'; b.textContent = label;
+      b.setAttribute('aria-pressed', isOn(val));
+      b.onclick = () => { onClick(val); draw(); };
+      box.appendChild(b);
+    });
+  }
+  function checkRows(box, items, isOn, onClick) {
     box.innerHTML = '';
     items.forEach(([val, label]) => {
       const b = document.createElement('button');
-      b.className = 'chip'; b.textContent = label;
+      b.className = 'rowc'; b.innerHTML = '<span class="cb">✓</span><span></span>';
+      b.lastChild.textContent = label;
       b.setAttribute('aria-pressed', isOn(val));
-      if (isOff && isOff(val)) b.disabled = true;
       b.onclick = () => { onClick(val); draw(); };
       box.appendChild(b);
     });
@@ -55,11 +66,11 @@
 
   function draw() {
     if (!st.P) return;
-    chips($('sup'), COLL.map(([s, n]) => [s, n]), v => v === st.sup, v => { st.sup = v; });
-    chips($('mat'), MATS.map(m => [m, m]), v => v === st.mat, v => { st.mat = v; });
-    chips($('lam'), [[25, '25 мм'], [50, '50 мм']], v => v === st.lam, v => { st.lam = v; });
-    chips($('fix'), FIXES.map(f => [f, f]), v => v === st.fix, v => { st.fix = st.fix === v ? null : v; });
-    chips($('opt'), OPTS.map(f => [f, f]), v => st.opts.includes(v), v => {
+    tabs($('sup'), COLL.map(([s, n]) => [s, n]), v => v === st.sup, v => { st.sup = v; });
+    tabs($('mat'), MATS.map(m => [m, m]), v => v === st.mat, v => { st.mat = v; });
+    tabs($('lam'), [[25, '25 мм'], [50, '50 мм']], v => v === st.lam, v => { st.lam = v; });
+    tabs($('fix'), [[null, 'Без фиксации']].concat(FIXES.map(f => [f, f])), v => v === st.fix, v => { st.fix = v; });
+    checkRows($('opt'), OPTS.map(f => [f, f]), v => st.opts.includes(v), v => {
       st.opts = st.opts.includes(v) ? st.opts.filter(x => x !== v) : st.opts.concat(v);
     });
     const cl = colorList(), sel = $('color'), keep = sel.value;
@@ -70,28 +81,28 @@
   }
 
   function recalc() {
-    const W = +$('W').value, H = +$('H').value;
+    const W = +$('W').value / 10, H = +$('H').value / 10;
     const pr = $('price'), note = $('note'), prof = $('profit');
     st.last = null; $('add').disabled = true; prof.hidden = true;
-    if (!W || !H) { pr.textContent = '—'; note.textContent = 'Введи ширину и высоту'; note.className = 'sub'; return; }
+    if (!W || !H) { pr.textContent = '—'; note.textContent = 'Введи ширину и высоту в миллиметрах'; note.className = 'sub'; return; }
     const r = JalCalc.calc(st.P, st.sup, st.mat, st.lam, W, H, params());
     if (!r.ok) { pr.textContent = '—'; note.textContent = r.msg; note.className = 'sub err'; return; }
     pr.textContent = rub(r.price);
     note.textContent = r.msg; note.className = 'sub' + (r.msg ? ' err' : '');
-    prof.hidden = !st.show; prof.textContent = 'Закуп ' + rub(r.zakup) + ' · прибыль ' + rub(r.profit);
+    prof.hidden = !st.show; prof.textContent = 'закуп ' + rub(r.zakup) + ' · прибыль ' + rub(r.profit);
     st.last = { sup: st.sup, mat: st.mat, lam: st.lam, W, H, o: params(), price: r.price, profit: r.profit };
     $('add').disabled = false;
   }
 
   function drawCart() {
-    $('tCart').textContent = 'Корзина (' + st.cart.length + ')';
+    $('badge').textContent = st.cart.length; $('badge').hidden = !st.cart.length;
     const box = $('cartList');
     box.innerHTML = st.cart.length ? '' : '<div class="sub">Пока пусто</div>';
     st.cart.forEach((it, i) => {
       const d = document.createElement('div'); d.className = 'item';
       const col = it.o.color ? ' · ' + it.o.color : '';
       const ex = [it.o.fix].concat(it.o.opts).filter(Boolean).join(', ');
-      d.innerHTML = '<div><b>' + it.mat + ' ' + it.lam + ' · ' + it.W + '×' + it.H + '</b><div class="sub">' +
+      d.innerHTML = '<div><b>' + it.mat + ' ' + it.lam + ' · ' + Math.round(it.W * 10) + '×' + Math.round(it.H * 10) + ' мм</b><div class="sub">' +
         (COLL.find(c => c[0] === it.sup) || [0, it.sup])[1] + col + (ex ? ' · ' + ex : '') + '</div></div>' +
         '<div style="text-align:right"><b>' + rub(it.price) + '</b><br><button class="x" aria-label="Убрать">×</button></div>';
       d.querySelector('.x').onclick = () => { st.cart.splice(i, 1); save(); drawCart(); };
@@ -103,11 +114,16 @@
   }
   const save = () => { try { localStorage.setItem('jal_cart', JSON.stringify(st.cart)); } catch (e) {} };
 
+  const NAV = { calc: 'tCalc', cart: 'tCart', ord: 'tOrd', set: 'tSet' };
   function tab(name) {
     $('calc').hidden = name !== 'calc' || !st.P; $('cart').hidden = name !== 'cart';
     $('orders').hidden = name !== 'ord'; $('form').hidden = name !== 'form'; $('doc').hidden = name !== 'doc';
-    $('load').hidden = !!st.P || name !== 'calc';
+    $('settings').hidden = name !== 'set';
+    $('load').hidden = name === 'set' ? false : (!!st.P || name !== 'calc');
+    document.body.setAttribute('data-tab', name);
+    Object.keys(NAV).forEach(k => { const b = $(NAV[k]); if (k === name) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
     if (name === 'cart') drawCart(); if (name === 'ord') drawOrders();
+    window.scrollTo(0, 0);
   }
 
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
@@ -170,13 +186,16 @@
   }
   $('urlGo').onclick = loadUrl;
   try { $('url').value = localStorage.getItem('jal_prices_url') || ''; } catch (e) {}
+  const setQty = n => { st.qty = Math.max(1, Math.min(99, n)); $('qv').textContent = st.qty; };
+  $('qm').onclick = () => setQty(st.qty - 1); $('qp').onclick = () => setQty(st.qty + 1);
   $('file').onchange = e => e.target.files[0] && loadFile(e.target.files[0]);
   ['W', 'H', 'color'].forEach(id => $(id).addEventListener('input', recalc));
-  $('add').onclick = () => { if (st.last) { st.cart.push(st.last); save(); drawCart(); $('add').textContent = 'Добавлено ✓'; setTimeout(() => $('add').textContent = 'В корзину', 900); } };
+  $('add').onclick = () => { if (st.last) { for (let k = 0; k < st.qty; k++) st.cart.push(Object.assign({}, st.last)); save(); drawCart(); $('add').textContent = 'Добавлено ✓'; setTimeout(() => $('add').textContent = 'В корзину', 900); } };
   $('clear').onclick = () => { st.cart = []; save(); drawCart(); };
   $('tCalc').onclick = () => tab('calc');
   $('tCart').onclick = () => tab('cart');
   $('tOrd').onclick = () => tab('ord');
+  $('tSet').onclick = () => tab('set');
   $('docBack').onclick = () => tab('ord');
   $('docPrint').onclick = () => window.print();
   $('mkOrder').onclick = () => { if (st.cart.length) tab('form'); };
@@ -188,11 +207,13 @@
       pre: v('fPre') || '100', preU: $('fPreU').value, term: v('fTerm') || '12', note: v('fNote') }, st.cart);
     st.cart = []; save(); drawCart(); tab('ord');
   };
-  $('pstat').onclick = () => { st.show = !st.show; recalc(); drawCart(); };
+  const setShow = v => { st.show = v; $('setProfit').setAttribute('aria-pressed', v); try { localStorage.setItem('jal_profit', v ? '1' : '0'); } catch (e) {} recalc(); drawCart(); };
+  $('setProfit').onclick = () => setShow(!st.show);
+  try { if (localStorage.getItem('jal_profit') === '1') setShow(true); } catch (e) {}
 
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem('jal_prices') || 'null'); } catch (e) {}
   if (saved) setPrices(saved); else $('load').hidden = false;
-  window.JalTab = tab;
+  window.JalTab = tab; tab('calc');
   drawCart();
 })();

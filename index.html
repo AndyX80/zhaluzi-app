@@ -4,44 +4,75 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Жалюзи-СПБ: расчёт</title>
-<style>
-:root{--bg:#F6F4F1;--card:#fff;--ink:#1d1b19;--m1:#7a746d;--line:#e4dfd9;--ac:#F1780F;--acink:#fff;--bad:#b3261e;--ok:#2e7d32}
-@media (prefers-color-scheme:dark){:root{--bg:#161412;--card:#221f1c;--ink:#f1ece6;--m1:#a39b92;--line:#38332e;--bad:#ff8a80;--ok:#81c784}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:0 16px 96px}
-header{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+<style>:root{--bg:#F5EEE6;--card:#fff;--ink:#2A1A10;--m1:#6B5545;--m2:#8B7662;--line:#E3D5C3;--ac:#E07B00;--acink:#fff;--dk:#4A2C18;--sel:#FBF1E4;--bad:#B3261E;--ok:#1E6B24;--sh:0 1px 3px rgba(40,20,10,.16)}
+@media (prefers-color-scheme:dark){:root{--bg:#1B130D;--card:#2A1E15;--ink:#F3E9DE;--m1:#C2AE98;--m2:#9C8A76;--line:#4A3A2C;--sel:#3A2A1B;--bad:#FF8A80;--ok:#81C784;--sh:0 1px 3px rgba(0,0,0,.4)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--dk);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px}
 h1{font-size:19px;margin:0}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
-.lbl{font-size:13px;color:var(--m1);margin:0 0 6px}
+header .sub{color:#E8D8C4}
+section#load{margin:12px}
+main{padding:12px 12px 200px;display:flex;flex-direction:column;gap:10px}
+.card{background:var(--card);border-radius:18px;box-shadow:var(--sh);padding:14px}
+.card.flat{padding:0;overflow:hidden}
+.lbl{font-size:13px;color:var(--m1);margin:0 0 6px;font-weight:600}
 .row{display:flex;gap:8px;flex-wrap:wrap}
-.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer}
-.chip[aria-pressed=true]{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac);font-weight:600}
-.chip:disabled{opacity:.35}
-input,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%}
+.chip{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:9px 14px;font:inherit;font-size:14px;cursor:pointer}
+.chip[aria-pressed=true]{border-color:var(--ac);background:var(--sel);font-weight:700}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px;width:100%;min-height:48px}
 .sz{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.price{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
+.size{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sbox{background:var(--card);border-radius:20px;box-shadow:var(--sh);padding:8px 14px 4px;display:flex;flex-direction:column}
+.sbox label{text-align:center;font-size:13px;color:var(--m2);font-weight:600}
+.sbox input{border:0;padding:0;min-height:46px;height:46px;font-size:38px;font-weight:800;letter-spacing:-1px;text-align:center;background:transparent;-moz-appearance:textfield}
+.tabs{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr))}
+.tab{min-height:52px;border:0;border-bottom:3px solid transparent;background:none;color:var(--m2);font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:0 2px}
+.tab[aria-pressed=true]{border-bottom-color:var(--ac);color:var(--ink);font-weight:800}
+.rowc{display:flex;align-items:center;gap:12px;min-height:46px;padding:0 14px;border:0;background:transparent;width:100%;font:inherit;font-size:15px;color:var(--ink);text-align:left;cursor:pointer}
+.rowc[aria-pressed=true]{background:var(--sel);font-weight:700}
+.cb{width:22px;height:22px;border-radius:6px;border:2px solid #B8A58F;display:grid;place-items:center;color:transparent;font-size:14px;flex-shrink:0}
+.rowc[aria-pressed=true] .cb{background:var(--ac);border-color:var(--ac);color:#fff}
+.qty{display:flex;align-items:center;justify-content:space-between;padding:0 4px}
+.stepper{display:flex;align-items:center;background:var(--card);border-radius:22px;box-shadow:var(--sh);overflow:hidden}
+.stepper button{width:54px;height:46px;border:0;background:transparent;font-size:24px;font-weight:700;color:var(--ink);cursor:pointer}
+.stepper b{min-width:44px;text-align:center;font-size:20px}
+.price{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
 .sub{color:var(--m1);font-size:14px}
 .err{color:var(--bad)}
-.btn{background:var(--ac);color:var(--acink);border:0;border-radius:12px;padding:14px;font:inherit;font-weight:600;width:100%;cursor:pointer}
-.btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn{background:var(--ac);color:var(--acink);border:0;border-radius:24px;min-height:48px;padding:0 20px;font:inherit;font-weight:800;width:100%;cursor:pointer}
+.btn.sec{background:var(--card);color:var(--ink);box-shadow:var(--sh)}
 .btn:disabled{opacity:.4}
 .item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
-.x{background:none;border:0;color:var(--m1);font-size:20px;cursor:pointer}
+.item>div:last-child{white-space:nowrap}
+.x{background:none;border:0;color:var(--m1);font-size:22px;cursor:pointer}
+#bottom{position:fixed;left:0;right:0;bottom:0;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;pointer-events:none}
+#bottom>*{pointer-events:auto}
+.cap{height:64px;border-radius:32px;background:var(--dk);color:#fff;display:flex;align-items:center;padding:0 8px 0 22px;gap:10px;box-shadow:0 8px 20px rgba(40,20,10,.35)}
+.cap>div{flex-grow:1;min-width:0}.cap .sub{color:#E8D8C4;font-size:12px}
+.cap .go{width:auto;height:48px;border-radius:24px;padding:0 20px;font-size:15px;white-space:nowrap}
+.navc{height:60px;border-radius:30px;background:var(--card);box-shadow:0 4px 14px rgba(40,20,10,.2);display:flex;align-items:center;gap:4px;padding:0 6px;font-size:13px;font-weight:700}
+.navc button{position:relative;flex:1 1 0;height:48px;border:0;background:transparent;color:var(--m2);display:flex;align-items:center;justify-content:center;gap:6px;border-radius:24px;cursor:pointer;font:inherit;font-weight:700}
+.navc button[aria-current=true]{flex:1.7 1 0;background:var(--dk);color:#fff}
+.navc svg{width:22px;height:22px;flex-shrink:0}
+.navc .lb{display:none}.navc button[aria-current=true] .lb{display:inline}
+.badge{position:absolute;top:2px;left:calc(50% + 4px);min-width:18px;height:18px;border-radius:9px;background:var(--ac);color:#fff;font-size:11px;line-height:18px;text-align:center}
+.navc button[aria-current=true] .badge{left:calc(50% + 14px)}
+body[data-tab=form] .navc,body[data-tab=doc] .navc,body[data-tab=form] .cap,body[data-tab=doc] .cap,body[data-tab=ord] .cap,body[data-tab=set] .cap{display:none}
+body[data-tab=calc] #capCart,body[data-tab=cart] #capCalc,body[data-tab=ord] #capCart,body[data-tab=set] #capCart{display:none}
 .doc{background:#fff;color:#111;border-radius:10px;padding:18px}
 .doc .logo{height:42px;display:block;margin-bottom:10px}.doc h2{margin:6px 0}.doc .s{font-size:12px;color:#666}
 .doc table{width:100%;border-collapse:collapse;margin:12px 0}.doc th,.doc td{border-bottom:1px solid #ddd;padding:6px 4px;text-align:left;vertical-align:top;font-size:13px}.doc .r{text-align:right;white-space:nowrap}.doc h4{margin:12px 0 4px;font-size:13px}.doc p{margin:4px 0;font-size:12px;line-height:1.35}.doc .c{text-align:center}
 .doc .sign{display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:11px}.doc .sg{margin-top:14px;position:relative;min-height:60px}.doc .sig{height:36px}.doc .stamp{height:90px;position:absolute;left:40px;top:-20px;opacity:.9}
 @page{margin:14mm}
 @media print{body{background:#fff;padding:0}header,nav,.noprint,main:not(#doc){display:none!important}.doc{padding:0}}
-nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
-nav button{flex:1;white-space:nowrap;padding-inline:6px}
+@page{margin:14mm}
+@media print{body{background:#fff}header,#bottom,.noprint,main:not(#doc){display:none!important}main#doc{padding:0}.doc{padding:0;box-shadow:none}}
 [hidden]{display:none!important}
-.bar{background:var(--ac);color:#fff;padding:10px 14px;border-radius:12px;margin-bottom:12px}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v7</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v8</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -53,24 +84,28 @@ nav button{flex:1;white-space:nowrap;padding-inline:6px}
 </section>
 
 <main id="calc" hidden>
-  <div class="card"><p class="lbl">Коллекция</p><div class="row" id="sup"></div></div>
-  <div class="card"><p class="lbl">Материал и ламель</p><div class="row" id="mat"></div><div class="row" id="lam" style="margin-top:8px"></div></div>
+  <div class="size">
+    <div class="sbox"><label for="W">Ширина, мм</label><input id="W" type="number" inputmode="numeric" placeholder="0"></div>
+    <div class="sbox"><label for="H">Высота, мм</label><input id="H" type="number" inputmode="numeric" placeholder="0"></div>
+  </div>
+  <div class="card flat"><div class="tabs" id="sup" style="--n:5"></div></div>
+  <div class="card flat"><div class="tabs" id="mat" style="--n:3"></div></div>
+  <div class="card flat"><div class="tabs" id="lam" style="--n:2"></div></div>
   <div class="card" id="colbox" hidden><p class="lbl">Цвет</p><select id="color"></select></div>
-  <div class="card"><p class="lbl">Размер, см</p>
-    <div class="sz"><input id="W" type="number" inputmode="numeric" placeholder="Ширина"><input id="H" type="number" inputmode="numeric" placeholder="Высота"></div></div>
-  <div class="card"><p class="lbl">Фиксация</p><div class="row" id="fix"></div>
-    <p class="lbl" style="margin-top:12px">Опции</p><div class="row" id="opt"></div></div>
-  <div class="card"><div class="price" id="price">—</div><div class="sub" id="note"></div>
-    <div class="sub" id="profit" hidden></div>
-    <div style="margin-top:12px"><button class="btn" id="add" disabled>В корзину</button></div></div>
+  <div class="card flat" id="opt"></div>
+  <div class="card flat"><div class="tabs" id="fix" style="--n:4"></div></div>
+  <div class="qty"><span style="font-weight:600">Кол-во</span><div class="stepper"><button id="qm" aria-label="Меньше">−</button><b id="qv">1</b><button id="qp" aria-label="Больше">+</button></div></div>
+  <div class="sub" id="note"></div>
 </main>
 
 <main id="cart" hidden>
   <div class="card" id="cartList"></div>
-  <div class="card"><div class="sub">Итого</div><div class="price" id="total">0 ₽</div>
-    <div class="sub" id="totalProfit" hidden></div></div>
-  <button class="btn" id="mkOrder" style="margin-bottom:8px">Оформить заказ</button>
   <button class="btn sec" id="clear">Очистить корзину</button>
+</main>
+
+<main id="settings" hidden>
+  <div class="card flat"><button class="rowc" id="setProfit" aria-pressed="false"><span class="cb">✓</span><span>Показывать закуп и прибыль</span></button></div>
+  <p class="sub" style="padding:0 6px">Версия приложения: <span id="verTxt">v8</span>. Цены ниже можно загрузить заново, если ты их менял в таблице.</p>
 </main>
 
 <main id="orders" hidden>
@@ -106,12 +141,21 @@ nav button{flex:1;white-space:nowrap;padding-inline:6px}
   <div class="row noprint" style="margin-top:12px"><button class="btn" id="docPrint" style="flex:1">Сохранить PDF / печать</button><button class="btn sec" id="docBack" style="flex:1">Назад</button></div>
 </main>
 
-<nav><button class="btn" id="tCalc">Расчёт</button><button class="btn sec" id="tCart">Корзина (0)</button><button class="btn sec" id="tOrd">Заказы</button></nav>
+<div id="bottom">
+  <div class="cap" id="capCalc"><div><div class="price" id="price">—</div><div class="sub" id="profit" hidden></div></div><button class="btn go" id="add" disabled>В корзину</button></div>
+  <div class="cap" id="capCart"><div><div class="sub">Итого</div><div class="price" id="total">0 ₽</div><div class="sub" id="totalProfit" hidden></div></div><button class="btn go" id="mkOrder">Оформить заказ</button></div>
+  <div class="navc">
+    <button id="tCalc" aria-label="Расчёт" aria-current="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span class="lb">Расчёт</span></button>
+    <button id="tCart" aria-label="Корзина"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L22 7H6"></path></svg><span class="lb">Корзина</span><b class="badge" id="badge">0</b></button>
+    <button id="tOrd" aria-label="Заказы"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"></path><circle cx="3.5" cy="6" r="1"></circle><circle cx="3.5" cy="12" r="1"></circle><circle cx="3.5" cy="18" r="1"></circle></svg><span class="lb">Заказы</span></button>
+    <button id="tSet" aria-label="Настройки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg><span class="lb">Настройки</span></button>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/calc.js?v=7"></script>
-<script src="src/orders.js?v=7"></script>
-<script src="src/docs.js?v=7"></script>
-<script src="src/app.js?v=7"></script>
+<script src="src/calc.js?v=8"></script>
+<script src="src/orders.js?v=8"></script>
+<script src="src/docs.js?v=8"></script>
+<script src="src/app.js?v=8"></script>
 </body>
 </html>
