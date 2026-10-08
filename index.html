@@ -119,11 +119,16 @@ body[data-tab=calc]>header,body[data-tab=calc] #bottom{display:none}
 #calcRoot input::placeholder{color:var(--m3);opacity:.55}
 #calcRoot [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.97),rgba(255,255,255,.93))!important}
 #calcRoot.nt [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:color-mix(in srgb,var(--dk) 30%,#0b0807)!important}
+#calcRoot{overflow-x:hidden;max-width:100vw}
+#calcRoot button{min-width:0;padding-left:2px;padding-right:2px}
+#calcRoot [style*="flex: 1 1 0; height: 46px"]{font-size:13.5px!important;padding:0 1px!important;white-space:nowrap;overflow:hidden}
+#calcRoot input:focus{outline:none}
+html,body{overflow-x:hidden}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v10</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v11</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -362,7 +367,7 @@ body[data-tab=calc]>header,body[data-tab=calc] #bottom{display:none}
 
 <main id="settings" hidden>
   <div class="card flat"><button class="rowc" id="setProfit" aria-pressed="false"><span class="cb">✓</span><span>Показывать закуп и прибыль</span></button></div>
-  <p class="sub" style="padding:0 6px">Версия приложения: <span id="verTxt">v10</span>. Цены ниже можно загрузить заново, если ты их менял в таблице.</p>
+  <p class="sub" style="padding:0 6px">Версия приложения: <span id="verTxt">v11</span>. Цены ниже можно загрузить заново, если ты их менял в таблице.</p>
 </main>
 
 <main id="orders" hidden>
@@ -409,13 +414,13 @@ body[data-tab=calc]>header,body[data-tab=calc] #bottom{display:none}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/calc.js?v=10"></script>
-<script src="src/orders.js?v=10"></script>
-<script src="src/docs.js?v=10"></script>
-<script src="src/data.js?v=10"></script>
-<script src="src/limits.js?v=10"></script>
-<script src="src/tpl.js?v=10"></script>
-<script src="src/calcscreen.js?v=10"></script>
-<script src="src/app.js?v=10"></script>
+<script src="src/calc.js?v=11"></script>
+<script src="src/orders.js?v=11"></script>
+<script src="src/docs.js?v=11"></script>
+<script src="src/data.js?v=11"></script>
+<script src="src/limits.js?v=11"></script>
+<script src="src/tpl.js?v=11"></script>
+<script src="src/calcscreen.js?v=11"></script>
+<script src="src/app.js?v=11"></script>
 </body>
 </html>
