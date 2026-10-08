@@ -132,7 +132,7 @@
   }
   function edit(it, idx) {
     Object.assign(S, { mode: 'blinds', sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '',
-      opts: Object.assign({}, it.opts), w: it.w, h: it.h, qty: it.qty || 1, editIdx: idx, justAdded: false, supOpen: false });
+      opts: Object.assign({}, it.opts), w: it.w, h: it.h, qty: it.qty || 1, editIdx: idx, fromCopy: idx < 0, justAdded: false, supOpen: false });
   }
   function editAuto(sup) { Object.assign(S, { mode: 'auto', sup, editIdx: -1, justAdded: false }); }
 
@@ -278,7 +278,7 @@
         if (!r.ok || !App) return;
         const item = { sup: s.sup, lam, mat, color, ctrl, fix, opts: Object.assign({}, opts0), w: +s.w, h: +s.h, qty: s.qty };
         if (s.editIdx >= 0) { JC.replaceItem(s.editIdx, item); set({ editIdx: -1, qty: 1 }); App.tab('cart'); }
-        else { JC.addItem(item); set({ qty: 1, justAdded: true }); }
+        else { if (!s.fromCopy) JC.C.service = 0; JC.addItem(item); set({ qty: 1, justAdded: true, fromCopy: false }); }
       },
       cartCount: JC.count(),
       openCart: () => App.tab('cart'), closeEditHeader: null, openOrders: () => App.tab('ord'), openSettings: () => App.tab('set')
