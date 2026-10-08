@@ -118,7 +118,12 @@
   setInterval(fitBottom, 400); addEventListener('resize', fitBottom);
   const docOut = btn => async () => {
     if (!st.curDoc) return; const msg = $('docMsg'), old = btn.textContent; btn.disabled = true; btn.textContent = 'Готовлю…'; msg.textContent = '';
-    try { JalExport.save(await JalExport.pdf(st.curDoc[0], st.curDoc[1])); }
+    try {
+      const f = await JalExport.pdf(st.curDoc[0], st.curDoc[1]); JalExport.save(f);
+      const to = localStorage.getItem('jal_mail') || '89817645545@mail.ru';
+      msg.textContent = 'Копия на почту…';
+      JalDrive.mail(to, 'Копия: ' + f.name.replace(/\.pdf$/, ''), 'Копия документа для архива.', [f]).then(() => { msg.textContent = 'Копия ушла на ' + to; }, e => { msg.textContent = 'Копия на почту не ушла: ' + (e.message || e); });
+    }
     catch (e) { msg.textContent = 'Не получилось: ' + (e.message || e); }
     btn.disabled = false; btn.textContent = old;
   };

@@ -74,8 +74,8 @@
         if (s.self) {
           toast('Отправляю на почту…');
           try { await JalDrive.mail(myMail, subj, text, prep.files); toast('Письмо отправлено на ' + myMail); done = true; } catch (e) { toast('Почта не ушла: ' + (e.message || e)); }
-        } else if (s.copy) {
-          JalDrive.mail(myMail, 'Копия: ' + subj, text, prep.files.filter(f => /\.pdf$/.test(f.name))).then(() => toast('Копия ушла на ' + myMail), e => toast('Копия на почту не ушла: ' + (e.message || e)));
+        } else if (prep.files.some(f => /\.pdf$/.test(f.name) && f.name !== 'Каталог.pdf')) {
+          JalDrive.mail(myMail, 'Копия: ' + subj, text, prep.files.filter(f => /\.pdf$/.test(f.name) && f.name !== 'Каталог.pdf')).then(() => toast('Копия ушла на ' + myMail), e => toast('Копия на почту не ушла: ' + (e.message || e)));
         }
         if (!done) done = await JalExport.share(prep.files, text, subj);
         if (!done) prep.files.forEach((f, i) => setTimeout(() => JalExport.save(f), i * 600));

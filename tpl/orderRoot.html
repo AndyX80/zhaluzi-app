@@ -231,7 +231,6 @@
 </div>
 
 <button onClick="{{goSend}}" style="border: 0; background: transparent; height: 48px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none">Отправить в мессенджер или с каталогом →</button>
-<sc-if value="{{toClientOn}}" hint-placeholder-val="{{true}}"><button onClick="{{toggleCopy}}" role="checkbox" aria-checked="{{copyOn}}" style="{{copyRow}}"><span style="{{copyBox}}">{{copyMark}}</span><span style="flex-grow: 1; text-align: left">Копию документов мне на почту</span><span style="font-weight: 400; font-size: 12px; color: var(--m1)">{{myMail}}</span></button></sc-if>
 </sc-if>
 </main>
 <div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
