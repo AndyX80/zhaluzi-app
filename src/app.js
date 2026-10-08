@@ -55,6 +55,7 @@
   register('cart', { root: 'cartRoot', needP: true, render: () => JalCart.render() });
   register('ord', { root: 'ordersRoot', render: n => JalOrdersScreen.render(n) });
   register('send', { root: 'sendRoot', render: () => JalSendScreen.render() });
+  register('compare', { root: 'compareRoot', needP: true, render: () => JalCompareScreen.render() });
   register('set', { root: 'settingsRoot', render: () => JalSettingsScreen.render() });
   register('order', { root: 'orderRoot', needP: true, render: () => JalOrderScreen.render() });
   register('orderOpen', { root: 'orderOpenRoot', needP: true, render: n => JalOrdersScreen.render(n) });
@@ -123,7 +124,11 @@
     const o = Object.assign({ no: '—', created: new Date().toISOString(), name: '', pre: '100', preU: '%', term: '12' }, JalCart.toOrder());
     showDoc('kpHtml', o, 'cart');
   }
-  window.JalApp = { setPricesRaw: setPrices, fetchPrices, loadFile, setShow, st, tab, rub, openKp, showDoc, go, register, GO };
+  function openKpVars() {
+    const o = Object.assign({ no: '—', created: new Date().toISOString(), name: '', pre: '100', preU: '%', term: '12' }, JalCart.toOrder());
+    showDoc('kpVarHtml', o, 'cart');
+  }
+  window.JalApp = { setPricesRaw: setPrices, fetchPrices, loadFile, setShow, st, tab, rub, openKp, openKpVars, showDoc, go, register, GO };
   window.JalTab = tab; tab('calc');
   drawCart();
 })();

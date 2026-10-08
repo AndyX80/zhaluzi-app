@@ -15,6 +15,7 @@
   const FIX = { 'Ниж. фиксация': 'нижняя фиксация', 'Струна': 'боковая фиксация (струна)', 'Магниты': 'магниты' };
   const C = { phone: '+7 981-764-55-45', address: 'г. Санкт-Петербург, ул. Ильюшина, д. 14, ТК «Долгоозерный», 3 эт.', site: 'жалюзи-спб.рф', email: '89817645545@mail.ru', signer: 'Хорошавин Андрей',
     req: 'ИП Хорошавин Андрей Владимирович  •  ИНН 575404581100  •  ОГРН 318574900000760  •  Банк: ООО «Банк Точка» г. Москва  •  БИК 044525104  •  Р/с 40802810002500165928  •  Корр/с 30101810745374525104' };
+  try { Object.assign(C, JSON.parse(localStorage.getItem('jal_req') || '{}')); } catch (e) {}
   const SUP = { 'Амиго': 'Amigo', 'Форум': 'Foroom' };
 
   /* строки: одинаковые изделия объединяются, цена уже с доставкой */
@@ -62,6 +63,28 @@
       utp: ['Полный цикл: замер → производство → монтаж', 'Собственная команда монтажников в СПб и Ленобласти', 'Гарантия на изделия — 1 год', 'Работаем с деревом, тканью и фурнитурой премиум-класса'] };
   }
 
+  function vmKpVar(order, sig) {
+    const base = vmKp(Object.assign({}, order, { items: [] }), sig), vs = order.vars || [], acc = [];
+    order.items.forEach(it => { const key = JSON.stringify([it.kind, it.title, it.sup, it.mat, it.lam, it.W, it.H, it.ctrl, it.o && it.o.color, it.o && it.o.fix, it.o && it.o.opts, it.pv]);
+      const f = acc.find(r => r.key === key); if (f) f.qty++; else acc.push({ key, it, pv: it.pv || vs.map(() => it.price), qty: 1 }); });
+    const disc = +order.disc || 0, cell = v => 'text-align: center; font-weight: 700' + (v.best ? '; background: #FDEBDB; padding: 12px 0' : '');
+    const all = acc.map((r, i) => ({ n: String(i + 1), name: r.it.title ? r.it.title : 'Горизонтальные жалюзи', spec: specKp(r.it), qty: String(r.qty), sums: vs.map((v, k) => ({ v: r.pv[k] == null ? 'нет' : rubS(r.qty * r.pv[k]), style: cell(v) })) }));
+    if (disc > 0) all.push({ n: '', name: 'Скидка', spec: '', qty: '', sums: vs.map(v => ({ v: '−' + rubS(disc), style: cell(v) })) });
+    const FIRST = 14, CONT = 19, WITH_LOWER = 5, pages = [];
+    if (all.length <= WITH_LOWER) pages.push({ first: true, rows: all, hasTotal: true, hasLower: true });
+    else {
+      pages.push({ first: true, rows: all.slice(0, FIRST) });
+      for (let k = FIRST; k < all.length; k += CONT) pages.push({ rows: all.slice(k, k + CONT) });
+      const last = pages[pages.length - 1]; last.hasTotal = true;
+      if (last.first || last.rows.length > WITH_LOWER) pages.push({ rows: [], hasLower: true }); else last.hasLower = true;
+    }
+    pages.forEach((p, k) => { p.hasRows = p.rows.length > 0; p.cont = !p.first; p.num = k + 1; p.count = pages.length; });
+    const vars = vs.map(v => ({ name: v.name, about: v.about, total: rubS(Math.max(0, v.total - disc)) + (v.miss ? '*' : ''),
+      headStyle: 'padding: 6px 0; text-align: center' + (v.best ? '; background: #F1780F' : ''),
+      boxStyle: 'border-radius: 6px; padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; ' + (v.best ? 'background: #F1780F; color: #FFFFFF' : 'background: #F4F4F4; color: #1A1A1A'),
+      tag: v.best ? 'Рекомендуем' : ' ', tagStyle: 'font-size: 8px; font-weight: 700; text-align: center; border-radius: 4px; padding: 2px 0; ' + (v.best ? 'background: #FFFFFF; color: #F1780F' : '') }));
+    return Object.assign(base, { pages, vars });
+  }
   const DRAW = { 50: { L: ['M18 12v80M21 12v80M25 12v72', ''], R: ['M82 12v80M79 12v80M75 12v72', ''], TL: ['M18 12v80M21 12v80M82 12v72', ''], TR: ['M19 12v72M79 12v80M82 12v80', ''] },
     25: { L: ['M24 12v72', 'M19 12v80'], R: ['M76 12v72', 'M81 12v80'], TL: ['M82 12v72', 'M19 12v80'], TR: ['M19 12v72', 'M82 12v80'] } };
   function vmBlank(order, sig) {
@@ -152,8 +175,8 @@
 
   /* показ: имя функции из docs.js → шаблоны. Договор идёт вместе с приложением (замерный лист). */
   const mounts = {};
-  const SET = { kpHtml: [['docKpRoot', 'tpl_docKp', vmKp]], zamernikHtml: [['docBlankRoot', 'tpl_docBlank', vmBlank]], dogovorHtml: [['docDogRoot', 'tpl_docDog', vmDog], ['docBlankRoot', 'tpl_docBlank', vmBlank]] };
-  const ALL = ['docKpRoot', 'docBlankRoot', 'docDogRoot'];
+  const SET = { kpHtml: [['docKpRoot', 'tpl_docKp', vmKp]], kpVarHtml: [['docKpVarRoot', 'tpl_docKpVar', vmKpVar]], zamernikHtml: [['docBlankRoot', 'tpl_docBlank', vmBlank]], dogovorHtml: [['docDogRoot', 'tpl_docDog', vmDog], ['docBlankRoot', 'tpl_docBlank', vmBlank]] };
+  const ALL = ['docKpRoot', 'docKpVarRoot', 'docBlankRoot', 'docDogRoot'];
   function fit() { const w = Math.min(window.innerWidth, 900) - 24, z = Math.min(1.6, w / 595); ALL.forEach(id => { const b = document.getElementById(id); if (b) b.style.zoom = z; }); }
   window.addEventListener('resize', fit);
   function show(fn, order, sig) {
@@ -166,5 +189,5 @@
     });
     fit(); return true;
   }
-  window.JalDocScreens = { show, hideAll: () => ALL.forEach(id => { const b = document.getElementById(id); if (b) b.hidden = true; }) };
+  window.JalDocScreens = { C, show, hideAll: () => ALL.forEach(id => { const b = document.getElementById(id); if (b) b.hidden = true; }) };
 })();

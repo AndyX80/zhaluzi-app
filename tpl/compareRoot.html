@@ -1,0 +1,33 @@
+<header style="background: var(--dk); color: #FFFFFF; padding: 18px 8px 14px 8px; display: flex; align-items: center; gap: 6px">
+<button onClick="{{go.Main}}" aria-label="Назад" style="border: 0; background: transparent; width: 44px; height: 44px; border-radius: 22px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+</button>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<h1 style="margin: 0; font-size: 19px; font-weight: 700">Сравнить поставщиков</h1>
+<div style="font-size: 13px; color: #DCC8B0">{{sub}}</div>
+</div>
+</header>
+<main style="padding: 14px 12px 96px 12px; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<button onClick="{{r.pick}}" style="{{r.style}}">
+<div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1; text-align: left">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="font-size: 16px; font-weight: 700">{{r.name}}</span>
+<span style="{{r.tagStyle}}">{{r.tag}}</span>
+</div>
+<span style="{{r.noteStyle}}">{{r.note}}</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+<span style="font-size: 19px; font-weight: 800; color: #1E6B24">{{r.price}}</span>
+<span style="font-size: 12px; color: #8A4B00">{{r.profit}}</span>
+</div>
+</button>
+</sc-for>
+</main>
+<div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="height: 64px; border-radius: 32px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; padding: 0 8px 0 22px; gap: 10px; box-shadow: 0 8px 20px rgba(40,20,10,0.35)">
+<div style="flex-grow: 1; font-size: 15px; font-weight: 600">{{chosen}}</div>
+<button onClick="{{go.Main}}" style="border: 0; background: transparent; height: 48px; box-sizing: border-box; border-radius: 24px; background: var(--ac); color: #FFFFFF; font-size: 16px; font-weight: 800; padding: 0 20px; white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; text-decoration: none">Назад к расчёту</button>
+</div>
+</div>
+

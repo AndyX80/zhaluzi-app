@@ -254,7 +254,7 @@
       hasOpts: opts.length > 0, opts,
       ctrls, ctrlTitle: chain ? 'Управление (цепочка)' : 'Управление',
       fixes, fixBoxStyle: 'display: grid; grid-template-columns: repeat(' + fixes.length + ', minmax(0, 1fr)); gap: 4px; background: var(--card); border-radius: 14px; padding: 4px 10px',
-      compare: () => alert('Сравнение поставщиков добавим следующим шагом.'),
+      compare: () => { if (!(+S.w > 0 && +S.h > 0)) { alert('Сначала введи ширину и высоту'); return; } window.JalApp.tab('compare'); },
       qty: s.qty, qtyMinus: () => set({ qty: Math.max(1, S.qty - 1) }), qtyPlus: () => set({ qty: Math.min(99, S.qty + 1) }),
       noAuto: !JC.hasAuto(s.sup), hasAuto: JC.hasAuto(s.sup),
       driveRows: autoRows('drive'), remoteRows: autoRows('remote'),
@@ -295,5 +295,32 @@
     mounted.render(build());
   }
 
-  window.JalCalcScreen = { render, setSheets, state: S, calcRow, edit, editAuto };
+
+  /* Цена такой же позиции у другого поставщика (цвет не подбирается: у Амиго мин. цена серии, у Форума первый цвет категории). */
+  function priceFor(it, sup, cat) {
+    const W = +it.w, H = +it.h; if (!P || !(W > 0 && H > 0)) return null;
+    let color = null;
+    if (sup === 'Foroom') { const c = P.forum.filter(x => x['Материал'] === it.mat && x['Категория'] === cat)[0]; if (!c) return null; color = c['Код']; }
+    const av = availOpts(sup, it.lam), fx = availFixes(sup, it.lam), sel = Object.keys(it.opts || {}).filter(k => it.opts[k]);
+    const miss = sel.filter(n => av.indexOf(n) < 0), fix = it.fix && fx.indexOf(it.fix) >= 0 ? it.fix : null; if (it.fix && !fix) miss.push(it.fix);
+    let r; try { r = JalCalc.calc(P, eng(sup), it.mat, it.lam, W / 10, H / 10, { color, opts: sel.filter(n => av.indexOf(n) >= 0), fix }); } catch (e) { return null; }
+    if (!r.ok) return null;
+    let lim = []; try { lim = LM.sizeLimits({ sup, mat: it.mat, lam: it.lam, w: W, h: H, opts: it.opts || {}, ctrl: it.ctrl, fix: it.fix || '' }, null, null); } catch (e) {}
+    return { unit: r.price, profit: r.profit, miss, warn: lim.map(x => x.t), hard: lim.some(x => x.hard) };
+  }
+  const VARIANTS = [{ name: 'Стандарт', sup: 'Amigo', cat: null, about: 'Надёжный выбор по цене' }, { name: 'Тренд', sup: 'Foroom', cat: 1, about: 'Больше цветов и фактур, голландская фурнитура', best: true }, { name: 'Премиум', sup: 'Уют', cat: null, about: 'Лучшие материалы и отделка' }];
+  function compareRows() {
+    const out = [];
+    SUPS.forEach(sup => (sup === 'Foroom' ? [0, 1, 2, 3] : [null]).forEach(cat => {
+      const r = priceFor(S, sup, cat); if (!r) return;
+      out.push({ sup, cat, label: sup === 'Foroom' ? 'Foroom кат.' + cat : sup, tag: COLL[sup], price: r.unit, profit: r.profit, miss: r.miss, warn: r.warn, hard: r.hard });
+    }));
+    return out.sort((a, b) => a.price - b.price);
+  }
+  function pickSupplier(sup) {
+    const av = availOpts(sup, S.lam), fx = availFixes(sup, S.lam), opts = {};
+    Object.keys(S.opts).forEach(k => { if (S.opts[k] && av.indexOf(k) >= 0) opts[k] = true; });
+    Object.assign(S, { sup, color: '', opts, fix: fx.indexOf(S.fix) >= 0 ? S.fix : '', colorOpen: false, supOpen: false, justAdded: false });
+  }
+  window.JalCalcScreen = { priceFor, compareRows, pickSupplier, VARIANTS, COLL, render, setSheets, state: S, calcRow, edit, editAuto };
 })();

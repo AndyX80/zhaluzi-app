@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Жалюзи-СПБ: расчёт</title>
+<title>Жалюзи</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=PT+Sans:wght@400;700&family=PT+Serif:wght@400;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2B1A12"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2B1A12"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <style>:root{--bg:#F5EEE6;--card:#fff;--ink:#2A1A10;--m1:#6B5545;--m2:#8B7662;--line:#E3D5C3;--ac:#E07B00;--acink:#fff;--dk:#4A2C18;--sel:#FBF1E4;--bad:#B3261E;--ok:#1E6B24;--sh:0 1px 3px rgba(40,20,10,.16)}
 @media (prefers-color-scheme:dark){:root{--bg:#1B130D;--card:#2A1E15;--ink:#F3E9DE;--m1:#C2AE98;--m2:#9C8A76;--line:#4A3A2C;--sel:#3A2A1B;--bad:#FF8A80;--ok:#81C784;--sh:0 1px 3px rgba(0,0,0,.4)}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -132,7 +132,7 @@ html,body{overflow-x:clip}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v24</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v26</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -160,10 +160,12 @@ html,body{overflow-x:clip}
 <!--TPL settingsRoot tpl_settingsRoot settingsRoot-->
 
 <!--TPL sendRoot tpl_sendRoot sendRoot-->
+<!--TPL compareRoot tpl_compareRoot compareRoot-->
 
 
 <main id="doc" hidden>
 <!--TPL docKpRoot tpl_docKp docKp-->
+<!--TPL docKpVarRoot tpl_docKpVar docKpVar-->
 <!--TPL docBlankRoot tpl_docBlank docBlank-->
 <!--TPL docDogRoot tpl_docDog docDog-->
   <div id="docBody"></div>
@@ -182,24 +184,25 @@ html,body{overflow-x:clip}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/look.js?v=24"></script>
-<script src="src/calc.js?v=24"></script>
-<script src="src/orders.js?v=24"></script>
-<script src="src/docs.js?v=24"></script>
-<script src="src/drive.js?v=24"></script>
-<script src="src/data.js?v=24"></script>
-<script src="src/limits.js?v=24"></script>
-<script src="src/tpl.js?v=24"></script>
-<script src="src/screen.js?v=24"></script>
-<script src="src/calcscreen.js?v=24"></script>
-<script src="src/cartscreen.js?v=24"></script>
-<script src="src/ordersscreen.js?v=24"></script>
-<script src="src/orderscreen.js?v=24"></script>
-<script src="src/settingsscreen.js?v=24"></script>
-<script src="src/docscreens.js?v=24"></script>
-<script src="src/sendscreen.js?v=24"></script>
-<script src="src/lock.js?v=24"></script>
-<script src="src/app.js?v=24"></script>
+<script src="src/look.js?v=26"></script>
+<script src="src/calc.js?v=26"></script>
+<script src="src/orders.js?v=26"></script>
+<script src="src/docs.js?v=26"></script>
+<script src="src/drive.js?v=26"></script>
+<script src="src/data.js?v=26"></script>
+<script src="src/limits.js?v=26"></script>
+<script src="src/tpl.js?v=26"></script>
+<script src="src/screen.js?v=26"></script>
+<script src="src/calcscreen.js?v=26"></script>
+<script src="src/cartscreen.js?v=26"></script>
+<script src="src/ordersscreen.js?v=26"></script>
+<script src="src/orderscreen.js?v=26"></script>
+<script src="src/comparescreen.js?v=26"></script>
+<script src="src/settingsscreen.js?v=26"></script>
+<script src="src/docscreens.js?v=26"></script>
+<script src="src/sendscreen.js?v=26"></script>
+<script src="src/lock.js?v=26"></script>
+<script src="src/app.js?v=26"></script>
 <script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 </body>
 </html>

@@ -43,5 +43,25 @@
     lsSet('jal_drive_at', String(Date.now()));
     return { files: n, tpl: Object.keys(t).length, folder: j.folder || '' };
   }
-  window.JalDrive = { refresh, text, fill, parse, dump, FILES, DEF, at: () => +lsGet('jal_drive_at') || 0 };
+  const keyOf = u => (u.match(/[?&]key=([^&]+)/) || [])[1] || '';
+  /* копия заказов на Диск: запись без чтения ответа (браузер не отдаёт его для такого запроса), поэтому потом проверяем чтением */
+  async function backup() {
+    const base = lsGet('jal_prices_url'); if (!base) throw new Error('Сначала вставь ссылку на цены (вкладка «Цены»)');
+    const orders = JalOrders.load();
+    await fetch(base.split('?')[0], { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: decodeURIComponent(keyOf(base)), orders }) });
+    const j = await (await fetch(base + '&orders=1')).json();
+    if (!j.ok || (j.orders || []).length !== orders.length) throw new Error('Копия не сохранилась, проверь, что скрипт обновлён');
+    lsSet('jal_backup_at', String(Date.now())); return orders.length;
+  }
+  async function restore() {
+    const base = lsGet('jal_prices_url'); if (!base) throw new Error('Сначала вставь ссылку на цены (вкладка «Цены»)');
+    const j = await (await fetch(base + '&orders=1')).json(); if (!j.ok) throw new Error(j.error || 'Скрипт не отдал заказы');
+    const have = JalOrders.load(), add = (j.orders || []).filter(o => !have.some(x => x.no === o.no));
+    try { localStorage.setItem('jal_orders', JSON.stringify(have.concat(add))); } catch (e) { throw new Error('Не хватило места на телефоне'); }
+    return add.length;
+  }
+  /* авто-копия: раз в день или раз в неделю, если включено в Настройках и ссылка есть */
+  setTimeout(() => { const m = +lsGet('jal_sched') || 0, age = Date.now() - (+lsGet('jal_backup_at') || 0);
+    if (m && lsGet('jal_prices_url') && age > (m === 1 ? 20 * 3600e3 : 7 * 86400e3)) backup().catch(() => {}); }, 6000);
+  window.JalDrive = { backup, restore, backupAt: () => +lsGet('jal_backup_at') || 0, refresh, text, fill, parse, dump, FILES, DEF, at: () => +lsGet('jal_drive_at') || 0 };
 })();

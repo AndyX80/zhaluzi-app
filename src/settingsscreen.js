@@ -99,7 +99,8 @@
       qrs: [qr('pay', 'Оплата (СБП)', 'для замерника и доплат'), qr('ya', 'Отзывы на Яндексе', ''), qr('av', 'Отзывы на Авито', '')],
       hasSign: !!lsGet('jal_sign'), signSrc: lsGet('jal_sign'), pickSign: () => pickImage('jal_sign', render),
       hasStamp: !!lsGet('jal_stamp'), stampSrc: lsGet('jal_stamp'), pickStamp: () => pickImage('jal_stamp', render),
-      reqs: () => alert('Редактор реквизитов, контактов и условий добавим следующим шагом. Сейчас они зашиты в договоре.'),
+      reqFields: [['phone', 'Телефон'], ['address', 'Адрес'], ['site', 'Сайт'], ['email', 'E-mail'], ['signer', 'Подписант (в КП)'], ['req', 'Строка реквизитов внизу КП']].map(f => ({ label: f[1], value: JalDocScreens.C[f[0]] || '',
+        set: e => { JalDocScreens.C[f[0]] = e.target.value; let o = {}; try { o = JSON.parse(lsGet('jal_req') || '{}'); } catch (x) {} o[f[0]] = e.target.value; lsSet('jal_req', JSON.stringify(o)); } })),
       themes: [['Дневной', 'day'], ['Ночной', 'night'], ['Как в телефоне', 'auto']].map(t => ({ name: t[0], pick: () => { saveTheme({ theme: t[1] }); render(); }, style: seg((th.theme || 'day') === t[1]) })),
       palettes: PAL.map((p, i) => ({ name: p[0], mark: pal === i ? '✓' : '', pick: () => { saveTheme({ pal: i }); render(); },
         style: 'width: 44px; height: 44px; border-radius: 22px; border: ' + (pal === i ? '3px solid var(--ink)' : '3px solid transparent') + '; background: ' + p[1] + '; display: flex; align-items: center; justify-content: center; padding: 0' })),
@@ -120,7 +121,10 @@
         if (!confirm('Загрузить заказов: ' + list.length + '. Заказы с теми же номерами заменятся.')) return;
         const cur = JalOrders.load().filter(o => !list.some(x => x.no === o.no)); lsSet('jal_orders', JSON.stringify(list.concat(cur))); render(); }),
       sched: ['Выкл.', 'Каждую ночь', 'Раз в неделю'].map((n, i) => ({ name: n, pick: () => { lsSet('jal_sched', String(i)); set({ sched: i }); }, style: seg(T.sched === i) })),
-      driveNow: () => alert('Архив в Google Диск добавим следующим шагом. Пока делай «Экспорт в файл».')
+      driveNow: async () => { T.arch = 'Сохраняю…'; T.archBad = false; render(); try { const n = await JalDrive.backup(); T.arch = 'Сохранено заказов: ' + n; } catch (e) { T.arch = e.message || String(e); T.archBad = true; } render(); },
+      driveRestore: async () => { T.arch = 'Загружаю…'; T.archBad = false; render(); try { const n = await JalDrive.restore(); T.arch = 'Добавлено заказов: ' + n; } catch (e) { T.arch = e.message || String(e); T.archBad = true; } render(); },
+      archNote: T.arch || (JalDrive.backupAt() ? 'Последняя копия: ' + dstr(JalDrive.backupAt()) : 'Архив в Диск ещё не делался'),
+      archStyle: 'font-size: 13px; color: ' + (T.archBad ? '#B3261E' : 'var(--m1)')
     };
     function relo() { try { const raw = JSON.parse(lsGet('jal_prices') || 'null'); if (raw) A.setPricesRaw(raw); } catch (e) {} }
     scr.render(vm);

@@ -110,7 +110,11 @@
 <button onClick="{{pickSign}}" style="border: 1.5px dashed #E3D5C3; background: transparent; border-radius: 12px; height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; color: var(--dk); font-weight: 600; padding: 0"><sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="" style="height: 30px; max-width: 100%"></sc-if>Подпись · заменить</button>
 <button onClick="{{pickStamp}}" style="border: 1.5px dashed #E3D5C3; background: transparent; border-radius: 12px; height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; color: var(--dk); font-weight: 600; padding: 0"><sc-if value="{{hasStamp}}"><img src="{{stampSrc}}" alt="" style="height: 34px; max-width: 100%"></sc-if>Печать · заменить</button>
 </div>
-<button onClick="{{reqs}}" style="height: 44px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: transparent; color: var(--dk); font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Реквизиты, контакты, условия, УТП</button>
+<div style="font-size: 13px; color: var(--m1); font-weight: 600">Реквизиты и контакты в КП</div>
+<sc-for list="{{reqFields}}" as="q" hint-placeholder-count="6">
+<div style="display: flex; flex-direction: column; gap: 4px"><label style="font-size: 12px; color: var(--m1); font-weight: 600">{{q.label}}</label><input value="{{q.value}}" onInput="{{q.set}}" style="height: 44px; border: 1.5px solid #E3D5C3; border-radius: 12px; padding: 0 12px; font-size: 15px; box-sizing: border-box; width: 100%; color: var(--ink); background: var(--card)"></div>
+</sc-for>
+<div style="font-size: 12px; color: var(--m1)">Договор берёт данные продавца из своего текста, их правим отдельно.</div>
 <div style="font-size: 12px; color: var(--m1)">Срок действия КП: 14 дней · предоплата по умолчанию 100%</div>
 </section>
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
@@ -166,14 +170,15 @@
 <button onClick="{{importDb}}" style="height: 48px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Импорт из файла</button>
 </div>
 <div style="border-top: 1px solid #EADFD1; padding-top: 10px; font-size: 14px; font-weight: 700">Архив в Google Диск</div>
-<div style="font-size: 13px; color: var(--m1)">Папка: Мой диск / Жалюзи / Архив заказов</div>
+<div style="font-size: 13px; color: var(--m1)">Папка: Мой диск / Жалюзи-приложение, файл «заказы.json»</div>
 <div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,.12); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))">
 <sc-for list="{{sched}}" as="t" hint-placeholder-count="3">
 <button onClick="{{t.pick}}" style="{{t.style}}">{{t.name}}</button>
 </sc-for>
 </div>
 <button onClick="{{driveNow}}" style="height: 48px; border-radius: 12px; border: 1.5px solid var(--dk); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700">Сохранить в Диск сейчас</button>
-<div style="font-size: 13px; color: var(--m1)">Архив в Диск ещё не делался</div>
+<button onClick="{{driveRestore}}" style="height: 48px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Вернуть заказы с Диска</button>
+<div style="{{archStyle}}">{{archNote}}</div>
 </section>
 </sc-if>
 </main>

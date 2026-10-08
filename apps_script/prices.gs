@@ -11,6 +11,7 @@ function out_(o) {
 function doGet(e) {
   if (!e || !e.parameter || e.parameter.key !== KEY) return out_({ ok: false, error: 'bad key' });
   if (e.parameter.files) return files_();
+  if (e.parameter.orders) return ordersGet_();
   const sheets = {};
   SpreadsheetApp.getActiveSpreadsheet().getSheets().forEach(function (sh) {
     sheets[sh.getName()] = sh.getDataRange().getValues();
@@ -30,4 +31,23 @@ function files_() {
     else if (/^image\//.test(f.getMimeType())) files[name] = 'data:' + f.getMimeType() + ';base64,' + Utilities.base64Encode(f.getBlob().getBytes());
   }
   return out_({ ok: true, folder: FOLDER, files: files, templates: templates });
+}
+
+// Резервная копия заказов: приложение присылает JSON, он кладётся в папку на Диске файлом «заказы.json».
+function folder_() {
+  const it = DriveApp.getFoldersByName(FOLDER);
+  return it.hasNext() ? it.next() : DriveApp.createFolder(FOLDER);
+}
+function doPost(e) {
+  let d = {};
+  try { d = JSON.parse(e.postData.contents); } catch (x) { return out_({ ok: false, error: 'bad body' }); }
+  if (d.key !== KEY) return out_({ ok: false, error: 'bad key' });
+  const folder = folder_(), old = folder.getFilesByName('заказы.json');
+  while (old.hasNext()) old.next().setTrashed(true);
+  folder.createFile('заказы.json', JSON.stringify(d.orders), 'application/json');
+  return out_({ ok: true, n: (d.orders || []).length });
+}
+function ordersGet_() {
+  const it = folder_().getFilesByName('заказы.json');
+  return out_({ ok: true, orders: it.hasNext() ? JSON.parse(it.next().getBlob().getDataAsString('UTF-8')) : [] });
 }

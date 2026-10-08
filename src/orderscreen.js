@@ -33,7 +33,7 @@
   function fresh(key) {
     return { key, to: 'client', ctype: 'fiz', pmode: 'pct', copy: true, inst: true, rep: 'fine', prepay: 100, term: '', pay: 'QR', step: 0, lad: {}, di: '', ci: false,
       mnotes: '', mount: ['', '', '', '', ''], no: key === 'new' ? '' : key, date: today(), measurer: lsGet('jal_measurer') || 'Хорошавин', deliv: '', name: '', phone: '', addr: '', email: '',
-      company: '', inn: '', uaddr: '', repr: '', notes: null, qFrom: '12', qTo: '14', qrBlank: lsGet('jal_qr_blank') === '1', savedNo: null };
+      company: '', inn: '', uaddr: '', repr: '', notes: null, qFrom: '12', qTo: '14', qrBlank: lsGet('jal_qr_blank') === '1', savedNo: null, media: [] };
   }
   function fromOrder(o) {
     if (o.zam) return Object.assign(fresh(o.no), o.zam, { key: o.no, savedNo: o.no });
@@ -45,6 +45,19 @@
     return s;
   }
   let S = null;
+  function shrink(file, cb) {
+    const rd = new FileReader();
+    rd.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, 900 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); cb(c.toDataURL('image/jpeg', 0.6)); }; im.src = rd.result; };
+    rd.readAsDataURL(file);
+  }
+  function pickPhoto(capture) {
+    const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; if (capture) i.setAttribute('capture', 'environment'); i.multiple = !capture;
+    i.onchange = () => { const fs = Array.from(i.files || []); let n = 0;
+      fs.forEach(f => shrink(f, src => { if ((S.media || []).length >= 12) { if (!n++) alert('Максимум 12 фото в одном замернике'); return; }
+        S.media = (S.media || []).concat([{ src, pos: 0 }]); persist(); render(); })); };
+    i.click();
+  }
   function persist() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function ensure() {
     const en = JalCart.C.editNo, key = en && JalOrders.get(en) ? en : 'new';
@@ -167,7 +180,12 @@
         return { n, pickAuto: () => { S.lad[n] = { own: false, v: '' }; set({}); }, pickOwn: () => { S.lad[n] = { own: true, v: (S.lad[n] || {}).v || '' }; set({}); },
           autoStyle: sg(!own), ownStyle: sg(own), value: own ? S.lad[n].v : '', setVal: e => { S.lad[n] = { own: true, v: e.target.value }; persist(); },
           inputStyle: 'width: 110px; height: 40px; border: 1.5px solid #E3D5C3; border-radius: 10px; padding: 0 8px; font-size: 14px; box-sizing: border-box; color: var(--ink); background: var(--card); ' + (own ? '' : 'visibility: hidden') }; }),
-      addPhoto: () => alert('Фото и видео добавим позже.'), addVideo: () => alert('Фото и видео добавим позже.'), hasMedia: false, media: [],
+      addPhoto: () => pickPhoto(true), addGallery: () => pickPhoto(false), addVideo: () => alert('Видео в приложении не храним (слишком тяжёлое для телефонной памяти браузера). Сними видео в камере и отправь клиенту или монтажнику напрямую.'),
+      hasMedia: (S.media || []).length > 0,
+      media: (S.media || []).map((m, i) => ({ icon: '', label: 'Фото ' + (i + 1), pos: m.pos ? 'Поз. ' + m.pos : 'Общее',
+        thumb: 'position: relative; height: 84px; border-radius: 10px; background: #EEE url(' + m.src + ') center / cover no-repeat; display: flex; align-items: center; justify-content: center',
+        remove: () => { S.media.splice(i, 1); persist(); render(); },
+        next: () => { m.pos = ((m.pos || 0) + 1) > blinds.length ? 0 : (m.pos || 0) + 1; persist(); render(); } })),
       notes: S.notes == null ? autoNotes(gs) : S.notes, setNotes: e => { S.notes = e.target.value; persist(); },
       instY: seg(S.inst), instN: seg(!S.inst), setInstY: () => set({ inst: true }), setInstN: () => set({ inst: false }), inst: S.inst, instWarn: noSend,
       mount: MOUNT.map((l, i) => ({ label: l, value: S.mount[i], set: e => { S.mount[i] = e.target.value; persist(); } })),

@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Жалюзи-СПБ: расчёт</title>
+<title>Жалюзи</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=PT+Sans:wght@400;700&family=PT+Serif:wght@400;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2B1A12"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2B1A12"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <style>:root{--bg:#F5EEE6;--card:#fff;--ink:#2A1A10;--m1:#6B5545;--m2:#8B7662;--line:#E3D5C3;--ac:#E07B00;--acink:#fff;--dk:#4A2C18;--sel:#FBF1E4;--bad:#B3261E;--ok:#1E6B24;--sh:0 1px 3px rgba(40,20,10,.16)}
 @media (prefers-color-scheme:dark){:root{--bg:#1B130D;--card:#2A1E15;--ink:#F3E9DE;--m1:#C2AE98;--m2:#9C8A76;--line:#4A3A2C;--sel:#3A2A1B;--bad:#FF8A80;--ok:#81C784;--sh:0 1px 3px rgba(0,0,0,.4)}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -132,7 +132,7 @@ html,body{overflow-x:clip}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v24</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v26</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -463,6 +463,7 @@ html,body{overflow-x:clip}
 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
 <button onClick="{{closeCart}}" style="height: 44px; border-radius: 14px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 14px; font-weight: 600">Ещё изделие</button>
 <button onClick="{{openKp}}" style="height: 44px; border-radius: 14px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none">КП</button>
+<button onClick="{{openKpVars}}" style="grid-column: span 2; height: 44px; border-radius: 14px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">КП: три варианта (Стандарт, Тренд, Премиум)</button>
 </div>
 </div>
 </sc-if>
@@ -725,7 +726,7 @@ html,body{overflow-x:clip}
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
 <button onClick="{{addPhoto}}" style="height: 48px; min-width: 0; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Снять фото</button>
 <button onClick="{{addVideo}}" style="height: 48px; min-width: 0; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Снять видео</button>
-<button onClick="{{addPhoto}}" style="height: 48px; min-width: 0; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Из галереи</button>
+<button onClick="{{addGallery}}" style="height: 48px; min-width: 0; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Из галереи</button>
 </div>
 <sc-if value="{{hasMedia}}" hint-placeholder-val="{{true}}">
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
@@ -1025,7 +1026,11 @@ html,body{overflow-x:clip}
 <button onClick="{{pickSign}}" style="border: 1.5px dashed #E3D5C3; background: transparent; border-radius: 12px; height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; color: var(--dk); font-weight: 600; padding: 0"><sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="" style="height: 30px; max-width: 100%"></sc-if>Подпись · заменить</button>
 <button onClick="{{pickStamp}}" style="border: 1.5px dashed #E3D5C3; background: transparent; border-radius: 12px; height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; color: var(--dk); font-weight: 600; padding: 0"><sc-if value="{{hasStamp}}"><img src="{{stampSrc}}" alt="" style="height: 34px; max-width: 100%"></sc-if>Печать · заменить</button>
 </div>
-<button onClick="{{reqs}}" style="height: 44px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: transparent; color: var(--dk); font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Реквизиты, контакты, условия, УТП</button>
+<div style="font-size: 13px; color: var(--m1); font-weight: 600">Реквизиты и контакты в КП</div>
+<sc-for list="{{reqFields}}" as="q" hint-placeholder-count="6">
+<div style="display: flex; flex-direction: column; gap: 4px"><label style="font-size: 12px; color: var(--m1); font-weight: 600">{{q.label}}</label><input value="{{q.value}}" onInput="{{q.set}}" style="height: 44px; border: 1.5px solid #E3D5C3; border-radius: 12px; padding: 0 12px; font-size: 15px; box-sizing: border-box; width: 100%; color: var(--ink); background: var(--card)"></div>
+</sc-for>
+<div style="font-size: 12px; color: var(--m1)">Договор берёт данные продавца из своего текста, их правим отдельно.</div>
 <div style="font-size: 12px; color: var(--m1)">Срок действия КП: 14 дней · предоплата по умолчанию 100%</div>
 </section>
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
@@ -1081,14 +1086,15 @@ html,body{overflow-x:clip}
 <button onClick="{{importDb}}" style="height: 48px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Импорт из файла</button>
 </div>
 <div style="border-top: 1px solid #EADFD1; padding-top: 10px; font-size: 14px; font-weight: 700">Архив в Google Диск</div>
-<div style="font-size: 13px; color: var(--m1)">Папка: Мой диск / Жалюзи / Архив заказов</div>
+<div style="font-size: 13px; color: var(--m1)">Папка: Мой диск / Жалюзи-приложение, файл «заказы.json»</div>
 <div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,.12); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))">
 <sc-for list="{{sched}}" as="t" hint-placeholder-count="3">
 <button onClick="{{t.pick}}" style="{{t.style}}">{{t.name}}</button>
 </sc-for>
 </div>
 <button onClick="{{driveNow}}" style="height: 48px; border-radius: 12px; border: 1.5px solid var(--dk); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700">Сохранить в Диск сейчас</button>
-<div style="font-size: 13px; color: var(--m1)">Архив в Диск ещё не делался</div>
+<button onClick="{{driveRestore}}" style="height: 48px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Вернуть заказы с Диска</button>
+<div style="{{archStyle}}">{{archNote}}</div>
 </section>
 </sc-if>
 </main>
@@ -1170,6 +1176,42 @@ html,body{overflow-x:clip}
 </div>
 
 </template>
+<div id="compareRoot" class="" hidden></div>
+<template id="tpl_compareRoot">
+<header style="background: var(--dk); color: #FFFFFF; padding: 18px 8px 14px 8px; display: flex; align-items: center; gap: 6px">
+<button onClick="{{go.Main}}" aria-label="Назад" style="border: 0; background: transparent; width: 44px; height: 44px; border-radius: 22px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+</button>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<h1 style="margin: 0; font-size: 19px; font-weight: 700">Сравнить поставщиков</h1>
+<div style="font-size: 13px; color: #DCC8B0">{{sub}}</div>
+</div>
+</header>
+<main style="padding: 14px 12px 96px 12px; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<button onClick="{{r.pick}}" style="{{r.style}}">
+<div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1; text-align: left">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="font-size: 16px; font-weight: 700">{{r.name}}</span>
+<span style="{{r.tagStyle}}">{{r.tag}}</span>
+</div>
+<span style="{{r.noteStyle}}">{{r.note}}</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+<span style="font-size: 19px; font-weight: 800; color: #1E6B24">{{r.price}}</span>
+<span style="font-size: 12px; color: #8A4B00">{{r.profit}}</span>
+</div>
+</button>
+</sc-for>
+</main>
+<div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="height: 64px; border-radius: 32px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; padding: 0 8px 0 22px; gap: 10px; box-shadow: 0 8px 20px rgba(40,20,10,0.35)">
+<div style="flex-grow: 1; font-size: 15px; font-weight: 600">{{chosen}}</div>
+<button onClick="{{go.Main}}" style="border: 0; background: transparent; height: 48px; box-sizing: border-box; border-radius: 24px; background: var(--ac); color: #FFFFFF; font-size: 16px; font-weight: 800; padding: 0 20px; white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; text-decoration: none">Назад к расчёту</button>
+</div>
+</div>
+
+</template>
 
 
 <main id="doc" hidden>
@@ -1219,6 +1261,99 @@ html,body{overflow-x:clip}
 <sc-if value="{{pg.hasTotal}}" hint-placeholder-val="{{true}}">
 <div style="background: #F1780F; color: #FFFFFF; display: flex; align-items: center; padding: 8px 14px">
 <span style="flex-grow: 1; font-size: 13px; font-weight: 700">ИТОГО:</span><span style="font-size: 17px; font-weight: 700">{{total}}</span>
+</div>
+<div style="align-self: flex-start; background: #FDEBDB; border: 0.75px solid #F1780F; border-radius: 6px; color: #F1780F; font-weight: 700; font-size: 8.5px; padding: 5px 16px">Предложение действует до {{valid}}</div>
+</sc-if>
+
+<sc-if value="{{pg.hasLower}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{conds}}" as="b" hint-placeholder-count="3">
+<div style="background: #F4F4F4; padding: 8px 9px; display: flex; flex-direction: column; gap: 4px; min-height: 62px">
+<b style="color: #F1780F; font-size: 9.5px">{{b.title}}</b>
+<span style="font-size: 8.3px; line-height: 1.45; white-space: pre-line">{{b.text}}</span>
+</div>
+</sc-for>
+</div>
+
+<div style="background: #1A1A1A; color: #FFFFFF; padding: 8px 14px; display: flex; flex-direction: column; gap: 3px">
+<b style="color: #F1780F; font-size: 10.5px">Почему выбирают Жалюзи-СПБ</b>
+<sc-for list="{{utp}}" as="u" hint-placeholder-count="4">
+<span style="font-size: 8.6px">•&nbsp; {{u}}</span>
+</sc-for>
+</div>
+
+<div style="background: #FDEBDB; border-radius: 5px; text-align: center; padding: 10px 8px; font-size: 10px; font-weight: 700">Готовы обсудить детали или ответить на вопросы — <span style="color: #F1780F">{{c.phone}}</span> <span style="font-weight: 400">или</span> <span style="color: #F1780F">{{c.site}}</span></div>
+
+<div style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px">
+<b style="font-size: 9.5px">Надеемся на взаимовыгодное сотрудничество!</b>
+<div style="display: flex; align-items: center; height: 74px; position: relative">
+<span style="font-size: 9px; width: 210px">С уважением, {{c.signer}}</span>
+<sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="подпись" style="height: 52px; width: auto; position: absolute; left: 150px; top: 36px"></sc-if>
+<sc-if value="{{hasStamp}}"><img src="{{stampSrc}}" alt="печать" style="height: 127px; width: 127px; position: absolute; left: 150px; top: 0px; transform: rotate(-9deg); mix-blend-mode: multiply; opacity: 0.93"></sc-if>
+</div>
+</div>
+<div style="font-size: 6.3px; color: #6E6E6E; line-height: 1.4; margin-top: auto">{{c.req}}</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</template>
+<div id="docKpVarRoot" class="docp" hidden></div>
+<template id="tpl_docKpVar">
+<div style="width: 595px; display: flex; flex-direction: column">
+<sc-for list="{{pages}}" as="pg" hint-placeholder-count="1">
+<div style="width: 595px; height: 842px; box-sizing: border-box; background: #FFFFFF; font-family: Arial, 'Segoe UI', sans-serif; color: #1A1A1A; padding: 26px 36px 20px 36px; display: flex; flex-direction: column; gap: 9px; font-size: 9px; overflow: hidden; border-bottom: 1px solid #E3E3E3">
+
+<sc-if value="{{pg.first}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: flex-start; gap: 12px">
+<img src="assets/logo.png" alt="Жалюзи-СПБ" style="width: 128px; height: auto; display: block">
+<div style="flex-grow: 1; text-align: right; font-size: 9.5px; line-height: 1.45">
+<div style="font-weight: 700">{{c.phone}}</div>
+<div>{{c.address}}</div>
+<div>{{c.site}} &nbsp;•&nbsp; {{c.email}}</div>
+</div>
+</div>
+<div style="background: #F1780F; color: #FFFFFF; font-size: 16px; font-weight: 700; text-align: center; padding: 8px 0">Коммерческое предложение: три варианта</div>
+<div style="display: flex; align-items: baseline; gap: 10px; margin-top: -4px">
+<div style="flex-grow: 1; font-size: 10.5px; line-height: 1.35">{{intro}}</div>
+<div style="font-size: 8.5px; font-style: italic; color: #6E6E6E; white-space: nowrap">{{date}}</div>
+</div>
+</sc-if>
+<sc-if value="{{pg.cont}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #F1780F; padding-bottom: 8px">
+<img src="assets/logo.png" alt="Жалюзи-СПБ" style="width: 84px; height: auto; display: block">
+<div style="flex-grow: 1; text-align: right; font-size: 10px; font-weight: 700; color: #F1780F">Коммерческое предложение — лист {{pg.num}} из {{pg.count}}</div>
+</div>
+</sc-if>
+
+<sc-if value="{{pg.hasRows}}" hint-placeholder-val="{{true}}">
+<div style="border: 0.75px solid #DDDDDD">
+<div style="display: grid; grid-template-columns: 24px minmax(0, 1fr) 36px 66px 66px 66px; background: #1A1A1A; color: #FFFFFF; font-weight: 700; font-size: 9px">
+<span style="padding: 6px 0; text-align: center">№</span><span style="padding: 6px 6px">Изделие</span><span style="padding: 6px 0; text-align: center">Шт</span>
+<sc-for list="{{vars}}" as="v" hint-placeholder-count="3"><span style="{{v.headStyle}}">{{v.name}}</span></sc-for>
+</div>
+<sc-for list="{{pg.rows}}" as="i" hint-placeholder-count="4">
+<div style="display: grid; grid-template-columns: 24px minmax(0, 1fr) 36px 66px 66px 66px; border-top: 0.75px solid #DDDDDD; align-items: center; font-size: 9.5px">
+<span style="padding: 5px 0; text-align: center">{{i.n}}</span>
+<span style="padding: 5px 6px; display: flex; flex-direction: column; gap: 2px"><b>{{i.name}}</b><span style="font-size: 8px; color: #6E6E6E; line-height: 1.3">{{i.spec}}</span></span>
+<span style="text-align: center">{{i.qty}}</span>
+<sc-for list="{{i.sums}}" as="s" hint-placeholder-count="3"><span style="{{s.style}}">{{s.v}}</span></sc-for>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{pg.hasTotal}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{vars}}" as="v" hint-placeholder-count="3">
+<div style="{{v.boxStyle}}">
+<div style="font-size: 9px; font-weight: 700">{{v.name}}</div>
+<div style="font-size: 8px; line-height: 1.35; min-height: 22px">{{v.about}}</div>
+<div style="font-size: 8px">ИТОГО</div>
+<div style="font-size: 16px; font-weight: 700">{{v.total}}</div>
+<div style="{{v.tagStyle}}">{{v.tag}}</div>
+</div>
+</sc-for>
 </div>
 <div style="align-self: flex-start; background: #FDEBDB; border: 0.75px solid #F1780F; border-radius: 6px; color: #F1780F; font-weight: 700; font-size: 8.5px; padding: 5px 16px">Предложение действует до {{valid}}</div>
 </sc-if>
@@ -1465,24 +1600,25 @@ html,body{overflow-x:clip}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/look.js?v=24"></script>
-<script src="src/calc.js?v=24"></script>
-<script src="src/orders.js?v=24"></script>
-<script src="src/docs.js?v=24"></script>
-<script src="src/drive.js?v=24"></script>
-<script src="src/data.js?v=24"></script>
-<script src="src/limits.js?v=24"></script>
-<script src="src/tpl.js?v=24"></script>
-<script src="src/screen.js?v=24"></script>
-<script src="src/calcscreen.js?v=24"></script>
-<script src="src/cartscreen.js?v=24"></script>
-<script src="src/ordersscreen.js?v=24"></script>
-<script src="src/orderscreen.js?v=24"></script>
-<script src="src/settingsscreen.js?v=24"></script>
-<script src="src/docscreens.js?v=24"></script>
-<script src="src/sendscreen.js?v=24"></script>
-<script src="src/lock.js?v=24"></script>
-<script src="src/app.js?v=24"></script>
+<script src="src/look.js?v=26"></script>
+<script src="src/calc.js?v=26"></script>
+<script src="src/orders.js?v=26"></script>
+<script src="src/docs.js?v=26"></script>
+<script src="src/drive.js?v=26"></script>
+<script src="src/data.js?v=26"></script>
+<script src="src/limits.js?v=26"></script>
+<script src="src/tpl.js?v=26"></script>
+<script src="src/screen.js?v=26"></script>
+<script src="src/calcscreen.js?v=26"></script>
+<script src="src/cartscreen.js?v=26"></script>
+<script src="src/ordersscreen.js?v=26"></script>
+<script src="src/orderscreen.js?v=26"></script>
+<script src="src/comparescreen.js?v=26"></script>
+<script src="src/settingsscreen.js?v=26"></script>
+<script src="src/docscreens.js?v=26"></script>
+<script src="src/sendscreen.js?v=26"></script>
+<script src="src/lock.js?v=26"></script>
+<script src="src/app.js?v=26"></script>
 <script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 </body>
 </html>

@@ -66,14 +66,14 @@
   }
 
   /* Все расчётные величины корзины в одном месте: для экрана и для заказа. */
-  function compute(st) {
+  function compute(st, ov) {
     const App = window.JalApp, s = st || C;
-    const calcs = s.cart.map(calcRow);
+    const calcs = ov ? ov.calcs : s.cart.map(calcRow);
     const S = Number(s.service) || 0;
     const adds = spread(s.cart.map((it, i) => ({ ok: calcs[i].ok && it.kind !== 'custom', qty: it.qty })), S);
     /* доставка от производителя: RATES.ship на каждую партию (кроме Уюта и Форума), делится на жалюзи этой партии */
     const ships = s.cart.map(() => 0), bySup = {};
-    s.cart.forEach((it, i) => { if (!it.kind && calcs[i].ok && !FREE_SHIP[it.sup]) (bySup[it.sup] = bySup[it.sup] || []).push(i); });
+    s.cart.forEach((it, i) => { const sp = ov ? ov.sups[i] : it.sup; if (!it.kind && calcs[i].ok && !FREE_SHIP[sp]) (bySup[sp] = bySup[sp] || []).push(i); });
     Object.keys(bySup).forEach(k => { const ix = bySup[k], part = spread(ix.map(i => ({ ok: true, qty: s.cart[i].qty })), Number(RATES.ship) || 0); ix.forEach((i, j) => { ships[i] = part[j]; }); });
     const lineSum = s.cart.map((it, i) => (calcs[i].ok ? ceil100(calcs[i].unit + ships[i] + adds[i]) * it.qty : 0));
     const total = lineSum.reduce((x, y) => x + y, 0);
@@ -217,9 +217,24 @@
       dogMark: s.needDog ? '✓' : '',
       cartTotal: fmt(netTotal) + ' ₽', cartPieces: pcs, showProfit, cartProfit: (netProf >= 0 ? '+' : '') + fmt(netProf),
       cartCount: s.cart.length,
-      openKp: () => window.JalApp.openKp(), openOrder: () => window.JalApp.tab('order'),
+      openKp: () => window.JalApp.openKp(), openKpVars: () => window.JalApp.openKpVars(), openOrder: () => window.JalApp.tab('order'),
       openOrders: () => window.JalApp.tab('ord'), openSettings: () => window.JalApp.tab('set')
     };
+  }
+
+  /* Три варианта КП: каждое жалюзи считается у поставщика коллекции (Стандарт, Тренд, Премиум), прочие позиции без изменений. */
+  function variants(st) {
+    const sC = st || C, CS = window.JalCalcScreen, base = sC.cart.map(calcRow);
+    return CS.VARIANTS.map(v => {
+      const sups = sC.cart.map(it => (it.kind || it.sup === undefined ? it.sup : v.sup));
+      const calcs = sC.cart.map((it, i) => {
+        if (it.kind) return base[i];
+        const r = CS.priceFor(it, v.sup, v.cat);
+        return r ? { ok: true, unit: r.unit, profit: r.profit, warn: [] } : { ok: false, warn: [] };
+      });
+      const F = compute(sC, { calcs, sups });
+      return { v, F, miss: sC.cart.some((it, i) => !it.kind && !calcs[i].ok) };
+    });
   }
 
   /* Заказ для документов: цены уже с доставкой и установкой, скидка отдельной суммой. */
@@ -235,7 +250,14 @@
           o: { color: c.col ? c.col.name : null, opts: Object.keys(it.opts || {}).filter(n => it.opts[n]), fix: it.fix || null }, price, profit: c.profit });
       }
     });
-    return { items, priced: true, delivery: F.S, disc: F.discAmt, needDog: sC.needDog };
+    let vars = null;
+    try {
+      const vs = variants(sC); vars = vs.map(x => ({ name: x.v.name, about: x.v.about, best: !!x.v.best, miss: x.miss, total: x.F.total }));
+      let k = 0;
+      sC.cart.forEach((it, i) => { if (!F.calcs[i].ok) return;
+        for (let q = 0; q < it.qty; q++, k++) items[k].pv = vs.map(x => (x.F.calcs[i].ok ? ceil100(x.F.calcs[i].unit + x.F.ships[i] + x.F.adds[i]) : null)); });
+    } catch (e) { vars = null; }
+    return { items, priced: true, delivery: F.S, disc: F.discAmt, needDog: sC.needDog, vars };
   }
 
   let mounted = null, TAB = 'items';
