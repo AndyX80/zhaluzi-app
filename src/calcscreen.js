@@ -24,7 +24,7 @@
   const rnd = x => Math.floor(x + 0.5);
 
   const S = { mode: 'blinds', q: '', w: '', h: '', sup: 'Amigo', lam: 50, mat: 'Дерево', qty: 1, color: '', colorOpen: false,
-    ctrl: 'TR', fix: '', opts: {}, supOpen: false, justAdded: false, recent: [] };
+    ctrl: 'TR', fix: '', opts: {}, supOpen: false, justAdded: false, recent: [], editIdx: -1 };
   try { S.recent = JSON.parse(localStorage.getItem('jal_recent') || '[]'); } catch (e) {}
   let P = null, mounted = null;
   let STOCK = { rdo: D.RDO_STOCK, int: D.INT_STOCK, fo: D.FOROOM_STOCK, am: {} };
@@ -125,6 +125,17 @@
     return { ok: true, base: res.base, unit: res.price, addSum: res.price - res.base, profit: res.profit, optP: res.opts, warn, col };
   }
 
+  /* Расчёт позиции корзины: it = { sup, mat, lam, color, ctrl, fix, opts, w, h } (поставщик по-макетному: Amigo, Foroom). */
+  function calcRow(it) {
+    const cur = { sup: it.sup, mat: it.mat, lam: it.lam, color: it.color || '', ctrl: it.ctrl, fix: it.fix || '', w: it.w, h: it.h, opts: it.opts || {} };
+    return calcItem(cur, colorsFor(it.sup, it.mat + ' ' + it.lam));
+  }
+  function edit(it, idx) {
+    Object.assign(S, { mode: 'blinds', sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '',
+      opts: Object.assign({}, it.opts), w: it.w, h: it.h, qty: it.qty || 1, editIdx: idx, justAdded: false, supOpen: false });
+  }
+  function editAuto(sup) { Object.assign(S, { mode: 'auto', sup, editIdx: -1, justAdded: false }); }
+
   function build() {
     const App = window.JalApp, s = S;
     const lamOk = s.sup === 'Foroom' ? [50] : [25, 50];
@@ -189,10 +200,14 @@
 
     const good = r.ok && !r.warn.length, waiting = !!r.needColor;
     const kg = LM.weightKg(mat, lam, +s.w, +s.h);
-    const showProfit = !!(App && App.st.show);
+    const showProfit = !!(App && App.st.show), JC = window.JalCart;
     const unit = r.ok ? r.unit : 0;
     const dotOf = st => st === null ? 'display: none' : 'width: 14px; height: 14px; border-radius: 7px; flex-shrink: 0; background: ' + DOT[st];
 
+    const rowStyle = n => 'min-height: 64px; border-radius: 14px; border: 1.5px solid ' + (n ? 'var(--dk)' : 'var(--line)') + '; background: ' + (n ? 'var(--chip)' : '#FFFFFF') + '; display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px';
+    const autoRows = kind => (JC.autoList(s.sup, kind) || []).map(f => { const q = JC.autoQty(s.sup, kind, f.key);
+      return { name: f.name, sub: f.sub, price: fmt(f.price) + ' ₽', qty: q, style: rowStyle(q),
+        minus: () => JC.autoStep(s.sup, kind, f.key, -1), plus: () => JC.autoStep(s.sup, kind, f.key, 1) }; });
     return {
       supName: s.sup, supColl: COLL[s.sup], supOpen: !!s.supOpen, toggleSup: () => set({ supOpen: !S.supOpen }),
       supArrow: 'flex-shrink: 0; transition: transform 0.25s ease; transform: rotate(' + (s.supOpen ? 180 : 0) + 'deg)',
@@ -201,7 +216,7 @@
       isBlinds: s.mode === 'blinds', isAuto: s.mode === 'auto',
       modeBlinds: () => set({ mode: 'blinds' }), modeAuto: () => set({ mode: 'auto' }),
       modeBlindsStyle: seg(s.mode === 'blinds'), modeAutoStyle: seg(s.mode === 'auto'),
-      calcHeader: false, calcTitle: '', posText: '',
+      calcHeader: s.editIdx >= 0, calcTitle: s.mode === 'auto' ? 'Автоматика' : 'Изменение позиции ' + (s.editIdx + 1), posText: 'позиция ' + (s.editIdx >= 0 ? s.editIdx + 1 : JC.count() + 1),
       w: s.w, h: s.h,
       setW: e => chg({ w: e.target.value }), setH: e => chg({ h: e.target.value }),
       showLam: lamOk.length > 1,
@@ -241,7 +256,9 @@
       fixes, fixBoxStyle: 'display: grid; grid-template-columns: repeat(' + fixes.length + ', minmax(0, 1fr)); gap: 4px; background: var(--card); border-radius: 14px; padding: 4px 10px',
       compare: () => alert('Сравнение поставщиков добавим следующим шагом.'),
       qty: s.qty, qtyMinus: () => set({ qty: Math.max(1, S.qty - 1) }), qtyPlus: () => set({ qty: Math.min(99, S.qty + 1) }),
-      noAuto: true, hasAuto: false, driveRows: [], remoteRows: [], autoSummary: 'Автоматику добавим позже',
+      noAuto: !JC.hasAuto(s.sup), hasAuto: JC.hasAuto(s.sup),
+      driveRows: autoRows('drive'), remoteRows: autoRows('remote'),
+      autoSummary: 'Приводов ' + JC.counts().drive + ', пультов ' + JC.counts().remote + ' в корзине',
       showCheck: !waiting,
       breakText: r.ok ? (s.qty > 1 ? fmt(unit) + ' ₽ × ' + s.qty + ' шт' : 'изделие ' + fmt(r.base) + ' + доп. ' + fmt(r.addSum)) : (waiting ? 'выбери цвет, и я посчитаю' : (r.msg ? '' : 'введи размеры')),
       weightText: kg ? 'вес ≈ ' + LM.fmtKg(kg * s.qty) + ' кг' + (s.qty > 1 ? ' (' + LM.fmtKg(kg) + ' кг × ' + s.qty + ')' : '') : '',
@@ -255,17 +272,16 @@
       priceText: r.ok ? fmt(unit * s.qty) + ' ₽' : '—',
       priceStyle: 'font-size: 24px; font-weight: 800; line-height: 1.05; color: ' + (r.ok ? '#FFFFFF' : '#C9B59C'),
       showProfit, profitText: r.ok ? '+' + fmt(r.profit * s.qty) : '—',
-      addLabel: 'В корзину',
+      addLabel: s.editIdx >= 0 ? 'Сохранить' : 'В корзину',
       addStyle: 'height: 48px; padding: 0 22px; border: 0; border-radius: 24px; background: var(--ac); color: #FFFFFF; font-size: 16px; font-weight: 800; display: flex; align-items: center; justify-content: center; opacity: ' + (r.ok ? '1' : '0.45'),
       addToCart: () => {
         if (!r.ok || !App) return;
-        for (let k = 0; k < S.qty; k++) App.st.cart.push({ sup: eng(s.sup), mat, lam, W: +s.w / 10, H: +s.h / 10, ctrl,
-          o: { color: selCol ? selCol.name : null, ckey: selCol ? selCol.key : null, opts: Object.keys(opts0), fix: fix || null }, price: unit, profit: r.profit });
-        App.save(); App.drawCart();
-        set({ qty: 1, justAdded: true });
+        const item = { sup: s.sup, lam, mat, color, ctrl, fix, opts: Object.assign({}, opts0), w: +s.w, h: +s.h, qty: s.qty };
+        if (s.editIdx >= 0) { JC.replaceItem(s.editIdx, item); set({ editIdx: -1, qty: 1 }); App.tab('cart'); }
+        else { JC.addItem(item); set({ qty: 1, justAdded: true }); }
       },
-      cartCount: App ? App.st.cart.length : 0,
-      openCart: () => App.tab('cart'), openOrders: () => App.tab('ord'), openSettings: () => App.tab('set')
+      cartCount: JC.count(),
+      openCart: () => App.tab('cart'), closeEditHeader: null, openOrders: () => App.tab('ord'), openSettings: () => App.tab('set')
     };
   }
 
@@ -279,5 +295,5 @@
     mounted.render(build());
   }
 
-  window.JalCalcScreen = { render, setSheets, state: S };
+  window.JalCalcScreen = { render, setSheets, state: S, calcRow, edit, editAuto };
 })();

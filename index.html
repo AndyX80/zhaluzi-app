@@ -70,65 +70,66 @@ body[data-tab=calc] #capCart,body[data-tab=cart] #capCalc,body[data-tab=ord] #ca
 @media print{body{background:#fff;padding:0}header,nav,.noprint,main:not(#doc){display:none!important}.doc{padding:0}}
 @page{margin:14mm}
 @media print{body{background:#fff}header,#bottom,.noprint,main:not(#doc){display:none!important}main#doc{padding:0}.doc{padding:0;box-shadow:none}}
-/* экран «Расчёт» по макету: тема и «Aero»-оформление действуют только внутри #calcRoot */
-#calcRoot input{min-height:0;border-radius:0;padding:0;border:0;background:none;width:auto;margin:0;color:inherit}
-body[data-tab=calc]>header,body[data-tab=calc] #bottom{display:none}
-#calcRoot button{font-family:inherit;cursor:pointer}
-#calcRoot input{font-family:inherit}
-#calcRoot input:focus{outline:2px solid var(--dk);outline-offset:0}
+/* экран «Расчёт» по макету: тема и «Aero»-оформление действуют только внутри :is(#calcRoot,#cartRoot) */
+:is(#calcRoot,#cartRoot) input{min-height:0;border-radius:0;padding:0;border:0;background:none;width:auto;margin:0;color:inherit}
+body[data-tab=calc]>header,body[data-tab=calc] #bottom,body[data-tab=cart]>header,body[data-tab=cart] #bottom{display:none}
+:is(#calcRoot,#cartRoot) button{font-family:inherit;cursor:pointer}
+:is(#calcRoot,#cartRoot) input{font-family:inherit}
+:is(#calcRoot,#cartRoot) input:focus{outline:2px solid var(--dk);outline-offset:0}
 /* Aero-skin: переменные цвета + глянец. Тема = класс pN и nt на корне экрана */
-#calcRoot,#calcRoot.p0{--dk:#4A2C18;--ac:#E07B00;--bg:#F5EEE6;--card:#FFFFFF;--ink:#2A1A10;--m1:#6B5545;--m2:#7A6453;--m3:#8B7662;--line:#D6C4AE;--sel:#FBF1E4;--chip:#F3E9DC;--track:#E9DDCE;--hd:#FAF5EF;--chk:#B8A58F;--bgA:#FFF7EC;--bgB:#F3E7D8;--bgC:#EBDCCB;--glow:#F6DFC4}
-#calcRoot.p1{--dk:#1F4A3D;--ac:#2FBF71}
-#calcRoot.p2{--dk:#2A3550;--ac:#0A84FF}
-#calcRoot.p3{--dk:#6B2C3B;--ac:#FF6B5A}
-#calcRoot.p4{--dk:#34306B;--ac:#8E7CF0}
-#calcRoot.p1,#calcRoot.p2,#calcRoot.p3,#calcRoot.p4{--bg:color-mix(in srgb,var(--dk) 7%,#fff);--ink:color-mix(in srgb,var(--dk) 14%,#101114);--m1:color-mix(in srgb,var(--dk) 30%,#6E727C);--m2:color-mix(in srgb,var(--dk) 24%,#7B7F89);--m3:color-mix(in srgb,var(--dk) 20%,#8E929B);--line:color-mix(in srgb,var(--dk) 22%,#fff);--sel:color-mix(in srgb,var(--ac) 12%,#fff);--chip:color-mix(in srgb,var(--dk) 10%,#fff);--track:color-mix(in srgb,var(--dk) 13%,#fff);--hd:color-mix(in srgb,var(--dk) 5%,#fff);--chk:color-mix(in srgb,var(--dk) 35%,#aaa);--bgA:color-mix(in srgb,var(--dk) 4%,#fff);--bgB:color-mix(in srgb,var(--dk) 8%,#fff);--bgC:color-mix(in srgb,var(--dk) 15%,#fff);--glow:color-mix(in srgb,var(--ac) 16%,#fff)}
-#calcRoot .nt{--bg:color-mix(in srgb,var(--dk) 18%,#0b0807);--card:rgba(255,255,255,.07);--ink:#F2E7DB;--m1:#BBA791;--m2:#B09C86;--m3:#A38F7A;--line:rgba(255,255,255,.16);--sel:rgba(255,255,255,.11);--chip:rgba(255,255,255,.12);--track:rgba(255,255,255,.09);--hd:rgba(255,255,255,.06);--chk:#8F7C68;color:var(--ink)}
-#calcRoot[style*="font-family"],#calcRoot [style*="font-family"]{font-family:Inter,-apple-system,"SF Pro Text","Segoe UI",system-ui,sans-serif!important}
-#calcRoot[style*="font-weight: 800"],#calcRoot [style*="font-weight: 800"],#calcRoot[style*="font-weight:800"],#calcRoot [style*="font-weight:800"]{font-weight:500!important}
-#calcRoot[style*="font-weight: 700"],#calcRoot [style*="font-weight: 700"],#calcRoot[style*="font-weight:700"],#calcRoot [style*="font-weight:700"]{font-weight:500!important}
-#calcRoot[style*="font-weight: 600"],#calcRoot [style*="font-weight: 600"],#calcRoot[style*="font-weight:600"],#calcRoot [style*="font-weight:600"]{font-weight:400!important}
-#calcRoot[style*="letter-spacing: -1px"],#calcRoot [style*="letter-spacing: -1px"]{letter-spacing:-1.5px!important;font-weight:300!important}
+:is(#calcRoot,#cartRoot),:is(#calcRoot,#cartRoot).p0{--dk:#4A2C18;--ac:#E07B00;--bg:#F5EEE6;--card:#FFFFFF;--ink:#2A1A10;--m1:#6B5545;--m2:#7A6453;--m3:#8B7662;--line:#D6C4AE;--sel:#FBF1E4;--chip:#F3E9DC;--track:#E9DDCE;--hd:#FAF5EF;--chk:#B8A58F;--bgA:#FFF7EC;--bgB:#F3E7D8;--bgC:#EBDCCB;--glow:#F6DFC4}
+:is(#calcRoot,#cartRoot).p1{--dk:#1F4A3D;--ac:#2FBF71}
+:is(#calcRoot,#cartRoot).p2{--dk:#2A3550;--ac:#0A84FF}
+:is(#calcRoot,#cartRoot).p3{--dk:#6B2C3B;--ac:#FF6B5A}
+:is(#calcRoot,#cartRoot).p4{--dk:#34306B;--ac:#8E7CF0}
+:is(#calcRoot,#cartRoot).p1,:is(#calcRoot,#cartRoot).p2,:is(#calcRoot,#cartRoot).p3,:is(#calcRoot,#cartRoot).p4{--bg:color-mix(in srgb,var(--dk) 7%,#fff);--ink:color-mix(in srgb,var(--dk) 14%,#101114);--m1:color-mix(in srgb,var(--dk) 30%,#6E727C);--m2:color-mix(in srgb,var(--dk) 24%,#7B7F89);--m3:color-mix(in srgb,var(--dk) 20%,#8E929B);--line:color-mix(in srgb,var(--dk) 22%,#fff);--sel:color-mix(in srgb,var(--ac) 12%,#fff);--chip:color-mix(in srgb,var(--dk) 10%,#fff);--track:color-mix(in srgb,var(--dk) 13%,#fff);--hd:color-mix(in srgb,var(--dk) 5%,#fff);--chk:color-mix(in srgb,var(--dk) 35%,#aaa);--bgA:color-mix(in srgb,var(--dk) 4%,#fff);--bgB:color-mix(in srgb,var(--dk) 8%,#fff);--bgC:color-mix(in srgb,var(--dk) 15%,#fff);--glow:color-mix(in srgb,var(--ac) 16%,#fff)}
+:is(#calcRoot,#cartRoot) .nt{--bg:color-mix(in srgb,var(--dk) 18%,#0b0807);--card:rgba(255,255,255,.07);--ink:#F2E7DB;--m1:#BBA791;--m2:#B09C86;--m3:#A38F7A;--line:rgba(255,255,255,.16);--sel:rgba(255,255,255,.11);--chip:rgba(255,255,255,.12);--track:rgba(255,255,255,.09);--hd:rgba(255,255,255,.06);--chk:#8F7C68;color:var(--ink)}
+:is(#calcRoot,#cartRoot)[style*="font-family"],:is(#calcRoot,#cartRoot) [style*="font-family"]{font-family:Inter,-apple-system,"SF Pro Text","Segoe UI",system-ui,sans-serif!important}
+:is(#calcRoot,#cartRoot)[style*="font-weight: 800"],:is(#calcRoot,#cartRoot) [style*="font-weight: 800"],:is(#calcRoot,#cartRoot)[style*="font-weight:800"],:is(#calcRoot,#cartRoot) [style*="font-weight:800"]{font-weight:500!important}
+:is(#calcRoot,#cartRoot)[style*="font-weight: 700"],:is(#calcRoot,#cartRoot) [style*="font-weight: 700"],:is(#calcRoot,#cartRoot)[style*="font-weight:700"],:is(#calcRoot,#cartRoot) [style*="font-weight:700"]{font-weight:500!important}
+:is(#calcRoot,#cartRoot)[style*="font-weight: 600"],:is(#calcRoot,#cartRoot) [style*="font-weight: 600"],:is(#calcRoot,#cartRoot)[style*="font-weight:600"],:is(#calcRoot,#cartRoot) [style*="font-weight:600"]{font-weight:400!important}
+:is(#calcRoot,#cartRoot)[style*="letter-spacing: -1px"],:is(#calcRoot,#cartRoot) [style*="letter-spacing: -1px"]{letter-spacing:-1.5px!important;font-weight:300!important}
 /* фон */
-#calcRoot[style*="background: var(--bg)"],#calcRoot [style*="background: var(--bg)"]{background:radial-gradient(120% 60% at 15% 0%,var(--bgA) 0%,transparent 60%),radial-gradient(90% 50% at 100% 40%,var(--glow) 0%,transparent 65%),linear-gradient(var(--bgB),var(--bgC))!important}
-#calcRoot.nt[style*="background: var(--bg)"]{background:radial-gradient(110% 50% at 10% 0%,color-mix(in srgb,var(--dk) 55%,#000) 0%,transparent 62%),radial-gradient(90% 45% at 100% 60%,color-mix(in srgb,var(--ac) 20%,#000) 0%,transparent 65%),linear-gradient(color-mix(in srgb,var(--dk) 22%,#000),color-mix(in srgb,var(--dk) 11%,#000))!important}
-#calcRoot.nt [style*="background: var(--bg)"]{background:var(--sel)!important}
+:is(#calcRoot,#cartRoot)[style*="background: var(--bg)"],:is(#calcRoot,#cartRoot) [style*="background: var(--bg)"]{background:radial-gradient(120% 60% at 15% 0%,var(--bgA) 0%,transparent 60%),radial-gradient(90% 50% at 100% 40%,var(--glow) 0%,transparent 65%),linear-gradient(var(--bgB),var(--bgC))!important}
+:is(#calcRoot,#cartRoot).nt[style*="background: var(--bg)"]{background:radial-gradient(110% 50% at 10% 0%,color-mix(in srgb,var(--dk) 55%,#000) 0%,transparent 62%),radial-gradient(90% 45% at 100% 60%,color-mix(in srgb,var(--ac) 20%,#000) 0%,transparent 65%),linear-gradient(color-mix(in srgb,var(--dk) 22%,#000),color-mix(in srgb,var(--dk) 11%,#000))!important}
+:is(#calcRoot,#cartRoot).nt [style*="background: var(--bg)"]{background:var(--sel)!important}
 /* стеклянные карточки */
-#calcRoot[style*="background: var(--card)"]:not(button):not(a),#calcRoot [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.9),rgba(255,255,255,.62))!important;backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);border:1px solid rgba(255,255,255,.9)!important;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 8px 22px color-mix(in srgb,var(--dk) 14%,transparent)!important}
-#calcRoot.nt [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.11),rgba(255,255,255,.05))!important;border:1px solid rgba(255,255,255,.13)!important;box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 10px 24px rgba(0,0,0,.45)!important}
+:is(#calcRoot,#cartRoot)[style*="background: var(--card)"]:not(button):not(a),:is(#calcRoot,#cartRoot) [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.9),rgba(255,255,255,.62))!important;backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);border:1px solid rgba(255,255,255,.9)!important;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 8px 22px color-mix(in srgb,var(--dk) 14%,transparent)!important}
+:is(#calcRoot,#cartRoot).nt [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.11),rgba(255,255,255,.05))!important;border:1px solid rgba(255,255,255,.13)!important;box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 10px 24px rgba(0,0,0,.45)!important}
 /* кнопки-клавиши */
-#calcRoot button[style*="background: var(--card)"],#calcRoot a[style*="background: var(--card)"]{background:linear-gradient(#fff,color-mix(in srgb,var(--dk) 9%,#fff))!important;border:1px solid color-mix(in srgb,var(--dk) 20%,#fff)!important;box-shadow:0 1px 0 #fff inset,0 -2px 3px color-mix(in srgb,var(--dk) 10%,transparent) inset,0 3px 8px color-mix(in srgb,var(--dk) 16%,transparent)!important}
-#calcRoot.nt button[style*="background: var(--card)"],#calcRoot.nt a[style*="background: var(--card)"]{background:linear-gradient(rgba(255,255,255,.18),rgba(255,255,255,.07))!important;border:1px solid rgba(255,255,255,.2)!important;box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 -2px 3px rgba(0,0,0,.3) inset,0 3px 8px rgba(0,0,0,.4)!important}
+:is(#calcRoot,#cartRoot) button[style*="background: var(--card)"],:is(#calcRoot,#cartRoot) a[style*="background: var(--card)"]{background:linear-gradient(#fff,color-mix(in srgb,var(--dk) 9%,#fff))!important;border:1px solid color-mix(in srgb,var(--dk) 20%,#fff)!important;box-shadow:0 1px 0 #fff inset,0 -2px 3px color-mix(in srgb,var(--dk) 10%,transparent) inset,0 3px 8px color-mix(in srgb,var(--dk) 16%,transparent)!important}
+:is(#calcRoot,#cartRoot).nt button[style*="background: var(--card)"],:is(#calcRoot,#cartRoot).nt a[style*="background: var(--card)"]{background:linear-gradient(rgba(255,255,255,.18),rgba(255,255,255,.07))!important;border:1px solid rgba(255,255,255,.2)!important;box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 -2px 3px rgba(0,0,0,.3) inset,0 3px 8px rgba(0,0,0,.4)!important}
 /* шапка и тёмные капсулы */
-#calcRoot header{background:linear-gradient(color-mix(in srgb,var(--dk) 82%,#fff) 0%,var(--dk) 55%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 4px 14px color-mix(in srgb,var(--dk) 45%,transparent)!important}
-#calcRoot header h1{font-weight:500!important;letter-spacing:.2px}
-#calcRoot[style*="background: var(--dk)"],#calcRoot [style*="background: var(--dk)"]{background:linear-gradient(color-mix(in srgb,var(--dk) 84%,#fff) 0%,var(--dk) 50%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.28) inset,0 -3px 5px rgba(0,0,0,.25) inset,0 8px 18px color-mix(in srgb,var(--dk) 45%,transparent)!important}
+:is(#calcRoot,#cartRoot) header{background:linear-gradient(color-mix(in srgb,var(--dk) 82%,#fff) 0%,var(--dk) 55%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 4px 14px color-mix(in srgb,var(--dk) 45%,transparent)!important}
+:is(#calcRoot,#cartRoot) header h1{font-weight:500!important;letter-spacing:.2px}
+:is(#calcRoot,#cartRoot)[style*="background: var(--dk)"],:is(#calcRoot,#cartRoot) [style*="background: var(--dk)"]{background:linear-gradient(color-mix(in srgb,var(--dk) 84%,#fff) 0%,var(--dk) 50%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.28) inset,0 -3px 5px rgba(0,0,0,.25) inset,0 8px 18px color-mix(in srgb,var(--dk) 45%,transparent)!important}
 /* акцентные кнопки: глянцевая капля */
-#calcRoot[style*="background: var(--ac)"],#calcRoot [style*="background: var(--ac)"]{background:linear-gradient(color-mix(in srgb,var(--ac) 65%,#fff) 0%,var(--ac) 48%,color-mix(in srgb,var(--ac) 88%,#000) 52%,color-mix(in srgb,var(--ac) 95%,#fff) 100%)!important;border:1px solid color-mix(in srgb,var(--ac) 65%,#000)!important;box-shadow:0 1px 0 rgba(255,255,255,.65) inset,0 -3px 4px color-mix(in srgb,var(--ac) 55%,#000) inset,0 5px 12px color-mix(in srgb,var(--ac) 45%,transparent)!important;text-shadow:0 -1px 0 rgba(0,0,0,.25)}
+:is(#calcRoot,#cartRoot)[style*="background: var(--ac)"],:is(#calcRoot,#cartRoot) [style*="background: var(--ac)"]{background:linear-gradient(color-mix(in srgb,var(--ac) 65%,#fff) 0%,var(--ac) 48%,color-mix(in srgb,var(--ac) 88%,#000) 52%,color-mix(in srgb,var(--ac) 95%,#fff) 100%)!important;border:1px solid color-mix(in srgb,var(--ac) 65%,#000)!important;box-shadow:0 1px 0 rgba(255,255,255,.65) inset,0 -3px 4px color-mix(in srgb,var(--ac) 55%,#000) inset,0 5px 12px color-mix(in srgb,var(--ac) 45%,transparent)!important;text-shadow:0 -1px 0 rgba(0,0,0,.25)}
 /* чекбоксы */
-#calcRoot[style*="solid var(--chk)"],#calcRoot [style*="solid var(--chk)"]{background:#fff!important;box-shadow:0 1px 2px rgba(60,40,20,.18) inset!important}
-#calcRoot.nt [style*="solid var(--chk)"]{background:rgba(255,255,255,.1)!important}
-#calcRoot.nt header{background:linear-gradient(rgba(255,255,255,.1),rgba(255,255,255,.03)),color-mix(in srgb,var(--dk) 40%,#0a0706)!important}
-#calcRoot.nt [style*="color: var(--dk)"]{color:var(--ink)!important}
-#calcRoot.nt [style*="stroke=\"var(--dk)"]{color:var(--ink)}
-#calcRoot.nt input,#calcRoot.nt textarea{color:#F2E7DB!important;color-scheme:dark}
-#calcRoot.nt [style*="color: #1E6B24"],#calcRoot.nt [style*="color: rgb(30, 107, 36)"]{color:#7FD58A!important}
-#calcRoot.nt [style*="color: #8A4B00"],#calcRoot.nt [style*="color: rgb(138, 75, 0)"]{color:#FFB27A!important}
-#calcRoot button:active{transform:translateY(1px) scale(.99)}
-#calcRoot button{transition:transform .08s,box-shadow .15s}
-#calcRoot input::placeholder{color:var(--m3);opacity:.55}
-#calcRoot [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.97),rgba(255,255,255,.93))!important}
-#calcRoot.nt [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:color-mix(in srgb,var(--dk) 30%,#0b0807)!important}
-#calcRoot{overflow-x:hidden;max-width:100vw}
-#calcRoot button{min-width:0;padding-left:2px;padding-right:2px}
-#calcRoot [style*="flex: 1 1 0; height: 46px"]{font-size:13.5px!important;padding:0 1px!important;white-space:nowrap;overflow:hidden}
-#calcRoot input:focus{outline:none}
+:is(#calcRoot,#cartRoot)[style*="solid var(--chk)"],:is(#calcRoot,#cartRoot) [style*="solid var(--chk)"]{background:#fff!important;box-shadow:0 1px 2px rgba(60,40,20,.18) inset!important}
+:is(#calcRoot,#cartRoot).nt [style*="solid var(--chk)"]{background:rgba(255,255,255,.1)!important}
+:is(#calcRoot,#cartRoot).nt header{background:linear-gradient(rgba(255,255,255,.1),rgba(255,255,255,.03)),color-mix(in srgb,var(--dk) 40%,#0a0706)!important}
+:is(#calcRoot,#cartRoot).nt [style*="color: var(--dk)"]{color:var(--ink)!important}
+:is(#calcRoot,#cartRoot).nt [style*="stroke=\"var(--dk)"]{color:var(--ink)}
+:is(#calcRoot,#cartRoot).nt input,:is(#calcRoot,#cartRoot).nt textarea{color:#F2E7DB!important;color-scheme:dark}
+:is(#calcRoot,#cartRoot).nt [style*="color: #1E6B24"],:is(#calcRoot,#cartRoot).nt [style*="color: rgb(30, 107, 36)"]{color:#7FD58A!important}
+:is(#calcRoot,#cartRoot).nt [style*="color: #8A4B00"],:is(#calcRoot,#cartRoot).nt [style*="color: rgb(138, 75, 0)"]{color:#FFB27A!important}
+:is(#calcRoot,#cartRoot) button:active{transform:translateY(1px) scale(.99)}
+:is(#calcRoot,#cartRoot) button{transition:transform .08s,box-shadow .15s}
+:is(#calcRoot,#cartRoot) input::placeholder{color:var(--m3);opacity:.55}
+:is(#calcRoot,#cartRoot) [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.97),rgba(255,255,255,.93))!important}
+:is(#calcRoot,#cartRoot).nt [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:color-mix(in srgb,var(--dk) 30%,#0b0807)!important}
+:is(#calcRoot,#cartRoot){overflow-x:hidden;max-width:100vw}
+:is(#calcRoot,#cartRoot) button{min-width:0;padding-left:2px;padding-right:2px}
+:is(#calcRoot,#cartRoot) [style*="flex: 1 1 0; height: 46px"]{font-size:13.5px!important;padding:0 1px!important;white-space:nowrap;overflow:hidden}
+:is(#calcRoot,#cartRoot) input:focus{outline:none}
 html,body{overflow-x:hidden}
+:is(#calcRoot,#cartRoot) div,:is(#calcRoot,#cartRoot) span{min-width:0}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v11</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v12</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -360,14 +361,123 @@ html,body{overflow-x:hidden}
 </sc-if>
 </template>
 
-<main id="cart" hidden>
-  <div class="card" id="cartList"></div>
-  <button class="btn sec" id="clear">Очистить корзину</button>
+<div id="cartRoot" hidden></div>
+<template id="tplCart">
+<header style="background: var(--dk); color: #FFFFFF; padding: 16px 12px 14px 8px; display: flex; align-items: center; gap: 6px">
+<button onClick="{{closeCart}}" aria-label="Назад к расчёту" style="width: 48px; height: 48px; border: 0; border-radius: 24px; background: transparent; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+</button>
+<h1 style="margin: 0; font-size: 21px; font-weight: 700; flex-grow: 1">Корзина</h1>
+<button onClick="{{clearCart}}" style="height: 40px; border: 1px solid rgba(255,255,255,0.5); border-radius: 20px; background: transparent; color: #FFFFFF; font-size: 14px; padding: 0 14px">Очистить</button>
+</header>
+<main style="padding: 14px 12px calc(480px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 10px">
+<sc-if value="{{undoOn}}" hint-placeholder-val="{{false}}"><div style="display: flex; align-items: center; gap: 10px; background: var(--dk); color: #FFFFFF; border-radius: 14px; padding: 6px 8px 6px 14px"><span style="flex-grow: 1; font-size: 14px">{{undoText}}</span><button onClick="{{undo}}" style="height: 40px; border: 0; border-radius: 10px; background: var(--ac); color: #FFFFFF; font-size: 14px; font-weight: 700; padding: 0 16px">Отменить</button></div></sc-if>
+<div style="background: var(--card); border-radius: 16px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); overflow: hidden">
+<div style="display: grid; grid-template-columns: 24px minmax(0, 1fr) 88px 34px 84px; gap: 6px; padding: 10px 10px; background: var(--hd); font-size: 12px; font-weight: 700; color: var(--m1)">
+<span>№</span><span>Изделие</span><span>Размер, мм</span><span>Шт</span><span style="text-align: right">Сумма</span>
+</div>
+<sc-for list="{{cart}}" as="it" hint-placeholder-count="2">
+<div style="border-top: 1px solid #EADFD1; padding: 10px 10px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: grid; grid-template-columns: 24px minmax(0, 1fr) 88px 34px 84px; gap: 6px; align-items: start; font-size: 14px">
+<span style="font-weight: 700">{{it.n}}</span>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">{{it.title}}</span><span style="font-size: 12px; color: var(--m1)">{{it.sub}}</span></div>
+<span>{{it.size}}</span>
+<span style="text-align: center">{{it.qty}}</span>
+<span style="text-align: right; font-weight: 800; color: #1E6B24">{{it.sum}}</span>
+</div>
+<sc-if value="{{it.profShow}}" hint-placeholder-val="{{true}}"><div style="{{it.profStyle}}">{{it.profLine}}</div></sc-if>
+<sc-if value="{{it.isDrive}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--m1)"><span>Вывод провода: <span style="{{it.wireNoteStyle}}">{{it.wireNote}}</span></span><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12)"><button onClick="{{it.wireL}}" style="{{it.wireLStyle}}">Слева</button><button onClick="{{it.wireR}}" style="{{it.wireRStyle}}">Справа</button></div></div></sc-if>
+<div style="display: flex; justify-content: flex-end; gap: 8px">
+<span style="{{it.warnStyle}}">{{it.warn}}</span>
+<button onClick="{{it.edit}}" style="height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 13px; font-weight: 600; padding: 0 12px; white-space: nowrap; flex-shrink: 0">Изменить</button>
+<sc-if value="{{it.dupShow}}" hint-placeholder-val="{{false}}"><button onClick="{{it.dup}}" style="height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 13px; font-weight: 600; padding: 0 12px; white-space: nowrap; flex-shrink: 0">Такое же</button></sc-if>
+<button onClick="{{it.remove}}" aria-label="Удалить позицию" style="height: 36px; width: 40px; border-radius: 10px; border: 1.5px solid #E7B7B7; background: var(--card); color: #B3261E; display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"></path></svg>
+</button>
+</div>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{cartEmpty}}" hint-placeholder-val="{{false}}">
+<div style="text-align: center; color: var(--m1); font-size: 15px; padding: 30px 0">Корзина пуста</div>
+</sc-if>
+<sc-if value="{{hasAutoErrors}}" hint-placeholder-val="{{false}}">
+<div style="background: #FDECEA; border: 1.5px solid #E7B7B7; border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 13px; font-weight: 800; color: #B3261E">АВТОМАТИКА: ПРОВЕРЬ ПУЛЬТЫ</div>
+<sc-for list="{{autoErrors}}" as="e" hint-placeholder-count="1"><div style="font-size: 13px; color: #8A1C14; line-height: 1.35">{{e.t}}</div></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{cfOpen}}" hint-placeholder-val="{{false}}">
+<div style="background: var(--card); border-radius: 16px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 700">Своя строка</div>
+<input type="text" placeholder="Название (например, демонтаж старых жалюзи)" value="{{cfTitle}}" onInput="{{cfSetTitle}}" style="height: 48px; border: 1.5px solid var(--line); border-radius: 12px; padding: 0 12px; font-size: 15px; box-sizing: border-box; width: 100%">
+<div style="display: grid; grid-template-columns: 70px 1fr 1fr; gap: 8px">
+<label style="font-size: 12px; color: var(--m1); display: flex; flex-direction: column; gap: 2px">Кол-во<input type="number" inputmode="numeric" value="{{cfQty}}" onChange="{{cfSetQty}}" style="height: 48px; border: 1.5px solid var(--line); border-radius: 12px; padding: 0 8px; font-size: 16px; font-weight: 700; box-sizing: border-box; width: 100%"></label>
+<label style="font-size: 12px; color: var(--m1); display: flex; flex-direction: column; gap: 2px">Цена за шт, ₽<input type="number" inputmode="numeric" placeholder="0" value="{{cfPrice}}" onChange="{{cfSetPrice}}" style="height: 48px; border: 1.5px solid var(--line); border-radius: 12px; padding: 0 8px; font-size: 16px; font-weight: 700; box-sizing: border-box; width: 100%"></label>
+<label style="font-size: 12px; color: var(--m1); display: flex; flex-direction: column; gap: 2px">Закуп, ₽ (не обяз.)<input type="number" inputmode="numeric" placeholder="нет" value="{{cfCost}}" onChange="{{cfSetCost}}" style="height: 48px; border: 1.5px solid var(--line); border-radius: 12px; padding: 0 8px; font-size: 16px; font-weight: 700; box-sizing: border-box; width: 100%"></label>
+</div>
+<div style="display: flex; gap: 8px"><button onClick="{{cfCancel}}" style="flex: 1 1 0; height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Отмена</button><button onClick="{{cfSave}}" style="{{cfSaveStyle}}">{{cfSaveLabel}}</button></div>
+</div>
+</sc-if>
+<sc-if value="{{hasUpsell}}" hint-placeholder-val="{{false}}">
+<div style="background: var(--card); border-radius: 16px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 700">Предложить клиенту</div>
+<sc-for list="{{upsell}}" as="u" hint-placeholder-count="2">
+<button onClick="{{u.act}}" style="min-height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--sel); color: var(--ink); font-size: 14px; font-weight: 600; padding: 6px 12px; text-align: left; display: flex; align-items: center; gap: 8px"><span style="flex-grow: 1">{{u.text}}</span><span style="font-size: 13px; color: var(--ac); font-weight: 700; white-space: nowrap">{{u.cta}}</span></button>
+</sc-for>
+</div>
+</sc-if>
+<button onClick="{{addCustom}}" style="height: 48px; border-radius: 14px; border: 1.5px dashed #4A2C18; background: transparent; color: var(--dk); font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+Своя строка (любая услуга или товар)</button>
 </main>
+<div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 6px">
+<div style="background: var(--card); border-radius: 18px; box-shadow: 0 4px 14px rgba(40,20,10,0.18); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-size: 13px; color: var(--m1)">
+<span>Общая площадь</span><span style="text-align: right; color: var(--ink); font-weight: 600">{{cartArea}}</span>
+<span>Общий вес</span><span style="text-align: right; color: var(--ink); font-weight: 600">{{cartWeight}}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<label for="dlv" style="flex-grow: 1; font-size: 15px; font-weight: 600">Доставка + установка</label>
+<input id="dlv" type="number" inputmode="numeric" placeholder="нет" value="{{service}}" onChange="{{setService}}" style="width: 120px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; font-size: 18px; font-weight: 700; text-align: right; padding: 0 12px; box-sizing: border-box; color: var(--ink); background: var(--card)">
+<span style="font-size: 15px; color: var(--m1)">₽</span>
+</div>
+<sc-if value="{{hasSugg}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: center; gap: 8px"><div style="flex-grow: 1; font-size: 12px; color: var(--m1); line-height: 1.35">{{suggText}}</div><button onClick="{{applySugg}}" style="{{suggStyle}}">Подставить</button></div>
+</sc-if>
+<div style="display: flex; align-items: center; gap: 10px">
+<label for="disc" style="flex-grow: 1; font-size: 15px; font-weight: 600">Скидка на заказ</label>
+<input id="disc" type="number" inputmode="decimal" placeholder="0" value="{{disc}}" onChange="{{setDisc}}" style="width: 120px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; font-size: 18px; font-weight: 700; text-align: right; padding: 0 12px; box-sizing: border-box; color: var(--ink); background: var(--card)">
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12)"><button onClick="{{discPct}}" style="{{discPctStyle}}">Процент</button><button onClick="{{discRub}}" style="{{discRubStyle}}">Рубли</button></div>
+<sc-if value="{{hasDisc}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; color: var(--m1)">{{discLine}}</div></sc-if>
+<sc-if value="{{hasBelow}}" hint-placeholder-val="{{false}}"><div style="background: #FDECEA; border-radius: 12px; padding: 8px 12px; font-size: 13px; font-weight: 700; color: #B3261E">{{belowText}}</div></sc-if>
+<button onClick="{{toggleDog}}" role="checkbox" aria-checked="{{needDog}}" style="{{dogRowStyle}}"><span style="{{dogBoxStyle}}">{{dogMark}}</span><span style="flex-grow: 1; text-align: left">Нужен договор</span></button>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{closeCart}}" style="height: 44px; border-radius: 14px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 14px; font-weight: 600">Ещё изделие</button>
+<button onClick="{{openKp}}" style="height: 44px; border-radius: 14px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none">КП</button>
+</div>
+</div>
+<div style="height: 56px; border-radius: 28px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; padding: 0 8px 0 22px; gap: 10px; box-shadow: 0 8px 20px rgba(40,20,10,0.35)">
+<div style="flex-grow: 1">
+<div style="font-size: 22px; font-weight: 800; line-height: 1.1">{{cartTotal}}</div>
+<div style="font-size: 12px; opacity: 0.75">{{cartPieces}} шт<sc-if value="{{showProfit}}" hint-placeholder-val="{{true}}"><span> · прибыль {{cartProfit}}</span></sc-if></div>
+</div>
+<button onClick="{{openOrder}}" style="height: 48px; border-radius: 24px; background: var(--ac); color: #FFFFFF; font-size: 16px; font-weight: 800; padding: 0 20px; display: flex; align-items: center; text-decoration: none">Замерник</button>
+</div>
+<div style="height: 52px; border-radius: 26px; background: var(--card); box-shadow: 0 4px 14px rgba(40,20,10,0.2); display: flex; align-items: center; gap: 4px; padding: 0 6px; font-size: 13px; font-weight: 700">
+<button onClick="{{closeCart}}" aria-label="Расчёт" style="flex: 1 1 0; height: 48px; border: 0; background: transparent; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg></button>
+<div style="flex: 1.7 1 0; height: 48px; border-radius: 24px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L22 7H6"></path></svg><span>Корзина</span><b style="min-width: 18px; height: 18px; border-radius: 9px; background: var(--ac); color: #FFFFFF; font-size: 11px; line-height: 18px; text-align: center">{{cartCount}}</b></div>
+<button onClick="{{openOrders}}" aria-label="Заказы" style="border: 0; background: transparent; flex: 1 1 0; height: 48px; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"></path><circle cx="3.5" cy="6" r="1"></circle><circle cx="3.5" cy="12" r="1"></circle><circle cx="3.5" cy="18" r="1"></circle></svg></button>
+<button onClick="{{openSettings}}" aria-label="Настройки" style="border: 0; background: transparent; flex: 1 1 0; height: 48px; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg></button>
+</div>
+</div>
+</template>
+
 
 <main id="settings" hidden>
   <div class="card flat"><button class="rowc" id="setProfit" aria-pressed="false"><span class="cb">✓</span><span>Показывать закуп и прибыль</span></button></div>
-  <p class="sub" style="padding:0 6px">Версия приложения: <span id="verTxt">v11</span>. Цены ниже можно загрузить заново, если ты их менял в таблице.</p>
+  <p class="sub" style="padding:0 6px">Версия приложения: <span id="verTxt">v12</span>. Цены ниже можно загрузить заново, если ты их менял в таблице.</p>
 </main>
 
 <main id="orders" hidden>
@@ -404,7 +514,6 @@ html,body{overflow-x:hidden}
 </main>
 
 <div id="bottom">
-  <div class="cap" id="capCart"><div><div class="sub">Итого</div><div class="price" id="total">0 ₽</div><div class="sub" id="totalProfit" hidden></div></div><button class="btn go" id="mkOrder">Оформить заказ</button></div>
   <div class="navc">
     <button id="tCalc" aria-label="Расчёт" aria-current="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span class="lb">Расчёт</span></button>
     <button id="tCart" aria-label="Корзина"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L22 7H6"></path></svg><span class="lb">Корзина</span><b class="badge" id="badge">0</b></button>
@@ -414,13 +523,14 @@ html,body{overflow-x:hidden}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/calc.js?v=11"></script>
-<script src="src/orders.js?v=11"></script>
-<script src="src/docs.js?v=11"></script>
-<script src="src/data.js?v=11"></script>
-<script src="src/limits.js?v=11"></script>
-<script src="src/tpl.js?v=11"></script>
-<script src="src/calcscreen.js?v=11"></script>
-<script src="src/app.js?v=11"></script>
+<script src="src/calc.js?v=12"></script>
+<script src="src/orders.js?v=12"></script>
+<script src="src/docs.js?v=12"></script>
+<script src="src/data.js?v=12"></script>
+<script src="src/limits.js?v=12"></script>
+<script src="src/tpl.js?v=12"></script>
+<script src="src/calcscreen.js?v=12"></script>
+<script src="src/cartscreen.js?v=12"></script>
+<script src="src/app.js?v=12"></script>
 </body>
 </html>

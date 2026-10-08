@@ -8,25 +8,26 @@
   const dateRu = d => d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear() + ' г.';
 
   function itemName(it) {
+    if (it.kind || it.title) return it.title;
     const parts = [it.mat + ' ' + it.lam + ' мм', COLL[it.sup] || it.sup];
     if (it.o.color) parts.push(it.o.color);
     return parts.join(', ');
   }
-  function extras(it) { return [it.o.fix].concat(it.o.opts || []).filter(Boolean).join(', '); }
+  function extras(it) { if (it.kind || it.title) return ''; return [it.o.fix].concat(it.o.opts || []).filter(Boolean).join(', '); }
 
   function kpHtml(order) {
     const created = new Date(order.created), until = new Date(created.getTime() + 14 * 86400000);
     const total = orderTotal(order);
     const rows = itemsWithDelivery(order).map((x, i) => { const it = x.it;
       return '<tr><td>' + (i + 1) + '</td><td>' + esc(itemName(it)) + (extras(it) ? '<div class="s">' + esc(extras(it)) + '</div>' : '') +
-      '</td><td>' + it.W + '×' + it.H + ' см</td><td class="r">' + rub(x.price) + '</td></tr>'; }).join('');
+      '</td><td>' + (it.W ? it.W + '×' + it.H + ' см' : '—') + '</td><td class="r">' + rub(x.price) + '</td></tr>'; }).join('');
     const pre = order.preU === '₽' ? +order.pre : Math.round(total * (+order.pre || 100) / 100);
     return '<div class="doc"><img class="logo" src="assets/logo.png" alt="Жалюзи-СПБ">' +
       '<h2>Коммерческое предложение № ' + esc(order.no) + '</h2>' +
       '<div class="s">от ' + dateRu(created) + ' · действительно до ' + dateRu(until) + '</div>' +
       '<p><b>' + esc(order.name || 'Клиент') + '</b>' + (order.addr ? '<br>' + esc(order.addr) : '') + '</p>' +
       '<table><tr><th>№</th><th>Изделие</th><th>Размер</th><th class="r">Цена</th></tr>' + rows +
-      '<tr><td colspan="3" class="r"><b>Итого</b></td><td class="r"><b>' + rub(total) + '</b></td></tr></table>' +
+      (+order.disc ? '<tr><td colspan="3" class="r">Скидка</td><td class="r">−' + rub(+order.disc) + '</td></tr>' : '') + '<tr><td colspan="3" class="r"><b>Итого</b></td><td class="r"><b>' + rub(total) + '</b></td></tr></table>' +
       '<p class="s">Предоплата ' + rub(pre) + ' (' + esc(order.pre || 100) + (order.preU || '%') + '). Срок изготовления ' + esc(order.term || 12) + ' календарных дней.</p>' +
       '</div>';
   }
@@ -60,7 +61,7 @@
 
   /* доставка+установка включена в цены позиций пропорционально */
   function itemsWithDelivery(order) {
-    const d = +order.delivery || 0, items = order.items.map(i => ({ it: i, price: i.price }));
+    const d = order.priced ? 0 : (+order.delivery || 0), items = order.items.map(i => ({ it: i, price: i.price }));
     const sum = items.reduce((a, b) => a + b.price, 0);
     if (d > 0 && sum > 0) {
       let left = d;
@@ -69,7 +70,7 @@
     }
     return items;
   }
-  const orderTotal = order => itemsWithDelivery(order).reduce((a, b) => a + b.price, 0);
+  const orderTotal = order => itemsWithDelivery(order).reduce((a, b) => a + b.price, 0) - (+order.disc || 0);
 
   function short(fio) {
     const p = String(fio || '').trim().split(/\s+/);
@@ -79,7 +80,7 @@
   function zamernikHtml(order) {
     const rows = order.items.map((it, i) =>
       '<tr><td>' + (i + 1) + '</td><td>' + esc(itemName(it)) + (extras(it) ? '<div class="s">' + esc(extras(it)) + '</div>' : '') +
-      '</td><td>' + it.W + '×' + it.H + ' см</td></tr>').join('');
+      '</td><td>' + (it.W ? it.W + '×' + it.H + ' см' : '—') + '</td></tr>').join('');
     const dt = v => v ? esc(String(v).replace('T', ' ')) : '—';
     return '<div class="doc"><img class="logo" src="assets/logo.png" alt="Жалюзи-СПБ">' +
       '<h2>Замерный лист (бланк заказа) № ' + esc(order.no) + '</h2>' +
@@ -101,7 +102,7 @@
     const buyerShort = short(order.name);
     let n = 0; const P = t => '<p>' + t + '</p>';
     const rows = itemsWithDelivery(order).map((x, i) => {
-      const it = x.it, nm = 'Горизонтальные жалюзи (' + [it.mat.toLowerCase() + ' ' + it.lam + ' мм', it.o.color ? '«' + it.o.color + '»' : '', (it.W * 10) + '×' + (it.H * 10) + ' мм', extras(it)].filter(Boolean).join(', ') + ')';
+      const it = x.it, nm = (it.kind || it.title) ? it.title : 'Горизонтальные жалюзи (' + [it.mat.toLowerCase() + ' ' + it.lam + ' мм', it.o.color ? '«' + it.o.color + '»' : '', (it.W * 10) + '×' + (it.H * 10) + ' мм', extras(it)].filter(Boolean).join(', ') + ')';
       return '<tr><td>' + (i + 1) + '</td><td>' + esc(nm) + '</td><td>1</td><td>шт.</td><td class="r">' + rub(x.price) + '</td><td class="r">' + rub(x.price) + '</td></tr>';
     }).join('');
     const pay = pct === 100
@@ -124,7 +125,7 @@
       (dlv ? P('1.3. Адрес доставки и установки Товара: ' + esc(order.addr || '—') + '.') : '') +
       P('1.' + (dlv ? 4 : 3) + '. Количество, размеры, конфигурация, цвет и стоимость Товара указаны в замерном листе.') +
       '<table><tr><th>№</th><th>Наименование</th><th>Кол-во</th><th>Ед.</th><th class="r">Цена</th><th class="r">Сумма</th></tr>' + rows +
-      '<tr><td colspan="5" class="r"><b>Итого:</b></td><td class="r"><b>' + rub(total) + '</b></td></tr></table>' +
+      (+order.disc ? '<tr><td colspan="5" class="r">Скидка:</td><td class="r">−' + rub(+order.disc) + '</td></tr>' : '') + '<tr><td colspan="5" class="r"><b>Итого:</b></td><td class="r"><b>' + rub(total) + '</b></td></tr></table>' +
       hd('2. ЦЕНА И ПОРЯДОК ОПЛАТЫ') +
       P('2.1. Общая цена Договора составляет: ' + money(total) + ' (' + rublesWords(total) + '). НДС не облагается (УСН/НПД).') +
       P('2.2. ' + pay) +
