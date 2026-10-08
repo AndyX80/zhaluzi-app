@@ -47,7 +47,7 @@
     const sc = SCREENS[name];
     $('load').hidden = !!st.P || !(sc && sc.needP);
     document.body.setAttribute('data-tab', name);
-    if (sc) document.body.setAttribute('data-own', '1'); else document.body.removeAttribute('data-own');
+    if (sc || name === 'doc') document.body.setAttribute('data-own', '1'); else document.body.removeAttribute('data-own');
     if (sc && (st.P || !sc.needP)) sc.render(name);
     window.scrollTo(0, 0);
   }
@@ -79,18 +79,8 @@
     st.curBack = back || st.curBack;
     const sig = { sign: lsGet('jal_sign'), stamp: lsGet('jal_stamp') };
     if (JalDocScreens.show(fn, o, sig)) $('docBody').innerHTML = ''; else { JalDocScreens.hideAll(); $('docBody').innerHTML = JalDocs[fn](o, sig); }
-    $('sigBox').hidden = fn !== 'dogovorHtml';
     st.curDoc = [fn, o]; tab('doc');
   }
-  function pickImg(id, key) {
-    $(id).onchange = e => {
-      const f = e.target.files[0]; if (!f) return;
-      const rd = new FileReader();
-      rd.onload = () => { try { localStorage.setItem(key, rd.result); } catch (er) { alert('Картинка слишком большая'); } if (st.curDoc) showDoc(st.curDoc[0], st.curDoc[1]); };
-      rd.readAsDataURL(f);
-    };
-  }
-  pickImg('sigFile', 'jal_sign'); pickImg('stampFile', 'jal_stamp');
 
   async function fetchPrices(u) {
     const j = await (await fetch(u)).json();
@@ -113,7 +103,6 @@
   $('tOrd').onclick = () => tab('ord');
   $('tSet').onclick = () => tab('set');
   $('docBack').onclick = () => { const b = st.curBack; st.curBack = null; tab(b || 'ord'); };
-  $('docPrint').onclick = () => window.print();
   /* нижние плашки экранов закрывают конец списка: отступ внизу = реальная высота плашек (с учётом размера шрифта) */
   function fitBottom() {
     const m = document.querySelector('main:not([hidden])'); if (!m) return;

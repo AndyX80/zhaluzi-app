@@ -7,7 +7,7 @@
   const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const MON = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
   const form = (x, f) => { const a = x % 100, b = x % 10; return a > 10 && a < 20 ? f[2] : b === 1 ? f[0] : b > 1 && b < 5 ? f[1] : f[2]; };
-  const S = { kinds: [], cat: true, ch: 'wa', edited: null, vars: false, qrSum: '5 000' };
+  const S = { kinds: [], self: false, cat: true, ch: 'wa', edited: null, vars: false, qrSum: '5 000' };
   const KINDS = [['catalog', 'Каталог', []], ['kp', 'КП', ['КП № {no}.pdf']], ['blank', 'Замерник', ['Замерник № {no}.pdf']], ['dogovor', 'Договор', ['Договор № {no}.pdf']], ['remind', 'Напоминание о КП', []], ['review', 'Запрос отзыва', []], ['qr', 'QR на оплату', []]];
   const CAT = 'Каталог деревянных жалюзи.pdf';
   const CH = [
@@ -25,7 +25,11 @@
   }
 
   function render() {
-    const A = App(), o = A.st.sendNo ? JalOrders.get(A.st.sendNo) : null, D = data(o), s = S;
+    const A = App();
+    if (A.st.sendPreset) { const pr = A.st.sendPreset; A.st.sendPreset = null; S.lastNo = A.st.sendNo; Object.assign(S, { kinds: pr.kinds || [], self: !!pr.self, edited: null, vars: false, ch: pr.self ? 'mail' : S.ch }); }
+    if (S.lastNo !== A.st.sendNo) { S.self = false; S.lastNo = A.st.sendNo; }
+    const o = A.st.sendNo ? JalOrders.get(A.st.sendNo) : null, D = data(o), s = S;
+    if (S.self && D) D.email = lsGet('jal_mail') || '89817645545@mail.ru';
     const set = p => { Object.assign(S, p); render(); };
     const V = { 'имя': D.name, 'изделия': D.items, 'сумма': D.sum, 'срок': D.term, 'до': D.until, 'предоплата': D.pre, 'номер': D.no, 'qrсумма': s.qrSum || '5 000',
       'каталог': s.cat ? '\n\n' + JalDrive.text('kp_katalog') : '' };
@@ -38,14 +42,14 @@
     const fnOf = k => k === 'kp' ? (s.vars && o && o.vars && o.vars.length ? 'kpVarHtml' : 'kpHtml') : k === 'blank' ? 'zamernikHtml' : 'dogovorHtml';
     const qrs = [].concat(has('review') ? [['jal_qr_ya', 'QR отзыв Яндекс.png'], ['jal_qr_av', 'QR отзыв Авито.png']] : [], has('qr') ? [['jal_qr_pay', 'QR оплаты ' + (s.qrSum || '5 000') + ' ₽.png']] : [], has('blank') && qrBlank ? [['jal_qr_pay', 'QR оплаты предоплаты.png']] : []);
     const pdfs = o ? ['kp', 'blank', 'dogovor'].filter(has).map(k => fnOf(k)) : [];
-    const files = pdfs.map(fn => JalExport.baseName(fn, o) + '.pdf').concat(qrs.filter(q => lsGet(q[0])).map(q => q[1]));
-    const pkey = pdfs.join(',') + '|' + qrs.map(q => q[1]).join(',') + '|' + (o ? o.no + ':' + JSON.stringify(o).length : '');
+    const files = pdfs.reduce((a, fn) => a.concat([JalExport.baseName(fn, o) + '.pdf'], s.self ? [JalExport.baseName(fn, o) + '.docx'] : []), []).concat(qrs.filter(q => lsGet(q[0])).map(q => q[1]));
+    const pkey = (s.self ? 'self:' : '') + pdfs.join(',') + '|' + qrs.map(q => q[1]).join(',') + '|' + (o ? o.no + ':' + JSON.stringify(o).length : '');
     if (!files.length) S.prep = null;
     else if (!S.prep || S.prep.key !== pkey) {
       const P = S.prep = { key: pkey, state: 'busy', files: [] };
       (async () => {
         try {
-          for (const fn of pdfs) P.files.push(await JalExport.pdf(fn, o));
+          for (const fn of pdfs) { P.files.push(await JalExport.pdf(fn, o)); if (S.self) P.files.push(await JalExport.docx(fn, o)); }
           qrs.forEach(q => { const f = JalExport.dataFile(lsGet(q[0]), q[1]); if (f) P.files.push(f); });
           P.state = 'ready';
         } catch (e) { P.state = 'err'; P.err = e.message || String(e); }
@@ -83,7 +87,7 @@
       showCatSwitch: has('kp'), catOn: s.cat, toggleCat: () => set({ cat: !s.cat }), catRow: toggle(s.cat, 'var(--card)'), catBox: box(s.cat, 'var(--chk)'), catMark: s.cat ? '✓' : '',
       varOn: s.vars, toggleVar: () => { if (!s.vars && !(o && o.vars && o.vars.length)) alert('У этого заказа нет трёх вариантов. Собери их в корзине кнопкой «КП: три варианта», сохрани заказ и вернись сюда.'); else set({ vars: !s.vars }); },
       varRow: toggle(s.vars, 'var(--chip)'), varBox: box(s.vars, 'var(--ac)'), varMark: s.vars ? '✓' : '',
-      files: files.length ? files.map(n => ({ name: n, ext: /\.png$/.test(n) ? 'QR' : 'PDF', size: prep ? (prep.state === 'busy' ? 'готовлю…' : prep.state === 'err' ? 'ошибка' : 'готов') : '' })) : [{ name: 'Без вложений, только текст', size: '' }], hasKind: !none,
+      files: files.length ? files.map(n => ({ name: n, ext: /\.png$/.test(n) ? 'QR' : (/\.docx$/.test(n) ? 'DOC' : 'PDF'), size: prep ? (prep.state === 'busy' ? 'готовлю…' : prep.state === 'err' ? 'ошибка' : 'готов') : '' })) : [{ name: 'Без вложений, только текст', size: '' }], hasKind: !none,
       channels: CH.map(c => ({ name: c.name, ic: c.ic, pick: () => set({ ch: c.key }),
         style: 'min-height: 72px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 13px; color: var(--ink); border: 1.5px solid ' + (s.ch === c.key ? 'var(--ac)' : '#E3D5C3') + '; background: ' + (s.ch === c.key ? 'var(--sel)' : '#FFFFFF') + '; font-weight: ' + (s.ch === c.key ? 800 : 500),
         dot: 'width: 30px; height: 30px; border-radius: 15px; background: ' + c.c + '; color: #FFFFFF; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center' })),

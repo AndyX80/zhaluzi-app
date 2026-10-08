@@ -63,14 +63,14 @@
       utp: ['Полный цикл: замер → производство → монтаж', 'Собственная команда монтажников в СПб и Ленобласти', 'Гарантия на изделия — 1 год', 'Работаем с деревом, тканью и фурнитурой премиум-класса'] };
   }
 
-  function vmKpVar(order, sig) {
+  function vmKpVar(order, sig, lower) {
     const base = vmKp(Object.assign({}, order, { items: [] }), sig), vs = order.vars || [], acc = [];
     order.items.forEach(it => { const key = JSON.stringify([it.kind, it.title, it.sup, it.mat, it.lam, it.W, it.H, it.ctrl, it.o && it.o.color, it.o && it.o.fix, it.o && it.o.opts, it.pv]);
       const f = acc.find(r => r.key === key); if (f) f.qty++; else acc.push({ key, it, pv: it.pv || vs.map(() => it.price), qty: 1 }); });
     const disc = +order.disc || 0, cell = v => 'text-align: center; font-weight: 700' + (v.best ? '; background: #FDEBDB; padding: 12px 0' : '');
     const all = acc.map((r, i) => ({ n: String(i + 1), name: r.it.title ? r.it.title : 'Горизонтальные жалюзи', spec: specKp(r.it), qty: String(r.qty), sums: vs.map((v, k) => ({ v: r.pv[k] == null ? 'нет' : rubS(r.qty * r.pv[k]), style: cell(v) })) }));
     if (disc > 0) all.push({ n: '', name: 'Скидка', spec: '', qty: '', sums: vs.map(v => ({ v: '−' + rubS(disc), style: cell(v) })) });
-    const FIRST = 14, CONT = 19, WITH_LOWER = 5, pages = [];
+    const FIRST = 14, CONT = 19, WITH_LOWER = lower == null ? 5 : lower, pages = [];
     if (all.length <= WITH_LOWER) pages.push({ first: true, rows: all, hasTotal: true, hasLower: true });
     else {
       pages.push({ first: true, rows: all.slice(0, FIRST) });
@@ -174,6 +174,33 @@
   }
 
   /* показ: имя функции из docs.js → шаблоны. Договор идёт вместе с приложением (замерный лист). */
+  /* КП на три варианта: нижний блок (условия, подпись, печать) остаётся на первом листе, только если там всё помещается; иначе уходит на следующий лист */
+  function pickLower(order, sig) {
+    const host = document.createElement('div'); host.setAttribute('style', 'position: fixed; left: -10000px; top: 0; width: 595px; zoom: ' + Math.min(1.6, (Math.min(window.innerWidth, 900) - 24) / 595));
+    document.body.appendChild(host);
+    const box = document.createElement('div'); host.appendChild(box); const mt = JalTpl.mount(box, document.getElementById('tpl_docKpVar'));
+    let pick = 0;
+    for (const w of [5, 4, 3, 2, 1]) {
+      mt.render(vmKpVar(order, sig, w)); let bad = false;
+      box.querySelectorAll('div[style*="height: 842px"]').forEach(d => { if (d.scrollHeight > d.clientHeight) bad = true; });
+      if (!bad) { pick = w; break; }
+    }
+    host.remove(); return pick;
+  }
+  const LOW = [5, 4, 3, 2, 1, 0];
+  const overflows = box => Array.from(box.querySelectorAll('div[style*="height: 842px"]')).some(d => d.scrollHeight > d.clientHeight);
+  const imgsReady = box => Promise.all(Array.from(box.querySelectorAll('img')).map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
+  /* после загрузки картинок (логотип, печать) проверяем по-настоящему и при переполнении переносим нижний блок на следующий лист */
+  async function settleReal(mt, box, order, sig, w) {
+    for (let guard = 0; guard < 6; guard++) {
+      await imgsReady(box); await new Promise(r => setTimeout(r, 30));
+      if (!box.offsetParent && !box.getClientRects().length) return;
+      if (!overflows(box)) return;
+      const nx = LOW.find(x => x < w); if (nx === undefined) return;
+      w = nx; mt.render(vmKpVar(order, sig, w));
+    }
+  }
+  const settleLower = (render, order, sig, after) => { const w = pickLower(order, sig); render(w); if (after) after(w); };
   const mounts = {};
   const SET = { kpHtml: [['docKpRoot', 'tpl_docKp', vmKp]], kpVarHtml: [['docKpVarRoot', 'tpl_docKpVar', vmKpVar]], zamernikHtml: [['docBlankRoot', 'tpl_docBlank', vmBlank]], dogovorHtml: [['docDogRoot', 'tpl_docDog', vmDog], ['docBlankRoot', 'tpl_docBlank', vmBlank]] };
   const ALL = ['docKpRoot', 'docKpVarRoot', 'docBlankRoot', 'docDogRoot'];
@@ -185,7 +212,7 @@
     set.forEach(s => {
       const box = document.getElementById(s[0]); box.hidden = false;
       if (!mounts[s[0]]) mounts[s[0]] = JalTpl.mount(box, document.getElementById(s[1]));
-      mounts[s[0]].render(s[2](order, sig));
+      if (s[2] === vmKpVar) settleLower(w => mounts[s[0]].render(vmKpVar(order, sig, w)), order, sig, w => setTimeout(() => settleReal(mounts[s[0]], box, order, sig, w), 60)); else mounts[s[0]].render(s[2](order, sig));
     });
     fit(); return true;
   }
@@ -193,11 +220,13 @@
   async function pagesOff(fn, order, sig) {
     const set = SET[fn]; if (!set) throw new Error('нет такого документа');
     const host = document.createElement('div'); host.setAttribute('style', 'position: fixed; left: -10000px; top: 0; width: 595px; background: #fff');
-    document.body.appendChild(host);
-    set.forEach(s => { const box = document.createElement('div'); host.appendChild(box); JalTpl.mount(box, document.getElementById(s[1])).render(s[2](order, sig)); });
+    document.body.appendChild(host); const fixes = [];
+    set.forEach(s => { const box = document.createElement('div'); host.appendChild(box); const mt = JalTpl.mount(box, document.getElementById(s[1]));
+      if (s[2] === vmKpVar) settleLower(w => mt.render(vmKpVar(order, sig, w)), order, sig, w => { fixes.push(() => settleReal(mt, box, order, sig, w)); }); else mt.render(s[2](order, sig)); });
     const imgs = Array.from(host.querySelectorAll('img'));
     await Promise.all(imgs.map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
     if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+    for (const f of fixes) await f();
     return { els: Array.from(host.querySelectorAll('div[style*="height: 842px"]')), done: () => host.remove() };
   }
   window.JalDocScreens = { C, pagesOff, vms: { kpHtml: vmKp, kpVarHtml: vmKpVar, zamernikHtml: vmBlank, dogovorHtml: vmDog }, show, hideAll: () => ALL.forEach(id => { const b = document.getElementById(id); if (b) b.hidden = true; }) };

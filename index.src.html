@@ -132,7 +132,7 @@ html,body{overflow-x:clip}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v35</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v36</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -164,16 +164,14 @@ html,body{overflow-x:clip}
 
 
 <main id="doc" hidden>
+<div class="noprint" id="docBar" style="position:sticky;top:0;z-index:6;display:flex;gap:8px;font-size:15px;padding:calc(8px + env(safe-area-inset-top,0px)) 0 8px;background:var(--bg)"><button class="btn sec" id="docBack" style="flex:1">Назад</button><button class="btn" id="docPdf" style="flex:1.2">PDF</button><button class="btn" id="docWord" style="flex:1">Word</button></div>
+<p class="sub noprint" id="docMsg" style="margin:0"></p>
 <!--TPL docKpRoot tpl_docKp docKp-->
 <!--TPL docKpVarRoot tpl_docKpVar docKpVar-->
 <!--TPL docBlankRoot tpl_docBlank docBlank-->
 <!--TPL docDogRoot tpl_docDog docDog-->
   <div id="docBody"></div>
-  <div class="card noprint" id="sigBox" style="margin-top:12px" hidden><p class="lbl">Подпись и печать (хранятся только на этом телефоне)</p>
-    <p class="sub">Подпись</p><input type="file" id="sigFile" accept="image/*"><p class="sub" style="margin-top:8px">Печать</p><input type="file" id="stampFile" accept="image/*"></div>
-  <div class="row noprint" style="margin-top:12px"><button class="btn" id="docPdf" style="flex:1">PDF файлом</button><button class="btn" id="docWord" style="flex:1">Word</button></div>
-  <div class="row noprint" style="margin-top:8px"><button class="btn sec" id="docPrint" style="flex:1">Печать</button><button class="btn sec" id="docBack" style="flex:1">Назад</button></div>
-  <p class="sub noprint" id="docMsg" style="margin-top:6px"></p>
+
 </main>
 
 <div id="bottom">
@@ -186,26 +184,26 @@ html,body{overflow-x:clip}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/look.js?v=35"></script>
-<script src="src/calc.js?v=35"></script>
-<script src="src/orders.js?v=35"></script>
-<script src="src/docs.js?v=35"></script>
-<script src="src/drive.js?v=35"></script>
-<script src="src/data.js?v=35"></script>
-<script src="src/limits.js?v=35"></script>
-<script src="src/tpl.js?v=35"></script>
-<script src="src/screen.js?v=35"></script>
-<script src="src/calcscreen.js?v=35"></script>
-<script src="src/cartscreen.js?v=35"></script>
-<script src="src/ordersscreen.js?v=35"></script>
-<script src="src/orderscreen.js?v=35"></script>
-<script src="src/comparescreen.js?v=35"></script>
-<script src="src/settingsscreen.js?v=35"></script>
-<script src="src/docscreens.js?v=35"></script>
-<script src="src/export.js?v=35"></script>
-<script src="src/sendscreen.js?v=35"></script>
-<script src="src/lock.js?v=35"></script>
-<script src="src/app.js?v=35"></script>
+<script src="src/look.js?v=36"></script>
+<script src="src/calc.js?v=36"></script>
+<script src="src/orders.js?v=36"></script>
+<script src="src/docs.js?v=36"></script>
+<script src="src/drive.js?v=36"></script>
+<script src="src/data.js?v=36"></script>
+<script src="src/limits.js?v=36"></script>
+<script src="src/tpl.js?v=36"></script>
+<script src="src/screen.js?v=36"></script>
+<script src="src/calcscreen.js?v=36"></script>
+<script src="src/cartscreen.js?v=36"></script>
+<script src="src/ordersscreen.js?v=36"></script>
+<script src="src/orderscreen.js?v=36"></script>
+<script src="src/comparescreen.js?v=36"></script>
+<script src="src/settingsscreen.js?v=36"></script>
+<script src="src/docscreens.js?v=36"></script>
+<script src="src/export.js?v=36"></script>
+<script src="src/sendscreen.js?v=36"></script>
+<script src="src/lock.js?v=36"></script>
+<script src="src/app.js?v=36"></script>
 <script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 </body>
 </html>

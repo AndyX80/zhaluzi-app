@@ -77,10 +77,10 @@
 
 <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px">
 <b style="font-size: 9.5px">Надеемся на взаимовыгодное сотрудничество!</b>
-<div style="display: flex; align-items: center; height: 74px; position: relative">
+<div style="display: flex; align-items: center; height: 96px; position: relative">
 <span style="font-size: 9px; width: 210px">С уважением, {{c.signer}}</span>
-<sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="подпись" style="height: 52px; width: auto; position: absolute; left: 150px; top: 36px"></sc-if>
-<sc-if value="{{hasStamp}}"><img src="{{stampSrc}}" alt="печать" style="height: 127px; width: 127px; position: absolute; left: 150px; top: 0px; transform: rotate(-9deg); mix-blend-mode: multiply; opacity: 0.93"></sc-if>
+<sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="подпись" style="height: 52px; width: auto; position: absolute; left: 150px; top: 30px"></sc-if>
+<sc-if value="{{hasStamp}}"><img src="{{stampSrc}}" alt="печать" style="height: 127px; width: 127px; position: absolute; left: 150px; top: -12px; transform: rotate(-9deg); mix-blend-mode: multiply; opacity: 0.93"></sc-if>
 </div>
 </div>
 <div style="font-size: 6.3px; color: #6E6E6E; line-height: 1.4; margin-top: auto">{{c.req}}</div>

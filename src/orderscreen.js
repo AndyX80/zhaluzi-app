@@ -33,7 +33,7 @@
   function fresh(key) {
     return { key, to: 'client', ctype: 'fiz', pmode: 'pct', copy: true, inst: true, rep: 'fine', prepay: 100, term: '', pay: 'QR', step: 0, lad: {}, di: '', ci: false,
       mnotes: '', mount: ['', '', '', '', ''], no: key === 'new' ? '' : key, date: today(), measurer: lsGet('jal_measurer') || 'Хорошавин', deliv: '', name: '', phone: '', addr: '', email: '',
-      company: '', inn: '', uaddr: '', repr: '', notes: null, qFrom: '12', qTo: '14', qrBlank: lsGet('jal_qr_blank') === '1', savedNo: null, media: [] };
+      company: '', inn: '', uaddr: '', repr: '', notes: null, qFrom: '', qTo: '', qrBlank: true, savedNo: null, media: [] };
   }
   function fromOrder(o) {
     if (o.zam) return Object.assign(fresh(o.no), o.zam, { key: o.no, savedNo: o.no });
@@ -202,7 +202,7 @@
       setPct: () => set({ pmode: 'pct', prepay: total ? Math.min(100, preRub / total * 100 | 0) : 100 }), setRub: () => set({ pmode: 'rub', prepay: preRub }),
       prepay: S.prepay, setPrepay: e => { const v = Math.max(0, Number(e.target.value) || 0); set({ prepay: S.pmode === 'pct' ? Math.min(100, v) : Math.min(total, v) }); },
       prepayNote: S.pmode === 'pct' ? '= ' + fmt(preRub) + ' ₽' : '= ' + (total ? Math.round(preRub / total * 1000) / 10 : 0).toString().replace('.', ',') + ' % от суммы',
-      pays: PAYS.map(p => { const on = S.pay === p; return { name: p, pick: () => set({ pay: p }), style: seg(on).replace('font-size: 15px', 'font-size: 14px') }; }),
+      pays: PAYS.map(p => { const on = S.pay === p; return { name: p, pick: () => { try { localStorage.setItem('jal_qr_blank', p === 'QR' ? '1' : '0'); } catch (e) {} set({ pay: p, qrBlank: p === 'QR' }); }, style: seg(on).replace('font-size: 15px', 'font-size: 14px') }; }),
       rest: fmt(total - preRub) + ' ₽',
       qrOn: S.qrBlank, toggleQr: () => { try { localStorage.setItem('jal_qr_blank', S.qrBlank ? '0' : '1'); } catch (e) {} set({ qrBlank: !S.qrBlank }); },
       qrRow: 'height: 46px; border: 0; border-radius: 12px; display: flex; align-items: center; gap: 12px; padding: 0 12px; color: var(--ink); font-size: 15px; text-align: left; width: 100%; box-sizing: border-box; font-weight: ' + (S.qrBlank ? 700 : 400) + '; background: ' + (S.qrBlank ? 'var(--sel)' : 'var(--chip)'),
@@ -215,14 +215,16 @@
       copyOn: S.copy, toggleCopy: () => set({ copy: !S.copy }), myMail: myMail(),
       copyRow: 'height: 46px; border: 0; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 12px; font-size: 15px; color: var(--ink); width: 100%; box-sizing: border-box; background: ' + (S.copy ? 'var(--sel)' : '#FFFFFF') + '; font-weight: ' + (S.copy ? 700 : 400),
       copyBox: chk(S.copy), copyMark: S.copy ? '✓' : '',
-      sendLabel: S.to === 'self' ? 'Отправить себе: Word + PDF' : (co.needDog ? 'Отправить замерник + договор' : 'Отправить замерник'),
+      sendLabel: S.to === 'self' ? 'Отправить себе' : 'Выбрать и отправить',
       sendStyle: 'height: 48px; border: 0; border-radius: 24px; background: var(--ac); color: #FFFFFF; font-size: 14px; font-weight: 800; padding: 0 14px; line-height: 1.1; min-width: 0; opacity: ' + (noSend ? '0.45' : '1'),
       sendDo: () => {
+        const S0self = S.to === 'self';
         if (noSend) { alert('В корзине сумма доставки и установки 0 ₽. Укажи сумму в корзине.'); return; }
         const o = save(JalCart.toOrder()); if (!o) return;
-        alert('Заказ № ' + o.no + ' сохранён. Отправку в мессенджер и на почту добавим следующим шагом: документы открываются из карточки заказа.');
         JalCart.clear(); S = null; try { localStorage.removeItem(KEY); } catch (e) {}
-        window.JalOrdersScreen.F.openNo = o.no; App().tab('orderOpen');
+        window.JalOrdersScreen.F.openNo = o.no;
+        const A = App(); A.st.sendNo = o.no; A.st.sendBack = 'orderOpen'; A.st.sendPreset = { kinds: ['blank'].concat(co.needDog ? ['dogovor'] : []), self: S0self };
+        A.tab('send');
       }
     };
     scr.render(vm);
