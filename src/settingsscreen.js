@@ -8,12 +8,12 @@
   const scr = JalScreen.make('settingsRoot', 'tpl_settingsRoot');
   const T = { drv: false, drvErr: '', drvOk: '', tab: 0, openSup: '', sched: +lsGet('jal_sched') || 0, busy: false, err: '', url: lsGet('jal_prices_url') };
   const PAL = [['Орех', '#4A2C18'], ['Хвоя', '#1F4A3D'], ['Графит', '#2A3550'], ['Бордо', '#6B2C3B'], ['Индиго', '#34306B']];
-  const SZ = [['Мелкий', 13], ['Обычный', 15], ['Крупный', 17], ['Очень крупный', 19]];
-  const FN = [['Обычный', 'system-ui, -apple-system, Segoe UI, sans-serif'], ['Читаемый', 'Verdana, Tahoma, sans-serif'], ['С засечками', 'Georgia, Times New Roman, serif'], ['Узкий', 'Arial Narrow, Roboto Condensed, sans-serif']];
+  const SZ = JalLook.SIZES;
+  const FN = JalLook.FONTS;
   const MPS = { 'Amigo': ['Дерево 50', 'Бамбук 50', 'Дерево 25', 'Бамбук 25', 'Пластик 50', 'Привод', 'Пульт'], 'РДО': ['Дерево 50', 'Бамбук 50', 'Дерево 25', 'Бамбук 25', 'Привод', 'Пульт'],
     'Интерьер': ['Дерево 50', 'Бамбук 50', 'Дерево 25', 'Привод', 'Пульт'], 'Foroom': ['Дерево 50', 'Бамбук 50', 'Привод', 'Пульт'], 'Уют': ['Дерево 50', 'Бамбук 50', 'Дерево 25', 'Бамбук 25', 'Привод', 'Пульт'] };
   const theme = () => { try { return JSON.parse(lsGet('jal_theme') || '{}'); } catch (e) { return {}; } };
-  const saveTheme = p => lsSet('jal_theme', JSON.stringify(Object.assign(theme(), p)));
+  const saveTheme = p => { lsSet('jal_theme', JSON.stringify(Object.assign(theme(), p))); JalLook.apply(); };
   const seg = on => 'min-height: 52px; padding: 4px 4px; border: 0; border-bottom: 3px solid ' + (on ? 'var(--ac)' : 'transparent') + '; background: transparent; text-align: center; font-size: 14px; font-weight: ' + (on ? 800 : 500) + '; color: ' + (on ? 'var(--ink)' : 'var(--m3)');
   const row = on => 'height: 46px; border: 0; border-radius: 12px; display: flex; align-items: center; gap: 12px; padding: 0 12px; color: var(--ink); font-size: 15px; font-weight: 700; text-align: left; background: ' + (on ? 'var(--sel)' : 'var(--chip)');
   const box = on => 'width: 22px; height: 22px; border-radius: 6px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 15px; font-weight: 800; border: 2px solid var(--ac); background: ' + (on ? 'var(--ac)' : 'transparent');
@@ -56,7 +56,7 @@
         rows: MPS[s].map(p => ({ name: p, val: mpVal(s, p), set: e => { mpSet(s, p, e.target.value === '' ? 0 : Number(e.target.value)); JC.saveCfg(); render(); } })) }; });
     const on = (k, def) => { const v = lsGet(k); return v === '' ? def : v === '1'; };
     const flag = (k, def) => () => { lsSet(k, on(k, def) ? '0' : '1'); render(); };
-    const profitOn = !!st.show, fpOn = on('jal_fp', false), pinOn = on('jal_pin_on', false);
+    const profitOn = !!st.show, fpOn = on('jal_fp', false) && JalLock.fpHas(), pinOn = on('jal_pin_on', false) && JalLock.hasPin();
     const bg = dark ? '#14181F' : '#F5EEE6', card = dark ? '#1F2630' : '#FFFFFF', tx = dark ? '#EFE4D6' : '#2A1A10', sub = dark ? '#A99683' : '#6B5545', acc = PAL[pal % 5][1], fsz = SZ[fs][1];
     const priceNote = !loaded ? 'Цены не загружены' : T.err ? T.err : 'Прайс' + (par['дата_прайса'] ? ' от ' + par['дата_прайса'] : '') + (at ? ' · загружен ' + dstr(at) : '');
     const qr = (key, name, note) => { const has = !!lsGet('jal_qr_' + key);
@@ -90,9 +90,11 @@
       sendQueue: () => alert('Очереди пока нет: отправку добавим следующим шагом.'),
       params, rt, setRt,
       profitOn, profitStyle: row(profitOn), profitBox: box(profitOn), profitMark: profitOn ? '✓' : '', toggleProfit: () => { A.setShow(!st.show); render(); },
-      fpOn, toggleFp: flag('jal_fp', false), fpStyle: row(fpOn), fpBox: box(fpOn), fpMark: fpOn ? '✓' : '',
-      pinOn, togglePin: flag('jal_pin_on', false), pinStyle: row(pinOn), pinBox: box(pinOn), pinMark: pinOn ? '✓' : '',
-      changePin: () => alert('PIN и отпечаток добавим следующим шагом: пока приложение открывается без них.'),
+      fpOn, toggleFp: () => { if (fpOn) { JalLock.fpOff(); render(); return; }
+        if (!pinOn) { alert('Сначала включи PIN: отпечаток работает вместе с ним.'); return; }
+        JalLock.fpRegister().then(render).catch(e => alert('Отпечаток не включился: ' + (e && e.message ? e.message : 'отменено'))); }, fpStyle: row(fpOn), fpBox: box(fpOn), fpMark: fpOn ? '✓' : '',
+      pinOn, togglePin: () => { if (pinOn) { JalLock.off(); render(); } else if (JalLock.hasPin()) { JalLock.on(); render(); } else JalLock.setPin(render); }, pinStyle: row(pinOn), pinBox: box(pinOn), pinMark: pinOn ? '✓' : '',
+      changePin: () => JalLock.setPin(render),
       mpSups,
       qrs: [qr('pay', 'Оплата (СБП)', 'для замерника и доплат'), qr('ya', 'Отзывы на Яндексе', ''), qr('av', 'Отзывы на Авито', '')],
       hasSign: !!lsGet('jal_sign'), signSrc: lsGet('jal_sign'), pickSign: () => pickImage('jal_sign', render),
