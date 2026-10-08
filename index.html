@@ -34,13 +34,13 @@ input,select{font:inherit;color:var(--ink);background:var(--card);border:1px sol
 @page{margin:14mm}
 @media print{body{background:#fff;padding:0}header,nav,.noprint,main:not(#doc){display:none!important}.doc{padding:0}}
 nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
-nav button{flex:1}
+nav button{flex:1;white-space:nowrap;padding-inline:6px}
 [hidden]{display:none!important}
 .bar{background:var(--ac);color:#fff;padding:10px 14px;border-radius:12px;margin-bottom:12px}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v4</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v5</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -100,9 +100,9 @@ nav button{flex:1}
 <nav><button class="btn" id="tCalc">Расчёт</button><button class="btn sec" id="tCart">Корзина (0)</button><button class="btn sec" id="tOrd">Заказы</button></nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/calc.js?v=4"></script>
-<script src="src/orders.js?v=4"></script>
-<script src="src/docs.js?v=4"></script>
-<script src="src/app.js?v=4"></script>
+<script src="src/calc.js?v=5"></script>
+<script src="src/orders.js?v=5"></script>
+<script src="src/docs.js?v=5"></script>
+<script src="src/app.js?v=5"></script>
 </body>
 </html>
