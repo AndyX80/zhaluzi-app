@@ -204,7 +204,7 @@
     const unit = r.ok ? r.unit : 0;
     const dotOf = st => st === null ? 'display: none' : 'width: 14px; height: 14px; border-radius: 7px; flex-shrink: 0; background: ' + DOT[st];
 
-    const rowStyle = n => 'min-height: 64px; border-radius: 14px; border: 1.5px solid ' + (n ? 'var(--dk)' : 'var(--line)') + '; background: ' + (n ? 'var(--chip)' : '#FFFFFF') + '; display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px';
+    const rowStyle = n => 'min-height: 64px; border-radius: 14px; border: ' + (n ? '2.5px solid var(--ac)' : '1.5px solid var(--line)') + '; background: ' + (n ? 'color-mix(in srgb, var(--ac) 16%, #FFFFFF)' : '#FFFFFF') + '; box-shadow: ' + (n ? '0 2px 10px rgba(224,123,0,0.35)' : 'none') + '; display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px';
     const autoRows = kind => (JC.autoList(s.sup, kind) || []).map(f => { const q = JC.autoQty(s.sup, kind, f.key);
       return { name: f.name, sub: f.sub, price: fmt(f.price) + ' ₽', qty: q, style: rowStyle(q),
         minus: () => JC.autoStep(s.sup, kind, f.key, -1), plus: () => JC.autoStep(s.sup, kind, f.key, 1) }; });
