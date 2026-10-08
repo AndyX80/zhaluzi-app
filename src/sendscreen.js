@@ -1,4 +1,4 @@
-/* Экран «Отправка клиенту» по макету Send.dc.html. Текст уходит в выбранный канал; файлы пока вручную. */
+/* Экран «Отправка клиенту» по макету Send.dc.html. Текст уходит в выбранный канал. */
 (function () {
   'use strict';
   const scr = JalScreen.make('sendRoot', 'tpl_sendRoot');
@@ -35,18 +35,44 @@
     const text = s.edited && s.edited.key === key ? s.edited.v : sel.map((k, i) => (i ? T[k[0]].replace(/^Добрый день, [^!]*!\s*/, '') : T[k[0]])).join('\n\n'), none = !sel.length, empty = !none && !text.trim();
     const withCat = has('catalog') || (has('kp') && s.cat), qrBlank = lsGet('jal_qr_blank') === '1';
     const extra = [].concat(has('review') ? ['QR отзыв Яндекс.png', 'QR отзыв Авито.png'] : [], has('qr') ? ['QR оплаты ' + (s.qrSum || '5 000') + ' ₽.png'] : [], has('blank') && qrBlank ? ['QR оплаты предоплаты.png'] : []);
-    const files = sel.reduce((a, k) => a.concat(k[2]), []).map(n => n.replace('{no}', D.no)).map(n => (has('kp') && s.vars ? n.replace('КП № ' + D.no + '.pdf', 'КП № ' + D.no + ' (3 варианта).pdf') : n)).reduce((a, n) => a.concat([n, n.replace(/\.pdf$/, '.docx')]), []).concat(withCat ? [CAT] : []).concat(extra);
+    const fnOf = k => k === 'kp' ? (s.vars && o && o.vars && o.vars.length ? 'kpVarHtml' : 'kpHtml') : k === 'blank' ? 'zamernikHtml' : 'dogovorHtml';
+    const qrs = [].concat(has('review') ? [['jal_qr_ya', 'QR отзыв Яндекс.png'], ['jal_qr_av', 'QR отзыв Авито.png']] : [], has('qr') ? [['jal_qr_pay', 'QR оплаты ' + (s.qrSum || '5 000') + ' ₽.png']] : [], has('blank') && qrBlank ? [['jal_qr_pay', 'QR оплаты предоплаты.png']] : []);
+    const pdfs = o ? ['kp', 'blank', 'dogovor'].filter(has).map(k => fnOf(k)) : [];
+    const files = pdfs.map(fn => JalExport.baseName(fn, o) + '.pdf').concat(qrs.filter(q => lsGet(q[0])).map(q => q[1]));
+    const pkey = pdfs.join(',') + '|' + qrs.map(q => q[1]).join(',') + '|' + (o ? o.no + ':' + JSON.stringify(o).length : '');
+    if (!files.length) S.prep = null;
+    else if (!S.prep || S.prep.key !== pkey) {
+      const P = S.prep = { key: pkey, state: 'busy', files: [] };
+      (async () => {
+        try {
+          for (const fn of pdfs) P.files.push(await JalExport.pdf(fn, o));
+          qrs.forEach(q => { const f = JalExport.dataFile(lsGet(q[0]), q[1]); if (f) P.files.push(f); });
+          P.state = 'ready';
+        } catch (e) { P.state = 'err'; P.err = e.message || String(e); }
+        if (S.prep === P) render();
+      })();
+    }
+    const prep = S.prep && S.prep.key === pkey ? S.prep : null;
     const ch = CH.find(c => c.key === s.ch), ok = !(empty || none);
     const toggle = (on, plain) => 'height: 46px; border: 0; border-radius: 12px; display: flex; align-items: center; gap: 12px; padding: 0 12px; color: var(--ink); width: 100%; box-sizing: border-box; background: ' + (on ? 'var(--sel)' : plain) + '; font-weight: ' + (on ? 700 : 400);
     const box = (on, off) => 'width: 22px; height: 22px; border-radius: 6px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 15px; font-weight: 800; border: 2px solid ' + (on ? 'var(--ac)' : off) + '; background: ' + (on ? 'var(--ac)' : 'transparent');
-    const send = () => {
+    const send = async () => {
       if (!ok) return;
       const enc = encodeURIComponent, subj = 'Жалюзи-СПБ' + (o ? ', заказ № ' + o.no : '');
-      if (s.ch === 'mail') location.href = 'mailto:' + (D.email || '') + '?subject=' + enc(subj) + '&body=' + enc(text);
-      else if (s.ch === 'wa') window.open('https://wa.me/' + digits(D.phone) + '?text=' + enc(text), '_blank');
-      else if (s.ch === 'tg') window.open('https://t.me/share/url?url=%20&text=' + enc(text), '_blank');
-      else if (navigator.share) navigator.share({ title: subj, text }).catch(() => {});
-      else { try { navigator.clipboard.writeText(text); alert('Текст скопирован, вставь его в нужное приложение'); } catch (e) { prompt('Скопируй текст', text); } }
+      let done = false;
+      if (prep && prep.state === 'err') alert('Файлы не собрались: ' + prep.err + '. Уйдёт только текст.');
+      if (prep && prep.state === 'busy') { alert('Файлы ещё готовятся, подожди несколько секунд и нажми «Отправить» снова.'); return; }
+      if (prep && prep.state === 'ready' && prep.files.length) {
+        done = await JalExport.share(prep.files, text, subj);
+        if (!done) { prep.files.forEach((f, i) => setTimeout(() => JalExport.save(f), i * 600)); alert('Телефон не умеет прикладывать файлы сам. Файлы скачаны, приложи их из «Загрузок» в открывшемся чате.'); }
+      }
+      if (!done) {
+        if (s.ch === 'mail') location.href = 'mailto:' + (D.email || '') + '?subject=' + enc(subj) + '&body=' + enc(text);
+        else if (s.ch === 'wa') window.open('https://wa.me/' + digits(D.phone) + '?text=' + enc(text), '_blank');
+        else if (s.ch === 'tg') window.open('https://t.me/share/url?url=%20&text=' + enc(text), '_blank');
+        else if (navigator.share) navigator.share({ title: subj, text }).catch(() => {});
+        else { try { navigator.clipboard.writeText(text); alert('Текст скопирован, вставь его в нужное приложение'); } catch (e) { prompt('Скопируй текст', text); } }
+      }
       if (o && has('kp') && o.status === 'Черновик') { JalOrders.setStatus(o.no, 'КП отправлено'); JalOrders.addVersion(o.no, 'КП отправлено (' + ch.name + ')', D.sum); }
     };
     scr.render({
@@ -55,15 +81,15 @@
         style: 'grid-column: span ' + (i < 3 ? 2 : 3) + '; min-height: 48px; padding: 0 8px; border-radius: 14px; font-size: 14px; text-align: center; border: 1.5px solid ' + (has(k[0]) ? 'var(--dk)' : 'var(--line)') + '; background: ' + (has(k[0]) ? 'var(--sel)' : 'var(--card)') + '; color: var(--ink); font-weight: ' + (has(k[0]) ? 700 : 500) })),
       showQr: has('qr'), qrSum: s.qrSum, setQrSum: e => { S.qrSum = e.target.value; render(); },
       showCatSwitch: has('kp'), catOn: s.cat, toggleCat: () => set({ cat: !s.cat }), catRow: toggle(s.cat, 'var(--card)'), catBox: box(s.cat, 'var(--chk)'), catMark: s.cat ? '✓' : '',
-      varOn: s.vars, toggleVar: () => { if (!s.vars) alert('КП на три варианта добавим вместе с экраном «Сравнить». Пока уйдёт обычное КП.'); },
+      varOn: s.vars, toggleVar: () => { if (!s.vars && !(o && o.vars && o.vars.length)) alert('У этого заказа нет трёх вариантов. Собери их в корзине кнопкой «КП: три варианта», сохрани заказ и вернись сюда.'); else set({ vars: !s.vars }); },
       varRow: toggle(s.vars, 'var(--chip)'), varBox: box(s.vars, 'var(--ac)'), varMark: s.vars ? '✓' : '',
-      files: files.length ? files.map(n => ({ name: n, ext: /\.docx$/.test(n) ? 'DOC' : (/\.png$/.test(n) ? 'QR' : 'PDF'), size: '' })) : [{ name: 'Без вложений, только текст', size: '' }], hasKind: !none,
+      files: files.length ? files.map(n => ({ name: n, ext: /\.png$/.test(n) ? 'QR' : 'PDF', size: prep ? (prep.state === 'busy' ? 'готовлю…' : prep.state === 'err' ? 'ошибка' : 'готов') : '' })) : [{ name: 'Без вложений, только текст', size: '' }], hasKind: !none,
       channels: CH.map(c => ({ name: c.name, ic: c.ic, pick: () => set({ ch: c.key }),
         style: 'min-height: 72px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 13px; color: var(--ink); border: 1.5px solid ' + (s.ch === c.key ? 'var(--ac)' : '#E3D5C3') + '; background: ' + (s.ch === c.key ? 'var(--sel)' : '#FFFFFF') + '; font-weight: ' + (s.ch === c.key ? 800 : 500),
         dot: 'width: 30px; height: 30px; border-radius: 15px; background: ' + c.c + '; color: #FFFFFF; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center' })),
       text, empty, setText: e => { S.edited = { key, v: e.target.value }; }, resetText: () => set({ edited: null }),
       taStyle: 'width: 100%; box-sizing: border-box; min-height: 330px; font-family: inherit; border: 1.5px solid ' + (empty ? '#B3261E' : 'var(--line)') + '; border-radius: 12px; padding: 12px; font-size: 15px; line-height: 1.45; color: var(--ink); resize: vertical',
-      sendLabel: s.ch === 'any' ? 'Поделиться' : 'Отправить', chName: ch.name, doSend: send,
+      sendLabel: prep && prep.state === 'busy' ? 'Готовлю файлы…' : (files.length ? 'Отправить с файлами' : (s.ch === 'any' ? 'Поделиться' : 'Отправить')), chName: ch.name, doSend: send,
       sendStyle: 'height: 48px; border: 0; border-radius: 24px; padding: 0 22px; font-size: 16px; font-weight: 800; color: #FFFFFF; background: ' + (ok ? 'var(--ac)' : 'var(--m3)') });
   }
   window.JalSendScreen = { render, S };

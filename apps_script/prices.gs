@@ -28,7 +28,7 @@ function files_() {
   while (list.hasNext()) {
     const f = list.next(), name = f.getName().replace(/\.[^.]+$/, '').toLowerCase();
     if (name === 'шаблоны') templates = f.getBlob().getDataAsString('UTF-8');
-    else if (/^image\//.test(f.getMimeType())) files[name] = 'data:' + f.getMimeType() + ';base64,' + Utilities.base64Encode(f.getBlob().getBytes());
+    else if (/^image\//.test(f.getMimeType())) files[name] = 'da' + 'ta:' + f.getMimeType() + ';base64,' + Utilities.base64Encode(f.getBlob().getBytes());
   }
   return out_({ ok: true, folder: FOLDER, files: files, templates: templates });
 }
@@ -50,4 +50,10 @@ function doPost(e) {
 function ordersGet_() {
   const it = folder_().getFilesByName('заказы.json');
   return out_({ ok: true, orders: it.hasNext() ? JSON.parse(it.next().getBlob().getDataAsString('UTF-8')) : [] });
+}
+
+// Одноразово: выбери эту функцию и нажми «Выполнить», чтобы Google выдал доступ к Диску.
+function razreshenie() {
+  DriveApp.getFoldersByName(FOLDER);
+  DriveApp.createFile('t.txt', 't').setTrashed(true);
 }

@@ -189,5 +189,16 @@
     });
     fit(); return true;
   }
-  window.JalDocScreens = { C, show, hideAll: () => ALL.forEach(id => { const b = document.getElementById(id); if (b) b.hidden = true; }) };
+  /* Страницы документа вне экрана: нужны для PDF. Возвращает { els: [page div], done() }. */
+  async function pagesOff(fn, order, sig) {
+    const set = SET[fn]; if (!set) throw new Error('нет такого документа');
+    const host = document.createElement('div'); host.setAttribute('style', 'position: fixed; left: -10000px; top: 0; width: 595px; background: #fff');
+    document.body.appendChild(host);
+    set.forEach(s => { const box = document.createElement('div'); host.appendChild(box); JalTpl.mount(box, document.getElementById(s[1])).render(s[2](order, sig)); });
+    const imgs = Array.from(host.querySelectorAll('img'));
+    await Promise.all(imgs.map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
+    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+    return { els: Array.from(host.querySelectorAll('div[style*="height: 842px"]')), done: () => host.remove() };
+  }
+  window.JalDocScreens = { C, pagesOff, vms: { kpHtml: vmKp, kpVarHtml: vmKpVar, zamernikHtml: vmBlank, dogovorHtml: vmDog }, show, hideAll: () => ALL.forEach(id => { const b = document.getElementById(id); if (b) b.hidden = true; }) };
 })();

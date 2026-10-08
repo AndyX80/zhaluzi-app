@@ -27,7 +27,7 @@
 </sc-if>
 <sc-if value="{{hasKind}}" hint-placeholder-val="{{true}}"><div style="background: var(--bg); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px">
 <div style="font-size: 12px; color: var(--m1); font-weight: 700">ВЛОЖЕНИЯ</div>
-<div style="font-size: 12px; color: #8A4B00; line-height: 1.35">Файлы пока не прикладываются сами: сохрани PDF из документа и добавь в чат. Текст уйдёт сразу.</div>
+<div style="font-size: 12px; color: #8A4B00; line-height: 1.35">PDF и QR приложатся сами: откроется меню телефона, выбери чат. Если телефон так не умеет, файлы скачаются, а текст уйдёт в канал. Word сохраняй из документа.</div>
 <sc-for list="{{files}}" as="f" hint-placeholder-count="2">
 <div style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="width: 28px; height: 28px; border-radius: 8px; background: var(--chip); color: #8A4B00; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{f.ext}}</span><span style="flex-grow: 1">{{f.name}}</span><span style="font-size: 12px; color: var(--m2)">{{f.size}}</span></div>
 </sc-for>

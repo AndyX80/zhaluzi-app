@@ -114,6 +114,13 @@
   $('tSet').onclick = () => tab('set');
   $('docBack').onclick = () => { const b = st.curBack; st.curBack = null; tab(b || 'ord'); };
   $('docPrint').onclick = () => window.print();
+  const docOut = (btn, kind) => async () => {
+    if (!st.curDoc) return; const msg = $('docMsg'), old = btn.textContent; btn.disabled = true; btn.textContent = 'Готовлю…'; msg.textContent = '';
+    try { const f = await JalExport[kind](st.curDoc[0], st.curDoc[1]); JalExport.save(f); msg.textContent = 'Файл «' + f.name + '» готов.'; }
+    catch (e) { msg.textContent = 'Не получилось: ' + (e.message || e); }
+    btn.disabled = false; btn.textContent = old;
+  };
+  $('docPdf').onclick = docOut($('docPdf'), 'pdf'); $('docWord').onclick = docOut($('docWord'), 'docx');
   const setShow = v => { st.show = v; try { localStorage.setItem('jal_profit', v ? '1' : '0'); } catch (e) {} drawCart(); if (window.JalCalcScreen && st.P) JalCalcScreen.render(); };
   try { if (localStorage.getItem('jal_profit') === '1') setShow(true); } catch (e) {}
 
