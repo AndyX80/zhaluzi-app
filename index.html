@@ -132,7 +132,7 @@ html,body{overflow-x:clip}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v31</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v32</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -162,18 +162,18 @@ html,body{overflow-x:clip}
 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
 <div style="background: var(--card); border-radius: 20px; box-shadow: 0 1px 3px rgba(40,20,10,0.16); padding: 7px 14px 3px 16px; display: flex; flex-direction: column">
 <label for="w1" style="text-align: center; font-size: 13px; color: var(--m2); font-weight: 600">Ширина, мм</label>
-<input id="w1" type="number" inputmode="numeric" value="{{w}}" onChange="{{setW}}" onInput="{{setW}}" placeholder="0" style="height: 44px; border: 0; padding: 0; font-size: 34px; font-weight: 800; letter-spacing: -1px; color: var(--ink); background: transparent; box-sizing: border-box; width: 100%; text-align: center">
+<input id="w1" type="number" inputmode="numeric" value="{{w}}" onChange="{{setW}}" onInput="{{setW}}" placeholder="0" style="height: 40px; border: 0; padding: 0; font-size: 32px; font-weight: 800; letter-spacing: -1px; color: var(--ink); background: transparent; box-sizing: border-box; width: 100%; text-align: center">
 </div>
 <div style="background: var(--card); border-radius: 20px; box-shadow: 0 1px 3px rgba(40,20,10,0.16); padding: 7px 14px 3px 16px; display: flex; flex-direction: column">
 <label for="h1" style="text-align: center; font-size: 13px; color: var(--m2); font-weight: 600">Высота, мм</label>
-<input id="h1" type="number" inputmode="numeric" value="{{h}}" onChange="{{setH}}" onInput="{{setH}}" placeholder="0" style="height: 44px; border: 0; padding: 0; font-size: 34px; font-weight: 800; letter-spacing: -1px; color: var(--ink); background: transparent; box-sizing: border-box; width: 100%; text-align: center">
+<input id="h1" type="number" inputmode="numeric" value="{{h}}" onChange="{{setH}}" onInput="{{setH}}" placeholder="0" style="height: 40px; border: 0; padding: 0; font-size: 32px; font-weight: 800; letter-spacing: -1px; color: var(--ink); background: transparent; box-sizing: border-box; width: 100%; text-align: center">
 </div>
 </div>
 
 </sc-if>
 
 <div style="display: flex; flex-direction: column">
-<button onClick="{{toggleSup}}" aria-expanded="{{supOpen}}" style="min-height: 52px; border: 0; border-radius: 18px; background: var(--card); box-shadow: 0 1px 3px rgba(40,20,10,0.16); display: flex; align-items: center; gap: 12px; padding: 4px 16px; text-align: left; color: var(--ink)">
+<button onClick="{{toggleSup}}" aria-expanded="{{supOpen}}" style="min-height: 48px; border-radius: 18px; border: 0; background: var(--card); box-shadow: 0 1px 3px rgba(40,20,10,0.16); display: flex; align-items: center; gap: 12px; padding: 4px 16px; text-align: left; color: var(--ink)">
 <span style="flex-grow: 1; display: flex; flex-direction: column"><span style="font-size: 11px; color: var(--m2); font-weight: 600; line-height: 1.1">Коллекция</span><span style="font-size: 20px; font-weight: 800">{{supName}}</span></span>
 <span style="font-size: 13px; font-weight: 700; color: var(--dk); background: var(--chip); border-radius: 10px; padding: 4px 10px">{{supColl}}</span>
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A2C18" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="{{supArrow}}"><path d="M6 9l6 6 6-6"></path></svg>
@@ -236,7 +236,7 @@ html,body{overflow-x:clip}
 <sc-for list="{{ctrls}}" as="k" hint-placeholder-count="4">
 <button onClick="{{k.pick}}" aria-pressed="{{k.on}}" style="{{k.style}}">
 <svg width="28" height="26" viewBox="0 0 34 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="flex-shrink: 0"><rect x="2" y="2" width="30" height="4" rx="1"></rect><path d="M4 10h26M4 14h26M4 18h26M4 22h26M4 26h26" stroke-opacity="0.3"></path><path d="{{k.thin}}" stroke-width="1.2"></path><path d="{{k.thick}}" stroke-width="3.2" stroke-dasharray="{{k.dash}}"></path></svg>
-<span style="font-size: 12px; line-height: 1.2; text-align: left; white-space: pre-line">{{k.name}}</span>
+<span style="font-size: 12px; line-height: 1.2; text-align: left; white-space: pre-line; min-width: 0">{{k.name}}</span>
 </button>
 </sc-for>
 </div>
@@ -298,7 +298,6 @@ html,body{overflow-x:clip}
 <div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 6px">
 <sc-if value="{{isBlinds}}" hint-placeholder-val="{{true}}">
 <sc-if value="{{showCheck}}" hint-placeholder-val="{{true}}"><div style="background: var(--card); border-radius: 18px; box-shadow: 0 4px 14px rgba(40,20,10,0.18); padding: 6px 12px; display: flex; flex-direction: column; gap: 1px">
-<div style="font-size: 12px; color: var(--m1)">{{breakText}}<span> {{weightText}}</span></div>
 <div style="{{checkStyle}}">
 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="{{checkIcon}}"></path></svg>
 <span>{{checkText}}</span>
@@ -1096,7 +1095,7 @@ html,body{overflow-x:clip}
 <div style="{{archStyle}}">{{archNote}}</div>
 </section>
 </sc-if>
-<div style="text-align: center; font-size: 12px; color: var(--m1); padding: 8px 0">Версия приложения: <span>v31</span></div>
+<div style="text-align: center; font-size: 12px; color: var(--m1); padding: 8px 0">Версия приложения: <span>v32</span></div>
 </main>
 <div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
 <div style="height: 60px; border-radius: 30px; background: var(--card); box-shadow: 0 4px 14px rgba(40,20,10,0.2); display: flex; align-items: center; gap: 4px; padding: 0 6px; font-size: 13px; font-weight: 700">
@@ -1602,26 +1601,26 @@ html,body{overflow-x:clip}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/look.js?v=31"></script>
-<script src="src/calc.js?v=31"></script>
-<script src="src/orders.js?v=31"></script>
-<script src="src/docs.js?v=31"></script>
-<script src="src/drive.js?v=31"></script>
-<script src="src/data.js?v=31"></script>
-<script src="src/limits.js?v=31"></script>
-<script src="src/tpl.js?v=31"></script>
-<script src="src/screen.js?v=31"></script>
-<script src="src/calcscreen.js?v=31"></script>
-<script src="src/cartscreen.js?v=31"></script>
-<script src="src/ordersscreen.js?v=31"></script>
-<script src="src/orderscreen.js?v=31"></script>
-<script src="src/comparescreen.js?v=31"></script>
-<script src="src/settingsscreen.js?v=31"></script>
-<script src="src/docscreens.js?v=31"></script>
-<script src="src/export.js?v=31"></script>
-<script src="src/sendscreen.js?v=31"></script>
-<script src="src/lock.js?v=31"></script>
-<script src="src/app.js?v=31"></script>
+<script src="src/look.js?v=32"></script>
+<script src="src/calc.js?v=32"></script>
+<script src="src/orders.js?v=32"></script>
+<script src="src/docs.js?v=32"></script>
+<script src="src/drive.js?v=32"></script>
+<script src="src/data.js?v=32"></script>
+<script src="src/limits.js?v=32"></script>
+<script src="src/tpl.js?v=32"></script>
+<script src="src/screen.js?v=32"></script>
+<script src="src/calcscreen.js?v=32"></script>
+<script src="src/cartscreen.js?v=32"></script>
+<script src="src/ordersscreen.js?v=32"></script>
+<script src="src/orderscreen.js?v=32"></script>
+<script src="src/comparescreen.js?v=32"></script>
+<script src="src/settingsscreen.js?v=32"></script>
+<script src="src/docscreens.js?v=32"></script>
+<script src="src/export.js?v=32"></script>
+<script src="src/sendscreen.js?v=32"></script>
+<script src="src/lock.js?v=32"></script>
+<script src="src/app.js?v=32"></script>
 <script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 </body>
 </html>

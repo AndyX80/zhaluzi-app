@@ -7,7 +7,7 @@
   const SUPS = ['Amigo', 'Интерьер', 'РДО', 'Foroom', 'Уют'];
   const COLL = { Amigo: 'Стандарт', 'Интерьер': 'Классик', 'РДО': 'Урбан', Foroom: 'Тренд', 'Уют': 'Премиум' };
   const FIXLBL = { 'Ниж. фиксация': 'Уголки' };
-  const CTRL_NAMES = { L: 'Подъём и поворот:\nслева', R: 'Подъём и поворот:\nсправа', TL: 'Подъём: справа\nПоворот: слева', TR: 'Подъём: слева\nПоворот: справа' };
+  const CTRL_NAMES = { L: 'Подъём+поворот\nслева', R: 'Подъём+поворот\nсправа', TL: 'Подъём: справа\nПоворот: слева', TR: 'Подъём: слева\nПоворот: справа' };
   const CHAIN_NAMES = { L: 'Цепочка:\nслева', R: 'Цепочка:\nсправа' };
   const CTRL_ORDER = { 50: ['TL', 'TR', 'L', 'R'], 25: ['L', 'R', 'TL', 'TR'] };
   // 50 мм: подъём = 1 шнур, поворот = 2 шнура рядом. 25 мм: подъём = тонкий шнур, поворот = толстый прутик. Цепочка = «бусины».
@@ -158,8 +158,8 @@
     const selCol = colList.find(c => c.key === color);
     const selStock = selCol ? stockOf(prodKey, selCol.key, s.sup, +s.w || 0) : null;
     const seg = sel => sel
-      ? 'flex: 1 1 0; height: 42px; border: 0; border-radius: 11px; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700; box-shadow: 0 1px 2px rgba(20,40,60,0.18)'
-      : 'flex: 1 1 0; height: 42px; border: 0; border-radius: 11px; background: transparent; color: var(--m1); font-size: 15px; font-weight: 600';
+      ? 'flex: 1 1 0; height: 40px; border: 0; border-radius: 11px; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700; box-shadow: 0 1px 2px rgba(20,40,60,0.18)'
+      : 'flex: 1 1 0; height: 40px; border: 0; border-radius: 11px; background: transparent; color: var(--m1); font-size: 15px; font-weight: 600';
     const set = p => { Object.assign(S, p); render(); };
     const chg = p => set(Object.assign({ justAdded: false }, p));
     const pickSup = n => chg({ sup: n, lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {}, supOpen: false });
@@ -171,14 +171,14 @@
     const opts = optNames.map(name => {
       const on = !!opts0[name];
       return { name, on: on ? 'true' : 'false', price: r.ok && on && r.optP[name] ? '+' + fmt(r.optP[name]) : '',
-        style: 'flex: 1 1 0; min-width: 0; min-height: 42px; padding: 2px 8px; border: 1.5px solid ' + (on ? 'var(--dk)' : 'var(--line)') + '; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; gap: 7px; font-size: 14px; color: var(--ink); font-weight: ' + (on ? '700' : '500') + '; background: ' + (on ? 'var(--sel)' : 'var(--card)'),
+        style: 'flex: 1 1 0; min-width: 0; min-height: 38px; padding: 2px 8px; border: 1.5px solid ' + (on ? 'var(--dk)' : 'var(--line)') + '; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; gap: 7px; font-size: 14px; color: var(--ink); font-weight: ' + (on ? '700' : '500') + '; background: ' + (on ? 'var(--sel)' : 'var(--card)'),
         toggle: () => { const x = Object.assign({}, S.opts); x[name] = !x[name]; chg({ opts: x }); } };
     });
     const fixList = [{ name: 'Без фиксации', key: '' }].concat(fixNames.map(n => ({ name: FIXLBL[n] || n, key: n })));
     const fixes = fixList.map(f => {
       const on = f.key === fix;
       return { name: f.name, on: on ? 'true' : 'false', price: f.key && r.ok && on && r.optP[f.key] !== undefined ? '+' + fmt(r.optP[f.key]) : ' ',
-        style: 'min-height: 46px; padding: 2px 2px; border: 0; border-bottom: 3px solid ' + (on ? 'var(--ac)' : 'transparent') + '; background: transparent; color: ' + (on ? 'var(--ink)' : 'var(--m3)') + '; font-weight: ' + (on ? '800' : '500') + '; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px',
+        style: 'min-height: 40px; padding: 2px 2px; border: 0; border-bottom: 3px solid ' + (on ? 'var(--ac)' : 'transparent') + '; background: transparent; color: ' + (on ? 'var(--ink)' : 'var(--m3)') + '; font-weight: ' + (on ? '800' : '500') + '; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px',
         pick: () => chg({ fix: f.key }) };
     });
     const ctrlKeys = chain ? ['L', 'R'] : (splitOnly ? ['TL', 'TR'] : CTRL_ORDER[lam]);
@@ -187,8 +187,8 @@
       thin: chain ? '' : DRAW[lam][kk][0], thick: chain ? DRAW_CHAIN[kk] : DRAW[lam][kk][1], dash: chain ? '0.1 4' : '',
       on: kk === ctrl ? 'true' : 'false',
       style: kk === ctrl
-        ? 'min-height: 46px; border-radius: 12px; border: 1.5px solid var(--dk); background: var(--chip); color: var(--dk); font-weight: 700; display: flex; align-items: center; gap: 6px; padding: 2px 8px'
-        : 'min-height: 46px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); font-weight: 500; display: flex; align-items: center; gap: 6px; padding: 2px 8px',
+        ? 'min-height: 42px; border-radius: 12px; border: 1.5px solid var(--dk); background: var(--chip); color: var(--dk); font-weight: 700; display: flex; align-items: center; gap: 6px; padding: 2px 8px'
+        : 'min-height: 42px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); font-weight: 500; display: flex; align-items: center; gap: 6px; padding: 2px 8px',
       pick: () => chg({ ctrl: kk }) }));
 
     // поиск и недавние цвета в листе выбора
@@ -259,7 +259,7 @@
       noAuto: !JC.hasAuto(s.sup), hasAuto: JC.hasAuto(s.sup),
       driveRows: autoRows('drive'), remoteRows: autoRows('remote'),
       autoSummary: 'Приводов ' + JC.counts().drive + ', пультов ' + JC.counts().remote + ' в корзине',
-      showCheck: !waiting,
+      showCheck: !waiting && (!good || (r.ok && !!selCol && selStock !== null && selStock < 2) || s.justAdded),
       breakText: r.ok ? (s.qty > 1 ? fmt(unit) + ' ₽ × ' + s.qty + ' шт' : 'изделие ' + fmt(r.base) + ' + доп. ' + fmt(r.addSum)) : (waiting ? 'выбери цвет, и я посчитаю' : (r.msg ? '' : 'введи размеры')),
       weightText: kg ? 'вес ≈ ' + LM.fmtKg(kg * s.qty) + ' кг' + (s.qty > 1 ? ' (' + LM.fmtKg(kg) + ' кг × ' + s.qty + ')' : '') : '',
       checkText: waiting ? 'Ждёт выбора цвета' : (!r.ok ? (r.msg ? r.msg[0].toUpperCase() + r.msg.slice(1) : 'Не поставляется') : (r.warn.length ? (r.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + r.warn.join('; ') : 'Размеры в гарантии')),
