@@ -7,12 +7,20 @@
   const FIXES = ['Ниж. фиксация', 'Струна', 'Магниты'];
   const OPTS = ['Тесьма', 'Цепочка', 'Окраска'];
   const rub = n => n.toLocaleString('ru-RU').replace(/ /g, ' ') + ' ₽';
+  const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
   const st = { qty: 1, sup: 'Амиго', mat: 'Дерево', lam: 50, fix: null, opts: [], cart: [], show: false, P: null, last: null };
   
-  function setPrices(sheets) {
+  function applyFx(sheets) {
+    if (lsGet('jal_fx_auto') !== '0' || !sheets['Параметры']) return sheets;
+    const v = parseFloat(lsGet('jal_fx').replace(',', '.')); if (!(v > 0)) return sheets;
+    return Object.assign({}, sheets, { 'Параметры': sheets['Параметры'].map(r => r[0] === 'курс_usd' ? [r[0], v, r[2]] : r) });
+  }
+  function setPrices(raw) {
+    const sheets = applyFx(raw); st.sheets = sheets;
     st.P = JalCalc.makePrice(sheets);
     $('load').hidden = true; $('calcRoot').hidden = false;
     JalCart.setSheets(sheets); JalCalcScreen.setSheets(sheets); JalCalcScreen.render();
+    if (!$('settingsRoot').hidden) JalSettingsScreen.render();
   }
   window.JalSetPrices = setPrices; // для тестов
 
@@ -22,7 +30,7 @@
       const wb = XLSX.read(rd.result, { type: 'array' });
       const sheets = {};
       wb.SheetNames.forEach(n => { sheets[n] = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: null }); });
-      try { localStorage.setItem('jal_prices', JSON.stringify(sheets)); } catch (e) {}
+      try { localStorage.setItem('jal_prices', JSON.stringify(sheets)); localStorage.setItem('jal_prices_at', String(Date.now())); } catch (e) {}
       setPrices(sheets);
     };
     rd.readAsArrayBuffer(file);
@@ -35,9 +43,9 @@
   function register(name, o) { SCREENS[name] = o; }
   function tab(name) {
     Object.keys(SCREENS).forEach(k => { const s = SCREENS[k]; $(s.root).hidden = k !== name || (s.needP && !st.P); });
-    $('doc').hidden = name !== 'doc'; $('settings').hidden = name !== 'set';
+    $('doc').hidden = name !== 'doc';
     const sc = SCREENS[name];
-    $('load').hidden = name === 'set' ? false : (!!st.P || !(sc && sc.needP));
+    $('load').hidden = !!st.P || !(sc && sc.needP);
     document.body.setAttribute('data-tab', name);
     if (sc) document.body.setAttribute('data-own', '1'); else document.body.removeAttribute('data-own');
     if (sc && (st.P || !sc.needP)) sc.render(name);
@@ -46,6 +54,7 @@
   register('calc', { root: 'calcRoot', needP: true, render: () => JalCalcScreen.render() });
   register('cart', { root: 'cartRoot', needP: true, render: () => JalCart.render() });
   register('ord', { root: 'ordersRoot', render: n => JalOrdersScreen.render(n) });
+  register('set', { root: 'settingsRoot', render: () => JalSettingsScreen.render() });
   register('order', { root: 'orderRoot', needP: true, render: () => JalOrderScreen.render() });
   register('orderOpen', { root: 'orderOpenRoot', needP: true, render: n => JalOrdersScreen.render(n) });
   const GO = { Main: 'calc', Cart: 'cart', Orders: 'ord', Settings: 'set', OrderOpen: 'orderOpen', Order: 'order' };
@@ -55,7 +64,6 @@
     alert('Этот экран добавим следующим шагом.');
   }
 
-  const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
   function showDoc(fn, o, back) {
     st.curBack = back || st.curBack;
     const sig = { sign: lsGet('jal_sign'), stamp: lsGet('jal_stamp') };
@@ -72,16 +80,17 @@
   }
   pickImg('sigFile', 'jal_sign'); pickImg('stampFile', 'jal_stamp');
 
+  async function fetchPrices(u) {
+    const j = await (await fetch(u)).json();
+    if (!j.ok) throw new Error(j.error === 'bad key' ? 'Неверный пароль в ссылке' : 'Таблица не отдала данные');
+    try { localStorage.setItem('jal_prices', JSON.stringify(j.sheets)); localStorage.setItem('jal_prices_url', u); localStorage.setItem('jal_prices_at', String(Date.now())); } catch (e) {}
+    setPrices(j.sheets);
+  }
   async function loadUrl() {
     const u = $('url').value.trim(), er = $('urlErr'); er.textContent = '';
     if (!u) return;
     $('urlGo').disabled = true; $('urlGo').textContent = 'Загружаю…';
-    try {
-      const j = await (await fetch(u)).json();
-      if (!j.ok) throw new Error(j.error === 'bad key' ? 'Неверный пароль в ссылке' : 'Таблица не отдала данные');
-      try { localStorage.setItem('jal_prices', JSON.stringify(j.sheets)); localStorage.setItem('jal_prices_url', u); } catch (e) {}
-      setPrices(j.sheets);
-    } catch (e) { er.textContent = 'Не получилось: ' + (e.message || e); er.className = 'sub err'; }
+    try { await fetchPrices(u); } catch (e) { er.textContent = 'Не получилось: ' + (e.message || e); er.className = 'sub err'; }
     $('urlGo').disabled = false; $('urlGo').textContent = 'Загрузить цены';
   }
   $('urlGo').onclick = loadUrl;
@@ -93,8 +102,7 @@
   $('tSet').onclick = () => tab('set');
   $('docBack').onclick = () => { const b = st.curBack; st.curBack = null; tab(b || 'ord'); };
   $('docPrint').onclick = () => window.print();
-  const setShow = v => { st.show = v; $('setProfit').setAttribute('aria-pressed', v); try { localStorage.setItem('jal_profit', v ? '1' : '0'); } catch (e) {} drawCart(); if (window.JalCalcScreen && st.P) JalCalcScreen.render(); };
-  $('setProfit').onclick = () => setShow(!st.show);
+  const setShow = v => { st.show = v; try { localStorage.setItem('jal_profit', v ? '1' : '0'); } catch (e) {} drawCart(); if (window.JalCalcScreen && st.P) JalCalcScreen.render(); };
   try { if (localStorage.getItem('jal_profit') === '1') setShow(true); } catch (e) {}
 
   let saved = null;
@@ -104,7 +112,7 @@
     const o = Object.assign({ no: '—', created: new Date().toISOString(), name: '', pre: '100', preU: '%', term: '12' }, JalCart.toOrder());
     showDoc('kpHtml', o, 'cart');
   }
-  window.JalApp = { st, tab, rub, openKp, showDoc, go, register, GO };
+  window.JalApp = { setPricesRaw: setPrices, fetchPrices, loadFile, setShow, st, tab, rub, openKp, showDoc, go, register, GO };
   window.JalTab = tab; tab('calc');
   drawCart();
 })();

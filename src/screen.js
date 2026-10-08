@@ -1,7 +1,7 @@
 /* Общая обвязка экранов: корень .scr с темой, шаблон, переходы между экранами. */
 (function () {
   'use strict';
-  const themeCls = () => { try { const o = JSON.parse(localStorage.getItem('jal_theme') || '{}'); return 'p' + ((o.pal | 0) % 5) + (o.theme === 'night' ? ' nt' : ''); } catch (e) { return 'p0'; } };
+  const themeCls = () => { try { const o = JSON.parse(localStorage.getItem('jal_theme') || '{}'); return 'p' + ((o.pal | 0) % 5) + ((o.theme === 'night' || (o.theme === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches)) ? ' nt' : ''); } catch (e) { return 'p0'; } };
   const ROOT = 'min-height: 100vh; box-sizing: border-box; background: var(--bg); font-family: Inter, -apple-system, system-ui, sans-serif; color: var(--ink); display: flex; flex-direction: column; position: relative';
   function make(rootId, tplId) {
     const box = document.getElementById(rootId); let m = null;

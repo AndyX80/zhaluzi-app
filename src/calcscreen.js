@@ -29,7 +29,7 @@
   let P = null, mounted = null;
   let STOCK = { rdo: D.RDO_STOCK, int: D.INT_STOCK, fo: D.FOROOM_STOCK, am: {} };
 
-  const themeCls = () => { try { const o = JSON.parse(localStorage.getItem('jal_theme') || '{}'); return 'p' + ((o.pal | 0) % 5) + (o.theme === 'night' ? ' nt' : ''); } catch (e) { return 'p0'; } };
+  const themeCls = () => { try { const o = JSON.parse(localStorage.getItem('jal_theme') || '{}'); return 'p' + ((o.pal | 0) % 5) + ((o.theme === 'night' || (o.theme === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches)) ? ' nt' : ''); } catch (e) { return 'p0'; } };
 
   /* Наличие из листа «Наличие» (если он есть в таблице цен). */
   function setSheets(sheets) {

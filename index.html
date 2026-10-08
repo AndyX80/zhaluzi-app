@@ -102,6 +102,7 @@ body[data-own]>header,body[data-own] #bottom{display:none}
 /* шапка и тёмные капсулы */
 .scr header{background:linear-gradient(color-mix(in srgb,var(--dk) 82%,#fff) 0%,var(--dk) 55%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 4px 14px color-mix(in srgb,var(--dk) 45%,transparent)!important}
 .scr header h1{font-weight:500!important;letter-spacing:.2px}
+.scr header{justify-content:flex-start}
 .scr[style*="background: var(--dk)"],.scr [style*="background: var(--dk)"]{background:linear-gradient(color-mix(in srgb,var(--dk) 84%,#fff) 0%,var(--dk) 50%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.28) inset,0 -3px 5px rgba(0,0,0,.25) inset,0 8px 18px color-mix(in srgb,var(--dk) 45%,transparent)!important}
 /* акцентные кнопки: глянцевая капля */
 .scr[style*="background: var(--ac)"],.scr [style*="background: var(--ac)"]{background:linear-gradient(color-mix(in srgb,var(--ac) 65%,#fff) 0%,var(--ac) 48%,color-mix(in srgb,var(--ac) 88%,#000) 52%,color-mix(in srgb,var(--ac) 95%,#fff) 100%)!important;border:1px solid color-mix(in srgb,var(--ac) 65%,#000)!important;box-shadow:0 1px 0 rgba(255,255,255,.65) inset,0 -3px 4px color-mix(in srgb,var(--ac) 55%,#000) inset,0 5px 12px color-mix(in srgb,var(--ac) 45%,transparent)!important;text-shadow:0 -1px 0 rgba(0,0,0,.25)}
@@ -475,10 +476,6 @@ html,body{overflow-x:hidden}
 </template>
 
 
-<main id="settings" hidden>
-  <div class="card flat"><button class="rowc" id="setProfit" aria-pressed="false"><span class="cb">✓</span><span>Показывать закуп и прибыль</span></button></div>
-  <p class="sub" style="padding:0 6px">Версия приложения: <span id="verTxt">v14</span>. Цены ниже можно загрузить заново, если ты их менял в таблице.</p>
-</main>
 
 
 <div id="ordersRoot" hidden></div>
@@ -882,6 +879,192 @@ html,body{overflow-x:hidden}
 
 </template>
 
+<div id="settingsRoot" hidden></div>
+<template id="tpl_settingsRoot">
+<header style="background: var(--dk); color: #FFFFFF; padding: 18px 8px 14px 8px; display: flex; align-items: center; gap: 6px">
+<button onClick="{{go.Main}}" aria-label="Назад" style="border: 0; background: transparent; width: 44px; height: 44px; border-radius: 22px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+</button>
+<h1 style="margin: 0; font-size: 19px; font-weight: 700">Настройки</h1>
+</header>
+<div style="padding: 12px 12px 0 12px"><div style="background: var(--card); border-radius: 14px; padding: 2px 6px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px">
+<sc-for list="{{tabs}}" as="st" hint-placeholder-count="5"><button onClick="{{st.pick}}" style="{{st.style}}">{{st.name}}</button></sc-for>
+</div></div>
+
+<main style="padding: 14px 12px 110px 12px; display: flex; flex-direction: column; gap: 12px">
+<sc-if value="{{tab0}}" hint-placeholder-val="{{true}}">
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Цены</h2>
+<label for="setUrl" style="font-size: 13px; color: var(--m1)">Ссылка на таблицу цен</label>
+<input id="setUrl" type="url" value="{{priceUrl}}" onInput="{{setPriceUrl}}" placeholder="https://script.google.com/macros/s/…/exec?key=…" style="height: 48px; border: 1.5px solid #E3D5C3; border-radius: 12px; padding: 0 12px; font-size: 14px; color: var(--ink); box-sizing: border-box; width: 100%">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{loadPrices}}" style="height: 48px; border: 0; border-radius: 12px; background: var(--dk); color: #FFFFFF; font-size: 15px; font-weight: 600">{{loadLabel}}</button>
+<button onClick="{{pickFile}}" style="height: 48px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Файл с телефона</button>
+</div>
+<div style="{{priceNoteStyle}}">{{priceNote}}</div>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Наличие цветов</h2>
+<label for="stock" style="font-size: 13px; color: var(--m1)">Ссылка на таблицу наличия</label>
+<input id="stock" type="url" value="{{stockUrl}}" onInput="{{setStockUrl}}" placeholder="https://script.google.com/macros/s/…/exec" style="height: 48px; border: 1.5px solid #E3D5C3; border-radius: 12px; padding: 0 12px; font-size: 14px; color: var(--ink); box-sizing: border-box; width: 100%">
+<div style="font-size: 13px; color: var(--m1)">{{stockNote}}</div>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Курс доллара (для Амиго)</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{fxAutoPick}}" style="{{fxAutoStyle}}">Автоматически</button>
+<button onClick="{{fxManPick}}" style="{{fxManStyle}}">Вручную</button>
+</div>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="flex-grow: 1">Курс USD, ₽</span><input type="text" inputmode="decimal" value="{{fxVal}}" onInput="{{setFx}}" style="{{fxInput}}"></label>
+<div style="font-size: 13px; color: var(--m1)">{{fxNote}}</div>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Без интернета</h2>
+<div style="font-size: 14px; line-height: 1.4">Расчёт, корзина, заказы и фото работают без связи. Отправки (КП, замерник, договор) встают в очередь.</div>
+<div style="background: #FFF6E6; border: 1.5px solid #F0D9A8; border-radius: 12px; padding: 10px 12px; font-size: 13px; color: #6B4A00">{{queueNote}}</div>
+<button onClick="{{sendQueue}}" style="height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700">Отправить сейчас</button>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Загруженные параметры</h2>
+<div style="display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 14px">
+<sc-for list="{{params}}" as="r"><span>{{r.k}}</span><span style="font-weight: 700">{{r.v}}</span></sc-for>
+</div>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Монтаж и доставка</h2>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="flex-grow: 1">Установка 50 мм, за изделие</span><input type="number" inputmode="numeric" value="{{rt.w50}}" onChange="{{setRt.w50}}" style="width: 100px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 10px; padding: 0 10px; font-size: 16px; font-weight: 700; text-align: right; box-sizing: border-box; color: var(--ink)"><span style="width: 32px; font-size: 13px; color: var(--m1)">₽</span></label>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="flex-grow: 1">Установка 50 мм с автоматикой</span><input type="number" inputmode="numeric" value="{{rt.w50auto}}" onChange="{{setRt.w50auto}}" style="width: 100px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 10px; padding: 0 10px; font-size: 16px; font-weight: 700; text-align: right; box-sizing: border-box; color: var(--ink)"><span style="width: 32px; font-size: 13px; color: var(--m1)">₽</span></label>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="flex-grow: 1">Установка 25 мм, за изделие</span><input type="number" inputmode="numeric" value="{{rt.w25}}" onChange="{{setRt.w25}}" style="width: 100px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 10px; padding: 0 10px; font-size: 16px; font-weight: 700; text-align: right; box-sizing: border-box; color: var(--ink)"><span style="width: 32px; font-size: 13px; color: var(--m1)">₽</span></label>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="flex-grow: 1">Установка 25 мм с автоматикой</span><input type="number" inputmode="numeric" value="{{rt.w25auto}}" onChange="{{setRt.w25auto}}" style="width: 100px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 10px; padding: 0 10px; font-size: 16px; font-weight: 700; text-align: right; box-sizing: border-box; color: var(--ink)"><span style="width: 32px; font-size: 13px; color: var(--m1)">₽</span></label>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="flex-grow: 1">Доставка, один раз на весь заказ</span><input type="number" inputmode="numeric" value="{{rt.delivery}}" onChange="{{setRt.delivery}}" style="width: 100px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 10px; padding: 0 10px; font-size: 16px; font-weight: 700; text-align: right; box-sizing: border-box; color: var(--ink)"><span style="width: 32px; font-size: 13px; color: var(--m1)">₽</span></label>
+</section>
+</sc-if>
+
+<sc-if value="{{tab1}}" hint-placeholder-val="{{false}}">
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Прибыль</h2>
+<button role="switch" onClick="{{toggleProfit}}" aria-checked="{{profitOn}}" aria-label="Показывать прибыль" style="{{profitStyle}}"><span style="{{profitBox}}">{{profitMark}}</span><span>Показывать прибыль</span></button>
+<button role="switch" onClick="{{toggleFp}}" aria-checked="{{fpOn}}" style="{{fpStyle}}"><span style="{{fpBox}}">{{fpMark}}</span><span>Вход по отпечатку вместо PIN</span></button>
+<button role="switch" onClick="{{togglePin}}" aria-checked="{{pinOn}}" style="{{pinStyle}}"><span style="{{pinBox}}">{{pinMark}}</span><span>PIN при входе в приложение</span></button>
+<button onClick="{{changePin}}" style="height: 44px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Сменить PIN</button>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Минимальная прибыль на изделие</h2>
+<sc-for list="{{mpSups}}" as="g" hint-placeholder-count="5">
+<div style="background: var(--hd); border-radius: 14px; overflow: hidden">
+<button onClick="{{g.toggle}}" aria-expanded="{{g.open}}" style="width: 100%; min-height: 52px; border: 0; background: {{g.headBg}}; display: flex; align-items: center; gap: 10px; padding: 0 14px; font-size: 16px; font-weight: 700; color: var(--ink); text-align: left">
+<span style="flex-grow: 1">{{g.name}}</span><span style="font-size: 13px; font-weight: 600; color: var(--m1)">{{g.summary}}</span>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A2C18" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="{{g.arrow}}"><path d="M6 9l6 6 6-6"></path></svg>
+</button>
+<sc-if value="{{g.open}}" hint-placeholder-val="{{false}}">
+<div style="padding: 10px 14px 14px 14px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #EADFD1">
+<div style="display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 10px; padding: 6px 8px 6px 12px"><span style="flex-grow: 1; font-size: 13px; font-weight: 600; color: var(--dk)">Одним числом на всё, кроме пульта</span><input type="number" inputmode="numeric" placeholder="₽" onChange="{{g.setAll}}" style="width: 90px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 10px; padding: 0 10px; font-size: 16px; font-weight: 700; text-align: right; box-sizing: border-box; background: var(--card)"></div>
+<sc-for list="{{g.rows}}" as="r" hint-placeholder-count="6">
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="flex-grow: 1">{{r.name}}</span><input type="number" inputmode="numeric" value="{{r.val}}" onChange="{{r.set}}" style="width: 100px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 10px; padding: 0 10px; font-size: 16px; font-weight: 700; text-align: right; box-sizing: border-box; color: var(--ink)"><span style="width: 20px; font-size: 13px; color: var(--m1)">₽</span></label>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</section>
+
+</sc-if>
+
+<sc-if value="{{tab2}}" hint-placeholder-val="{{false}}">
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">QR-коды</h2>
+<sc-for list="{{qrs}}" as="q" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="{{q.thumb}}">QR</div>
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0"><span style="font-size: 15px; font-weight: 700">{{q.name}}</span><span style="font-size: 12px; color: var(--m1)">{{q.note}}</span></div>
+<button onClick="{{q.pick}}" style="height: 40px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 13px; font-weight: 700; padding: 0 12px; flex-shrink: 0">{{q.btn}}</button>
+</div>
+</sc-for>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Документы: КП и договор</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{pickSign}}" style="border: 1.5px dashed #E3D5C3; background: transparent; border-radius: 12px; height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; color: var(--dk); font-weight: 600; padding: 0"><sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="" style="height: 30px; max-width: 100%"></sc-if>Подпись · заменить</button>
+<button onClick="{{pickStamp}}" style="border: 1.5px dashed #E3D5C3; background: transparent; border-radius: 12px; height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; color: var(--dk); font-weight: 600; padding: 0"><sc-if value="{{hasStamp}}"><img src="{{stampSrc}}" alt="" style="height: 34px; max-width: 100%"></sc-if>Печать · заменить</button>
+</div>
+<button onClick="{{reqs}}" style="height: 44px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: transparent; color: var(--dk); font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Реквизиты, контакты, условия, УТП</button>
+<div style="font-size: 12px; color: var(--m1)">Срок действия КП: 14 дней · предоплата по умолчанию 100%</div>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Тексты сообщений клиенту</h2>
+<button onClick="{{go.Send}}" style="border: 0; background: transparent; min-height: 44px; border-radius: 12px; border: 1.5px solid #E3D5C3; color: var(--dk); font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Править тексты и посмотреть, как уйдёт</button>
+</section>
+</sc-if>
+
+<sc-if value="{{tab3}}" hint-placeholder-val="{{false}}">
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Внешний вид</h2>
+<div style="font-size: 13px; color: var(--m1); font-weight: 600">Режим</div>
+<div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,.12); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))">
+<sc-for list="{{themes}}" as="t" hint-placeholder-count="3">
+<button onClick="{{t.pick}}" style="{{t.style}}">{{t.name}}</button>
+</sc-for>
+</div>
+<div style="font-size: 13px; color: var(--m1); font-weight: 600">Цветовая гамма</div>
+<div style="display: flex; gap: 12px; flex-wrap: wrap">
+<sc-for list="{{palettes}}" as="p" hint-placeholder-count="5">
+<button onClick="{{p.pick}}" aria-label="{{p.name}}" style="{{p.style}}"><span style="font-size: 11px; font-weight: 700; color: #FFFFFF">{{p.mark}}</span></button>
+</sc-for>
+</div>
+<div style="font-size: 13px; color: var(--m1); font-weight: 600">Размер шрифта</div>
+<div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,.12); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
+<sc-for list="{{sizes}}" as="t" hint-placeholder-count="4">
+<button onClick="{{t.pick}}" style="{{t.style}}">{{t.name}}</button>
+</sc-for>
+</div>
+<div style="font-size: 13px; color: var(--m1); font-weight: 600">Шрифт</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<sc-for list="{{fonts}}" as="t" hint-placeholder-count="4">
+<button onClick="{{t.pick}}" role="radio" aria-checked="{{t.on}}" style="{{t.style}}"><span style="{{t.box}}">{{t.mark}}</span><span>{{t.name}}</span></button>
+</sc-for>
+</div>
+<div style="font-size: 13px; color: var(--m1); font-weight: 600">Так будет выглядеть</div>
+<div style="{{pvBox}}">
+<div style="{{pvHead}}">Расчёт</div>
+<div style="padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="{{pvCard}}"><div style="font-weight: 700">Дерево 50 · дуб антик браш</div><div style="{{pvSub}}">1030×1200 · тесьма · 13 800 ₽</div></div>
+<div style="{{pvBtn}}">В корзину</div>
+</div>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{tab4}}" hint-placeholder-val="{{false}}">
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">База заказов</h2>
+<div style="font-size: 13px; color: var(--m1); line-height: 1.4">{{dbNote}} <button onClick="{{go.Orders}}" style="border: 0; background: transparent; padding: 0; color: var(--dk); text-decoration: underline; font: inherit">Открыть список</button></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{exportDb}}" style="height: 48px; border: 0; border-radius: 12px; background: var(--dk); color: #FFFFFF; font-size: 15px; font-weight: 600">Экспорт в файл</button>
+<button onClick="{{importDb}}" style="height: 48px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Импорт из файла</button>
+</div>
+<div style="border-top: 1px solid #EADFD1; padding-top: 10px; font-size: 14px; font-weight: 700">Архив в Google Диск</div>
+<div style="font-size: 13px; color: var(--m1)">Папка: Мой диск / Жалюзи / Архив заказов</div>
+<div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,.12); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))">
+<sc-for list="{{sched}}" as="t" hint-placeholder-count="3">
+<button onClick="{{t.pick}}" style="{{t.style}}">{{t.name}}</button>
+</sc-for>
+</div>
+<button onClick="{{driveNow}}" style="height: 48px; border-radius: 12px; border: 1.5px solid var(--dk); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700">Сохранить в Диск сейчас</button>
+<div style="font-size: 13px; color: var(--m1)">Архив в Диск ещё не делался</div>
+</section>
+</sc-if>
+</main>
+<div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="height: 60px; border-radius: 30px; background: var(--card); box-shadow: 0 4px 14px rgba(40,20,10,0.2); display: flex; align-items: center; gap: 4px; padding: 0 6px; font-size: 13px; font-weight: 700">
+<button onClick="{{go.Main}}" aria-label="Расчёт" style="border: 0; background: transparent; text-decoration: none; position: relative; flex: 1 1 0; height: 48px; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg></button>
+<button onClick="{{go.Cart}}" aria-label="Корзина" style="border: 0; background: transparent; text-decoration: none; position: relative; flex: 1 1 0; height: 48px; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L22 7H6"></path></svg><b style="position: absolute; top: 2px; left: calc(50% + 4px); min-width: 18px; height: 18px; border-radius: 9px; background: var(--ac); color: #FFFFFF; font-size: 11px; line-height: 18px; text-align: center">{{cartCount}}</b></button>
+<button onClick="{{go.Orders}}" aria-label="Заказы" style="border: 0; background: transparent; text-decoration: none; position: relative; flex: 1 1 0; height: 48px; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"></path><circle cx="3.5" cy="6" r="1"></circle><circle cx="3.5" cy="12" r="1"></circle><circle cx="3.5" cy="18" r="1"></circle></svg></button>
+<div style="flex: 1.7 1 0; height: 48px; border-radius: 24px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg><span>Настройки</span></div>
+</div>
+</div>
+
+</template>
+
 
 <main id="doc" hidden>
   <div id="docBody"></div>
@@ -911,6 +1094,7 @@ html,body{overflow-x:hidden}
 <script src="src/cartscreen.js?v=14"></script>
 <script src="src/ordersscreen.js?v=14"></script>
 <script src="src/orderscreen.js?v=14"></script>
+<script src="src/settingsscreen.js?v=14"></script>
 <script src="src/app.js?v=14"></script>
 </body>
 </html>

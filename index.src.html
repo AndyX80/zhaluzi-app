@@ -102,6 +102,7 @@ body[data-own]>header,body[data-own] #bottom{display:none}
 /* шапка и тёмные капсулы */
 .scr header{background:linear-gradient(color-mix(in srgb,var(--dk) 82%,#fff) 0%,var(--dk) 55%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 4px 14px color-mix(in srgb,var(--dk) 45%,transparent)!important}
 .scr header h1{font-weight:500!important;letter-spacing:.2px}
+.scr header{justify-content:flex-start}
 .scr[style*="background: var(--dk)"],.scr [style*="background: var(--dk)"]{background:linear-gradient(color-mix(in srgb,var(--dk) 84%,#fff) 0%,var(--dk) 50%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.28) inset,0 -3px 5px rgba(0,0,0,.25) inset,0 8px 18px color-mix(in srgb,var(--dk) 45%,transparent)!important}
 /* акцентные кнопки: глянцевая капля */
 .scr[style*="background: var(--ac)"],.scr [style*="background: var(--ac)"]{background:linear-gradient(color-mix(in srgb,var(--ac) 65%,#fff) 0%,var(--ac) 48%,color-mix(in srgb,var(--ac) 88%,#000) 52%,color-mix(in srgb,var(--ac) 95%,#fff) 100%)!important;border:1px solid color-mix(in srgb,var(--ac) 65%,#000)!important;box-shadow:0 1px 0 rgba(255,255,255,.65) inset,0 -3px 4px color-mix(in srgb,var(--ac) 55%,#000) inset,0 5px 12px color-mix(in srgb,var(--ac) 45%,transparent)!important;text-shadow:0 -1px 0 rgba(0,0,0,.25)}
@@ -146,10 +147,6 @@ html,body{overflow-x:hidden}
 <!--TPL cartRoot tplCart cart-->
 
 
-<main id="settings" hidden>
-  <div class="card flat"><button class="rowc" id="setProfit" aria-pressed="false"><span class="cb">✓</span><span>Показывать закуп и прибыль</span></button></div>
-  <p class="sub" style="padding:0 6px">Версия приложения: <span id="verTxt">v14</span>. Цены ниже можно загрузить заново, если ты их менял в таблице.</p>
-</main>
 
 
 <!--TPL ordersRoot tpl_ordersRoot orders-->
@@ -157,6 +154,8 @@ html,body{overflow-x:hidden}
 <!--TPL orderOpenRoot tpl_orderOpenRoot orderOpen-->
 
 <!--TPL orderRoot tpl_orderRoot orderRoot-->
+
+<!--TPL settingsRoot tpl_settingsRoot settingsRoot-->
 
 
 <main id="doc" hidden>
@@ -187,6 +186,7 @@ html,body{overflow-x:hidden}
 <script src="src/cartscreen.js?v=14"></script>
 <script src="src/ordersscreen.js?v=14"></script>
 <script src="src/orderscreen.js?v=14"></script>
+<script src="src/settingsscreen.js?v=14"></script>
 <script src="src/app.js?v=14"></script>
 </body>
 </html>

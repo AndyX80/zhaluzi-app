@@ -15,6 +15,8 @@
   const RATES = { w50: 3000, w50auto: 5000, w25: 1200, w25auto: 2000, delivery: 1000 };
   const MINP = { def: 2000, p: {} };
   const SUPNAME = { Amigo: 'Амиго', Foroom: 'Форум' };
+  try { Object.assign(RATES, JSON.parse(localStorage.getItem('jal_rates') || '{}')); const mp = JSON.parse(localStorage.getItem('jal_minp') || '{}'); if (mp.def !== undefined) MINP.def = mp.def; if (mp.p) MINP.p = mp.p; } catch (e) {}
+  const saveCfg = () => { try { localStorage.setItem('jal_rates', JSON.stringify(RATES)); localStorage.setItem('jal_minp', JSON.stringify(MINP)); } catch (e) {} };
 
   /* ---------- автоматика из листа ---------- */
   let AUTO = null;
@@ -235,7 +237,7 @@
     if (!AUTO) return;
     const box = document.getElementById('cartRoot');
     if (!mounted) mounted = JalTpl.mount(box, document.getElementById('tplCart'));
-    let cls = 'p0'; try { const o = JSON.parse(localStorage.getItem('jal_theme') || '{}'); cls = 'p' + ((o.pal | 0) % 5) + (o.theme === 'night' ? ' nt' : ''); } catch (e) {}
+    let cls = 'p0'; try { const o = JSON.parse(localStorage.getItem('jal_theme') || '{}'); cls = 'p' + ((o.pal | 0) % 5) + ((o.theme === 'night' || (o.theme === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches)) ? ' nt' : ''); } catch (e) {}
     box.className = 'scr ' + cls;
     box.setAttribute('style', 'min-height: 100vh; box-sizing: border-box; background: var(--bg); font-family: Inter, -apple-system, system-ui, sans-serif; color: var(--ink); display: flex; flex-direction: column; position: relative');
     mounted.render(build());
@@ -248,7 +250,7 @@
   function restore(snap, no) { Object.assign(C, JSON.parse(JSON.stringify(snap)), { editNo: no || null, cf: null, undoItem: null }); save(); }
   function clear() { C.editNo = null; C.cart = []; C.service = 0; C.disc = ''; save(); }
 
-  window.JalCart = { C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
+  window.JalCart = { RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
     autoList: (sup, kind) => (AUTO && AUTO[sup] ? AUTO[sup][kind] : null), autoQty, autoStep, hasAuto: sup => !!(AUTO && AUTO[sup]),
     counts: () => ({ drive: C.cart.filter(x => x.kind === 'drive').reduce((a, x) => a + x.qty, 0), remote: C.cart.filter(x => x.kind === 'remote').reduce((a, x) => a + x.qty, 0) }) };
 })();
