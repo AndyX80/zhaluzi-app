@@ -73,7 +73,7 @@
     const lineSum = s.cart.map((it, i) => (calcs[i].ok ? ceil100(calcs[i].unit + adds[i]) * it.qty : 0));
     const total = lineSum.reduce((x, y) => x + y, 0);
     const dv = Math.max(0, Number(s.disc) || 0);
-    const discAmt = Math.min(total, s.discMode === 'pct' ? Math.round(total * Math.min(dv, 100) / 100 / 100) * 100 : dv);
+    const discAmt = Math.min(total, s.discMode === 'pct' ? Math.round(total * Math.min(dv, 50) / 100 / 100) * 100 : Math.min(dv, total * 0.5));
     const goodsSum = s.cart.reduce((x, it, i) => x + (calcs[i].ok ? calcs[i].unit * it.qty : 0), 0);
     return { calcs, S, adds, lineSum, total, dv, discAmt, goodsSum, netTotal: total - discAmt };
   }
@@ -202,7 +202,7 @@
       hasSugg: sugg > 0, suggText: 'По ставкам монтажа: ' + sp.join(' + ') + ' = ' + fmt(sugg) + ' ₽ (ориентировочно)',
       suggStyle: 'height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: ' + (S === sugg ? 'var(--chip)' : '#FFFFFF') + '; color: var(--dk); font-size: 13px; font-weight: 700; padding: 0 12px; white-space: nowrap; flex-shrink: 0',
       applySugg: () => set({ service: sugg }),
-      disc: s.disc || '', setDisc: e => set({ disc: e.target.value }),
+      disc: s.disc || '', setDisc: e => { const v = Math.max(0, Number(e.target.value) || 0), mx = s.discMode === 'pct' ? 50 : Math.floor(total * 0.5); if (v > mx) alert('Скидка не больше 50% от суммы: ' + (s.discMode === 'pct' ? '50%' : fmt(mx) + ' ₽')); set({ disc: v ? String(Math.min(v, mx)) : '' }); },
       discPct: () => set({ discMode: 'pct', disc: '' }), discRub: () => set({ discMode: 'rub', disc: '' }), discPctStyle: tabBtn(pctOn), discRubStyle: tabBtn(!pctOn),
       hasDisc: discAmt > 0, discLine: 'Сумма без скидки ' + fmt(total) + ' ₽ · скидка −' + fmt(discAmt) + ' ₽' + (pctOn ? ' (' + dv + '%)' : ''),
       hasBelow: showProfit && below.length > 0, belowText: 'Ниже минимальной прибыли: позиции ' + below.join(', ') + (discAmt > 0 ? '. Скидка съедает прибыль, уменьши её.' : '.'),
