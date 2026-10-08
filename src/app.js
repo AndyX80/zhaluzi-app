@@ -67,7 +67,8 @@
   function showDoc(fn, o, back) {
     st.curBack = back || st.curBack;
     const sig = { sign: lsGet('jal_sign'), stamp: lsGet('jal_stamp') };
-    $('docBody').innerHTML = JalDocs[fn](o, sig); $('sigBox').hidden = fn !== 'dogovorHtml';
+    if (JalDocScreens.show(fn, o, sig)) $('docBody').innerHTML = ''; else { JalDocScreens.hideAll(); $('docBody').innerHTML = JalDocs[fn](o, sig); }
+    $('sigBox').hidden = fn !== 'dogovorHtml';
     st.curDoc = [fn, o]; tab('doc');
   }
   function pickImg(id, key) {

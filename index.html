@@ -69,7 +69,8 @@ body[data-tab=calc] #capCart,body[data-tab=cart] #capCalc,body[data-tab=ord] #ca
 @page{margin:14mm}
 @media print{body{background:#fff;padding:0}header,nav,.noprint,main:not(#doc){display:none!important}.doc{padding:0}}
 @page{margin:14mm}
-@media print{body{background:#fff}header,#bottom,.noprint,main:not(#doc){display:none!important}main#doc{padding:0}.doc{padding:0;box-shadow:none}}
+@page{size:A4;margin:0}
+@media print{.docp{zoom:1.3345!important}body{background:#fff}header,#bottom,.noprint,main:not(#doc){display:none!important}main#doc{padding:0}.doc{padding:0;box-shadow:none}}
 /* экран «Расчёт» по макету: тема и «Aero»-оформление действуют только внутри .scr */
 .scr input{min-height:0;border-radius:0;padding:0;border:0;background:none;width:auto;margin:0;color:inherit}
 body[data-own]>header,body[data-own] #bottom{display:none}
@@ -130,7 +131,7 @@ html,body{overflow-x:hidden}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v14</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v15</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -142,7 +143,7 @@ html,body{overflow-x:hidden}
 </section>
 
 
-<div id="calcRoot" hidden></div>
+<div id="calcRoot" class="" hidden></div>
 <template id="tplCalc">
 <sc-if value="{{calcHeader}}" hint-placeholder-val="{{false}}"><header style="background: var(--dk); color: #FFFFFF; padding: 16px 14px 14px 18px; display: flex; align-items: center; gap: 10px">
 <h1 style="margin: 0; font-size: 22px; font-weight: 800; flex-grow: 1">{{calcTitle}}</h1>
@@ -362,7 +363,7 @@ html,body{overflow-x:hidden}
 </sc-if>
 </template>
 
-<div id="cartRoot" hidden></div>
+<div id="cartRoot" class="" hidden></div>
 <template id="tplCart">
 <header style="background: var(--dk); color: #FFFFFF; padding: 16px 12px 14px 8px; display: flex; align-items: center; gap: 6px">
 <button onClick="{{closeCart}}" aria-label="Назад к расчёту" style="width: 48px; height: 48px; border: 0; border-radius: 24px; background: transparent; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
@@ -478,7 +479,7 @@ html,body{overflow-x:hidden}
 
 
 
-<div id="ordersRoot" hidden></div>
+<div id="ordersRoot" class="" hidden></div>
 <template id="tpl_ordersRoot">
 <header style="background: var(--dk); color: #FFFFFF; padding: 18px 8px 14px 8px; display: flex; align-items: center; gap: 6px">
 <button onClick="{{go.Main}}" aria-label="Назад" style="border: 0; background: transparent; width: 44px; height: 44px; border-radius: 22px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
@@ -538,7 +539,7 @@ html,body{overflow-x:hidden}
 
 </template>
 
-<div id="orderOpenRoot" hidden></div>
+<div id="orderOpenRoot" class="" hidden></div>
 <template id="tpl_orderOpenRoot">
 <header style="background: var(--dk); color: #FFFFFF; padding: 18px 8px 14px 8px; display: flex; align-items: center; gap: 6px">
 <button onClick="{{back}}" aria-label="Назад к заказам" style="border: 0; background: transparent; width: 44px; height: 44px; border-radius: 22px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
@@ -633,7 +634,7 @@ html,body{overflow-x:hidden}
 
 </template>
 
-<div id="orderRoot" hidden></div>
+<div id="orderRoot" class="" hidden></div>
 <template id="tpl_orderRoot">
 <header style="background: var(--dk); color: #FFFFFF; padding: 16px 12px 14px 8px; display: flex; align-items: center; gap: 6px">
 <button onClick="{{go.Cart}}" aria-label="Назад в корзину" style="border: 0; background: transparent; width: 48px; height: 48px; border-radius: 24px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
@@ -879,7 +880,7 @@ html,body{overflow-x:hidden}
 
 </template>
 
-<div id="settingsRoot" hidden></div>
+<div id="settingsRoot" class="" hidden></div>
 <template id="tpl_settingsRoot">
 <header style="background: var(--dk); color: #FFFFFF; padding: 18px 8px 14px 8px; display: flex; align-items: center; gap: 6px">
 <button onClick="{{go.Main}}" aria-label="Назад" style="border: 0; background: transparent; width: 44px; height: 44px; border-radius: 22px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
@@ -1067,6 +1068,281 @@ html,body{overflow-x:hidden}
 
 
 <main id="doc" hidden>
+<div id="docKpRoot" class="docp" hidden></div>
+<template id="tpl_docKp">
+<div style="width: 595px; display: flex; flex-direction: column">
+<sc-for list="{{pages}}" as="pg" hint-placeholder-count="1">
+<div style="width: 595px; height: 842px; box-sizing: border-box; background: #FFFFFF; font-family: Arial, 'Segoe UI', sans-serif; color: #1A1A1A; padding: 26px 36px 20px 36px; display: flex; flex-direction: column; gap: 9px; font-size: 9px; overflow: hidden; border-bottom: 1px solid #E3E3E3">
+
+<sc-if value="{{pg.first}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: flex-start; gap: 12px">
+<img src="assets/logo.png" alt="Жалюзи-СПБ" style="width: 128px; height: auto; display: block">
+<div style="flex-grow: 1; text-align: right; font-size: 9.5px; line-height: 1.45">
+<div style="font-weight: 700">{{c.phone}}</div>
+<div>{{c.address}}</div>
+<div>{{c.site}} &nbsp;•&nbsp; {{c.email}}</div>
+</div>
+</div>
+<div style="background: #F1780F; color: #FFFFFF; font-size: 16px; font-weight: 700; text-align: center; padding: 8px 0">Коммерческое предложение</div>
+<div style="display: flex; align-items: baseline; gap: 10px; margin-top: -4px">
+<div style="flex-grow: 1; font-size: 10.5px; line-height: 1.35">{{intro}}</div>
+<div style="font-size: 8.5px; font-style: italic; color: #6E6E6E; white-space: nowrap">{{date}}</div>
+</div>
+</sc-if>
+<sc-if value="{{pg.cont}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #F1780F; padding-bottom: 8px">
+<img src="assets/logo.png" alt="Жалюзи-СПБ" style="width: 84px; height: auto; display: block">
+<div style="flex-grow: 1; text-align: right; font-size: 10px; font-weight: 700; color: #F1780F">Коммерческое предложение — лист {{pg.num}} из {{pg.count}}</div>
+</div>
+</sc-if>
+
+<sc-if value="{{pg.hasRows}}" hint-placeholder-val="{{true}}">
+<div style="border: 0.75px solid #DDDDDD">
+<div style="display: grid; grid-template-columns: 26px minmax(0, 1fr) 46px 70px 74px; background: #1A1A1A; color: #FFFFFF; font-weight: 700; font-size: 9px">
+<span style="padding: 6px 0; text-align: center">№</span><span style="padding: 6px 6px">Наименование</span><span style="padding: 6px 0; text-align: center">Кол-во, шт</span><span style="padding: 6px 0; text-align: center">Цена за шт</span><span style="padding: 6px 0; text-align: center">Сумма</span>
+</div>
+<sc-for list="{{pg.rows}}" as="i" hint-placeholder-count="4">
+<div style="display: grid; grid-template-columns: 26px minmax(0, 1fr) 46px 70px 74px; border-top: 0.75px solid #DDDDDD; align-items: center; font-size: 9.5px">
+<span style="padding: 5px 0; text-align: center">{{i.n}}</span>
+<span style="padding: 5px 6px; display: flex; flex-direction: column; gap: 2px"><b>{{i.name}}</b><span style="font-size: 8px; color: #6E6E6E; line-height: 1.3">{{i.spec}}</span></span>
+<span style="text-align: center">{{i.qty}}</span><span style="text-align: center">{{i.price}}</span><span style="text-align: center; font-weight: 700">{{i.sum}}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{pg.hasTotal}}" hint-placeholder-val="{{true}}">
+<div style="background: #F1780F; color: #FFFFFF; display: flex; align-items: center; padding: 8px 14px">
+<span style="flex-grow: 1; font-size: 13px; font-weight: 700">ИТОГО:</span><span style="font-size: 17px; font-weight: 700">{{total}}</span>
+</div>
+<div style="align-self: flex-start; background: #FDEBDB; border: 0.75px solid #F1780F; border-radius: 6px; color: #F1780F; font-weight: 700; font-size: 8.5px; padding: 5px 16px">Предложение действует до {{valid}}</div>
+</sc-if>
+
+<sc-if value="{{pg.hasLower}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{conds}}" as="b" hint-placeholder-count="3">
+<div style="background: #F4F4F4; padding: 8px 9px; display: flex; flex-direction: column; gap: 4px; min-height: 62px">
+<b style="color: #F1780F; font-size: 9.5px">{{b.title}}</b>
+<span style="font-size: 8.3px; line-height: 1.45; white-space: pre-line">{{b.text}}</span>
+</div>
+</sc-for>
+</div>
+
+<div style="background: #1A1A1A; color: #FFFFFF; padding: 8px 14px; display: flex; flex-direction: column; gap: 3px">
+<b style="color: #F1780F; font-size: 10.5px">Почему выбирают Жалюзи-СПБ</b>
+<sc-for list="{{utp}}" as="u" hint-placeholder-count="4">
+<span style="font-size: 8.6px">•&nbsp; {{u}}</span>
+</sc-for>
+</div>
+
+<div style="background: #FDEBDB; border-radius: 5px; text-align: center; padding: 10px 8px; font-size: 10px; font-weight: 700">Готовы обсудить детали или ответить на вопросы — <span style="color: #F1780F">{{c.phone}}</span> <span style="font-weight: 400">или</span> <span style="color: #F1780F">{{c.site}}</span></div>
+
+<div style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px">
+<b style="font-size: 9.5px">Надеемся на взаимовыгодное сотрудничество!</b>
+<div style="display: flex; align-items: center; height: 74px; position: relative">
+<span style="font-size: 9px; width: 210px">С уважением, {{c.signer}}</span>
+<sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="подпись" style="height: 52px; width: auto; position: absolute; left: 150px; top: 36px"></sc-if>
+<sc-if value="{{hasStamp}}"><img src="{{stampSrc}}" alt="печать" style="height: 127px; width: 127px; position: absolute; left: 150px; top: 0px; transform: rotate(-9deg); mix-blend-mode: multiply; opacity: 0.93"></sc-if>
+</div>
+</div>
+<div style="font-size: 6.3px; color: #6E6E6E; line-height: 1.4; margin-top: auto">{{c.req}}</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</template>
+<div id="docBlankRoot" class="docp" hidden></div>
+<template id="tpl_docBlank">
+<div style="width: 595px; display: flex; flex-direction: column">
+<sc-for list="{{pages}}" as="pg" hint-placeholder-count="1">
+<div style="width: 595px; height: 842px; box-sizing: border-box; background: #FFFFFF; font-family: 'Segoe UI', system-ui, sans-serif; color: #111111; padding: 26px 26px 18px 26px; display: flex; flex-direction: column; gap: 8px; font-size: 9px; overflow: hidden; border-bottom: 1px solid #E3E3E3">
+
+<div style="display: flex; align-items: flex-end; gap: 12px">
+<div style="display: flex; align-items: center; width: 150px">
+<img src="assets/logo.png" alt="Жалюзи-СПБ" style="height: 52px; width: auto; display: block">
+</div>
+<div style="font-size: 12px; font-weight: 700; flex-grow: 1; text-align: center; white-space: nowrap">ЗАКАЗ № <span style="border-bottom: 1px solid #111111; padding: 0 16px; color: #1F4E78">{{num}}</span><sc-if value="{{pg.cont}}" hint-placeholder-val="{{false}}"><span style="font-size: 8px; font-weight: 600; color: #444444; white-space: nowrap"> &nbsp;лист {{pg.num}} из {{pg.count}}</span></sc-if></div>
+<div style="width: 190px; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; gap: 4px"><b>Замерил:</b><span style="flex-grow: 1; border-bottom: 1px solid #999999; color: #1F4E78">{{measurer}}</span></div>
+<div style="display: flex; gap: 4px"><span style="flex-grow: 1; border-bottom: 1px solid #999999; color: #1F4E78; text-align: center">{{date}}</span></div>
+</div>
+</div>
+
+<sc-if value="{{pg.first}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; gap: 10px; flex-grow: 1; min-height: 0">
+<div style="flex: 0 0 330px; border: 1px solid #111111; padding: 8px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{pg.cells}}" as="c" hint-placeholder-count="12">
+<div style="display: flex; align-items: center; justify-content: center">
+<svg width="96" height="112" viewBox="0 0 96 112" fill="none" stroke-linecap="round">
+<rect x="14" y="12" width="72" height="88" stroke="{{c.box}}" stroke-width="{{c.bw}}" stroke-dasharray="{{c.dash}}"></rect>
+<text x="50" y="60" text-anchor="middle" font-size="10" fill="#333333">{{c.n}}</text>
+<text x="50" y="9" text-anchor="middle" font-size="10" fill="#1F4E78" font-weight="700">{{c.w}}</text>
+<text x="7" y="56" text-anchor="middle" font-size="10" fill="#1F4E78" font-weight="700" transform="rotate(-90 7 56)">{{c.h}}</text>
+<path d="{{c.thin}}" stroke="#1F4E78" stroke-width="1.1"></path><path d="{{c.thick}}" stroke="#1F4E78" stroke-width="3"></path>
+<text x="50" y="96" text-anchor="middle" font-size="7.5" fill="#1F4E78">{{c.opt}}</text>
+</svg>
+</div>
+</sc-for>
+</div>
+
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px">
+<sc-for list="{{fields}}" as="f" hint-placeholder-count="5">
+<div style="display: flex; gap: 4px; align-items: baseline"><b style="white-space: nowrap">{{f.k}}</b><span style="flex-grow: 1; border-bottom: 1px solid #999999; color: #1F4E78; min-height: 11px">{{f.v}}</span></div>
+</sc-for>
+<div style="border: 1px solid #111111; padding: 6px; display: flex; flex-direction: column; gap: 4px">
+<b>Примечания:</b>
+<div style="color: #1F4E78; line-height: 1.35; white-space: pre-line; min-height: 70px">{{notes}}</div>
+<div style="display: flex; gap: 6px; align-items: center"><b>Установка:</b><span>{{instYes}}</span><span>{{instNo}}</span></div>
+<sc-if value="{{pg.inst}}" hint-placeholder-val="{{true}}">
+<sc-for list="{{mount}}" as="m" hint-placeholder-count="5">
+<div style="display: flex; gap: 4px"><b style="white-space: nowrap">{{m.k}}</b><span style="flex-grow: 1; border-bottom: 1px solid #999999; color: #1F4E78">{{m.v}}&nbsp;</span></div>
+</sc-for>
+</sc-if>
+</div>
+<sc-if value="{{pg.inst}}" hint-placeholder-val="{{true}}">
+<div style="border: 1px solid #111111; padding: 6px; display: flex; flex-direction: column; gap: 4px; font-size: 8.5px">
+<b>Заполняется Потребителем (представителем Потребителя)</b>
+<div>Есть ли «Часы тишины» в доме? {{quietText}}</div>
+<div style="color: #333333">При установке изделий обязуюсь предоставить доступ для проведения работ, проинформировать мастера о скрытых коммуникациях в области установки (трубы, электропроводка и т.п.)</div>
+<div><b>Стадия ремонта:</b> {{stageText}}</div>
+</div>
+</sc-if>
+</div>
+</div>
+
+<div style="text-align: center; font-weight: 700; font-size: 9px; line-height: 1.35">ВНИМАНИЕ!!! ПРИ ИСПОЛНЕНИИ ЗАМЕРОВ ПРИСУТСТВИЕ ЗАКАЗЧИКА ОБЯЗАТЕЛЬНО!!!<br>Жалюзи, изготовленные в соответствии с заказом, возврату не подлежат!*</div>
+<div style="font-size: 7px; color: #444444">*Постановление Правительства РФ № 55 от 20.10.1998 N 1222 (от 06.02.2002 N 81) п.4 «Текстильные товары отпускаемые на метраж».</div>
+</sc-if>
+
+<sc-if value="{{pg.sk}}" hint-placeholder-val="{{false}}">
+<div style="border: 1px solid #111111; padding: 8px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; align-items: center; justify-items: center">
+<sc-for list="{{pg.cells}}" as="c" hint-placeholder-count="12">
+<div style="display: flex; align-items: center; justify-content: center">
+<svg width="96" height="112" viewBox="0 0 96 112" fill="none" stroke-linecap="round">
+<rect x="14" y="12" width="72" height="88" stroke="{{c.box}}" stroke-width="{{c.bw}}" stroke-dasharray="{{c.dash}}"></rect>
+<text x="50" y="60" text-anchor="middle" font-size="10" fill="#333333">{{c.n}}</text>
+<text x="50" y="9" text-anchor="middle" font-size="10" fill="#1F4E78" font-weight="700">{{c.w}}</text>
+<text x="7" y="56" text-anchor="middle" font-size="10" fill="#1F4E78" font-weight="700" transform="rotate(-90 7 56)">{{c.h}}</text>
+<path d="{{c.thin}}" stroke="#1F4E78" stroke-width="1.1"></path><path d="{{c.thick}}" stroke="#1F4E78" stroke-width="3"></path>
+<text x="50" y="96" text-anchor="middle" font-size="7.5" fill="#1F4E78">{{c.opt}}</text>
+</svg>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{pg.hasRows}}" hint-placeholder-val="{{true}}">
+<div style="border: 1px solid #111111">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 46px 80px 90px; background: #D9D9D9; font-weight: 700; text-align: center">
+<span style="padding: 3px; border-right: 1px solid #111111">Наименование продукции</span><span style="padding: 3px; border-right: 1px solid #111111">Кол-во</span><span style="padding: 3px; border-right: 1px solid #111111">Стоимость</span><span style="padding: 3px">Общая стоимость</span>
+</div>
+<sc-for list="{{pg.rows}}" as="l" hint-placeholder-count="4">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 46px 80px 90px; border-top: 1px solid #111111; color: #1F4E78">
+<span style="padding: 3px 5px; border-right: 1px solid #111111">{{l.name}}</span><span style="padding: 3px; border-right: 1px solid #111111; text-align: center">{{l.qty}}</span><span style="padding: 3px 5px; border-right: 1px solid #111111; text-align: right">{{l.price}}</span><span style="padding: 3px 5px; text-align: right">{{l.sum}}</span>
+</div>
+</sc-for>
+<sc-if value="{{pg.hasTotal}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 170px; border-top: 1px solid #111111">
+<span style="padding: 3px 5px; text-align: right; font-weight: 700; background: #D9D9D9">ИТОГО к оплате:</span><span style="padding: 3px 5px; text-align: right; font-weight: 800; font-size: 11px; color: #1F4E78">{{total}}</span>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{pg.hasTotal}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: 70px 70px 70px minmax(0, 1fr) 100px; border: 1px solid #111111; text-align: center">
+<span style="padding: 3px; border-right: 1px solid #111111; background: #EEEEEE; font-weight: 700">ПП</span>
+<span style="padding: 3px; border-right: 1px solid #111111; background: #EEEEEE; font-weight: 700">ПКО</span>
+<span style="padding: 3px; border-right: 1px solid #111111; background: #EEEEEE; font-weight: 700">Дата</span>
+<span style="padding: 3px; border-right: 1px solid #111111; background: #EEEEEE; font-weight: 700">Разное</span>
+<span style="padding: 3px; background: #EEEEEE; font-weight: 700">Предоплата</span>
+<span style="padding: 3px; border-right: 1px solid #111111; border-top: 1px solid #111111">&nbsp;</span>
+<span style="padding: 3px; border-right: 1px solid #111111; border-top: 1px solid #111111">&nbsp;</span>
+<span style="padding: 3px; border-right: 1px solid #111111; border-top: 1px solid #111111; color: #1F4E78">{{date}}</span>
+<span style="padding: 3px; border-right: 1px solid #111111; border-top: 1px solid #111111; color: #1F4E78">{{payText}}</span>
+<span style="padding: 3px; border-top: 1px solid #111111; color: #1F4E78">{{prepayText}}</span>
+</div>
+
+<div style="display: flex; gap: 14px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 3px; font-size: 9px">
+<div>Всю информацию можно получить по телефону/WhatsApp:<br><b style="white-space: nowrap">8-981-764-55-45</b></div>
+<div>Адрес: г. Санкт-Петербург ул. Ильюшина д.14 ТК «Долгоозерный» 3 этаж</div>
+<div>E-mail: <span style="color: #1F4E78; text-decoration: underline">89817645545@mail.ru</span> Сайт: <b>жалюзи-спб.рф</b></div>
+</div>
+<div style="width: 220px; display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; gap: 4px"><b>Оставшаяся сумма:</b><span style="flex-grow: 1; border-bottom: 1px solid #999999; color: #1F4E78; text-align: center; font-weight: 700">{{rest}}</span></div>
+<div style="font-size: 8px">С типом изделий, цветом и произведенными замерами согласен:</div>
+<div style="border-bottom: 1px solid #999999; height: 10px"></div>
+<sc-if value="{{pg.inst}}" hint-placeholder-val="{{true}}"><div style="display: flex; gap: 4px; font-size: 8px"><span>Претензий к монтажу нет</span><span style="flex-grow: 1; border-bottom: 1px solid #999999"></span></div></sc-if>
+</div>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</template>
+<div id="docDogRoot" class="docp" hidden></div>
+<template id="tpl_docDog">
+<div style="width: 595px; background: #8E9AA6; display: flex; flex-direction: column; gap: 16px; font-family: 'Times New Roman', Georgia, serif; color: #111111">
+
+<div style="width: 595px; height: 842px; box-sizing: border-box; background: #FFFFFF; padding: 30px 38px 24px 38px; display: flex; flex-direction: column; gap: 5px; font-size: 8.4px; line-height: 1.34">
+<div style="text-align: center; font-size: 12px; font-weight: 700">ДОГОВОР ПОСТАВКИ № {{num}}</div>
+<div style="display: flex"><span style="flex-grow: 1">г. Санкт-Петербург</span><span>{{dateText}}</span></div>
+<div style="text-align: justify">Индивидуальный предприниматель Хорошавин Андрей Владимирович (ОГРНИП 318574900000760, ИНН 575404581100), именуемый в дальнейшем «Поставщик», с одной стороны, и <b style="color: #1F4E78">{{buyer}}</b>, именуемый в дальнейшем «Покупатель», с другой стороны, вместе именуемые «Стороны», заключили настоящий Договор о нижеследующем:</div>
+<sc-for list="{{p1}}" as="b" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<b style="margin-top: 3px">{{b.h}}</b>
+<sc-for list="{{b.t}}" as="t" hint-placeholder-count="3"><div style="text-align: justify">{{t}}</div></sc-for>
+</div>
+</sc-for>
+<div style="border: 0.7px solid #111111; font-size: 8px">
+<div style="display: grid; grid-template-columns: 22px minmax(0, 1fr) 40px 28px 66px 72px; background: #E6E6E6; font-weight: 700; text-align: center">
+<span style="padding: 2px">№</span><span style="padding: 2px">Наименование</span><span style="padding: 2px">Кол-во</span><span style="padding: 2px">Ед.</span><span style="padding: 2px">Цена</span><span style="padding: 2px">Сумма</span>
+</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+<div style="display: grid; grid-template-columns: 22px minmax(0, 1fr) 40px 28px 66px 72px; border-top: 0.7px solid #111111; color: #1F4E78">
+<span style="padding: 2px; text-align: center">{{r.n}}</span><span style="padding: 2px 4px">{{r.name}}</span><span style="padding: 2px; text-align: center">{{r.qty}}</span><span style="padding: 2px; text-align: center">шт.</span><span style="padding: 2px 4px; text-align: right">{{r.price}}</span><span style="padding: 2px 4px; text-align: right">{{r.sum}}</span>
+</div>
+</sc-for>
+<div style="display: flex; border-top: 0.7px solid #111111; font-weight: 700"><span style="flex-grow: 1; padding: 2px 4px; text-align: right">Итого:</span><span style="width: 72px; padding: 2px 4px; text-align: right; color: #1F4E78">{{totalRub}}</span></div>
+</div>
+<sc-for list="{{p2}}" as="b" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<b style="margin-top: 3px">{{b.h}}</b>
+<sc-for list="{{b.t}}" as="t" hint-placeholder-count="3"><div style="text-align: justify">{{t}}</div></sc-for>
+</div>
+</sc-for>
+<div style="margin-top: auto; display: flex; align-items: flex-end; height: 56px; font-size: 7.5px; color: #555555"><span style="flex: 1 1 0; position: relative; height: 18px; display: flex; align-items: flex-end">Поставщик ____________<sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="подпись" style="position: absolute; left: 40px; bottom: 2px; height: 56px; width: auto"></sc-if><sc-if value="{{hasStamp}}"><img src="{{stampSrc}}" alt="печать" style="position: absolute; left: 14px; bottom: -8px; width: 127px; height: 127px; transform: rotate(-9deg); mix-blend-mode: multiply; opacity: 0.93"></sc-if></span><span style="flex: 1 1 0; height: 18px; display: flex; align-items: flex-end; justify-content: flex-end">Покупатель ____________</span></div>
+</div>
+
+<div style="width: 595px; height: 842px; box-sizing: border-box; background: #FFFFFF; padding: 30px 38px 24px 38px; display: flex; flex-direction: column; gap: 5px; font-size: 8.4px; line-height: 1.34">
+<sc-for list="{{p3}}" as="b" hint-placeholder-count="5">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<b style="margin-top: 3px">{{b.h}}</b>
+<sc-for list="{{b.t}}" as="t" hint-placeholder-count="3"><div style="text-align: justify">{{t}}</div></sc-for>
+</div>
+</sc-for>
+<b style="margin-top: 6px">9. РЕКВИЗИТЫ И ПОДПИСИ СТОРОН</b>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 1px">
+<b>Поставщик</b>
+<sc-for list="{{seller}}" as="l" hint-placeholder-count="8"><span>{{l}}</span></sc-for>
+<div style="position: relative; height: 90px; margin-top: 6px">
+<span style="position: absolute; left: 0; bottom: 14px">_______________ / Хорошавин А.В. /</span>
+<sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="подпись" style="position: absolute; left: 36px; bottom: 20px; height: 56px; width: auto"></sc-if>
+<sc-if value="{{hasStamp}}"><img src="{{stampSrc}}" alt="печать" style="position: absolute; left: -30px; bottom: -30px; width: 127px; height: 127px; transform: rotate(-9deg); mix-blend-mode: multiply; opacity: 0.93"></sc-if>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 1px">
+<b>Покупатель</b>
+<sc-for list="{{buyerReq}}" as="l" hint-placeholder-count="6"><span style="color: #1F4E78">{{l}}</span></sc-for>
+<div style="height: 90px; margin-top: 6px; display: flex; align-items: flex-end; padding-bottom: 14px; box-sizing: border-box">_______________ / {{buyerShort}} /</div>
+</div>
+</div>
+<div style="margin-top: 36px; border: 1px dashed #1F4E78; border-radius: 4px; padding: 8px; color: #1F4E78; font-family: Arial, sans-serif; font-size: 8px">Приложение № 1 — бланк заказа (замерный лист) № {{num}} — прикладывается к договору третьей страницей того же PDF.</div>
+</div>
+</div>
+</template>
   <div id="docBody"></div>
   <div class="card noprint" id="sigBox" style="margin-top:12px" hidden><p class="lbl">Подпись и печать (хранятся только на этом телефоне)</p>
     <p class="sub">Подпись</p><input type="file" id="sigFile" accept="image/*"><p class="sub" style="margin-top:8px">Печать</p><input type="file" id="stampFile" accept="image/*"></div>
@@ -1083,18 +1359,19 @@ html,body{overflow-x:hidden}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/calc.js?v=14"></script>
-<script src="src/orders.js?v=14"></script>
-<script src="src/docs.js?v=14"></script>
-<script src="src/data.js?v=14"></script>
-<script src="src/limits.js?v=14"></script>
-<script src="src/tpl.js?v=14"></script>
-<script src="src/screen.js?v=14"></script>
-<script src="src/calcscreen.js?v=14"></script>
-<script src="src/cartscreen.js?v=14"></script>
-<script src="src/ordersscreen.js?v=14"></script>
-<script src="src/orderscreen.js?v=14"></script>
-<script src="src/settingsscreen.js?v=14"></script>
-<script src="src/app.js?v=14"></script>
+<script src="src/calc.js?v=15"></script>
+<script src="src/orders.js?v=15"></script>
+<script src="src/docs.js?v=15"></script>
+<script src="src/data.js?v=15"></script>
+<script src="src/limits.js?v=15"></script>
+<script src="src/tpl.js?v=15"></script>
+<script src="src/screen.js?v=15"></script>
+<script src="src/calcscreen.js?v=15"></script>
+<script src="src/cartscreen.js?v=15"></script>
+<script src="src/ordersscreen.js?v=15"></script>
+<script src="src/orderscreen.js?v=15"></script>
+<script src="src/settingsscreen.js?v=15"></script>
+<script src="src/docscreens.js?v=15"></script>
+<script src="src/app.js?v=15"></script>
 </body>
 </html>

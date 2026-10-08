@@ -69,7 +69,8 @@ body[data-tab=calc] #capCart,body[data-tab=cart] #capCalc,body[data-tab=ord] #ca
 @page{margin:14mm}
 @media print{body{background:#fff;padding:0}header,nav,.noprint,main:not(#doc){display:none!important}.doc{padding:0}}
 @page{margin:14mm}
-@media print{body{background:#fff}header,#bottom,.noprint,main:not(#doc){display:none!important}main#doc{padding:0}.doc{padding:0;box-shadow:none}}
+@page{size:A4;margin:0}
+@media print{.docp{zoom:1.3345!important}body{background:#fff}header,#bottom,.noprint,main:not(#doc){display:none!important}main#doc{padding:0}.doc{padding:0;box-shadow:none}}
 /* экран «Расчёт» по макету: тема и «Aero»-оформление действуют только внутри .scr */
 .scr input{min-height:0;border-radius:0;padding:0;border:0;background:none;width:auto;margin:0;color:inherit}
 body[data-own]>header,body[data-own] #bottom{display:none}
@@ -130,7 +131,7 @@ html,body{overflow-x:hidden}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v14</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v15</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -159,6 +160,9 @@ html,body{overflow-x:hidden}
 
 
 <main id="doc" hidden>
+<!--TPL docKpRoot tpl_docKp docKp-->
+<!--TPL docBlankRoot tpl_docBlank docBlank-->
+<!--TPL docDogRoot tpl_docDog docDog-->
   <div id="docBody"></div>
   <div class="card noprint" id="sigBox" style="margin-top:12px" hidden><p class="lbl">Подпись и печать (хранятся только на этом телефоне)</p>
     <p class="sub">Подпись</p><input type="file" id="sigFile" accept="image/*"><p class="sub" style="margin-top:8px">Печать</p><input type="file" id="stampFile" accept="image/*"></div>
@@ -175,18 +179,19 @@ html,body{overflow-x:hidden}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/calc.js?v=14"></script>
-<script src="src/orders.js?v=14"></script>
-<script src="src/docs.js?v=14"></script>
-<script src="src/data.js?v=14"></script>
-<script src="src/limits.js?v=14"></script>
-<script src="src/tpl.js?v=14"></script>
-<script src="src/screen.js?v=14"></script>
-<script src="src/calcscreen.js?v=14"></script>
-<script src="src/cartscreen.js?v=14"></script>
-<script src="src/ordersscreen.js?v=14"></script>
-<script src="src/orderscreen.js?v=14"></script>
-<script src="src/settingsscreen.js?v=14"></script>
-<script src="src/app.js?v=14"></script>
+<script src="src/calc.js?v=15"></script>
+<script src="src/orders.js?v=15"></script>
+<script src="src/docs.js?v=15"></script>
+<script src="src/data.js?v=15"></script>
+<script src="src/limits.js?v=15"></script>
+<script src="src/tpl.js?v=15"></script>
+<script src="src/screen.js?v=15"></script>
+<script src="src/calcscreen.js?v=15"></script>
+<script src="src/cartscreen.js?v=15"></script>
+<script src="src/ordersscreen.js?v=15"></script>
+<script src="src/orderscreen.js?v=15"></script>
+<script src="src/settingsscreen.js?v=15"></script>
+<script src="src/docscreens.js?v=15"></script>
+<script src="src/app.js?v=15"></script>
 </body>
 </html>

@@ -166,6 +166,6 @@
       '</div>';
   }
 
-  const api = { kpHtml, dogovorHtml, zamernikHtml, rublesWords, dateRu, itemName, orderTotal };
+  const api = { kpHtml, dogovorHtml, zamernikHtml, rublesWords, dateRu, itemName, orderTotal, itemsWithDelivery };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.JalDocs = api;
 })(typeof self !== 'undefined' ? self : this);

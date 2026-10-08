@@ -5,7 +5,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 h=open('index.src.html').read()
 def sub(m):
     rid,tid,f=m.groups()
-    return '<div id="%s" hidden></div>\n<template id="%s">\n%s</template>\n'%(rid,tid,open('tpl/%s.html'%f).read())
+    return '<div id="%s" class="%s" hidden></div>\n<template id="%s">\n%s</template>\n'%(rid,'docp' if rid.startswith('doc') and rid.endswith('Root') and rid!='docBody' else '',tid,open('tpl/%s.html'%f).read())
 h=re.sub(r'<!--TPL (\S+) (\S+) (\S+)-->\n?',sub,h)
 open('index.html','w').write(h)
 print('index.html собран,',len(h))
