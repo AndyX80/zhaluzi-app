@@ -1,0 +1,242 @@
+<header style="background: var(--dk); color: #FFFFFF; padding: 16px 12px 14px 8px; display: flex; align-items: center; gap: 6px">
+<button onClick="{{go.Cart}}" aria-label="Назад в корзину" style="border: 0; background: transparent; width: 48px; height: 48px; border-radius: 24px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+</button>
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+<h1 style="margin: 0; font-size: 20px; font-weight: 700">Замерник</h1>
+<div style="font-size: 13px; color: #DCC8B0">Необязательно · данные изделий из корзины</div>
+</div>
+</header>
+<div style="padding: 12px 12px 0 12px"><div style="background: var(--card); border-radius: 14px; padding: 2px 6px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px">
+<sc-for list="{{steps}}" as="st" hint-placeholder-count="5"><button onClick="{{st.pick}}" style="{{st.style}}">{{st.name}}</button></sc-for>
+</div></div>
+
+
+<main style="padding: 14px 12px 110px 12px; display: flex; flex-direction: column; gap: 12px">
+<sc-if value="{{step0}}" hint-placeholder-val="{{true}}">
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Заказ</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{head}}" as="f" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<label style="font-size: 12px; color: var(--m1); font-weight: 600">{{f.label}}</label>
+<input value="{{f.value}}" placeholder="{{f.ph}}" onInput="{{f.set}}" style="height: 46px; border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 0 12px; font-size: 15px; box-sizing: border-box; width: 100%; color: var(--ink); background: var(--card)">
+</div>
+</sc-for>
+</div>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Заказчик</h2>
+<div style="background: var(--card); border-radius: 14px; box-shadow: 0 0 0 1px #EFE3D3; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+<button onClick="{{setFiz}}" style="{{typeFiz}}">Физлицо</button>
+<button onClick="{{setYur}}" style="{{typeYur}}">Юрлицо</button>
+</div>
+<sc-for list="{{client}}" as="f" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<label style="font-size: 12px; color: var(--m1); font-weight: 600">{{f.label}}</label>
+<input value="{{f.value}}" inputmode="{{f.mode}}" onInput="{{f.set}}" style="height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 0 12px; font-size: 16px; box-sizing: border-box; width: 100%; color: var(--ink); background: var(--card)">
+</div>
+</sc-for>
+</section>
+</sc-if>
+
+<sc-if value="{{step1}}" hint-placeholder-val="{{false}}">
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: baseline; gap: 8px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700; flex-grow: 1">Изделия</h2>
+<button onClick="{{go.Cart}}" style="border: 0; background: transparent; padding: 0; color: var(--dk); text-decoration: underline; font-size: 13px; font-weight: 600">изменить в корзине</button>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{sketch}}" as="k" hint-placeholder-count="3">
+<div style="border: 1px solid #E6D8C6; border-radius: 12px; padding: 6px; display: flex; flex-direction: column; align-items: center; gap: 2px">
+<svg width="96" height="104" viewBox="0 0 96 104" fill="none" stroke="#4A2C18" stroke-linecap="round">
+<text x="48" y="10" text-anchor="middle" font-size="11" fill="#2A1A10" stroke="none" font-weight="700">{{k.w}}</text>
+<text x="8" y="60" text-anchor="middle" font-size="11" fill="#2A1A10" stroke="none" font-weight="700" transform="rotate(-90 8 60)">{{k.h}}</text>
+<rect x="18" y="16" width="70" height="84" rx="2" stroke-width="1.5"></rect>
+<text x="53" y="62" text-anchor="middle" font-size="15" fill="#7A6453" stroke="none" font-weight="700">{{k.n}}</text>
+<path d="{{k.thin}}" stroke-width="1.2"></path><path d="{{k.thick}}" stroke-width="3.2"></path>
+</svg>
+<div style="font-size: 11px; color: var(--m1); text-align: center; line-height: 1.25">{{k.note}}</div>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #EADFD1; padding-top: 10px">
+<div style="font-size: 14px; font-weight: 700">Цвет лесенки / тесьмы</div>
+<sc-for list="{{ladder}}" as="r" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="width: 34px; font-size: 14px; font-weight: 700">№ {{r.n}}</span>
+<div style="display: flex; flex-grow: 1; gap: 6px; min-width: 0">
+<button onClick="{{r.pickAuto}}" style="{{r.autoStyle}}">По ламелям</button>
+<button onClick="{{r.pickOwn}}" style="{{r.ownStyle}}">Свой</button>
+</div>
+<input value="{{r.value}}" onInput="{{r.setVal}}" placeholder="цвет" style="{{r.inputStyle}}">
+</div>
+</sc-for>
+</div>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Фото и видео</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{addPhoto}}" style="height: 48px; min-width: 0; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Снять фото</button>
+<button onClick="{{addVideo}}" style="height: 48px; min-width: 0; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Снять видео</button>
+<button onClick="{{addPhoto}}" style="height: 48px; min-width: 0; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Из галереи</button>
+</div>
+<sc-if value="{{hasMedia}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{media}}" as="m" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="{{m.thumb}}">
+<span style="font-size: 22px">{{m.icon}}</span>
+<button onClick="{{m.remove}}" aria-label="Удалить" style="position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border-radius: 14px; border: 0; background: rgba(0,0,0,0.55); color: #FFFFFF; font-size: 15px; padding: 0">×</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+<span style="font-size: 12px; font-weight: 700; line-height: 1.2">{{m.label}}</span>
+<button onClick="{{m.next}}" style="height: 28px; border: 0; border-radius: 8px; background: var(--chip); color: var(--ink); font-size: 12px; font-weight: 600; padding: 0 6px">{{m.pos}}</button>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Примечания</h2>
+<textarea rows="5" onInput="{{setNotes}}" style="border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 10px 12px; font-size: 15px; line-height: 1.4; color: var(--ink); resize: vertical; font-family: inherit; background: var(--card)">{{notes}}</textarea>
+</section>
+</sc-if>
+
+<sc-if value="{{step2}}" hint-placeholder-val="{{false}}">
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Монтаж</h2>
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="flex-grow: 1; font-size: 15px">Доставка и установка</span>
+<div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 190px; flex-shrink: 0; box-shadow: 0 0 0 1px #EFE3D3">
+<button onClick="{{setInstY}}" style="{{instY}}">есть</button>
+<button onClick="{{setInstN}}" style="{{instN}}">нет</button>
+</div>
+</div>
+<sc-if value="{{instWarn}}" hint-placeholder-val="{{false}}">
+<div style="background: #FDECEA; border: 1.5px solid #E7B7B7; border-radius: 12px; padding: 10px 12px; font-size: 14px; color: #B3261E; font-weight: 600; line-height: 1.35">В корзине сумма доставки и установки 0 ₽. Укажи сумму в корзине. <button onClick="{{go.Cart}}" style="border: 0; background: transparent; padding: 0; text-decoration: underline; font-size: inherit; font-weight: inherit; color: #B3261E">Открыть корзину</button></div>
+</sc-if>
+<sc-if value="{{inst}}" hint-placeholder-val="{{true}}">
+<sc-for list="{{mount}}" as="f" hint-placeholder-count="5">
+<div style="display: flex; align-items: center; gap: 10px">
+<label style="flex-grow: 1; font-size: 15px">{{f.label}}</label>
+<input value="{{f.value}}" placeholder="—" onInput="{{f.set}}" style="width: 150px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 0 10px; font-size: 15px; box-sizing: border-box; color: var(--ink); background: var(--card); text-align: right">
+</div>
+</sc-for>
+</sc-if>
+<div style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #EADFD1; padding-top: 10px">
+<sc-for list="{{dates}}" as="d" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 8px"><span style="{{d.dot}}"></span><span style="font-size: 15px; font-weight: 700">{{d.name}}</span></div>
+<div style="display: flex; align-items: center; gap: 8px">
+<input type="date" value="{{d.value}}" onChange="{{d.setVal}}" aria-label="{{d.name}}" style="flex: 1 1 0; min-width: 0; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 12px; padding: 0 8px; font-size: 15px; box-sizing: border-box; color: var(--ink); background: var(--card)">
+<button onClick="{{d.cal}}" style="{{d.calStyle}}">{{d.calText}}</button>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; border-top: 1px solid #EADFD1; padding-top: 10px">
+<label for="mnotes" style="font-size: 15px; font-weight: 700">Нюансы для монтажника</label>
+<textarea id="mnotes" rows="3" onInput="{{setMnotes}}" placeholder="Этаж, лифт, домофон, ключи, подоконник, батарея, во сколько ждут" style="border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 10px 12px; font-size: 15px; line-height: 1.4; color: var(--ink); resize: vertical; font-family: inherit; background: var(--card)">{{mnotes}}</textarea>
+</div>
+</section>
+<sc-if value="{{inst}}" hint-placeholder-val="{{true}}"><section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Со слов заказчика</h2>
+<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+<span style="flex-grow: 1; font-size: 15px">Часы тишины в доме</span>
+<span style="font-size: 14px; color: var(--m1)">с</span>
+<input value="{{qFrom}}" onInput="{{setQFrom}}" style="width: 52px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; text-align: center; font-size: 15px; box-sizing: border-box">
+<span style="font-size: 14px; color: var(--m1)">до</span>
+<input value="{{qTo}}" onInput="{{setQTo}}" style="width: 52px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; text-align: center; font-size: 15px; box-sizing: border-box">
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="flex-grow: 1; font-size: 15px">Стадия ремонта</span>
+<div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 220px; flex-shrink: 0; box-shadow: 0 0 0 1px #EFE3D3">
+<button onClick="{{setRepRough}}" style="{{repRough}}">черновая</button>
+<button onClick="{{setRepFine}}" style="{{repFine}}">чистовая</button>
+</div>
+</div>
+</section></sc-if>
+</sc-if>
+
+<sc-if value="{{step3}}" hint-placeholder-val="{{false}}">
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Расчёт стоимости</h2>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 30px 70px 76px; gap: 6px; font-size: 12px; font-weight: 700; color: var(--m1); padding-bottom: 4px; border-bottom: 1px solid #EADFD1">
+<span>Наименование</span><span style="text-align: center">Кол</span><span style="text-align: right">Цена</span><span style="text-align: right">Сумма</span>
+</div>
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="4">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 30px 70px 76px; gap: 6px; font-size: 14px; align-items: baseline">
+<span>{{l.name}}</span><span style="text-align: center">{{l.qty}}</span><span style="text-align: right">{{l.price}}</span><span style="text-align: right; font-weight: 700">{{l.sum}}</span>
+</div>
+</sc-for>
+<div style="display: flex; align-items: baseline; border-top: 1px solid #EADFD1; padding-top: 8px">
+<span style="flex-grow: 1; font-size: 16px; font-weight: 700">Итого к оплате</span>
+<span style="font-size: 24px; font-weight: 800; color: #1E6B24">{{total}}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 4px">
+<label style="flex-grow: 1; font-size: 15px">Срок изготовления, календарных дней</label>
+<input type="number" inputmode="numeric" value="{{term}}" placeholder="—" onChange="{{setTerm}}" style="width: 90px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 0 10px; font-size: 17px; font-weight: 700; box-sizing: border-box; text-align: right; color: var(--ink); background: var(--card)">
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="flex-grow: 1; font-size: 13px; color: var(--m1)">{{termHint}}</span>
+<button onClick="{{useTerm}}" style="height: 36px; border: 0; border-radius: 10px; padding: 0 14px; background: var(--chip); color: var(--ink); font-size: 14px; font-weight: 600">Подставить {{termHintN}}</button>
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<label style="flex-grow: 1; font-size: 15px">Предоплата</label>
+<div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 96px; flex-shrink: 0; box-shadow: 0 0 0 1px #EFE3D3">
+<button onClick="{{setPct}}" style="{{modePct}}">%</button>
+<button onClick="{{setRub}}" style="{{modeRub}}">₽</button>
+</div>
+<input type="number" inputmode="numeric" value="{{prepay}}" onChange="{{setPrepay}}" style="width: 100px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 0 10px; font-size: 17px; font-weight: 700; box-sizing: border-box; text-align: right; color: var(--ink); background: var(--card)">
+</div>
+<div style="font-size: 13px; color: var(--m1); text-align: right; margin-top: -4px">{{prepayNote}}
+</div>
+<div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); box-shadow: 0 0 0 1px #EFE3D3">
+<sc-for list="{{pays}}" as="p" hint-placeholder-count="5">
+<button onClick="{{p.pick}}" style="{{p.style}}">{{p.name}}</button>
+</sc-for>
+</div>
+<div style="display: flex; align-items: baseline">
+<span style="flex-grow: 1; font-size: 15px">Оставшаяся сумма</span>
+<span style="font-size: 20px; font-weight: 800">{{rest}}</span>
+</div>
+<button role="switch" onClick="{{toggleQr}}" aria-checked="{{qrOn}}" style="{{qrRow}}"><span style="{{qrBox}}">{{qrMark}}</span><span style="flex-grow: 1">Приложить QR для оплаты к замернику</span></button>
+</section>
+</sc-if>
+
+<sc-if value="{{step4}}" hint-placeholder-val="{{false}}">
+
+
+
+
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 13px; color: var(--m1); font-weight: 600">Кому отправить</div>
+<div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+<button onClick="{{toClient}}" style="{{toClientStyle}}">Клиенту</button>
+<button onClick="{{toSelf}}" style="{{toSelfStyle}}">Себе для правки</button>
+</div>
+<div style="font-size: 12px; color: var(--m2); line-height: 1.4">{{toHint}}</div>
+</div>
+<div style="{{docGrid}}">
+
+<button onClick="{{docKp}}" style="border: 0; background: transparent; height: 56px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none">КП</button>
+<button onClick="{{docZam}}" style="border: 0; background: transparent; height: 56px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none">
+Замерник</button>
+<sc-if value="{{needDog}}" hint-placeholder-val="{{true}}"><button onClick="{{docDog}}" style="border: 0; background: transparent; height: 56px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none">Договор</button></sc-if>
+</div>
+
+<button onClick="{{goSend}}" style="border: 0; background: transparent; height: 48px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none">Отправить в мессенджер или с каталогом →</button>
+<sc-if value="{{toClientOn}}" hint-placeholder-val="{{true}}"><button onClick="{{toggleCopy}}" role="checkbox" aria-checked="{{copyOn}}" style="{{copyRow}}"><span style="{{copyBox}}">{{copyMark}}</span><span style="flex-grow: 1; text-align: left">Копию документов мне на почту</span><span style="font-weight: 400; font-size: 12px; color: var(--m1)">{{myMail}}</span></button></sc-if>
+</sc-if>
+</main>
+<div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="height: 64px; border-radius: 32px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; padding: 0 8px 0 22px; gap: 10px; box-shadow: 0 8px 20px rgba(40,20,10,0.35)">
+<div style="display: flex; flex-direction: column; flex-grow: 1"><div style="font-size: 17px; font-weight: 800; white-space: nowrap">{{total}}</div><div style="font-size: 12px; opacity: 0.75">{{stepHint}}</div></div>
+<sc-if value="{{notLast}}" hint-placeholder-val="{{true}}"><button onClick="{{nextStep}}" style="height: 48px; border: 0; border-radius: 24px; background: var(--ac); color: #FFFFFF; font-size: 16px; font-weight: 800; padding: 0 26px">Далее</button></sc-if>
+<sc-if value="{{isLast}}" hint-placeholder-val="{{false}}"><button onClick="{{sendDo}}" style="{{sendStyle}}">{{sendLabel}}</button></sc-if>
+</div>
+</div>
+

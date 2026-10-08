@@ -35,7 +35,7 @@
   function register(name, o) { SCREENS[name] = o; }
   function tab(name) {
     Object.keys(SCREENS).forEach(k => { const s = SCREENS[k]; $(s.root).hidden = k !== name || (s.needP && !st.P); });
-    $('form').hidden = name !== 'form'; $('doc').hidden = name !== 'doc'; $('settings').hidden = name !== 'set';
+    $('doc').hidden = name !== 'doc'; $('settings').hidden = name !== 'set';
     const sc = SCREENS[name];
     $('load').hidden = name === 'set' ? false : (!!st.P || !(sc && sc.needP));
     document.body.setAttribute('data-tab', name);
@@ -46,8 +46,9 @@
   register('calc', { root: 'calcRoot', needP: true, render: () => JalCalcScreen.render() });
   register('cart', { root: 'cartRoot', needP: true, render: () => JalCart.render() });
   register('ord', { root: 'ordersRoot', render: n => JalOrdersScreen.render(n) });
+  register('order', { root: 'orderRoot', needP: true, render: () => JalOrderScreen.render() });
   register('orderOpen', { root: 'orderOpenRoot', needP: true, render: n => JalOrdersScreen.render(n) });
-  const GO = { Main: 'calc', Cart: 'cart', Orders: 'ord', Settings: 'set', OrderOpen: 'orderOpen', Order: 'form' };
+  const GO = { Main: 'calc', Cart: 'cart', Orders: 'ord', Settings: 'set', OrderOpen: 'orderOpen', Order: 'order' };
   function go(k) {
     if (GO[k]) { tab(GO[k]); return; }
     if (k === 'Kp') { openKp(); return; }
@@ -70,9 +71,6 @@
     };
   }
   pickImg('sigFile', 'jal_sign'); pickImg('stampFile', 'jal_stamp');
-  st.buyer = 'физ';
-  function setBuyer(b) { st.buyer = b; $('urBox').hidden = b !== 'юр'; $('bFiz').setAttribute('aria-pressed', b === 'физ'); $('bUr').setAttribute('aria-pressed', b === 'юр'); }
-  $('bFiz').onclick = () => setBuyer('физ'); $('bUr').onclick = () => setBuyer('юр');
 
   async function loadUrl() {
     const u = $('url').value.trim(), er = $('urlErr'); er.textContent = '';
@@ -95,19 +93,6 @@
   $('tSet').onclick = () => tab('set');
   $('docBack').onclick = () => { const b = st.curBack; st.curBack = null; tab(b || 'ord'); };
   $('docPrint').onclick = () => window.print();
-  $('fSave').onclick = () => {
-    const v = id => $(id).value.trim();
-    const co = JalCart.toOrder();
-    if (!co.items.length) { alert('Корзина пуста'); return; }
-    const data = { priced: true, disc: co.disc, needDog: co.needDog, name: v('fName'), phone: v('fPhone'), addr: v('fAddr'), meas: v('fMeas'), inst: v('fInst'),
-      buyer: st.buyer, company: v('fCompany'), inn: v('fInn'), uaddr: v('fUaddr'), email: v('fEmail'),
-      delivery: co.delivery, measurer: v('fMeasurer'),
-      pre: v('fPre') || '100', preU: $('fPreU').value, term: v('fTerm') || '12', note: v('fNote'), cart: JalCart.snapshot() };
-    const en = JalCart.C.editNo;
-    if (en && JalOrders.get(en)) { JalOrders.update(en, Object.assign({ items: co.items }, data)); JalOrders.addVersion(en, 'Правка заказа', co.items.reduce((a, x) => a + x.price, 0) - co.disc + ' ₽'); }
-    else JalOrders.create(data, co.items);
-    JalCart.clear(); tab('ord');
-  };
   const setShow = v => { st.show = v; $('setProfit').setAttribute('aria-pressed', v); try { localStorage.setItem('jal_profit', v ? '1' : '0'); } catch (e) {} drawCart(); if (window.JalCalcScreen && st.P) JalCalcScreen.render(); };
   $('setProfit').onclick = () => setShow(!st.show);
   try { if (localStorage.getItem('jal_profit') === '1') setShow(true); } catch (e) {}

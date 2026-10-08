@@ -208,7 +208,7 @@
       dogMark: s.needDog ? '✓' : '',
       cartTotal: fmt(netTotal) + ' ₽', cartPieces: pcs, showProfit, cartProfit: (netProf >= 0 ? '+' : '') + fmt(netProf),
       cartCount: s.cart.length,
-      openKp: () => window.JalApp.openKp(), openOrder: () => window.JalApp.tab('form'),
+      openKp: () => window.JalApp.openKp(), openOrder: () => window.JalApp.tab('order'),
       openOrders: () => window.JalApp.tab('ord'), openSettings: () => window.JalApp.tab('set')
     };
   }
