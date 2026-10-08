@@ -118,7 +118,7 @@
   function fitBottom() {
     const m = document.querySelector('main:not([hidden])'); if (!m) return;
     let top = innerHeight; document.querySelectorAll('div[style*="position: fixed"][style*="z-index: 5"],#bottom').forEach(e => { const r = e.getBoundingClientRect(); if (r.height > 0 && r.width > 0 && r.top < top) top = r.top; });
-    const need = Math.ceil(innerHeight - top) + 24; if (need > 40 && need < 900) m.style.paddingBottom = Math.max(need, 260 * (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zm')) || 1)) + 'px';
+    const need = Math.ceil(innerHeight - top) + 4; if (need > 40 && need < 900) m.style.paddingBottom = need + 'px';
   }
   setInterval(fitBottom, 400); addEventListener('resize', fitBottom);
   const docOut = (btn, kind) => async () => {
