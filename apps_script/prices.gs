@@ -42,18 +42,30 @@ function doPost(e) {
   let d = {};
   try { d = JSON.parse(e.postData.contents); } catch (x) { return out_({ ok: false, error: 'bad body' }); }
   if (d.key !== KEY) return out_({ ok: false, error: 'bad key' });
+  if (d.mail) return mail_(d.mail);
   const folder = folder_(), old = folder.getFilesByName('заказы.json');
   while (old.hasNext()) old.next().setTrashed(true);
   folder.createFile('заказы.json', JSON.stringify(d.orders), 'application/json');
   return out_({ ok: true, n: (d.orders || []).length });
+}
+// Письмо с вложениями (PDF, Word): приложение присылает адрес, тему, текст и файлы в base64.
+function mail_(m) {
+  try {
+    const atts = (m.files || []).map(function (f) {
+      return Utilities.newBlob(Utilities.base64Decode(f.b64), f.mime || 'application/octet-stream', f.name);
+    });
+    MailApp.sendEmail({ to: m.to, subject: m.subject || 'Жалюзи-СПБ', body: m.body || '', attachments: atts, name: 'Жалюзи-СПБ' });
+    return out_({ ok: true, sent: atts.length });
+  } catch (x) { return out_({ ok: false, error: String(x) }); }
 }
 function ordersGet_() {
   const it = folder_().getFilesByName('заказы.json');
   return out_({ ok: true, orders: it.hasNext() ? JSON.parse(it.next().getBlob().getDataAsString('UTF-8')) : [] });
 }
 
-// Одноразово: выбери эту функцию и нажми «Выполнить», чтобы Google выдал доступ к Диску.
+// Одноразово (и после каждого обновления кода): выбери эту функцию и нажми «Выполнить», чтобы Google выдал доступ к Диску.
 function razreshenie() {
   DriveApp.getFoldersByName(FOLDER);
   DriveApp.createFile('t.txt', 't').setTrashed(true);
+  MailApp.getRemainingDailyQuota();
 }

@@ -223,7 +223,7 @@
         const o = save(JalCart.toOrder()); if (!o) return;
         JalCart.clear(); S = null; try { localStorage.removeItem(KEY); } catch (e) {}
         window.JalOrdersScreen.F.openNo = o.no;
-        const A = App(); A.st.sendNo = o.no; A.st.sendBack = 'orderOpen'; A.st.sendPreset = { kinds: ['blank'].concat(co.needDog ? ['dogovor'] : []), self: S0self };
+        const A = App(); A.st.sendNo = o.no; A.st.sendBack = 'orderOpen'; A.st.sendPreset = { kinds: ['blank'].concat(co.needDog ? ['dogovor'] : []), self: S0self, copy: S.copy };
         A.tab('send');
       }
     };

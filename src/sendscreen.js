@@ -26,7 +26,7 @@
 
   function render() {
     const A = App();
-    if (A.st.sendPreset) { const pr = A.st.sendPreset; A.st.sendPreset = null; S.lastNo = A.st.sendNo; Object.assign(S, { kinds: pr.kinds || [], self: !!pr.self, edited: null, vars: false, ch: pr.self ? 'mail' : S.ch }); }
+    if (A.st.sendPreset) { const pr = A.st.sendPreset; A.st.sendPreset = null; S.lastNo = A.st.sendNo; Object.assign(S, { kinds: pr.kinds || [], self: !!pr.self, copy: !!pr.copy, edited: null, vars: false, ch: pr.self ? 'mail' : S.ch }); }
     if (S.lastNo !== A.st.sendNo) { S.self = false; S.lastNo = A.st.sendNo; }
     const o = A.st.sendNo ? JalOrders.get(A.st.sendNo) : null, D = data(o), s = S;
     if (S.self && D) D.email = lsGet('jal_mail') || '89817645545@mail.ru';
@@ -60,7 +60,7 @@
     const ch = CH.find(c => c.key === s.ch), ok = !(empty || none);
     const toggle = (on, plain) => 'height: 46px; border: 0; border-radius: 12px; display: flex; align-items: center; gap: 12px; padding: 0 12px; color: var(--ink); width: 100%; box-sizing: border-box; background: ' + (on ? 'var(--sel)' : plain) + '; font-weight: ' + (on ? 700 : 400);
     const box = (on, off) => 'width: 22px; height: 22px; border-radius: 6px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 15px; font-weight: 800; border: 2px solid ' + (on ? 'var(--ac)' : off) + '; background: ' + (on ? 'var(--ac)' : 'transparent');
-    const toast = m => { const d = document.createElement('div'); d.textContent = m; d.setAttribute('style', 'position: fixed; left: 12px; right: 12px; bottom: 90px; z-index: 99; background: #222; color: #fff; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.35; box-shadow: 0 4px 16px rgba(0,0,0,.3)'); document.body.appendChild(d); setTimeout(() => d.remove(), 2500); };
+    const toast = m => { const d = document.createElement('div'); d.textContent = m; d.setAttribute('style', 'position: fixed; left: 12px; right: 12px; bottom: 90px; z-index: 99; background: #222; color: #fff; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.35; box-shadow: 0 4px 16px rgba(0,0,0,.3)'); document.body.appendChild(d); setTimeout(() => d.remove(), 4500); };
     const send = async () => {
       if (!ok) return;
       const enc = encodeURIComponent, subj = 'Жалюзи-СПБ' + (o ? ', заказ № ' + o.no : '');
@@ -68,7 +68,14 @@
       if (prep && prep.state === 'err') toast('Файлы не собрались: ' + prep.err);
       if (prep && prep.state === 'busy') { toast('Файлы ещё готовятся, нажми ещё раз'); return; }
       if (prep && prep.state === 'ready' && prep.files.length) {
-        done = await JalExport.share(prep.files, text, subj);
+        const myMail = lsGet('jal_mail') || '89817645545@mail.ru';
+        if (s.self) {
+          toast('Отправляю на почту…');
+          try { await JalDrive.mail(myMail, subj, text, prep.files); toast('Письмо отправлено на ' + myMail); done = true; } catch (e) { toast('Почта не ушла: ' + (e.message || e)); }
+        } else if (s.copy) {
+          JalDrive.mail(myMail, 'Копия: ' + subj, text, prep.files.filter(f => /\.pdf$/.test(f.name))).then(() => toast('Копия ушла на ' + myMail), e => toast('Копия на почту не ушла: ' + (e.message || e)));
+        }
+        if (!done) done = await JalExport.share(prep.files, text, subj);
         if (!done) prep.files.forEach((f, i) => setTimeout(() => JalExport.save(f), i * 600));
       }
       if (!done) {

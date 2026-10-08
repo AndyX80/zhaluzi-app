@@ -116,13 +116,13 @@
     st.className = root.className; st.setAttribute('style', 'background: var(--bg); left: 0; right: 0; bottom: 0; z-index: 4; box-sizing: border-box; height: ' + (need - 4) + 'px; box-shadow: 0 -1px 0 var(--line)');
   }
   setInterval(fitBottom, 400); addEventListener('resize', fitBottom);
-  const docOut = (btn, kind) => async () => {
+  const docOut = btn => async () => {
     if (!st.curDoc) return; const msg = $('docMsg'), old = btn.textContent; btn.disabled = true; btn.textContent = 'Готовлю…'; msg.textContent = '';
-    try { const f = await JalExport[kind](st.curDoc[0], st.curDoc[1]); msg.textContent = ''; if (kind === 'docx' && navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); } catch (e) { if (!e || e.name !== 'AbortError') JalExport.save(f); } } else JalExport.save(f); }
+    try { JalExport.save(await JalExport.pdf(st.curDoc[0], st.curDoc[1])); }
     catch (e) { msg.textContent = 'Не получилось: ' + (e.message || e); }
     btn.disabled = false; btn.textContent = old;
   };
-  $('docPdf').onclick = docOut($('docPdf'), 'pdf'); $('docWord').onclick = docOut($('docWord'), 'docx');
+  $('docPdf').onclick = docOut($('docPdf'));
   const setShow = v => { st.show = v; try { localStorage.setItem('jal_profit', v ? '1' : '0'); } catch (e) {} drawCart(); if (window.JalCalcScreen && st.P) JalCalcScreen.render(); };
   try { if (localStorage.getItem('jal_profit') === '1') setShow(true); } catch (e) {}
 

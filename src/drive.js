@@ -50,8 +50,19 @@
     const orders = JalOrders.load();
     await fetch(base.split('?')[0], { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: decodeURIComponent(keyOf(base)), orders }) });
     const j = await (await fetch(base + '&orders=1')).json();
-    if (!j.ok || (j.orders || []).length !== orders.length) throw new Error('Копия не сохранилась, проверь, что скрипт обновлён');
+    if (!j.ok) throw new Error(j.error || 'Скрипт не ответил');
+    if (j.orders === undefined) throw new Error('Скрипт старой версии: вставь новый код и сделай новое развёртывание');
+    if (j.orders.length !== orders.length) throw new Error('Копия не записалась: запусти razreshenie в скрипте (доступ к Диску) и повтори');
     lsSet('jal_backup_at', String(Date.now())); return orders.length;
+  }
+  const b64 = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = () => no(new Error('файл не прочитался')); r.readAsDataURL(f); });
+  /* письмо с файлами через скрипт: Apps Script шлёт с твоей почты; ответ читаем, чтобы знать, что письмо ушло */
+  async function mail(to, subject, body, files) {
+    const base = lsGet('jal_prices_url'); if (!base) throw new Error('Нет ссылки на скрипт (вкладка «Цены»)');
+    const fl = []; for (const f of files) fl.push({ name: f.name, mime: f.type, b64: await b64(f) });
+    const r = await fetch(base.split('?')[0], { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: decodeURIComponent(keyOf(base)), mail: { to, subject, body, files: fl } }) });
+    const j = await r.json(); if (!j.ok) throw new Error(j.error || 'Письмо не ушло');
+    return j.sent;
   }
   async function restore() {
     const base = lsGet('jal_prices_url'); if (!base) throw new Error('Сначала вставь ссылку на цены (вкладка «Цены»)');
@@ -63,5 +74,5 @@
   /* авто-копия: раз в день или раз в неделю, если включено в Настройках и ссылка есть */
   setTimeout(() => { const m = +lsGet('jal_sched') || 0, age = Date.now() - (+lsGet('jal_backup_at') || 0);
     if (m && lsGet('jal_prices_url') && age > (m === 1 ? 20 * 3600e3 : 7 * 86400e3)) backup().catch(() => {}); }, 6000);
-  window.JalDrive = { backup, restore, backupAt: () => +lsGet('jal_backup_at') || 0, refresh, text, fill, parse, dump, FILES, DEF, at: () => +lsGet('jal_drive_at') || 0 };
+  window.JalDrive = { mail, backup, restore, backupAt: () => +lsGet('jal_backup_at') || 0, refresh, text, fill, parse, dump, FILES, DEF, at: () => +lsGet('jal_drive_at') || 0 };
 })();
