@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Жалюзи-СПБ: расчёт</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>:root{--bg:#F5EEE6;--card:#fff;--ink:#2A1A10;--m1:#6B5545;--m2:#8B7662;--line:#E3D5C3;--ac:#E07B00;--acink:#fff;--dk:#4A2C18;--sel:#FBF1E4;--bad:#B3261E;--ok:#1E6B24;--sh:0 1px 3px rgba(40,20,10,.16)}
+@media (prefers-color-scheme:dark){:root{--bg:#1B130D;--card:#2A1E15;--ink:#F3E9DE;--m1:#C2AE98;--m2:#9C8A76;--line:#4A3A2C;--sel:#3A2A1B;--bad:#FF8A80;--ok:#81C784;--sh:0 1px 3px rgba(0,0,0,.4)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--dk);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px}
+h1{font-size:19px;margin:0}
+header .sub{color:#E8D8C4}
+section#load{margin:12px}
+main{padding:12px 12px calc(240px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+.card{background:var(--card);border-radius:18px;box-shadow:var(--sh);padding:14px}
+.card.flat{padding:0;overflow:hidden}
+.lbl{font-size:13px;color:var(--m1);margin:0 0 6px;font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:9px 14px;font:inherit;font-size:14px;cursor:pointer}
+.chip[aria-pressed=true]{border-color:var(--ac);background:var(--sel);font-weight:700}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px;width:100%;min-height:48px}
+.sz{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.size{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sbox{background:var(--card);border-radius:20px;box-shadow:var(--sh);padding:8px 14px 4px;display:flex;flex-direction:column}
+.sbox label{text-align:center;font-size:13px;color:var(--m2);font-weight:600}
+.sbox input{border:0;padding:0;min-height:42px;height:42px;font-size:34px;font-weight:800;letter-spacing:-1px;text-align:center;background:transparent;-moz-appearance:textfield}
+.tabs{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr))}
+#sup .tab{font-size:12.5px;font-weight:700;letter-spacing:-.2px}
+.tab{min-height:48px;border:0;border-bottom:3px solid transparent;background:none;color:var(--m2);font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:0 2px}
+.tab[aria-pressed=true]{border-bottom-color:var(--ac);color:var(--ink);font-weight:800}
+.rowc{display:flex;align-items:center;gap:12px;min-height:46px;padding:0 14px;border:0;background:transparent;width:100%;font:inherit;font-size:15px;color:var(--ink);text-align:left;cursor:pointer}
+.rowc[aria-pressed=true]{background:var(--sel);font-weight:700}
+.cb{width:22px;height:22px;border-radius:6px;border:2px solid #B8A58F;display:grid;place-items:center;color:transparent;font-size:14px;flex-shrink:0}
+.rowc[aria-pressed=true] .cb{background:var(--ac);border-color:var(--ac);color:#fff}
+.qty{display:flex;align-items:center;justify-content:space-between;padding:0 4px}
+.stepper{display:flex;align-items:center;background:var(--card);border-radius:22px;box-shadow:var(--sh);overflow:hidden}
+.stepper button{width:54px;height:46px;border:0;background:transparent;font-size:24px;font-weight:700;color:var(--ink);cursor:pointer}
+.stepper b{min-width:44px;text-align:center;font-size:20px}
+.price{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.sub{color:var(--m1);font-size:14px}
+.err{color:var(--bad)}
+.btn{background:var(--ac);color:var(--acink);border:0;border-radius:24px;min-height:48px;padding:0 20px;font:inherit;font-weight:800;width:100%;cursor:pointer}
+.btn.sec{background:var(--card);color:var(--ink);box-shadow:var(--sh)}
+.btn:disabled{opacity:.4}
+.item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item>div:last-child{white-space:nowrap}
+.x{background:none;border:0;color:var(--m1);font-size:22px;cursor:pointer}
+#bottom{position:fixed;left:0;right:0;bottom:0;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;pointer-events:none}
+#bottom>*{pointer-events:auto}
+.cap{height:64px;border-radius:32px;background:var(--dk);color:#fff;display:flex;align-items:center;padding:0 8px 0 22px;gap:10px;box-shadow:0 8px 20px rgba(40,20,10,.35)}
+.cap>div{flex-grow:1;min-width:0}.cap .sub{color:#E8D8C4;font-size:12px}
+.cap .go{width:auto;height:48px;border-radius:24px;padding:0 20px;font-size:15px;white-space:nowrap}
+.navc{height:60px;border-radius:30px;background:var(--card);box-shadow:0 4px 14px rgba(40,20,10,.2);display:flex;align-items:center;gap:4px;padding:0 6px;font-size:13px;font-weight:700}
+.navc button{position:relative;flex:1 1 0;height:48px;border:0;background:transparent;color:var(--m2);display:flex;align-items:center;justify-content:center;gap:6px;border-radius:24px;cursor:pointer;font:inherit;font-weight:700}
+.navc button[aria-current=true]{flex:1.7 1 0;background:var(--dk);color:#fff}
+.navc svg{width:22px;height:22px;flex-shrink:0}
+.navc .lb{display:none}.navc button[aria-current=true] .lb{display:inline}
+.badge{position:absolute;top:2px;left:calc(50% + 4px);min-width:18px;height:18px;border-radius:9px;background:var(--ac);color:#fff;font-size:11px;line-height:18px;text-align:center}
+.navc button[aria-current=true] .badge{left:calc(50% + 14px)}
+body[data-tab=form] .navc,body[data-tab=doc] .navc,body[data-tab=form] .cap,body[data-tab=doc] .cap,body[data-tab=ord] .cap,body[data-tab=set] .cap{display:none}
+body[data-tab=calc] #capCart,body[data-tab=cart] #capCalc,body[data-tab=ord] #capCart,body[data-tab=set] #capCart{display:none}
+.doc{background:#fff;color:#111;border-radius:10px;padding:18px}
+.doc .logo{height:42px;display:block;margin-bottom:10px}.doc h2{margin:6px 0}.doc .s{font-size:12px;color:#666}
+.doc table{width:100%;border-collapse:collapse;margin:12px 0}.doc th,.doc td{border-bottom:1px solid #ddd;padding:6px 4px;text-align:left;vertical-align:top;font-size:13px}.doc .r{text-align:right;white-space:nowrap}.doc h4{margin:12px 0 4px;font-size:13px}.doc p{margin:4px 0;font-size:12px;line-height:1.35}.doc .c{text-align:center}
+.doc .sign{display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:11px}.doc .sg{margin-top:14px;position:relative;min-height:60px}.doc .sig{height:36px}.doc .stamp{height:90px;position:absolute;left:40px;top:-20px;opacity:.9}
+@page{margin:14mm}
+@media print{body{background:#fff;padding:0}header,nav,.noprint,main:not(#doc){display:none!important}.doc{padding:0}}
+@page{margin:14mm}
+@media print{body{background:#fff}header,#bottom,.noprint,main:not(#doc){display:none!important}main#doc{padding:0}.doc{padding:0;box-shadow:none}}
+/* экран «Расчёт» по макету: тема и «Aero»-оформление действуют только внутри .scr */
+.scr input{min-height:0;border-radius:0;padding:0;border:0;background:none;width:auto;margin:0;color:inherit}
+body[data-own]>header,body[data-own] #bottom{display:none}
+.scr button{font-family:inherit;cursor:pointer}
+.scr input{font-family:inherit}
+.scr input:focus{outline:2px solid var(--dk);outline-offset:0}
+/* Aero-skin: переменные цвета + глянец. Тема = класс pN и nt на корне экрана */
+.scr,.scr.p0{--dk:#4A2C18;--ac:#E07B00;--bg:#F5EEE6;--card:#FFFFFF;--ink:#2A1A10;--m1:#6B5545;--m2:#7A6453;--m3:#8B7662;--line:#D6C4AE;--sel:#FBF1E4;--chip:#F3E9DC;--track:#E9DDCE;--hd:#FAF5EF;--chk:#B8A58F;--bgA:#FFF7EC;--bgB:#F3E7D8;--bgC:#EBDCCB;--glow:#F6DFC4}
+.scr.p1{--dk:#1F4A3D;--ac:#2FBF71}
+.scr.p2{--dk:#2A3550;--ac:#0A84FF}
+.scr.p3{--dk:#6B2C3B;--ac:#FF6B5A}
+.scr.p4{--dk:#34306B;--ac:#8E7CF0}
+.scr.p1,.scr.p2,.scr.p3,.scr.p4{--bg:color-mix(in srgb,var(--dk) 7%,#fff);--ink:color-mix(in srgb,var(--dk) 14%,#101114);--m1:color-mix(in srgb,var(--dk) 30%,#6E727C);--m2:color-mix(in srgb,var(--dk) 24%,#7B7F89);--m3:color-mix(in srgb,var(--dk) 20%,#8E929B);--line:color-mix(in srgb,var(--dk) 22%,#fff);--sel:color-mix(in srgb,var(--ac) 12%,#fff);--chip:color-mix(in srgb,var(--dk) 10%,#fff);--track:color-mix(in srgb,var(--dk) 13%,#fff);--hd:color-mix(in srgb,var(--dk) 5%,#fff);--chk:color-mix(in srgb,var(--dk) 35%,#aaa);--bgA:color-mix(in srgb,var(--dk) 4%,#fff);--bgB:color-mix(in srgb,var(--dk) 8%,#fff);--bgC:color-mix(in srgb,var(--dk) 15%,#fff);--glow:color-mix(in srgb,var(--ac) 16%,#fff)}
+.scr .nt{--bg:color-mix(in srgb,var(--dk) 18%,#0b0807);--card:rgba(255,255,255,.07);--ink:#F2E7DB;--m1:#BBA791;--m2:#B09C86;--m3:#A38F7A;--line:rgba(255,255,255,.16);--sel:rgba(255,255,255,.11);--chip:rgba(255,255,255,.12);--track:rgba(255,255,255,.09);--hd:rgba(255,255,255,.06);--chk:#8F7C68;color:var(--ink)}
+.scr[style*="font-family"],.scr [style*="font-family"]{font-family:Inter,-apple-system,"SF Pro Text","Segoe UI",system-ui,sans-serif!important}
+.scr[style*="font-weight: 800"],.scr [style*="font-weight: 800"],.scr[style*="font-weight:800"],.scr [style*="font-weight:800"]{font-weight:500!important}
+.scr[style*="font-weight: 700"],.scr [style*="font-weight: 700"],.scr[style*="font-weight:700"],.scr [style*="font-weight:700"]{font-weight:500!important}
+.scr[style*="font-weight: 600"],.scr [style*="font-weight: 600"],.scr[style*="font-weight:600"],.scr [style*="font-weight:600"]{font-weight:400!important}
+.scr[style*="letter-spacing: -1px"],.scr [style*="letter-spacing: -1px"]{letter-spacing:-1.5px!important;font-weight:300!important}
+/* фон */
+.scr[style*="background: var(--bg)"],.scr [style*="background: var(--bg)"]{background:radial-gradient(120% 60% at 15% 0%,var(--bgA) 0%,transparent 60%),radial-gradient(90% 50% at 100% 40%,var(--glow) 0%,transparent 65%),linear-gradient(var(--bgB),var(--bgC))!important}
+.scr.nt[style*="background: var(--bg)"]{background:radial-gradient(110% 50% at 10% 0%,color-mix(in srgb,var(--dk) 55%,#000) 0%,transparent 62%),radial-gradient(90% 45% at 100% 60%,color-mix(in srgb,var(--ac) 20%,#000) 0%,transparent 65%),linear-gradient(color-mix(in srgb,var(--dk) 22%,#000),color-mix(in srgb,var(--dk) 11%,#000))!important}
+.scr.nt [style*="background: var(--bg)"]{background:var(--sel)!important}
+/* стеклянные карточки */
+.scr[style*="background: var(--card)"]:not(button):not(a),.scr [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.9),rgba(255,255,255,.62))!important;backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);border:1px solid rgba(255,255,255,.9)!important;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 8px 22px color-mix(in srgb,var(--dk) 14%,transparent)!important}
+.scr.nt [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.11),rgba(255,255,255,.05))!important;border:1px solid rgba(255,255,255,.13)!important;box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 10px 24px rgba(0,0,0,.45)!important}
+/* кнопки-клавиши */
+.scr button[style*="background: var(--card)"],.scr a[style*="background: var(--card)"]{background:linear-gradient(#fff,color-mix(in srgb,var(--dk) 9%,#fff))!important;border:1px solid color-mix(in srgb,var(--dk) 20%,#fff)!important;box-shadow:0 1px 0 #fff inset,0 -2px 3px color-mix(in srgb,var(--dk) 10%,transparent) inset,0 3px 8px color-mix(in srgb,var(--dk) 16%,transparent)!important}
+.scr.nt button[style*="background: var(--card)"],.scr.nt a[style*="background: var(--card)"]{background:linear-gradient(rgba(255,255,255,.18),rgba(255,255,255,.07))!important;border:1px solid rgba(255,255,255,.2)!important;box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 -2px 3px rgba(0,0,0,.3) inset,0 3px 8px rgba(0,0,0,.4)!important}
+/* шапка и тёмные капсулы */
+.scr header{background:linear-gradient(color-mix(in srgb,var(--dk) 82%,#fff) 0%,var(--dk) 55%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 4px 14px color-mix(in srgb,var(--dk) 45%,transparent)!important}
+.scr header h1{font-weight:500!important;letter-spacing:.2px}
+.scr[style*="background: var(--dk)"],.scr [style*="background: var(--dk)"]{background:linear-gradient(color-mix(in srgb,var(--dk) 84%,#fff) 0%,var(--dk) 50%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.28) inset,0 -3px 5px rgba(0,0,0,.25) inset,0 8px 18px color-mix(in srgb,var(--dk) 45%,transparent)!important}
+/* акцентные кнопки: глянцевая капля */
+.scr[style*="background: var(--ac)"],.scr [style*="background: var(--ac)"]{background:linear-gradient(color-mix(in srgb,var(--ac) 65%,#fff) 0%,var(--ac) 48%,color-mix(in srgb,var(--ac) 88%,#000) 52%,color-mix(in srgb,var(--ac) 95%,#fff) 100%)!important;border:1px solid color-mix(in srgb,var(--ac) 65%,#000)!important;box-shadow:0 1px 0 rgba(255,255,255,.65) inset,0 -3px 4px color-mix(in srgb,var(--ac) 55%,#000) inset,0 5px 12px color-mix(in srgb,var(--ac) 45%,transparent)!important;text-shadow:0 -1px 0 rgba(0,0,0,.25)}
+/* чекбоксы */
+.scr[style*="solid var(--chk)"],.scr [style*="solid var(--chk)"]{background:#fff!important;box-shadow:0 1px 2px rgba(60,40,20,.18) inset!important}
+.scr.nt [style*="solid var(--chk)"]{background:rgba(255,255,255,.1)!important}
+.scr.nt header{background:linear-gradient(rgba(255,255,255,.1),rgba(255,255,255,.03)),color-mix(in srgb,var(--dk) 40%,#0a0706)!important}
+.scr.nt [style*="color: var(--dk)"]{color:var(--ink)!important}
+.scr.nt [style*="stroke=\"var(--dk)"]{color:var(--ink)}
+.scr.nt input,.scr.nt textarea{color:#F2E7DB!important;color-scheme:dark}
+.scr.nt [style*="color: #1E6B24"],.scr.nt [style*="color: rgb(30, 107, 36)"]{color:#7FD58A!important}
+.scr.nt [style*="color: #8A4B00"],.scr.nt [style*="color: rgb(138, 75, 0)"]{color:#FFB27A!important}
+.scr button:active{transform:translateY(1px) scale(.99)}
+.scr button{transition:transform .08s,box-shadow .15s}
+.scr input::placeholder{color:var(--m3);opacity:.55}
+.scr [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.97),rgba(255,255,255,.93))!important}
+.scr.nt [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:color-mix(in srgb,var(--dk) 30%,#0b0807)!important}
+.scr{overflow-x:hidden;max-width:100vw}
+.scr button{min-width:0;padding-left:2px;padding-right:2px}
+.scr [style*="flex: 1 1 0; height: 46px"]{font-size:13.5px!important;padding:0 1px!important;white-space:nowrap;overflow:hidden}
+.scr input:focus{outline:none}
+html,body{overflow-x:hidden}
+.scr div,.scr span{min-width:0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v13</span></header>
+
+<section id="load" class="card" hidden>
+  <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
+  <input id="url" placeholder="Ссылка на таблицу цен" autocomplete="off">
+  <button class="btn" id="urlGo" style="margin-top:8px">Загрузить цены</button>
+  <p class="sub" id="urlErr"></p>
+  <p class="lbl" style="margin-top:14px">Или файл xlsx с телефона:</p>
+  <input type="file" id="file">
+</section>
+
+
+<!--TPL calcRoot tplCalc calc-->
+
+<!--TPL cartRoot tplCart cart-->
+
+
+<main id="settings" hidden>
+  <div class="card flat"><button class="rowc" id="setProfit" aria-pressed="false"><span class="cb">✓</span><span>Показывать закуп и прибыль</span></button></div>
+  <p class="sub" style="padding:0 6px">Версия приложения: <span id="verTxt">v13</span>. Цены ниже можно загрузить заново, если ты их менял в таблице.</p>
+</main>
+
+
+<!--TPL ordersRoot tpl_ordersRoot orders-->
+
+<!--TPL orderOpenRoot tpl_orderOpenRoot orderOpen-->
+
+<main id="form" hidden>
+  <div class="card"><p class="lbl">Клиент</p>
+    <input id="fName" placeholder="Имя" autocomplete="off">
+    <input id="fPhone" type="tel" inputmode="tel" placeholder="Телефон" style="margin-top:8px">
+    <input id="fAddr" placeholder="Адрес" style="margin-top:8px"></div>
+  <div class="card"><p class="lbl">Покупатель</p>
+    <div class="row"><button class="chip" id="bFiz" aria-pressed="true">Физлицо</button><button class="chip" id="bUr" aria-pressed="false">Юрлицо</button></div>
+    <div id="urBox" hidden><input id="fCompany" placeholder="Название организации" style="margin-top:8px"><input id="fInn" inputmode="numeric" placeholder="ИНН" style="margin-top:8px"><input id="fUaddr" placeholder="Юридический адрес" style="margin-top:8px"></div>
+    <input id="fEmail" type="email" placeholder="E-mail (необязательно)" style="margin-top:8px"></div>
+  <div class="card"><p class="lbl">Доставка и установка, ₽ (0 = самовывоз)</p><input id="fDeliv" type="number" inputmode="numeric" placeholder="0">
+    <p class="lbl" style="margin-top:12px">Замерил (если замер делал ты, укажи имя)</p><input id="fMeasurer" placeholder="Например: Андрей"></div>
+  <div class="card"><p class="lbl">Даты</p>
+    <div class="sz"><div><div class="sub">Замер</div><input id="fMeas" type="datetime-local"></div>
+    <div><div class="sub">Монтаж</div><input id="fInst" type="datetime-local"></div></div></div>
+  <div class="card"><p class="lbl">Предоплата</p>
+    <div class="sz"><input id="fPre" type="number" inputmode="numeric" placeholder="100"><select id="fPreU"><option value="%">%</option><option value="₽">₽</option></select></div>
+    <p class="lbl" style="margin-top:12px">Срок изготовления, календарных дней</p><input id="fTerm" type="number" inputmode="numeric" placeholder="12">
+    <p class="lbl" style="margin-top:12px">Примечания</p><textarea id="fNote" rows="3" style="font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card);color:var(--ink)"></textarea></div>
+  <button class="btn" id="fSave">Сохранить заказ</button>
+</main>
+
+<main id="doc" hidden>
+  <div id="docBody"></div>
+  <div class="card noprint" id="sigBox" style="margin-top:12px" hidden><p class="lbl">Подпись и печать (хранятся только на этом телефоне)</p>
+    <p class="sub">Подпись</p><input type="file" id="sigFile" accept="image/*"><p class="sub" style="margin-top:8px">Печать</p><input type="file" id="stampFile" accept="image/*"></div>
+  <div class="row noprint" style="margin-top:12px"><button class="btn" id="docPrint" style="flex:1">Сохранить PDF / печать</button><button class="btn sec" id="docBack" style="flex:1">Назад</button></div>
+</main>
+
+<div id="bottom">
+  <div class="navc">
+    <button id="tCalc" aria-label="Расчёт" aria-current="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span class="lb">Расчёт</span></button>
+    <button id="tCart" aria-label="Корзина"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L22 7H6"></path></svg><span class="lb">Корзина</span><b class="badge" id="badge">0</b></button>
+    <button id="tOrd" aria-label="Заказы"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"></path><circle cx="3.5" cy="6" r="1"></circle><circle cx="3.5" cy="12" r="1"></circle><circle cx="3.5" cy="18" r="1"></circle></svg><span class="lb">Заказы</span></button>
+    <button id="tSet" aria-label="Настройки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg><span class="lb">Настройки</span></button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="src/calc.js?v=13"></script>
+<script src="src/orders.js?v=13"></script>
+<script src="src/docs.js?v=13"></script>
+<script src="src/data.js?v=13"></script>
+<script src="src/limits.js?v=13"></script>
+<script src="src/tpl.js?v=13"></script>
+<script src="src/screen.js?v=13"></script>
+<script src="src/calcscreen.js?v=13"></script>
+<script src="src/cartscreen.js?v=13"></script>
+<script src="src/ordersscreen.js?v=13"></script>
+<script src="src/app.js?v=13"></script>
+</body>
+</html>

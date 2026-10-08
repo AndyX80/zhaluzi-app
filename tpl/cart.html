@@ -1,0 +1,109 @@
+<header style="background: var(--dk); color: #FFFFFF; padding: 16px 12px 14px 8px; display: flex; align-items: center; gap: 6px">
+<button onClick="{{closeCart}}" aria-label="Назад к расчёту" style="width: 48px; height: 48px; border: 0; border-radius: 24px; background: transparent; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+</button>
+<h1 style="margin: 0; font-size: 21px; font-weight: 700; flex-grow: 1">Корзина</h1>
+<button onClick="{{clearCart}}" style="height: 40px; border: 1px solid rgba(255,255,255,0.5); border-radius: 20px; background: transparent; color: #FFFFFF; font-size: 14px; padding: 0 14px">Очистить</button>
+</header>
+<main style="padding: 14px 12px calc(480px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 10px">
+<sc-if value="{{undoOn}}" hint-placeholder-val="{{false}}"><div style="display: flex; align-items: center; gap: 10px; background: var(--dk); color: #FFFFFF; border-radius: 14px; padding: 6px 8px 6px 14px"><span style="flex-grow: 1; font-size: 14px">{{undoText}}</span><button onClick="{{undo}}" style="height: 40px; border: 0; border-radius: 10px; background: var(--ac); color: #FFFFFF; font-size: 14px; font-weight: 700; padding: 0 16px">Отменить</button></div></sc-if>
+<div style="background: var(--card); border-radius: 16px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); overflow: hidden">
+<div style="display: grid; grid-template-columns: 24px minmax(0, 1fr) 88px 34px 84px; gap: 6px; padding: 10px 10px; background: var(--hd); font-size: 12px; font-weight: 700; color: var(--m1)">
+<span>№</span><span>Изделие</span><span>Размер, мм</span><span>Шт</span><span style="text-align: right">Сумма</span>
+</div>
+<sc-for list="{{cart}}" as="it" hint-placeholder-count="2">
+<div style="border-top: 1px solid #EADFD1; padding: 10px 10px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: grid; grid-template-columns: 24px minmax(0, 1fr) 88px 34px 84px; gap: 6px; align-items: start; font-size: 14px">
+<span style="font-weight: 700">{{it.n}}</span>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">{{it.title}}</span><span style="font-size: 12px; color: var(--m1)">{{it.sub}}</span></div>
+<span>{{it.size}}</span>
+<span style="text-align: center">{{it.qty}}</span>
+<span style="text-align: right; font-weight: 800; color: #1E6B24">{{it.sum}}</span>
+</div>
+<sc-if value="{{it.profShow}}" hint-placeholder-val="{{true}}"><div style="{{it.profStyle}}">{{it.profLine}}</div></sc-if>
+<sc-if value="{{it.isDrive}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--m1)"><span>Вывод провода: <span style="{{it.wireNoteStyle}}">{{it.wireNote}}</span></span><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12)"><button onClick="{{it.wireL}}" style="{{it.wireLStyle}}">Слева</button><button onClick="{{it.wireR}}" style="{{it.wireRStyle}}">Справа</button></div></div></sc-if>
+<div style="display: flex; justify-content: flex-end; gap: 8px">
+<span style="{{it.warnStyle}}">{{it.warn}}</span>
+<button onClick="{{it.edit}}" style="height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 13px; font-weight: 600; padding: 0 12px; white-space: nowrap; flex-shrink: 0">Изменить</button>
+<sc-if value="{{it.dupShow}}" hint-placeholder-val="{{false}}"><button onClick="{{it.dup}}" style="height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 13px; font-weight: 600; padding: 0 12px; white-space: nowrap; flex-shrink: 0">Такое же</button></sc-if>
+<button onClick="{{it.remove}}" aria-label="Удалить позицию" style="height: 36px; width: 40px; border-radius: 10px; border: 1.5px solid #E7B7B7; background: var(--card); color: #B3261E; display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"></path></svg>
+</button>
+</div>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{cartEmpty}}" hint-placeholder-val="{{false}}">
+<div style="text-align: center; color: var(--m1); font-size: 15px; padding: 30px 0">Корзина пуста</div>
+</sc-if>
+<sc-if value="{{hasAutoErrors}}" hint-placeholder-val="{{false}}">
+<div style="background: #FDECEA; border: 1.5px solid #E7B7B7; border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 13px; font-weight: 800; color: #B3261E">АВТОМАТИКА: ПРОВЕРЬ ПУЛЬТЫ</div>
+<sc-for list="{{autoErrors}}" as="e" hint-placeholder-count="1"><div style="font-size: 13px; color: #8A1C14; line-height: 1.35">{{e.t}}</div></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{cfOpen}}" hint-placeholder-val="{{false}}">
+<div style="background: var(--card); border-radius: 16px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 700">Своя строка</div>
+<input type="text" placeholder="Название (например, демонтаж старых жалюзи)" value="{{cfTitle}}" onInput="{{cfSetTitle}}" style="height: 48px; border: 1.5px solid var(--line); border-radius: 12px; padding: 0 12px; font-size: 15px; box-sizing: border-box; width: 100%">
+<div style="display: grid; grid-template-columns: 70px 1fr 1fr; gap: 8px">
+<label style="font-size: 12px; color: var(--m1); display: flex; flex-direction: column; gap: 2px">Кол-во<input type="number" inputmode="numeric" value="{{cfQty}}" onChange="{{cfSetQty}}" style="height: 48px; border: 1.5px solid var(--line); border-radius: 12px; padding: 0 8px; font-size: 16px; font-weight: 700; box-sizing: border-box; width: 100%"></label>
+<label style="font-size: 12px; color: var(--m1); display: flex; flex-direction: column; gap: 2px">Цена за шт, ₽<input type="number" inputmode="numeric" placeholder="0" value="{{cfPrice}}" onChange="{{cfSetPrice}}" style="height: 48px; border: 1.5px solid var(--line); border-radius: 12px; padding: 0 8px; font-size: 16px; font-weight: 700; box-sizing: border-box; width: 100%"></label>
+<label style="font-size: 12px; color: var(--m1); display: flex; flex-direction: column; gap: 2px">Закуп, ₽ (не обяз.)<input type="number" inputmode="numeric" placeholder="нет" value="{{cfCost}}" onChange="{{cfSetCost}}" style="height: 48px; border: 1.5px solid var(--line); border-radius: 12px; padding: 0 8px; font-size: 16px; font-weight: 700; box-sizing: border-box; width: 100%"></label>
+</div>
+<div style="display: flex; gap: 8px"><button onClick="{{cfCancel}}" style="flex: 1 1 0; height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Отмена</button><button onClick="{{cfSave}}" style="{{cfSaveStyle}}">{{cfSaveLabel}}</button></div>
+</div>
+</sc-if>
+<sc-if value="{{hasUpsell}}" hint-placeholder-val="{{false}}">
+<div style="background: var(--card); border-radius: 16px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 700">Предложить клиенту</div>
+<sc-for list="{{upsell}}" as="u" hint-placeholder-count="2">
+<button onClick="{{u.act}}" style="min-height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--sel); color: var(--ink); font-size: 14px; font-weight: 600; padding: 6px 12px; text-align: left; display: flex; align-items: center; gap: 8px"><span style="flex-grow: 1">{{u.text}}</span><span style="font-size: 13px; color: var(--ac); font-weight: 700; white-space: nowrap">{{u.cta}}</span></button>
+</sc-for>
+</div>
+</sc-if>
+<button onClick="{{addCustom}}" style="height: 48px; border-radius: 14px; border: 1.5px dashed #4A2C18; background: transparent; color: var(--dk); font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+Своя строка (любая услуга или товар)</button>
+</main>
+<div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 6px">
+<div style="background: var(--card); border-radius: 18px; box-shadow: 0 4px 14px rgba(40,20,10,0.18); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-size: 13px; color: var(--m1)">
+<span>Общая площадь</span><span style="text-align: right; color: var(--ink); font-weight: 600">{{cartArea}}</span>
+<span>Общий вес</span><span style="text-align: right; color: var(--ink); font-weight: 600">{{cartWeight}}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<label for="dlv" style="flex-grow: 1; font-size: 15px; font-weight: 600">Доставка + установка</label>
+<input id="dlv" type="number" inputmode="numeric" placeholder="нет" value="{{service}}" onChange="{{setService}}" style="width: 120px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; font-size: 18px; font-weight: 700; text-align: right; padding: 0 12px; box-sizing: border-box; color: var(--ink); background: var(--card)">
+<span style="font-size: 15px; color: var(--m1)">₽</span>
+</div>
+<sc-if value="{{hasSugg}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: center; gap: 8px"><div style="flex-grow: 1; font-size: 12px; color: var(--m1); line-height: 1.35">{{suggText}}</div><button onClick="{{applySugg}}" style="{{suggStyle}}">Подставить</button></div>
+</sc-if>
+<div style="display: flex; align-items: center; gap: 10px">
+<label for="disc" style="flex-grow: 1; font-size: 15px; font-weight: 600">Скидка на заказ</label>
+<input id="disc" type="number" inputmode="decimal" placeholder="0" value="{{disc}}" onChange="{{setDisc}}" style="width: 120px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; font-size: 18px; font-weight: 700; text-align: right; padding: 0 12px; box-sizing: border-box; color: var(--ink); background: var(--card)">
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12)"><button onClick="{{discPct}}" style="{{discPctStyle}}">Процент</button><button onClick="{{discRub}}" style="{{discRubStyle}}">Рубли</button></div>
+<sc-if value="{{hasDisc}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; color: var(--m1)">{{discLine}}</div></sc-if>
+<sc-if value="{{hasBelow}}" hint-placeholder-val="{{false}}"><div style="background: #FDECEA; border-radius: 12px; padding: 8px 12px; font-size: 13px; font-weight: 700; color: #B3261E">{{belowText}}</div></sc-if>
+<button onClick="{{toggleDog}}" role="checkbox" aria-checked="{{needDog}}" style="{{dogRowStyle}}"><span style="{{dogBoxStyle}}">{{dogMark}}</span><span style="flex-grow: 1; text-align: left">Нужен договор</span></button>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{closeCart}}" style="height: 44px; border-radius: 14px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 14px; font-weight: 600">Ещё изделие</button>
+<button onClick="{{openKp}}" style="height: 44px; border-radius: 14px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none">КП</button>
+</div>
+</div>
+<div style="height: 56px; border-radius: 28px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; padding: 0 8px 0 22px; gap: 10px; box-shadow: 0 8px 20px rgba(40,20,10,0.35)">
+<div style="flex-grow: 1">
+<div style="font-size: 22px; font-weight: 800; line-height: 1.1">{{cartTotal}}</div>
+<div style="font-size: 12px; opacity: 0.75">{{cartPieces}} шт<sc-if value="{{showProfit}}" hint-placeholder-val="{{true}}"><span> · прибыль {{cartProfit}}</span></sc-if></div>
+</div>
+<button onClick="{{openOrder}}" style="height: 48px; border-radius: 24px; background: var(--ac); color: #FFFFFF; font-size: 16px; font-weight: 800; padding: 0 20px; display: flex; align-items: center; text-decoration: none">Замерник</button>
+</div>
+<div style="height: 52px; border-radius: 26px; background: var(--card); box-shadow: 0 4px 14px rgba(40,20,10,0.2); display: flex; align-items: center; gap: 4px; padding: 0 6px; font-size: 13px; font-weight: 700">
+<button onClick="{{closeCart}}" aria-label="Расчёт" style="flex: 1 1 0; height: 48px; border: 0; background: transparent; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg></button>
+<div style="flex: 1.7 1 0; height: 48px; border-radius: 24px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L22 7H6"></path></svg><span>Корзина</span><b style="min-width: 18px; height: 18px; border-radius: 9px; background: var(--ac); color: #FFFFFF; font-size: 11px; line-height: 18px; text-align: center">{{cartCount}}</b></div>
+<button onClick="{{openOrders}}" aria-label="Заказы" style="border: 0; background: transparent; flex: 1 1 0; height: 48px; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"></path><circle cx="3.5" cy="6" r="1"></circle><circle cx="3.5" cy="12" r="1"></circle><circle cx="3.5" cy="18" r="1"></circle></svg></button>
+<button onClick="{{openSettings}}" aria-label="Настройки" style="border: 0; background: transparent; flex: 1 1 0; height: 48px; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg></button>
+</div>
+</div>

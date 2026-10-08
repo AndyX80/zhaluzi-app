@@ -1,0 +1,91 @@
+<header style="background: var(--dk); color: #FFFFFF; padding: 18px 8px 14px 8px; display: flex; align-items: center; gap: 6px">
+<button onClick="{{back}}" aria-label="Назад к заказам" style="border: 0; background: transparent; width: 44px; height: 44px; border-radius: 22px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+</button>
+<h1 style="margin: 0; font-size: 19px; font-weight: 700; flex-grow: 1">Заказ № {{no}}</h1>
+</header>
+<main style="padding: 12px 12px 110px 12px; display: flex; flex-direction: column; gap: 12px">
+
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: baseline; gap: 8px">
+<span style="font-size: 18px; font-weight: 800; flex-grow: 1">{{client}}</span>
+<span style="font-size: 20px; font-weight: 800; color: #1E6B24">{{sum}}</span>
+</div>
+<div style="font-size: 14px; color: var(--m1); line-height: 1.5">{{contactLine}}<br>{{summaryLine}}</div>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-top: 4px">
+<a href="{{tel}}" style="grid-column: span 3; height: 48px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none; min-width: 0">Позвонить</a>
+<a href="{{route}}" target="_blank" rel="noopener" style="grid-column: span 3; height: 48px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none; min-width: 0">Маршрут</a>
+<a href="{{wa}}" target="_blank" rel="noopener" style="grid-column: span 2; height: 48px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none; min-width: 0">WhatsApp</a>
+<a href="{{tg}}" target="_blank" rel="noopener" style="grid-column: span 2; height: 48px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none; min-width: 0">Telegram</a>
+<a href="https://max.ru/" target="_blank" rel="noopener" style="grid-column: span 2; height: 48px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none; min-width: 0">MAX</a>
+</div>
+<div style="font-size: 13px; color: var(--m1); font-weight: 600; margin-top: 4px">Статус</div>
+<div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
+<sc-for list="{{statuses}}" as="t" hint-placeholder-count="4">
+<button onClick="{{t.pick}}" style="{{t.style}}">{{t.name}}</button>
+</sc-for>
+</div>
+</section>
+
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Напомнить о КП</h2>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{rems}}" as="r" hint-placeholder-count="4">
+<button onClick="{{r.pick}}" style="{{r.style}}">{{r.name}}</button>
+</sc-for>
+</div>
+<div style="font-size: 14px; color: var(--m1)">{{remNote}}</div>
+<sc-if value="{{remOn}}" hint-placeholder-val="{{false}}">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{act.cal}}" style="height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">В календарь</button>
+<button onClick="{{act.txt}}" style="height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Текст для клиента</button>
+</div>
+</sc-if>
+</section>
+
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Отзыв и оплата</h2>
+<button role="switch" onClick="{{toggleRev}}" aria-checked="{{revOn}}" style="{{revRow}}"><span style="{{revBox}}">{{revMark}}</span><span style="flex-grow: 1">Запросить отзыв через 14 дней после оформления</span></button>
+<div style="font-size: 14px; color: var(--m1)">{{revNote}}</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{go.Send}}" style="border: 0; background: transparent; height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none">Запрос отзыва сейчас</button>
+<button onClick="{{go.Send}}" style="border: 0; background: transparent; height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none">QR на доплату</button>
+</div>
+</section>
+
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Что сделать</h2>
+<sc-if value="{{hasDelta}}"><div style="background: #FFF6E6; border: 1.5px solid #F0D9A8; border-radius: 12px; padding: 10px 12px; font-size: 13px; color: #6B4A00; line-height: 1.4">По текущему прайсу заказ стоил бы <b>{{newSum}}</b> ({{deltaText}}).</div></sc-if>
+<button onClick="{{act.recalc}}" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--dk); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700">Пересчитать по новым ценам</button>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{act.kp}}" style="border: 0; background: transparent; height: 52px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none; text-align: center">КП клиенту заново</button>
+<button onClick="{{act.self}}" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Себе: Word + PDF</button>
+<button onClick="{{act.dup}}" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Дублировать заказ</button>
+<button onClick="{{act.arch}}" style="height: 52px; border-radius: 14px; border: 1.5px solid #E7B7B7; background: var(--card); color: #B3261E; font-size: 14px; font-weight: 700">В архив</button>
+</div>
+</section>
+
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">История версий</h2>
+<sc-for list="{{history}}" as="h" hint-placeholder-count="3">
+<div style="border-top: 1px solid #EADFD1; padding-top: 10px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 15px; font-weight: 700; flex-grow: 1">{{h.title}}</span><span style="font-size: 15px; font-weight: 800">{{h.sum}}</span></div>
+<div style="font-size: 12px; color: var(--m2)">{{h.sub}}</div>
+</div>
+</sc-for>
+</section>
+
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Позиции</h2>
+<div style="display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 14px">
+<sc-for list="{{posList}}" as="p"><span>{{p.t}}</span><span style="font-weight: 700">{{p.sum}}</span></sc-for>
+</div>
+</section>
+</main>
+<div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="height: 64px; border-radius: 32px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; padding: 0 8px 0 22px; gap: 10px; box-shadow: 0 8px 20px rgba(40,20,10,0.35)">
+<div style="flex-grow: 1; font-size: 17px; font-weight: 800">{{sum}}</div>
+<button onClick="{{editOrder}}" style="border: 0; background: transparent; height: 48px; border-radius: 24px; background: var(--ac); color: #FFFFFF; font-size: 16px; font-weight: 800; padding: 0 20px; display: flex; align-items: center; text-decoration: none; box-sizing: border-box">Открыть и править</button>
+</div>
+</div>
+

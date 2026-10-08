@@ -30,19 +30,23 @@
 
   const drawCart = () => { if (window.JalCart && st.P) { const r = $('cartRoot'); if (!r.hidden) JalCart.render(); } };
 
-  const ROOTS = { calc: 'calcRoot', cart: 'cartRoot', ord: 'ordersRoot', orderOpen: 'orderOpenRoot' };
-  const NEEDP = { calc: 1, cart: 1, orderOpen: 1 };
+  /* Реестр экранов: register(имя, { root, render, needP }). Свои экраны сами рисуют шапку и нижнюю навигацию. */
+  const SCREENS = {};
+  function register(name, o) { SCREENS[name] = o; }
   function tab(name) {
-    Object.keys(ROOTS).forEach(k => { $(ROOTS[k]).hidden = k !== name || (NEEDP[k] && !st.P); });
+    Object.keys(SCREENS).forEach(k => { const s = SCREENS[k]; $(s.root).hidden = k !== name || (s.needP && !st.P); });
     $('form').hidden = name !== 'form'; $('doc').hidden = name !== 'doc'; $('settings').hidden = name !== 'set';
-    $('load').hidden = name === 'set' ? false : (!!st.P || !NEEDP[name]);
+    const sc = SCREENS[name];
+    $('load').hidden = name === 'set' ? false : (!!st.P || !(sc && sc.needP));
     document.body.setAttribute('data-tab', name);
-    if (st.P || !NEEDP[name]) {
-      if (name === 'calc') JalCalcScreen.render(); else if (name === 'cart') JalCart.render();
-      else if (name === 'ord' || name === 'orderOpen') JalOrdersScreen.render(name);
-    }
+    if (sc) document.body.setAttribute('data-own', '1'); else document.body.removeAttribute('data-own');
+    if (sc && (st.P || !sc.needP)) sc.render(name);
     window.scrollTo(0, 0);
   }
+  register('calc', { root: 'calcRoot', needP: true, render: () => JalCalcScreen.render() });
+  register('cart', { root: 'cartRoot', needP: true, render: () => JalCart.render() });
+  register('ord', { root: 'ordersRoot', render: n => JalOrdersScreen.render(n) });
+  register('orderOpen', { root: 'orderOpenRoot', needP: true, render: n => JalOrdersScreen.render(n) });
   const GO = { Main: 'calc', Cart: 'cart', Orders: 'ord', Settings: 'set', OrderOpen: 'orderOpen', Order: 'form' };
   function go(k) {
     if (GO[k]) { tab(GO[k]); return; }
@@ -115,7 +119,7 @@
     const o = Object.assign({ no: '—', created: new Date().toISOString(), name: '', pre: '100', preU: '%', term: '12' }, JalCart.toOrder());
     showDoc('kpHtml', o, 'cart');
   }
-  window.JalApp = { st, tab, rub, openKp, showDoc, go };
+  window.JalApp = { st, tab, rub, openKp, showDoc, go, register, GO };
   window.JalTab = tab; tab('calc');
   drawCart();
 })();
