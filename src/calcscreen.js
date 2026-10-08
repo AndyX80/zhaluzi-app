@@ -289,7 +289,7 @@
     if (!P) return;
     const box = document.getElementById('calcRoot');
     if (!mounted) mounted = JalTpl.mount(box, document.getElementById('tplCalc'));
-    box.className = themeCls();
+    box.className = 'scr ' + themeCls();
     box.setAttribute('style', 'min-height: 100vh; box-sizing: border-box; background: var(--bg); font-family: Inter, -apple-system, system-ui, sans-serif; color: var(--ink); display: flex; flex-direction: column; position: relative');
     document.body.style.overflow = S.colorOpen ? 'hidden' : '';
     mounted.render(build());

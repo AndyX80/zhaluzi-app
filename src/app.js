@@ -30,20 +30,29 @@
 
   const drawCart = () => { if (window.JalCart && st.P) { const r = $('cartRoot'); if (!r.hidden) JalCart.render(); } };
 
-  const NAV = { calc: 'tCalc', cart: 'tCart', ord: 'tOrd', set: 'tSet' };
+  const ROOTS = { calc: 'calcRoot', cart: 'cartRoot', ord: 'ordersRoot', orderOpen: 'orderOpenRoot' };
+  const NEEDP = { calc: 1, cart: 1, orderOpen: 1 };
   function tab(name) {
-    $('calcRoot').hidden = name !== 'calc' || !st.P; $('cartRoot').hidden = name !== 'cart' || !st.P;
-    $('orders').hidden = name !== 'ord'; $('form').hidden = name !== 'form'; $('doc').hidden = name !== 'doc';
-    $('settings').hidden = name !== 'set';
-    $('load').hidden = name === 'set' ? false : (!!st.P || name !== 'calc');
+    Object.keys(ROOTS).forEach(k => { $(ROOTS[k]).hidden = k !== name || (NEEDP[k] && !st.P); });
+    $('form').hidden = name !== 'form'; $('doc').hidden = name !== 'doc'; $('settings').hidden = name !== 'set';
+    $('load').hidden = name === 'set' ? false : (!!st.P || !NEEDP[name]);
     document.body.setAttribute('data-tab', name);
-    Object.keys(NAV).forEach(k => { const b = $(NAV[k]); if (k === name) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
-    if (name === 'cart' && st.P) JalCart.render(); if (name === 'ord') drawOrders(); if (name === 'calc' && st.P) JalCalcScreen.render();
+    if (st.P || !NEEDP[name]) {
+      if (name === 'calc') JalCalcScreen.render(); else if (name === 'cart') JalCart.render();
+      else if (name === 'ord' || name === 'orderOpen') JalOrdersScreen.render(name);
+    }
     window.scrollTo(0, 0);
+  }
+  const GO = { Main: 'calc', Cart: 'cart', Orders: 'ord', Settings: 'set', OrderOpen: 'orderOpen', Order: 'form' };
+  function go(k) {
+    if (GO[k]) { tab(GO[k]); return; }
+    if (k === 'Kp') { openKp(); return; }
+    alert('Этот экран добавим следующим шагом.');
   }
 
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
-  function showDoc(fn, o) {
+  function showDoc(fn, o, back) {
+    st.curBack = back || st.curBack;
     const sig = { sign: lsGet('jal_sign'), stamp: lsGet('jal_stamp') };
     $('docBody').innerHTML = JalDocs[fn](o, sig); $('sigBox').hidden = fn !== 'dogovorHtml';
     st.curDoc = [fn, o]; tab('doc');
@@ -60,33 +69,6 @@
   st.buyer = 'физ';
   function setBuyer(b) { st.buyer = b; $('urBox').hidden = b !== 'юр'; $('bFiz').setAttribute('aria-pressed', b === 'физ'); $('bUr').setAttribute('aria-pressed', b === 'юр'); }
   $('bFiz').onclick = () => setBuyer('физ'); $('bUr').onclick = () => setBuyer('юр');
-
-  function drawOrders() {
-    const list = JalOrders.load(), box = $('ordList');
-    $('ordEmpty').hidden = list.length > 0; box.innerHTML = '';
-    list.forEach(o => {
-      const sum = JalDocs.orderTotal(o);
-      const d = document.createElement('div'); d.className = 'card';
-      d.innerHTML = '<div class="item" style="border:0;padding:0"><div><b>№ ' + o.no + ' · ' + (o.name || 'без имени') + '</b>' +
-        '<div class="sub">' + [o.phone, o.addr].filter(Boolean).join(' · ') + '</div>' +
-        (o.meas ? '<div class="sub">Замер: ' + o.meas.replace('T', ' ') + '</div>' : '') +
-        (o.inst ? '<div class="sub">Монтаж: ' + o.inst.replace('T', ' ') + '</div>' : '') +
-        '</div><b>' + rub(sum) + '</b></div><div class="row" style="margin-top:10px"></div>';
-      const r = d.querySelector('.row');
-      JalOrders.STATUSES.forEach(s => {
-        const b = document.createElement('button'); b.className = 'chip'; b.textContent = s;
-        b.setAttribute('aria-pressed', o.status === s);
-        b.onclick = () => { JalOrders.setStatus(o.no, s); drawOrders(); };
-        r.appendChild(b);
-      });
-      [['КП (PDF)', 'kpHtml'], ['Замерник', 'zamernikHtml'], ['Договор', 'dogovorHtml']].forEach(([lbl, fn]) => {
-        const b = document.createElement('button'); b.className = 'chip'; b.textContent = lbl;
-        b.onclick = () => { showDoc(fn, o); };
-        r.appendChild(b);
-      });
-      box.appendChild(d);
-    });
-  }
 
   async function loadUrl() {
     const u = $('url').value.trim(), er = $('urlErr'); er.textContent = '';
@@ -113,10 +95,13 @@
     const v = id => $(id).value.trim();
     const co = JalCart.toOrder();
     if (!co.items.length) { alert('Корзина пуста'); return; }
-    JalOrders.create({ priced: true, disc: co.disc, needDog: co.needDog, name: v('fName'), phone: v('fPhone'), addr: v('fAddr'), meas: v('fMeas'), inst: v('fInst'),
+    const data = { priced: true, disc: co.disc, needDog: co.needDog, name: v('fName'), phone: v('fPhone'), addr: v('fAddr'), meas: v('fMeas'), inst: v('fInst'),
       buyer: st.buyer, company: v('fCompany'), inn: v('fInn'), uaddr: v('fUaddr'), email: v('fEmail'),
       delivery: co.delivery, measurer: v('fMeasurer'),
-      pre: v('fPre') || '100', preU: $('fPreU').value, term: v('fTerm') || '12', note: v('fNote') }, co.items);
+      pre: v('fPre') || '100', preU: $('fPreU').value, term: v('fTerm') || '12', note: v('fNote'), cart: JalCart.snapshot() };
+    const en = JalCart.C.editNo;
+    if (en && JalOrders.get(en)) { JalOrders.update(en, Object.assign({ items: co.items }, data)); JalOrders.addVersion(en, 'Правка заказа', co.items.reduce((a, x) => a + x.price, 0) - co.disc + ' ₽'); }
+    else JalOrders.create(data, co.items);
     JalCart.clear(); tab('ord');
   };
   const setShow = v => { st.show = v; $('setProfit').setAttribute('aria-pressed', v); try { localStorage.setItem('jal_profit', v ? '1' : '0'); } catch (e) {} drawCart(); if (window.JalCalcScreen && st.P) JalCalcScreen.render(); };
@@ -128,9 +113,9 @@
   if (saved) setPrices(saved); else $('load').hidden = false;
   function openKp() {
     const o = Object.assign({ no: '—', created: new Date().toISOString(), name: '', pre: '100', preU: '%', term: '12' }, JalCart.toOrder());
-    showDoc('kpHtml', o); st.curBack = 'cart';
+    showDoc('kpHtml', o, 'cart');
   }
-  window.JalApp = { st, tab, rub, openKp };
+  window.JalApp = { st, tab, rub, openKp, showDoc, go };
   window.JalTab = tab; tab('calc');
   drawCart();
 })();

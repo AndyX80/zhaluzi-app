@@ -63,8 +63,8 @@
   }
 
   /* Все расчётные величины корзины в одном месте: для экрана и для заказа. */
-  function compute() {
-    const App = window.JalApp, s = C;
+  function compute(st) {
+    const App = window.JalApp, s = st || C;
     const calcs = s.cart.map(calcRow);
     const S = Number(s.service) || 0;
     const adds = spread(s.cart.map((it, i) => ({ ok: calcs[i].ok && it.kind !== 'custom', qty: it.qty })), S);
@@ -214,9 +214,9 @@
   }
 
   /* Заказ для документов: цены уже с доставкой и установкой, скидка отдельной суммой. */
-  function toOrder() {
-    const F = compute(), items = [];
-    C.cart.forEach((it, i) => {
+  function toOrder(st) {
+    const sC = st || C, F = compute(sC), items = [];
+    sC.cart.forEach((it, i) => {
       const c = F.calcs[i]; if (!c.ok) return;
       const price = ceil100(c.unit + F.adds[i]);
       for (let k = 0; k < it.qty; k++) {
@@ -226,7 +226,7 @@
           o: { color: c.col ? c.col.name : null, opts: Object.keys(it.opts || {}).filter(n => it.opts[n]), fix: it.fix || null }, price, profit: c.profit });
       }
     });
-    return { items, priced: true, delivery: F.S, disc: F.discAmt, needDog: C.needDog };
+    return { items, priced: true, delivery: F.S, disc: F.discAmt, needDog: sC.needDog };
   }
 
   let mounted = null;
@@ -236,7 +236,7 @@
     const box = document.getElementById('cartRoot');
     if (!mounted) mounted = JalTpl.mount(box, document.getElementById('tplCart'));
     let cls = 'p0'; try { const o = JSON.parse(localStorage.getItem('jal_theme') || '{}'); cls = 'p' + ((o.pal | 0) % 5) + (o.theme === 'night' ? ' nt' : ''); } catch (e) {}
-    box.className = cls;
+    box.className = 'scr ' + cls;
     box.setAttribute('style', 'min-height: 100vh; box-sizing: border-box; background: var(--bg); font-family: Inter, -apple-system, system-ui, sans-serif; color: var(--ink); display: flex; flex-direction: column; position: relative');
     mounted.render(build());
   }
@@ -244,9 +244,11 @@
   /* для главного экрана */
   function addItem(item) { C.cart.push(item); save(); }
   function replaceItem(i, item) { C.cart[i] = item; save(); }
-  function clear() { C.cart = []; C.service = 0; C.disc = ''; save(); }
+  const snapshot = () => JSON.parse(JSON.stringify({ cart: C.cart, service: C.service, disc: C.disc, discMode: C.discMode, needDog: C.needDog }));
+  function restore(snap, no) { Object.assign(C, JSON.parse(JSON.stringify(snap)), { editNo: no || null, cf: null, undoItem: null }); save(); }
+  function clear() { C.editNo = null; C.cart = []; C.service = 0; C.disc = ''; save(); }
 
-  window.JalCart = { C, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
+  window.JalCart = { C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
     autoList: (sup, kind) => (AUTO && AUTO[sup] ? AUTO[sup][kind] : null), autoQty, autoStep, hasAuto: sup => !!(AUTO && AUTO[sup]),
     counts: () => ({ drive: C.cart.filter(x => x.kind === 'drive').reduce((a, x) => a + x.qty, 0), remote: C.cart.filter(x => x.kind === 'remote').reduce((a, x) => a + x.qty, 0) }) };
 })();
