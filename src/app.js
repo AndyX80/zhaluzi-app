@@ -118,7 +118,7 @@
   setInterval(fitBottom, 400); addEventListener('resize', fitBottom);
   const docOut = (btn, kind) => async () => {
     if (!st.curDoc) return; const msg = $('docMsg'), old = btn.textContent; btn.disabled = true; btn.textContent = 'Готовлю…'; msg.textContent = '';
-    try { const f = await JalExport[kind](st.curDoc[0], st.curDoc[1]); JalExport.save(f); msg.textContent = 'Файл «' + f.name + '» готов.'; }
+    try { const f = await JalExport[kind](st.curDoc[0], st.curDoc[1]); msg.textContent = ''; if (kind === 'docx' && navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); } catch (e) { if (!e || e.name !== 'AbortError') JalExport.save(f); } } else JalExport.save(f); }
     catch (e) { msg.textContent = 'Не получилось: ' + (e.message || e); }
     btn.disabled = false; btn.textContent = old;
   };

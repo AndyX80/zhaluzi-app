@@ -38,9 +38,9 @@
     const key = s.kinds.join('+') + (has('kp') && s.cat ? ':cat' : '');
     const text = s.edited && s.edited.key === key ? s.edited.v : sel.map((k, i) => (i ? T[k[0]].replace(/^Добрый день, [^!]*!\s*/, '') : T[k[0]])).join('\n\n'), none = !sel.length, empty = !none && !text.trim();
     const withCat = has('catalog') || (has('kp') && s.cat), qrBlank = lsGet('jal_qr_blank') === '1';
-    const extra = [].concat(has('review') ? ['QR отзыв Яндекс.png', 'QR отзыв Авито.png'] : [], has('qr') ? ['QR оплаты ' + (s.qrSum || '5 000') + ' ₽.png'] : [], has('blank') && qrBlank ? ['QR оплаты предоплаты.png'] : []);
+    const extra = [].concat(has('review') ? ['QR отзыв Яндекс.png', 'QR отзыв Авито.png'] : [], has('qr') ? ['QR оплаты ' + (s.qrSum || '5 000') + ' ₽.png'] : []);
     const fnOf = k => k === 'kp' ? (s.vars && o && o.vars && o.vars.length ? 'kpVarHtml' : 'kpHtml') : k === 'blank' ? 'zamernikHtml' : 'dogovorHtml';
-    const qrs = [].concat(has('review') ? [['jal_qr_ya', 'QR отзыв Яндекс.png'], ['jal_qr_av', 'QR отзыв Авито.png']] : [], has('qr') ? [['jal_qr_pay', 'QR оплаты ' + (s.qrSum || '5 000') + ' ₽.png']] : [], has('blank') && qrBlank ? [['jal_qr_pay', 'QR оплаты предоплаты.png']] : []);
+    const qrs = [].concat(has('review') ? [['jal_qr_ya', 'QR отзыв Яндекс.png'], ['jal_qr_av', 'QR отзыв Авито.png']] : [], has('qr') ? [['jal_qr_pay', 'QR оплаты ' + (s.qrSum || '5 000') + ' ₽.png']] : []);
     const pdfs = o ? ['kp', 'blank', 'dogovor'].filter(has).map(k => fnOf(k)) : [];
     const files = pdfs.reduce((a, fn) => a.concat([JalExport.baseName(fn, o) + '.pdf'], s.self ? [JalExport.baseName(fn, o) + '.docx'] : []), []).concat(qrs.filter(q => lsGet(q[0])).map(q => q[1]));
     const pkey = (s.self ? 'self:' : '') + pdfs.join(',') + '|' + qrs.map(q => q[1]).join(',') + '|' + (o ? o.no + ':' + JSON.stringify(o).length : '');
@@ -60,26 +60,20 @@
     const ch = CH.find(c => c.key === s.ch), ok = !(empty || none);
     const toggle = (on, plain) => 'height: 46px; border: 0; border-radius: 12px; display: flex; align-items: center; gap: 12px; padding: 0 12px; color: var(--ink); width: 100%; box-sizing: border-box; background: ' + (on ? 'var(--sel)' : plain) + '; font-weight: ' + (on ? 700 : 400);
     const box = (on, off) => 'width: 22px; height: 22px; border-radius: 6px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 15px; font-weight: 800; border: 2px solid ' + (on ? 'var(--ac)' : off) + '; background: ' + (on ? 'var(--ac)' : 'transparent');
-    const toast = m => { const d = document.createElement('div'); d.textContent = m; d.setAttribute('style', 'position: fixed; left: 12px; right: 12px; bottom: 90px; z-index: 99; background: #222; color: #fff; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.35; box-shadow: 0 4px 16px rgba(0,0,0,.3)'); document.body.appendChild(d); setTimeout(() => d.remove(), 9000); };
+    const toast = m => { const d = document.createElement('div'); d.textContent = m; d.setAttribute('style', 'position: fixed; left: 12px; right: 12px; bottom: 90px; z-index: 99; background: #222; color: #fff; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.35; box-shadow: 0 4px 16px rgba(0,0,0,.3)'); document.body.appendChild(d); setTimeout(() => d.remove(), 2500); };
     const send = async () => {
       if (!ok) return;
       const enc = encodeURIComponent, subj = 'Жалюзи-СПБ' + (o ? ', заказ № ' + o.no : '');
       let done = false;
-      if (prep && prep.state === 'err') alert('Файлы не собрались: ' + prep.err + '. Уйдёт только текст.');
-      if (prep && prep.state === 'busy') { alert('Файлы ещё готовятся, подожди несколько секунд и нажми «Отправить» снова.'); return; }
+      if (prep && prep.state === 'err') toast('Файлы не собрались: ' + prep.err);
+      if (prep && prep.state === 'busy') { toast('Файлы ещё готовятся, нажми ещё раз'); return; }
       if (prep && prep.state === 'ready' && prep.files.length) {
-        /* Telegram и часть мессенджеров при отправке файлов выбрасывают текст: кладём его в буфер и говорим об этом */
-        let copied = false; try { await navigator.clipboard.writeText(text); copied = true; } catch (e) {}
-        if (copied) toast('Текст сообщения скопирован. Если он не подставился сам, вставь его в подпись или сообщение.');
         done = await JalExport.share(prep.files, text, subj);
-        if (!done) { prep.files.forEach((f, i) => setTimeout(() => JalExport.save(f), i * 600)); alert('Телефон не умеет прикладывать файлы сам. Файлы скачаны, приложи их из «Загрузок» в открывшемся чате.'); }
+        if (!done) prep.files.forEach((f, i) => setTimeout(() => JalExport.save(f), i * 600));
       }
       if (!done) {
-        if (s.ch === 'mail') location.href = 'mailto:' + (D.email || '') + '?subject=' + enc(subj) + '&body=' + enc(text);
-        else if (s.ch === 'wa') window.open('https://wa.me/' + digits(D.phone) + '?text=' + enc(text), '_blank');
-        else if (s.ch === 'tg') window.open('https://t.me/share/url?url=%20&text=' + enc(text), '_blank');
-        else if (navigator.share) navigator.share({ title: subj, text }).catch(() => {});
-        else { try { navigator.clipboard.writeText(text); alert('Текст скопирован, вставь его в нужное приложение'); } catch (e) { prompt('Скопируй текст', text); } }
+        if (navigator.share) navigator.share({ title: subj, text }).catch(() => {});
+        else { try { navigator.clipboard.writeText(text); toast('Текст скопирован'); } catch (e) { prompt('Скопируй текст', text); } }
       }
       if (o && has('kp') && o.status === 'Черновик') { JalOrders.setStatus(o.no, 'КП отправлено'); JalOrders.addVersion(o.no, 'КП отправлено (' + ch.name + ')', D.sum); }
     };
@@ -95,7 +89,7 @@
       channels: CH.map(c => ({ name: c.name, ic: c.ic, pick: () => set({ ch: c.key }),
         style: 'min-height: 72px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 13px; color: var(--ink); border: 1.5px solid ' + (s.ch === c.key ? 'var(--ac)' : '#E3D5C3') + '; background: ' + (s.ch === c.key ? 'var(--sel)' : '#FFFFFF') + '; font-weight: ' + (s.ch === c.key ? 800 : 500),
         dot: 'width: 30px; height: 30px; border-radius: 15px; background: ' + c.c + '; color: #FFFFFF; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center' })),
-      text, empty, setText: e => { S.edited = { key, v: e.target.value }; }, resetText: () => set({ edited: null }),
+      text, empty, copyText: async () => { try { await navigator.clipboard.writeText(text); toast('Скопировано'); } catch (e) { toast('Не удалось скопировать'); } }, setText: e => { S.edited = { key, v: e.target.value }; }, resetText: () => set({ edited: null }),
       taStyle: 'width: 100%; box-sizing: border-box; min-height: 330px; font-family: inherit; border: 1.5px solid ' + (empty ? '#B3261E' : 'var(--line)') + '; border-radius: 12px; padding: 12px; font-size: 15px; line-height: 1.45; color: var(--ink); resize: vertical',
       sendLabel: prep && prep.state === 'busy' ? 'Готовлю файлы…' : (files.length ? 'Отправить с файлами' : (s.ch === 'any' ? 'Поделиться' : 'Отправить')), chName: ch.name, doSend: send,
       sendStyle: 'height: 48px; border: 0; border-radius: 24px; padding: 0 22px; font-size: 16px; font-weight: 800; color: #FFFFFF; background: ' + (ok ? 'var(--ac)' : 'var(--m3)') });

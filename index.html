@@ -132,7 +132,7 @@ html,body{overflow-x:clip}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v39</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v40</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -1095,7 +1095,7 @@ html,body{overflow-x:clip}
 <div style="{{archStyle}}">{{archNote}}</div>
 </section>
 </sc-if>
-<div style="text-align: center; font-size: 12px; color: var(--m1); padding: 8px 0">Версия приложения: <span>v39</span></div>
+<div style="text-align: center; font-size: 12px; color: var(--m1); padding: 8px 0">Версия приложения: <span>v40</span></div>
 </main>
 <div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
 <div style="height: 60px; border-radius: 30px; background: var(--card); box-shadow: 0 4px 14px rgba(40,20,10,0.2); display: flex; align-items: center; gap: 4px; padding: 0 6px; font-size: 13px; font-weight: 700">
@@ -1120,7 +1120,6 @@ html,body{overflow-x:clip}
 
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
 <h2 style="margin: 0; font-size: 16px; font-weight: 700">Что отправляем</h2>
-<div style="font-size: 12px; color: var(--m1); margin-top: -6px">Можно выбрать несколько: например замерник и договор.</div>
 <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px"><sc-for list="{{kinds}}" as="k" hint-placeholder-count="5">
 <button onClick="{{k.pick}}" style="{{k.style}}">{{k.name}}</button>
 </sc-for></div>
@@ -1139,7 +1138,6 @@ html,body{overflow-x:clip}
 </sc-if>
 <sc-if value="{{hasKind}}" hint-placeholder-val="{{true}}"><div style="background: var(--bg); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px">
 <div style="font-size: 12px; color: var(--m1); font-weight: 700">ВЛОЖЕНИЯ</div>
-<div style="font-size: 12px; color: #8A4B00; line-height: 1.35">PDF и QR приложатся сами: откроется меню телефона, выбери чат. Если телефон так не умеет, файлы скачаются, а текст уйдёт в канал. Word сохраняй из документа.</div>
 <sc-for list="{{files}}" as="f" hint-placeholder-count="2">
 <div style="display: flex; align-items: center; gap: 8px; font-size: 14px"><span style="width: 28px; height: 28px; border-radius: 8px; background: var(--chip); color: #8A4B00; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{f.ext}}</span><span style="flex-grow: 1">{{f.name}}</span><span style="font-size: 12px; color: var(--m2)">{{f.size}}</span></div>
 </sc-for>
@@ -1148,18 +1146,9 @@ html,body{overflow-x:clip}
 </section>
 
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
-<h2 style="margin: 0; font-size: 16px; font-weight: 700">Куда</h2>
-<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
-<sc-for list="{{channels}}" as="c" hint-placeholder-count="6">
-<button onClick="{{c.pick}}" style="{{c.style}}"><span style="{{c.dot}}">{{c.ic}}</span><span>{{c.name}}</span></button>
-</sc-for>
-</div>
-</section>
-
-<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
-<div style="display: flex; align-items: baseline; gap: 8px"><h2 style="margin: 0; font-size: 16px; font-weight: 700; flex-grow: 1">Сообщение клиенту</h2></div>
+<div style="display: flex; align-items: center; gap: 8px"><h2 style="margin: 0; font-size: 16px; font-weight: 700; flex-grow: 1">Сообщение клиенту</h2><button onClick="{{copyText}}" style="height: 40px; padding: 0 16px; border-radius: 12px; border: 1.5px solid var(--dk); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Скопировать</button></div>
 <textarea onInput="{{setText}}" aria-label="Текст сообщения" style="{{taStyle}}">{{text}}</textarea>
-<sc-if value="{{empty}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; color: #B3261E; font-weight: 600">Без текста не отправится. Напиши пару слов или верни шаблон.</div></sc-if>
+<sc-if value="{{empty}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; color: #B3261E; font-weight: 600">Текст пустой.</div></sc-if>
 <div style="display: flex; gap: 8px">
 <button onClick="{{resetText}}" style="flex: 1 1 0; height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 600">Вернуть шаблон</button>
 <button onClick="{{go.Settings}}" style="border: 0; background: transparent; flex: 1 1 0; height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none">Править шаблоны</button>
@@ -1169,7 +1158,7 @@ html,body{overflow-x:clip}
 </main>
 <div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
 <div style="height: 64px; border-radius: 32px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; padding: 0 8px 0 22px; gap: 10px; box-shadow: 0 8px 20px rgba(40,20,10,0.35)">
-<div style="flex-grow: 1; min-width: 0"><div style="font-size: 12px; opacity: 0.75">Куда</div><div style="font-size: 15px; font-weight: 700">{{chName}}</div></div>
+<div style="flex-grow: 1; min-width: 0"></div>
 <button onClick="{{doSend}}" style="{{sendStyle}}">{{sendLabel}}</button>
 </div>
 </div>
@@ -1618,26 +1607,26 @@ html,body{overflow-x:clip}
   }, 5000);
 })();
 </script>
-<script src="src/look.js?v=39"></script>
-<script src="src/calc.js?v=39"></script>
-<script src="src/orders.js?v=39"></script>
-<script src="src/docs.js?v=39"></script>
-<script src="src/drive.js?v=39"></script>
-<script src="src/data.js?v=39"></script>
-<script src="src/limits.js?v=39"></script>
-<script src="src/tpl.js?v=39"></script>
-<script src="src/screen.js?v=39"></script>
-<script src="src/calcscreen.js?v=39"></script>
-<script src="src/cartscreen.js?v=39"></script>
-<script src="src/ordersscreen.js?v=39"></script>
-<script src="src/orderscreen.js?v=39"></script>
-<script src="src/comparescreen.js?v=39"></script>
-<script src="src/settingsscreen.js?v=39"></script>
-<script src="src/docscreens.js?v=39"></script>
-<script src="src/export.js?v=39"></script>
-<script src="src/sendscreen.js?v=39"></script>
-<script src="src/lock.js?v=39"></script>
-<script src="src/app.js?v=39"></script>
+<script src="src/look.js?v=40"></script>
+<script src="src/calc.js?v=40"></script>
+<script src="src/orders.js?v=40"></script>
+<script src="src/docs.js?v=40"></script>
+<script src="src/drive.js?v=40"></script>
+<script src="src/data.js?v=40"></script>
+<script src="src/limits.js?v=40"></script>
+<script src="src/tpl.js?v=40"></script>
+<script src="src/screen.js?v=40"></script>
+<script src="src/calcscreen.js?v=40"></script>
+<script src="src/cartscreen.js?v=40"></script>
+<script src="src/ordersscreen.js?v=40"></script>
+<script src="src/orderscreen.js?v=40"></script>
+<script src="src/comparescreen.js?v=40"></script>
+<script src="src/settingsscreen.js?v=40"></script>
+<script src="src/docscreens.js?v=40"></script>
+<script src="src/export.js?v=40"></script>
+<script src="src/sendscreen.js?v=40"></script>
+<script src="src/lock.js?v=40"></script>
+<script src="src/app.js?v=40"></script>
 <script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 </body>
 </html>
