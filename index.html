@@ -59,13 +59,35 @@ nav button{flex:1}
   <div class="card" id="cartList"></div>
   <div class="card"><div class="sub">Итого</div><div class="price" id="total">0 ₽</div>
     <div class="sub" id="totalProfit" hidden></div></div>
+  <button class="btn" id="mkOrder" style="margin-bottom:8px">Оформить заказ</button>
   <button class="btn sec" id="clear">Очистить корзину</button>
 </main>
 
-<nav><button class="btn" id="tCalc">Расчёт</button><button class="btn sec" id="tCart">Корзина (0)</button></nav>
+<main id="orders" hidden>
+  <div id="ordList"></div>
+  <p class="sub" id="ordEmpty">Заказов пока нет. Собери корзину и нажми «Оформить заказ».</p>
+</main>
+
+<main id="form" hidden>
+  <div class="card"><p class="lbl">Клиент</p>
+    <input id="fName" placeholder="Имя" autocomplete="off">
+    <input id="fPhone" type="tel" inputmode="tel" placeholder="Телефон" style="margin-top:8px">
+    <input id="fAddr" placeholder="Адрес" style="margin-top:8px"></div>
+  <div class="card"><p class="lbl">Даты</p>
+    <div class="sz"><div><div class="sub">Замер</div><input id="fMeas" type="datetime-local"></div>
+    <div><div class="sub">Монтаж</div><input id="fInst" type="datetime-local"></div></div></div>
+  <div class="card"><p class="lbl">Предоплата</p>
+    <div class="sz"><input id="fPre" type="number" inputmode="numeric" placeholder="100"><select id="fPreU"><option value="%">%</option><option value="₽">₽</option></select></div>
+    <p class="lbl" style="margin-top:12px">Срок изготовления, календарных дней</p><input id="fTerm" type="number" inputmode="numeric" placeholder="12">
+    <p class="lbl" style="margin-top:12px">Примечания</p><textarea id="fNote" rows="3" style="font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card);color:var(--ink)"></textarea></div>
+  <button class="btn" id="fSave">Сохранить заказ</button>
+</main>
+
+<nav><button class="btn" id="tCalc">Расчёт</button><button class="btn sec" id="tCart">Корзина (0)</button><button class="btn sec" id="tOrd">Заказы</button></nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="src/calc.js"></script>
+<script src="src/orders.js"></script>
 <script src="src/app.js"></script>
 </body>
 </html>

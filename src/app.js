@@ -103,18 +103,54 @@
   }
   const save = () => { try { localStorage.setItem('jal_cart', JSON.stringify(st.cart)); } catch (e) {} };
 
-  function tab(cart) { $('calc').hidden = cart || !st.P; $('cart').hidden = !cart; $('load').hidden = !!st.P || cart; if (cart) drawCart(); }
+  function tab(name) {
+    $('calc').hidden = name !== 'calc' || !st.P; $('cart').hidden = name !== 'cart';
+    $('orders').hidden = name !== 'ord'; $('form').hidden = name !== 'form';
+    $('load').hidden = !!st.P || name !== 'calc';
+    if (name === 'cart') drawCart(); if (name === 'ord') drawOrders();
+  }
+
+  function drawOrders() {
+    const list = JalOrders.load(), box = $('ordList');
+    $('ordEmpty').hidden = list.length > 0; box.innerHTML = '';
+    list.forEach(o => {
+      const sum = o.items.reduce((a, b) => a + b.price, 0);
+      const d = document.createElement('div'); d.className = 'card';
+      d.innerHTML = '<div class="item" style="border:0;padding:0"><div><b>№ ' + o.no + ' · ' + (o.name || 'без имени') + '</b>' +
+        '<div class="sub">' + [o.phone, o.addr].filter(Boolean).join(' · ') + '</div>' +
+        (o.meas ? '<div class="sub">Замер: ' + o.meas.replace('T', ' ') + '</div>' : '') +
+        (o.inst ? '<div class="sub">Монтаж: ' + o.inst.replace('T', ' ') + '</div>' : '') +
+        '</div><b>' + rub(sum) + '</b></div><div class="row" style="margin-top:10px"></div>';
+      const r = d.querySelector('.row');
+      JalOrders.STATUSES.forEach(s => {
+        const b = document.createElement('button'); b.className = 'chip'; b.textContent = s;
+        b.setAttribute('aria-pressed', o.status === s);
+        b.onclick = () => { JalOrders.setStatus(o.no, s); drawOrders(); };
+        r.appendChild(b);
+      });
+      box.appendChild(d);
+    });
+  }
 
   $('file').onchange = e => e.target.files[0] && loadFile(e.target.files[0]);
   ['W', 'H', 'color'].forEach(id => $(id).addEventListener('input', recalc));
   $('add').onclick = () => { if (st.last) { st.cart.push(st.last); save(); drawCart(); $('add').textContent = 'Добавлено ✓'; setTimeout(() => $('add').textContent = 'В корзину', 900); } };
   $('clear').onclick = () => { st.cart = []; save(); drawCart(); };
-  $('tCalc').onclick = () => tab(false);
-  $('tCart').onclick = () => tab(true);
+  $('tCalc').onclick = () => tab('calc');
+  $('tCart').onclick = () => tab('cart');
+  $('tOrd').onclick = () => tab('ord');
+  $('mkOrder').onclick = () => { if (st.cart.length) tab('form'); };
+  $('fSave').onclick = () => {
+    const v = id => $(id).value.trim();
+    JalOrders.create({ name: v('fName'), phone: v('fPhone'), addr: v('fAddr'), meas: v('fMeas'), inst: v('fInst'),
+      pre: v('fPre') || '100', preU: $('fPreU').value, term: v('fTerm') || '12', note: v('fNote') }, st.cart);
+    st.cart = []; save(); drawCart(); tab('ord');
+  };
   $('pstat').onclick = () => { st.show = !st.show; recalc(); drawCart(); };
 
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem('jal_prices') || 'null'); } catch (e) {}
   if (saved) setPrices(saved); else $('load').hidden = false;
+  window.JalTab = tab;
   drawCart();
 })();
