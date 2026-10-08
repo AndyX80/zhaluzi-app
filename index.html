@@ -131,7 +131,7 @@ html,body{overflow-x:hidden}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v16</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v17</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -372,15 +372,19 @@ html,body{overflow-x:hidden}
 <h1 style="margin: 0; font-size: 21px; font-weight: 700; flex-grow: 1">Корзина</h1>
 <button onClick="{{clearCart}}" style="height: 40px; border: 1px solid rgba(255,255,255,0.5); border-radius: 20px; background: transparent; color: #FFFFFF; font-size: 14px; padding: 0 14px">Очистить</button>
 </header>
-<main style="padding: 14px 12px calc(480px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 10px">
+<main style="padding: 14px 12px calc(150px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 10px">
+<div style="background: var(--card); border-radius: 14px; padding: 2px 6px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px">
+<sc-for list="{{cartTabs}}" as="tb" hint-placeholder-count="2"><button onClick="{{tb.pick}}" style="{{tb.style}}">{{tb.name}}</button></sc-for>
+</div>
+<sc-if value="{{tabItems}}" hint-placeholder-val="{{true}}">
 <sc-if value="{{undoOn}}" hint-placeholder-val="{{false}}"><div style="display: flex; align-items: center; gap: 10px; background: var(--dk); color: #FFFFFF; border-radius: 14px; padding: 6px 8px 6px 14px"><span style="flex-grow: 1; font-size: 14px">{{undoText}}</span><button onClick="{{undo}}" style="height: 40px; border: 0; border-radius: 10px; background: var(--ac); color: #FFFFFF; font-size: 14px; font-weight: 700; padding: 0 16px">Отменить</button></div></sc-if>
 <div style="background: var(--card); border-radius: 16px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); overflow: hidden">
-<div style="display: grid; grid-template-columns: 24px minmax(0, 1fr) 88px 34px 84px; gap: 6px; padding: 10px 10px; background: var(--hd); font-size: 12px; font-weight: 700; color: var(--m1)">
-<span>№</span><span>Изделие</span><span>Размер, мм</span><span>Шт</span><span style="text-align: right">Сумма</span>
+<div style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 66px 22px 62px; gap: 4px; padding: 10px 8px; background: var(--hd); font-size: 11px; font-weight: 700; color: var(--m1)">
+<span>№</span><span>Изделие</span><span>Размер</span><span>Шт</span><span style="text-align: right">Сумма</span>
 </div>
 <sc-for list="{{cart}}" as="it" hint-placeholder-count="2">
-<div style="border-top: 1px solid #EADFD1; padding: 10px 10px; display: flex; flex-direction: column; gap: 8px">
-<div style="display: grid; grid-template-columns: 24px minmax(0, 1fr) 88px 34px 84px; gap: 6px; align-items: start; font-size: 14px">
+<div style="border-top: 1px solid #EADFD1; padding: 10px 8px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: grid; grid-template-columns: 18px minmax(0, 1fr) 66px 22px 62px; gap: 4px; align-items: start; font-size: 13px">
 <span style="font-weight: 700">{{it.n}}</span>
 <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-weight: 600">{{it.title}}</span><span style="font-size: 12px; color: var(--m1)">{{it.sub}}</span></div>
 <span>{{it.size}}</span>
@@ -389,7 +393,7 @@ html,body{overflow-x:hidden}
 </div>
 <sc-if value="{{it.profShow}}" hint-placeholder-val="{{true}}"><div style="{{it.profStyle}}">{{it.profLine}}</div></sc-if>
 <sc-if value="{{it.isDrive}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--m1)"><span>Вывод провода: <span style="{{it.wireNoteStyle}}">{{it.wireNote}}</span></span><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12)"><button onClick="{{it.wireL}}" style="{{it.wireLStyle}}">Слева</button><button onClick="{{it.wireR}}" style="{{it.wireRStyle}}">Справа</button></div></div></sc-if>
-<div style="display: flex; justify-content: flex-end; gap: 8px">
+<div style="display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px">
 <span style="{{it.warnStyle}}">{{it.warn}}</span>
 <button onClick="{{it.edit}}" style="height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 13px; font-weight: 600; padding: 0 12px; white-space: nowrap; flex-shrink: 0">Изменить</button>
 <sc-if value="{{it.dupShow}}" hint-placeholder-val="{{false}}"><button onClick="{{it.dup}}" style="height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 13px; font-weight: 600; padding: 0 12px; white-space: nowrap; flex-shrink: 0">Такое же</button></sc-if>
@@ -432,9 +436,9 @@ html,body{overflow-x:hidden}
 <button onClick="{{addCustom}}" style="height: 48px; border-radius: 14px; border: 1.5px dashed #4A2C18; background: transparent; color: var(--dk); font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px">
 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
 Своя строка (любая услуга или товар)</button>
-</main>
-<div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 6px">
-<div style="background: var(--card); border-radius: 18px; box-shadow: 0 4px 14px rgba(40,20,10,0.18); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+</sc-if>
+<sc-if value="{{tabOther}}" hint-placeholder-val="{{false}}">
+<div style="background: var(--card); border-radius: 16px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); padding: 14px; display: flex; flex-direction: column; gap: 8px">
 <div style="display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-size: 13px; color: var(--m1)">
 <span>Общая площадь</span><span style="text-align: right; color: var(--ink); font-weight: 600">{{cartArea}}</span>
 <span>Общий вес</span><span style="text-align: right; color: var(--ink); font-weight: 600">{{cartWeight}}</span>
@@ -445,7 +449,7 @@ html,body{overflow-x:hidden}
 <span style="font-size: 15px; color: var(--m1)">₽</span>
 </div>
 <sc-if value="{{hasSugg}}" hint-placeholder-val="{{true}}">
-<div style="display: flex; align-items: center; gap: 8px"><div style="flex-grow: 1; font-size: 12px; color: var(--m1); line-height: 1.35">{{suggText}}</div><button onClick="{{applySugg}}" style="{{suggStyle}}">Подставить</button></div>
+<div style="display: flex; align-items: center; gap: 8px"><div style="flex: 1 1 0; min-width: 0; font-size: 12px; color: var(--m1); line-height: 1.35">{{suggText}}</div><button onClick="{{applySugg}}" style="{{suggStyle}}">Подставить</button></div>
 </sc-if>
 <div style="display: flex; align-items: center; gap: 10px">
 <label for="disc" style="flex-grow: 1; font-size: 15px; font-weight: 600">Скидка на заказ</label>
@@ -460,6 +464,9 @@ html,body{overflow-x:hidden}
 <button onClick="{{openKp}}" style="height: 44px; border-radius: 14px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none">КП</button>
 </div>
 </div>
+</sc-if>
+</main>
+<div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 6px">
 <div style="height: 56px; border-radius: 28px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; padding: 0 8px 0 22px; gap: 10px; box-shadow: 0 8px 20px rgba(40,20,10,0.35)">
 <div style="flex-grow: 1">
 <div style="font-size: 22px; font-weight: 800; line-height: 1.1">{{cartTotal}}</div>
@@ -1426,20 +1433,20 @@ html,body{overflow-x:hidden}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/calc.js?v=16"></script>
-<script src="src/orders.js?v=16"></script>
-<script src="src/docs.js?v=16"></script>
-<script src="src/data.js?v=16"></script>
-<script src="src/limits.js?v=16"></script>
-<script src="src/tpl.js?v=16"></script>
-<script src="src/screen.js?v=16"></script>
-<script src="src/calcscreen.js?v=16"></script>
-<script src="src/cartscreen.js?v=16"></script>
-<script src="src/ordersscreen.js?v=16"></script>
-<script src="src/orderscreen.js?v=16"></script>
-<script src="src/settingsscreen.js?v=16"></script>
-<script src="src/docscreens.js?v=16"></script>
-<script src="src/sendscreen.js?v=16"></script>
-<script src="src/app.js?v=16"></script>
+<script src="src/calc.js?v=17"></script>
+<script src="src/orders.js?v=17"></script>
+<script src="src/docs.js?v=17"></script>
+<script src="src/data.js?v=17"></script>
+<script src="src/limits.js?v=17"></script>
+<script src="src/tpl.js?v=17"></script>
+<script src="src/screen.js?v=17"></script>
+<script src="src/calcscreen.js?v=17"></script>
+<script src="src/cartscreen.js?v=17"></script>
+<script src="src/ordersscreen.js?v=17"></script>
+<script src="src/orderscreen.js?v=17"></script>
+<script src="src/settingsscreen.js?v=17"></script>
+<script src="src/docscreens.js?v=17"></script>
+<script src="src/sendscreen.js?v=17"></script>
+<script src="src/app.js?v=17"></script>
 </body>
 </html>

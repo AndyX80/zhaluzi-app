@@ -179,7 +179,9 @@
 
     const cf = s.cf, cfOk = cf && Number(cf.price) > 0;
     const setCf = (k, v) => { C.cf = Object.assign({}, C.cf, { [k]: v }); rerender(); };
+    const tabSt = on => 'min-height: 48px; border: 0; background: transparent; padding: 0 2px; font-size: 15px; text-align: center; border-bottom: 3px solid ' + (on ? 'var(--ac)' : 'transparent') + '; font-weight: ' + (on ? 800 : 600) + '; color: ' + (on ? 'var(--ink)' : 'var(--m3)');
     return {
+      cartTabs: [['Изделия', 'items'], ['Прочее', 'other']].map(x => ({ name: x[0], style: tabSt(TAB === x[1]), pick: () => { TAB = x[1]; render(); window.scrollTo(0, 0); } })), tabItems: TAB === 'items', tabOther: TAB === 'other',
       closeCart: () => window.JalApp.tab('calc'), clearCart: () => set({ cart: [] }),
       undoOn: !!s.undoItem, undoText: 'Позиция ' + (s.undoItem ? s.undoItem.i + 1 : '') + ' удалена',
       undo: () => { const u = C.undoItem; if (!u) return; C.cart.splice(u.i, 0, u.it); C.undoItem = null; try { clearTimeout(C._undoT); } catch (e) {} save(); rerender(); },
@@ -198,7 +200,7 @@
       cartWeight: kgSum ? (kgPart ? '' : 'от ') + LM.fmtKg(kgSum) + ' кг' : '—',
       service: s.service || '', setService: e => set({ service: Number(e.target.value) || 0 }),
       hasSugg: sugg > 0, suggText: 'По ставкам монтажа: ' + sp.join(' + ') + ' = ' + fmt(sugg) + ' ₽ (ориентировочно)',
-      suggStyle: 'height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: ' + (S === sugg ? 'var(--chip)' : '#FFFFFF') + '; color: var(--dk); font-size: 13px; font-weight: 700; padding: 0 12px; white-space: nowrap',
+      suggStyle: 'height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: ' + (S === sugg ? 'var(--chip)' : '#FFFFFF') + '; color: var(--dk); font-size: 13px; font-weight: 700; padding: 0 12px; white-space: nowrap; flex-shrink: 0',
       applySugg: () => set({ service: sugg }),
       disc: s.disc || '', setDisc: e => set({ disc: e.target.value }),
       discPct: () => set({ discMode: 'pct' }), discRub: () => set({ discMode: 'rub' }), discPctStyle: tabBtn(pctOn), discRubStyle: tabBtn(!pctOn),
@@ -231,7 +233,7 @@
     return { items, priced: true, delivery: F.S, disc: F.discAmt, needDog: sC.needDog };
   }
 
-  let mounted = null;
+  let mounted = null, TAB = 'items';
   function rerender() { if (window.JalApp && document.getElementById('cartRoot') && !document.getElementById('cartRoot').hidden) render(); else if (window.JalCalcScreen) { try { JalCalcScreen.render(); } catch (e) {} } }
   function render() {
     if (!AUTO) return;
