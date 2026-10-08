@@ -12,6 +12,7 @@ function doGet(e) {
   if (!e || !e.parameter || e.parameter.key !== KEY) return out_({ ok: false, error: 'bad key' });
   if (e.parameter.files) return files_();
   if (e.parameter.orders) return ordersGet_();
+  if (e.parameter.catalog) return catalog_();
   const sheets = {};
   SpreadsheetApp.getActiveSpreadsheet().getSheets().forEach(function (sh) {
     sheets[sh.getName()] = sh.getDataRange().getValues();
@@ -31,6 +32,20 @@ function files_() {
     else if (/^image\//.test(f.getMimeType())) files[name] = 'da' + 'ta:' + f.getMimeType() + ';base64,' + Utilities.base64Encode(f.getBlob().getBytes());
   }
   return out_({ ok: true, folder: FOLDER, files: files, templates: templates });
+}
+
+// Каталог: файл «Каталог» (PDF) из той же папки на Диске, отдаётся одним файлом в base64.
+function catalog_() {
+  const it = DriveApp.getFoldersByName(FOLDER);
+  if (!it.hasNext()) return out_({ ok: false, error: 'Папка «' + FOLDER + '» не найдена на Диске' });
+  const list = it.next().getFiles();
+  while (list.hasNext()) {
+    const f = list.next();
+    if (f.getName().toLowerCase().indexOf('каталог') === 0 && !/^image\//.test(f.getMimeType())) {
+      return out_({ ok: true, name: f.getName(), mime: f.getMimeType(), b64: Utilities.base64Encode(f.getBlob().getBytes()) });
+    }
+  }
+  return out_({ ok: false, error: 'В папке «' + FOLDER + '» нет файла «Каталог.pdf» (имя должно начинаться со слова «Каталог»)' });
 }
 
 // Резервная копия заказов: приложение присылает JSON, он кладётся в папку на Диске файлом «заказы.json».

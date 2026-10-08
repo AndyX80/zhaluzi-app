@@ -42,13 +42,14 @@
     const fnOf = k => k === 'kp' ? (s.vars && o && o.vars && o.vars.length ? 'kpVarHtml' : 'kpHtml') : k === 'blank' ? 'zamernikHtml' : 'dogovorHtml';
     const qrs = [].concat(has('review') ? [['jal_qr_ya', 'QR отзыв Яндекс.png'], ['jal_qr_av', 'QR отзыв Авито.png']] : [], has('qr') ? [['jal_qr_pay', 'QR оплаты ' + (s.qrSum || '5 000') + ' ₽.png']] : []);
     const pdfs = o ? ['kp', 'blank', 'dogovor'].filter(has).map(k => fnOf(k)) : [];
-    const files = pdfs.reduce((a, fn) => a.concat([JalExport.baseName(fn, o) + '.pdf'], s.self ? [JalExport.baseName(fn, o) + '.docx'] : []), []).concat(qrs.filter(q => lsGet(q[0])).map(q => q[1]));
-    const pkey = (s.self ? 'self:' : '') + pdfs.join(',') + '|' + qrs.map(q => q[1]).join(',') + '|' + (o ? o.no + ':' + JSON.stringify(o).length : '');
+    const files = (withCat ? ['Каталог.pdf'] : []).concat(pdfs.reduce((a, fn) => a.concat([JalExport.baseName(fn, o) + '.pdf'], s.self ? [JalExport.baseName(fn, o) + '.docx'] : []), []).concat(qrs.filter(q => lsGet(q[0])).map(q => q[1])));
+    const pkey = (withCat ? 'cat:' : '') + (s.self ? 'self:' : '') + pdfs.join(',') + '|' + qrs.map(q => q[1]).join(',') + '|' + (o ? o.no + ':' + JSON.stringify(o).length : '');
     if (!files.length) S.prep = null;
     else if (!S.prep || S.prep.key !== pkey) {
       const P = S.prep = { key: pkey, state: 'busy', files: [] };
       (async () => {
         try {
+          if (withCat) { try { P.files.push(await JalDrive.catalog()); } catch (e) { P.catErr = e.message || String(e); } }
           for (const fn of pdfs) { P.files.push(await JalExport.pdf(fn, o)); if (S.self) P.files.push(await JalExport.docx(fn, o)); }
           qrs.forEach(q => { const f = JalExport.dataFile(lsGet(q[0]), q[1]); if (f) P.files.push(f); });
           P.state = 'ready';
@@ -65,6 +66,7 @@
       if (!ok) return;
       const enc = encodeURIComponent, subj = 'Жалюзи-СПБ' + (o ? ', заказ № ' + o.no : '');
       let done = false;
+      if (prep && prep.catErr) toast('Каталог не приложился: ' + prep.catErr);
       if (prep && prep.state === 'err') toast('Файлы не собрались: ' + prep.err);
       if (prep && prep.state === 'busy') { toast('Файлы ещё готовятся, нажми ещё раз'); return; }
       if (prep && prep.state === 'ready' && prep.files.length) {

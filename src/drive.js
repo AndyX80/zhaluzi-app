@@ -64,6 +64,16 @@
     const j = await r.json(); if (!j.ok) throw new Error(j.error || 'Письмо не ушло');
     return j.sent;
   }
+  let catFile = null;
+  /* каталог: PDF «Каталог» из папки на Диске, берётся по требованию и запоминается до закрытия приложения */
+  async function catalog() {
+    if (catFile) return catFile;
+    const base = lsGet('jal_prices_url'); if (!base) throw new Error('Нет ссылки на скрипт (вкладка «Цены»)');
+    const j = await (await fetch(base + (base.indexOf('?') < 0 ? '?' : '&') + 'catalog=1')).json();
+    if (!j.ok) throw new Error(j.error || 'Скрипт не отдал каталог (обнови скрипт)');
+    const bin = atob(j.b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return (catFile = new File([u], 'Каталог.pdf', { type: j.mime || 'application/pdf' }));
+  }
   async function restore() {
     const base = lsGet('jal_prices_url'); if (!base) throw new Error('Сначала вставь ссылку на цены (вкладка «Цены»)');
     const j = await (await fetch(base + '&orders=1')).json(); if (!j.ok) throw new Error(j.error || 'Скрипт не отдал заказы');
@@ -74,5 +84,5 @@
   /* авто-копия: раз в день или раз в неделю, если включено в Настройках и ссылка есть */
   setTimeout(() => { const m = +lsGet('jal_sched') || 0, age = Date.now() - (+lsGet('jal_backup_at') || 0);
     if (m && lsGet('jal_prices_url') && age > (m === 1 ? 20 * 3600e3 : 7 * 86400e3)) backup().catch(() => {}); }, 6000);
-  window.JalDrive = { mail, backup, restore, backupAt: () => +lsGet('jal_backup_at') || 0, refresh, text, fill, parse, dump, FILES, DEF, at: () => +lsGet('jal_drive_at') || 0 };
+  window.JalDrive = { mail, catalog, backup, restore, backupAt: () => +lsGet('jal_backup_at') || 0, refresh, text, fill, parse, dump, FILES, DEF, at: () => +lsGet('jal_drive_at') || 0 };
 })();
