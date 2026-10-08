@@ -114,6 +114,13 @@
   $('tSet').onclick = () => tab('set');
   $('docBack').onclick = () => { const b = st.curBack; st.curBack = null; tab(b || 'ord'); };
   $('docPrint').onclick = () => window.print();
+  /* нижние плашки экранов закрывают конец списка: отступ внизу = реальная высота плашек (с учётом размера шрифта) */
+  function fitBottom() {
+    const m = document.querySelector('main:not([hidden])'); if (!m) return;
+    let top = innerHeight; document.querySelectorAll('div[style*="position: fixed"][style*="z-index: 5"],#bottom').forEach(e => { const r = e.getBoundingClientRect(); if (r.height > 0 && r.width > 0 && r.top < top) top = r.top; });
+    const need = Math.ceil(innerHeight - top) + 24; if (need > 40 && need < 700) m.style.paddingBottom = need + 'px';
+  }
+  setInterval(fitBottom, 400); addEventListener('resize', fitBottom);
   const docOut = (btn, kind) => async () => {
     if (!st.curDoc) return; const msg = $('docMsg'), old = btn.textContent; btn.disabled = true; btn.textContent = 'Готовлю…'; msg.textContent = '';
     try { const f = await JalExport[kind](st.curDoc[0], st.curDoc[1]); JalExport.save(f); msg.textContent = 'Файл «' + f.name + '» готов.'; }
