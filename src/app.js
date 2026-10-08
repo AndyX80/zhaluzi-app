@@ -134,6 +134,9 @@
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem('jal_prices') || 'null'); } catch (e) {}
   if (saved) setPrices(saved); else $('load').hidden = false;
+  /* наличие и цены подтягиваются сами при открытии, если данным больше 3 часов (без интернета тихо остаётся прежнее) */
+  try { const u = localStorage.getItem('jal_prices_url'), at = +localStorage.getItem('jal_prices_at') || 0;
+    if (saved && u && navigator.onLine !== false && Date.now() - at > 3 * 3600e3) setTimeout(() => fetchPrices(u).catch(() => {}), 2500); } catch (e) {}
   function openKp() {
     const o = Object.assign({ no: '—', created: new Date().toISOString(), name: '', pre: '100', preU: '%', term: '12' }, JalCart.toOrder());
     showDoc('kpHtml', o, 'cart');
