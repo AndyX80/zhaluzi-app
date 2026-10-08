@@ -135,6 +135,20 @@
     });
   }
 
+  async function loadUrl() {
+    const u = $('url').value.trim(), er = $('urlErr'); er.textContent = '';
+    if (!u) return;
+    $('urlGo').disabled = true; $('urlGo').textContent = 'Загружаю…';
+    try {
+      const j = await (await fetch(u)).json();
+      if (!j.ok) throw new Error(j.error === 'bad key' ? 'Неверный пароль в ссылке' : 'Таблица не отдала данные');
+      try { localStorage.setItem('jal_prices', JSON.stringify(j.sheets)); localStorage.setItem('jal_prices_url', u); } catch (e) {}
+      setPrices(j.sheets);
+    } catch (e) { er.textContent = 'Не получилось: ' + (e.message || e); er.className = 'sub err'; }
+    $('urlGo').disabled = false; $('urlGo').textContent = 'Загрузить цены';
+  }
+  $('urlGo').onclick = loadUrl;
+  try { $('url').value = localStorage.getItem('jal_prices_url') || ''; } catch (e) {}
   $('file').onchange = e => e.target.files[0] && loadFile(e.target.files[0]);
   ['W', 'H', 'color'].forEach(id => $(id).addEventListener('input', recalc));
   $('add').onclick = () => { if (st.last) { st.cart.push(st.last); save(); drawCart(); $('add').textContent = 'Добавлено ✓'; setTimeout(() => $('add').textContent = 'В корзину', 900); } };

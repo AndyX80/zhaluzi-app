@@ -44,6 +44,10 @@ nav button{flex:1}
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
+  <input id="url" placeholder="Ссылка на таблицу цен" autocomplete="off">
+  <button class="btn" id="urlGo" style="margin-top:8px">Загрузить цены</button>
+  <p class="sub" id="urlErr"></p>
+  <p class="lbl" style="margin-top:14px">Или файл xlsx с телефона:</p>
   <input type="file" id="file">
 </section>
 
