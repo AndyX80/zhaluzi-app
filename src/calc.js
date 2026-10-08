@@ -93,7 +93,7 @@
     } else {
       throw new Error('поставщик? ' + sup);
     }
-    const dlv = s['Доставка_руб'];
+    const dlv = 0; /* доставка от поставщика считается в корзине: 1500 ₽ на партию производителя */
     const profitM2 = P.x[prod] + s['Доп_к_X'];
     const base = ceilTo(zak + dlv + profitM2 * Math.max(S, par['мин_площадь_прибыли']), par['округление']);
     const pr = base - zak - dlv;

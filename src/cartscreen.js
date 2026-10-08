@@ -12,9 +12,10 @@
   const CTRL_TXT = { L: 'поворот и подъём слева', R: 'поворот и подъём справа', TL: 'поворот слева, подъём справа', TR: 'поворот справа, подъём слева' };
   const CTRL_TXT_CHAIN = { L: 'цепочка слева', R: 'цепочка справа' };
   // Ставки монтажа (ориентировочно) и минимальная прибыль на изделие
-  const RATES = { w50: 3000, w50auto: 5000, w25: 1200, w25auto: 2000, delivery: 1000 };
+  const RATES = { w50: 3000, w50auto: 5000, w25: 1200, w25auto: 2000, delivery: 1000, ship: 1500 };
   const MINP = { def: 2000, p: {} };
   const SUPNAME = { Amigo: 'Амиго', Foroom: 'Форум' };
+  const FREE_SHIP = { Foroom: 1, 'Уют': 1 }; /* у них доставка до нас бесплатная */
   try { Object.assign(RATES, JSON.parse(localStorage.getItem('jal_rates') || '{}')); const mp = JSON.parse(localStorage.getItem('jal_minp') || '{}'); if (mp.def !== undefined) MINP.def = mp.def; if (mp.p) MINP.p = mp.p; } catch (e) {}
   const saveCfg = () => { try { localStorage.setItem('jal_rates', JSON.stringify(RATES)); localStorage.setItem('jal_minp', JSON.stringify(MINP)); } catch (e) {} };
 
@@ -70,12 +71,16 @@
     const calcs = s.cart.map(calcRow);
     const S = Number(s.service) || 0;
     const adds = spread(s.cart.map((it, i) => ({ ok: calcs[i].ok && it.kind !== 'custom', qty: it.qty })), S);
-    const lineSum = s.cart.map((it, i) => (calcs[i].ok ? ceil100(calcs[i].unit + adds[i]) * it.qty : 0));
+    /* доставка от производителя: RATES.ship на каждую партию (кроме Уюта и Форума), делится на жалюзи этой партии */
+    const ships = s.cart.map(() => 0), bySup = {};
+    s.cart.forEach((it, i) => { if (!it.kind && calcs[i].ok && !FREE_SHIP[it.sup]) (bySup[it.sup] = bySup[it.sup] || []).push(i); });
+    Object.keys(bySup).forEach(k => { const ix = bySup[k], part = spread(ix.map(i => ({ ok: true, qty: s.cart[i].qty })), Number(RATES.ship) || 0); ix.forEach((i, j) => { ships[i] = part[j]; }); });
+    const lineSum = s.cart.map((it, i) => (calcs[i].ok ? ceil100(calcs[i].unit + ships[i] + adds[i]) * it.qty : 0));
     const total = lineSum.reduce((x, y) => x + y, 0);
     const dv = Math.max(0, Number(s.disc) || 0);
     const discAmt = Math.min(total, s.discMode === 'pct' ? Math.round(total * Math.min(dv, 50) / 100 / 100) * 100 : Math.min(dv, total * 0.5));
     const goodsSum = s.cart.reduce((x, it, i) => x + (calcs[i].ok ? calcs[i].unit * it.qty : 0), 0);
-    return { calcs, S, adds, lineSum, total, dv, discAmt, goodsSum, netTotal: total - discAmt };
+    return { calcs, S, adds, ships, lineSum, total, dv, discAmt, goodsSum, netTotal: total - discAmt };
   }
 
   function build() {
@@ -222,7 +227,7 @@
     const sC = st || C, F = compute(sC), items = [];
     sC.cart.forEach((it, i) => {
       const c = F.calcs[i]; if (!c.ok) return;
-      const price = ceil100(c.unit + F.adds[i]);
+      const price = ceil100(c.unit + F.ships[i] + F.adds[i]);
       for (let k = 0; k < it.qty; k++) {
         if (it.kind === 'custom') items.push({ kind: 'custom', title: it.title || 'Услуга', price, profit: c.profit });
         else if (it.kind) items.push({ kind: it.kind, sup: SUPNAME[it.sup] || it.sup, title: c.auto.name + (it.kind === 'drive' ? ' (привод)' : ''), price, profit: c.profit });
