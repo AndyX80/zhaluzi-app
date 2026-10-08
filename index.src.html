@@ -132,7 +132,7 @@ html,body{overflow-x:clip}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v38</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v39</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -184,26 +184,45 @@ html,body{overflow-x:clip}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/look.js?v=38"></script>
-<script src="src/calc.js?v=38"></script>
-<script src="src/orders.js?v=38"></script>
-<script src="src/docs.js?v=38"></script>
-<script src="src/drive.js?v=38"></script>
-<script src="src/data.js?v=38"></script>
-<script src="src/limits.js?v=38"></script>
-<script src="src/tpl.js?v=38"></script>
-<script src="src/screen.js?v=38"></script>
-<script src="src/calcscreen.js?v=38"></script>
-<script src="src/cartscreen.js?v=38"></script>
-<script src="src/ordersscreen.js?v=38"></script>
-<script src="src/orderscreen.js?v=38"></script>
-<script src="src/comparescreen.js?v=38"></script>
-<script src="src/settingsscreen.js?v=38"></script>
-<script src="src/docscreens.js?v=38"></script>
-<script src="src/export.js?v=38"></script>
-<script src="src/sendscreen.js?v=38"></script>
-<script src="src/lock.js?v=38"></script>
-<script src="src/app.js?v=38"></script>
+<script>
+/* Сторож запуска: если приложение не поднялось, показываем причину и кнопку сброса кэша вместо вечной заставки */
+(function () {
+  var errs = [];
+  window.addEventListener('error', function (e) { errs.push((e.message || 'ошибка') + (e.filename ? ' [' + e.filename.split('/').pop() + ':' + e.lineno + ']' : '')); }, true);
+  window.addEventListener('unhandledrejection', function (e) { errs.push('promise: ' + ((e.reason && e.reason.message) || e.reason)); });
+  setTimeout(function () {
+    if (window.JalApp && window.JalApp.st) return;
+    var d = document.createElement('div');
+    d.setAttribute('style', 'position: fixed; inset: 0; z-index: 2000; background: #2B1A12; color: #fff; padding: 28px 20px; font: 15px/1.45 sans-serif; overflow: auto');
+    d.innerHTML = '<b style="font-size:18px">Приложение не запустилось</b><p>Скорее всего, телефон держит старые файлы. Нажми «Сбросить кэш», потом открой приложение снова.</p><p style="opacity:.7;font-size:12px;word-break:break-word">' + (errs.join('<br>') || 'ошибок не поймано').replace(/</g, '&lt;') + '</p><button id="jalReset" style="height:48px;padding:0 24px;border:0;border-radius:24px;background:#FF7520;color:#fff;font-size:16px;font-weight:800">Сбросить кэш</button>';
+    document.body.appendChild(d);
+    document.getElementById('jalReset').onclick = function () {
+      var done = function () { location.replace(location.pathname + '?r=' + Date.now()); };
+      Promise.all([(navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : 0), (window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : 0)]).then(done, done);
+    };
+  }, 5000);
+})();
+</script>
+<script src="src/look.js?v=39"></script>
+<script src="src/calc.js?v=39"></script>
+<script src="src/orders.js?v=39"></script>
+<script src="src/docs.js?v=39"></script>
+<script src="src/drive.js?v=39"></script>
+<script src="src/data.js?v=39"></script>
+<script src="src/limits.js?v=39"></script>
+<script src="src/tpl.js?v=39"></script>
+<script src="src/screen.js?v=39"></script>
+<script src="src/calcscreen.js?v=39"></script>
+<script src="src/cartscreen.js?v=39"></script>
+<script src="src/ordersscreen.js?v=39"></script>
+<script src="src/orderscreen.js?v=39"></script>
+<script src="src/comparescreen.js?v=39"></script>
+<script src="src/settingsscreen.js?v=39"></script>
+<script src="src/docscreens.js?v=39"></script>
+<script src="src/export.js?v=39"></script>
+<script src="src/sendscreen.js?v=39"></script>
+<script src="src/lock.js?v=39"></script>
+<script src="src/app.js?v=39"></script>
 <script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 </body>
 </html>
