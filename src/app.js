@@ -105,7 +105,7 @@
 
   function tab(name) {
     $('calc').hidden = name !== 'calc' || !st.P; $('cart').hidden = name !== 'cart';
-    $('orders').hidden = name !== 'ord'; $('form').hidden = name !== 'form';
+    $('orders').hidden = name !== 'ord'; $('form').hidden = name !== 'form'; $('doc').hidden = name !== 'doc';
     $('load').hidden = !!st.P || name !== 'calc';
     if (name === 'cart') drawCart(); if (name === 'ord') drawOrders();
   }
@@ -128,6 +128,9 @@
         b.onclick = () => { JalOrders.setStatus(o.no, s); drawOrders(); };
         r.appendChild(b);
       });
+      const kp = document.createElement('button'); kp.className = 'chip'; kp.textContent = 'КП (PDF)';
+      kp.onclick = () => { $('docBody').innerHTML = JalDocs.kpHtml(o); tab('doc'); };
+      r.appendChild(kp);
       box.appendChild(d);
     });
   }
@@ -139,6 +142,8 @@
   $('tCalc').onclick = () => tab('calc');
   $('tCart').onclick = () => tab('cart');
   $('tOrd').onclick = () => tab('ord');
+  $('docBack').onclick = () => tab('ord');
+  $('docPrint').onclick = () => window.print();
   $('mkOrder').onclick = () => { if (st.cart.length) tab('form'); };
   $('fSave').onclick = () => {
     const v = id => $(id).value.trim();
