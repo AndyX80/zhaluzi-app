@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Жалюзи-СПБ: расчёт</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>:root{--bg:#F5EEE6;--card:#fff;--ink:#2A1A10;--m1:#6B5545;--m2:#8B7662;--line:#E3D5C3;--ac:#E07B00;--acink:#fff;--dk:#4A2C18;--sel:#FBF1E4;--bad:#B3261E;--ok:#1E6B24;--sh:0 1px 3px rgba(40,20,10,.16)}
 @media (prefers-color-scheme:dark){:root{--bg:#1B130D;--card:#2A1E15;--ink:#F3E9DE;--m1:#C2AE98;--m2:#9C8A76;--line:#4A3A2C;--sel:#3A2A1B;--bad:#FF8A80;--ok:#81C784;--sh:0 1px 3px rgba(0,0,0,.4)}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -69,11 +70,60 @@ body[data-tab=calc] #capCart,body[data-tab=cart] #capCalc,body[data-tab=ord] #ca
 @media print{body{background:#fff;padding:0}header,nav,.noprint,main:not(#doc){display:none!important}.doc{padding:0}}
 @page{margin:14mm}
 @media print{body{background:#fff}header,#bottom,.noprint,main:not(#doc){display:none!important}main#doc{padding:0}.doc{padding:0;box-shadow:none}}
+/* экран «Расчёт» по макету: тема и «Aero»-оформление действуют только внутри #calcRoot */
+#calcRoot input{min-height:0;border-radius:0;padding:0;border:0;background:none;width:auto;margin:0;color:inherit}
+body[data-tab=calc]>header,body[data-tab=calc] #bottom{display:none}
+#calcRoot button{font-family:inherit;cursor:pointer}
+#calcRoot input{font-family:inherit}
+#calcRoot input:focus{outline:2px solid var(--dk);outline-offset:0}
+/* Aero-skin: переменные цвета + глянец. Тема = класс pN и nt на корне экрана */
+#calcRoot,#calcRoot.p0{--dk:#4A2C18;--ac:#E07B00;--bg:#F5EEE6;--card:#FFFFFF;--ink:#2A1A10;--m1:#6B5545;--m2:#7A6453;--m3:#8B7662;--line:#D6C4AE;--sel:#FBF1E4;--chip:#F3E9DC;--track:#E9DDCE;--hd:#FAF5EF;--chk:#B8A58F;--bgA:#FFF7EC;--bgB:#F3E7D8;--bgC:#EBDCCB;--glow:#F6DFC4}
+#calcRoot.p1{--dk:#1F4A3D;--ac:#2FBF71}
+#calcRoot.p2{--dk:#2A3550;--ac:#0A84FF}
+#calcRoot.p3{--dk:#6B2C3B;--ac:#FF6B5A}
+#calcRoot.p4{--dk:#34306B;--ac:#8E7CF0}
+#calcRoot.p1,#calcRoot.p2,#calcRoot.p3,#calcRoot.p4{--bg:color-mix(in srgb,var(--dk) 7%,#fff);--ink:color-mix(in srgb,var(--dk) 14%,#101114);--m1:color-mix(in srgb,var(--dk) 30%,#6E727C);--m2:color-mix(in srgb,var(--dk) 24%,#7B7F89);--m3:color-mix(in srgb,var(--dk) 20%,#8E929B);--line:color-mix(in srgb,var(--dk) 22%,#fff);--sel:color-mix(in srgb,var(--ac) 12%,#fff);--chip:color-mix(in srgb,var(--dk) 10%,#fff);--track:color-mix(in srgb,var(--dk) 13%,#fff);--hd:color-mix(in srgb,var(--dk) 5%,#fff);--chk:color-mix(in srgb,var(--dk) 35%,#aaa);--bgA:color-mix(in srgb,var(--dk) 4%,#fff);--bgB:color-mix(in srgb,var(--dk) 8%,#fff);--bgC:color-mix(in srgb,var(--dk) 15%,#fff);--glow:color-mix(in srgb,var(--ac) 16%,#fff)}
+#calcRoot .nt{--bg:color-mix(in srgb,var(--dk) 18%,#0b0807);--card:rgba(255,255,255,.07);--ink:#F2E7DB;--m1:#BBA791;--m2:#B09C86;--m3:#A38F7A;--line:rgba(255,255,255,.16);--sel:rgba(255,255,255,.11);--chip:rgba(255,255,255,.12);--track:rgba(255,255,255,.09);--hd:rgba(255,255,255,.06);--chk:#8F7C68;color:var(--ink)}
+#calcRoot[style*="font-family"],#calcRoot [style*="font-family"]{font-family:Inter,-apple-system,"SF Pro Text","Segoe UI",system-ui,sans-serif!important}
+#calcRoot[style*="font-weight: 800"],#calcRoot [style*="font-weight: 800"],#calcRoot[style*="font-weight:800"],#calcRoot [style*="font-weight:800"]{font-weight:500!important}
+#calcRoot[style*="font-weight: 700"],#calcRoot [style*="font-weight: 700"],#calcRoot[style*="font-weight:700"],#calcRoot [style*="font-weight:700"]{font-weight:500!important}
+#calcRoot[style*="font-weight: 600"],#calcRoot [style*="font-weight: 600"],#calcRoot[style*="font-weight:600"],#calcRoot [style*="font-weight:600"]{font-weight:400!important}
+#calcRoot[style*="letter-spacing: -1px"],#calcRoot [style*="letter-spacing: -1px"]{letter-spacing:-1.5px!important;font-weight:300!important}
+/* фон */
+#calcRoot[style*="background: var(--bg)"],#calcRoot [style*="background: var(--bg)"]{background:radial-gradient(120% 60% at 15% 0%,var(--bgA) 0%,transparent 60%),radial-gradient(90% 50% at 100% 40%,var(--glow) 0%,transparent 65%),linear-gradient(var(--bgB),var(--bgC))!important}
+#calcRoot.nt[style*="background: var(--bg)"]{background:radial-gradient(110% 50% at 10% 0%,color-mix(in srgb,var(--dk) 55%,#000) 0%,transparent 62%),radial-gradient(90% 45% at 100% 60%,color-mix(in srgb,var(--ac) 20%,#000) 0%,transparent 65%),linear-gradient(color-mix(in srgb,var(--dk) 22%,#000),color-mix(in srgb,var(--dk) 11%,#000))!important}
+#calcRoot.nt [style*="background: var(--bg)"]{background:var(--sel)!important}
+/* стеклянные карточки */
+#calcRoot[style*="background: var(--card)"]:not(button):not(a),#calcRoot [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.9),rgba(255,255,255,.62))!important;backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);border:1px solid rgba(255,255,255,.9)!important;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 8px 22px color-mix(in srgb,var(--dk) 14%,transparent)!important}
+#calcRoot.nt [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.11),rgba(255,255,255,.05))!important;border:1px solid rgba(255,255,255,.13)!important;box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 10px 24px rgba(0,0,0,.45)!important}
+/* кнопки-клавиши */
+#calcRoot button[style*="background: var(--card)"],#calcRoot a[style*="background: var(--card)"]{background:linear-gradient(#fff,color-mix(in srgb,var(--dk) 9%,#fff))!important;border:1px solid color-mix(in srgb,var(--dk) 20%,#fff)!important;box-shadow:0 1px 0 #fff inset,0 -2px 3px color-mix(in srgb,var(--dk) 10%,transparent) inset,0 3px 8px color-mix(in srgb,var(--dk) 16%,transparent)!important}
+#calcRoot.nt button[style*="background: var(--card)"],#calcRoot.nt a[style*="background: var(--card)"]{background:linear-gradient(rgba(255,255,255,.18),rgba(255,255,255,.07))!important;border:1px solid rgba(255,255,255,.2)!important;box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 -2px 3px rgba(0,0,0,.3) inset,0 3px 8px rgba(0,0,0,.4)!important}
+/* шапка и тёмные капсулы */
+#calcRoot header{background:linear-gradient(color-mix(in srgb,var(--dk) 82%,#fff) 0%,var(--dk) 55%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 4px 14px color-mix(in srgb,var(--dk) 45%,transparent)!important}
+#calcRoot header h1{font-weight:500!important;letter-spacing:.2px}
+#calcRoot[style*="background: var(--dk)"],#calcRoot [style*="background: var(--dk)"]{background:linear-gradient(color-mix(in srgb,var(--dk) 84%,#fff) 0%,var(--dk) 50%,color-mix(in srgb,var(--dk) 78%,#000) 100%)!important;box-shadow:0 1px 0 rgba(255,255,255,.28) inset,0 -3px 5px rgba(0,0,0,.25) inset,0 8px 18px color-mix(in srgb,var(--dk) 45%,transparent)!important}
+/* акцентные кнопки: глянцевая капля */
+#calcRoot[style*="background: var(--ac)"],#calcRoot [style*="background: var(--ac)"]{background:linear-gradient(color-mix(in srgb,var(--ac) 65%,#fff) 0%,var(--ac) 48%,color-mix(in srgb,var(--ac) 88%,#000) 52%,color-mix(in srgb,var(--ac) 95%,#fff) 100%)!important;border:1px solid color-mix(in srgb,var(--ac) 65%,#000)!important;box-shadow:0 1px 0 rgba(255,255,255,.65) inset,0 -3px 4px color-mix(in srgb,var(--ac) 55%,#000) inset,0 5px 12px color-mix(in srgb,var(--ac) 45%,transparent)!important;text-shadow:0 -1px 0 rgba(0,0,0,.25)}
+/* чекбоксы */
+#calcRoot[style*="solid var(--chk)"],#calcRoot [style*="solid var(--chk)"]{background:#fff!important;box-shadow:0 1px 2px rgba(60,40,20,.18) inset!important}
+#calcRoot.nt [style*="solid var(--chk)"]{background:rgba(255,255,255,.1)!important}
+#calcRoot.nt header{background:linear-gradient(rgba(255,255,255,.1),rgba(255,255,255,.03)),color-mix(in srgb,var(--dk) 40%,#0a0706)!important}
+#calcRoot.nt [style*="color: var(--dk)"]{color:var(--ink)!important}
+#calcRoot.nt [style*="stroke=\"var(--dk)"]{color:var(--ink)}
+#calcRoot.nt input,#calcRoot.nt textarea{color:#F2E7DB!important;color-scheme:dark}
+#calcRoot.nt [style*="color: #1E6B24"],#calcRoot.nt [style*="color: rgb(30, 107, 36)"]{color:#7FD58A!important}
+#calcRoot.nt [style*="color: #8A4B00"],#calcRoot.nt [style*="color: rgb(138, 75, 0)"]{color:#FFB27A!important}
+#calcRoot button:active{transform:translateY(1px) scale(.99)}
+#calcRoot button{transition:transform .08s,box-shadow .15s}
+#calcRoot input::placeholder{color:var(--m3);opacity:.55}
+#calcRoot [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.97),rgba(255,255,255,.93))!important}
+#calcRoot.nt [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:color-mix(in srgb,var(--dk) 30%,#0b0807)!important}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v9</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v10</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -84,20 +134,226 @@ body[data-tab=calc] #capCart,body[data-tab=cart] #capCalc,body[data-tab=ord] #ca
   <input type="file" id="file">
 </section>
 
-<main id="calc" hidden>
-  <div class="size">
-    <div class="sbox"><label for="W">Ширина, мм</label><input id="W" type="number" inputmode="numeric" placeholder="0"></div>
-    <div class="sbox"><label for="H">Высота, мм</label><input id="H" type="number" inputmode="numeric" placeholder="0"></div>
-  </div>
-  <div class="card flat"><div class="tabs" id="sup" style="--n:5"></div></div>
-  <div class="card flat"><div class="tabs" id="mat" style="--n:3"></div></div>
-  <div class="card flat"><div class="tabs" id="lam" style="--n:2"></div></div>
-  <div class="card" id="colbox" hidden><p class="lbl">Цвет</p><select id="color"></select></div>
-  <div class="card flat" id="opt"></div>
-  <div class="card flat"><div class="tabs" id="fix" style="--n:4"></div></div>
-  <div class="qty"><span style="font-weight:600">Кол-во</span><div class="stepper"><button id="qm" aria-label="Меньше">−</button><b id="qv">1</b><button id="qp" aria-label="Больше">+</button></div></div>
-  <div class="sub" id="note"></div>
+
+<div id="calcRoot" hidden></div>
+<template id="tplCalc">
+<sc-if value="{{calcHeader}}" hint-placeholder-val="{{false}}"><header style="background: var(--dk); color: #FFFFFF; padding: 16px 14px 14px 18px; display: flex; align-items: center; gap: 10px">
+<h1 style="margin: 0; font-size: 22px; font-weight: 800; flex-grow: 1">{{calcTitle}}</h1>
+<span style="font-size: 13px; opacity: 0.8">{{posText}}</span>
+</header></sc-if>
+
+<main style="padding: 10px 14px calc(290px + env(safe-area-inset-bottom, 0px)) 14px; display: flex; flex-direction: column; gap: 8px">
+
+<div style="display: flex; background: var(--track); border-radius: 14px; padding: 3px; gap: 3px">
+<button onClick="{{modeBlinds}}" style="{{modeBlindsStyle}}">Жалюзи</button>
+<button onClick="{{modeAuto}}" style="{{modeAutoStyle}}">Автоматика</button>
+</div>
+
+<sc-if value="{{isBlinds}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="background: var(--card); border-radius: 20px; box-shadow: 0 1px 3px rgba(40,20,10,0.16); padding: 8px 14px 4px 16px; display: flex; flex-direction: column">
+<label for="w1" style="text-align: center; font-size: 13px; color: var(--m2); font-weight: 600">Ширина, мм</label>
+<input id="w1" type="number" inputmode="numeric" value="{{w}}" onChange="{{setW}}" onInput="{{setW}}" placeholder="0" style="height: 46px; border: 0; padding: 0; font-size: 38px; font-weight: 800; letter-spacing: -1px; color: var(--ink); background: transparent; box-sizing: border-box; width: 100%; text-align: center">
+</div>
+<div style="background: var(--card); border-radius: 20px; box-shadow: 0 1px 3px rgba(40,20,10,0.16); padding: 8px 14px 4px 16px; display: flex; flex-direction: column">
+<label for="h1" style="text-align: center; font-size: 13px; color: var(--m2); font-weight: 600">Высота, мм</label>
+<input id="h1" type="number" inputmode="numeric" value="{{h}}" onChange="{{setH}}" onInput="{{setH}}" placeholder="0" style="height: 46px; border: 0; padding: 0; font-size: 38px; font-weight: 800; letter-spacing: -1px; color: var(--ink); background: transparent; box-sizing: border-box; width: 100%; text-align: center">
+</div>
+</div>
+
+</sc-if>
+
+<div style="display: flex; flex-direction: column">
+<button onClick="{{toggleSup}}" aria-expanded="{{supOpen}}" style="min-height: 54px; border: 0; border-radius: 20px; background: var(--card); box-shadow: 0 1px 3px rgba(40,20,10,0.16); display: flex; align-items: center; gap: 12px; padding: 8px 16px; text-align: left; color: var(--ink)">
+<span style="flex-grow: 1; display: flex; flex-direction: column"><span style="font-size: 12px; color: var(--m2); font-weight: 600">Коллекция</span><span style="font-size: 22px; font-weight: 800">{{supName}}</span></span>
+<span style="font-size: 13px; font-weight: 700; color: var(--dk); background: var(--chip); border-radius: 10px; padding: 4px 10px">{{supColl}}</span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A2C18" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="{{supArrow}}"><path d="M6 9l6 6 6-6"></path></svg>
+</button>
+<div style="{{supWrap}}">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding-top: 8px">
+<sc-for list="{{supTiles}}" as="t" hint-placeholder-count="5">
+<button onClick="{{t.pick}}" aria-pressed="{{t.on}}" style="{{t.style}}"><span style="font-size: 12px; opacity: 0.75; font-weight: 600">{{t.coll}}</span><span style="font-size: 21px; font-weight: 800">{{t.name}}</span></button>
+</sc-for>
+</div>
+</div>
+</div>
+
+<sc-if value="{{isBlinds}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; gap: 10px">
+<sc-if value="{{showLam}}" hint-placeholder-val="{{true}}">
+<div style="flex: 0 0 128px; display: flex; background: var(--track); border-radius: 14px; padding: 3px; gap: 3px">
+<sc-for list="{{lams}}" as="l" hint-placeholder-count="2">
+<button onClick="{{l.pick}}" style="{{l.style}}">{{l.name}}</button>
+</sc-for>
+</div>
+</sc-if>
+<div style="flex: 1 1 0; display: flex; background: var(--track); border-radius: 14px; padding: 3px; gap: 3px">
+<sc-for list="{{mats}}" as="m" hint-placeholder-count="3">
+<button onClick="{{m.pick}}" style="{{m.style}}">{{m.name}}</button>
+</sc-for>
+</div>
+</div>
+
+<sc-if value="{{hasColors}}" hint-placeholder-val="{{true}}">
+<button onClick="{{openColors}}" style="{{colorBtnStyle}}">
+<span style="font-size: 13px; color: var(--m1); font-weight: 600; width: 44px">Цвет</span>
+<span style="{{colorDotStyle}}"></span>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px">
+<span style="{{colorNameStyle}}">{{colorName}}</span>
+<sc-if value="{{colorSub}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; color: var(--m1)">{{colorSub}}</span></sc-if>
+</span>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7A6453" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+</button>
+</sc-if>
+
+<sc-if value="{{hasOpts}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: stretch; gap: 6px">
+<sc-for list="{{opts}}" as="o" hint-placeholder-count="2">
+<button onClick="{{o.toggle}}" aria-pressed="{{o.on}}" style="{{o.style}}"><span style="display: flex; flex-direction: column; align-items: center; line-height: 1.15; min-width: 0"><span>{{o.name}}</span><span style="font-size: 11px; font-weight: 700; color: #8A4B00; min-height: 13px">{{o.price}}</span></span></button>
+</sc-for>
+</div>
+</sc-if>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="{{fixBoxStyle}}">
+<sc-for list="{{fixes}}" as="f" hint-placeholder-count="3">
+<button onClick="{{f.pick}}" aria-pressed="{{f.on}}" style="{{f.style}}"><span style="font-size: 14px">{{f.name}}</span><span style="font-size: 12px; font-weight: 700; min-height: 15px">{{f.price}}</span></button>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 13px; color: var(--m1); font-weight: 600">{{ctrlTitle}}</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ctrls}}" as="k" hint-placeholder-count="4">
+<button onClick="{{k.pick}}" aria-pressed="{{k.on}}" style="{{k.style}}">
+<svg width="34" height="32" viewBox="0 0 34 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="flex-shrink: 0"><rect x="2" y="2" width="30" height="4" rx="1"></rect><path d="M4 10h26M4 14h26M4 18h26M4 22h26M4 26h26" stroke-opacity="0.3"></path><path d="{{k.thin}}" stroke-width="1.2"></path><path d="{{k.thick}}" stroke-width="3.2" stroke-dasharray="{{k.dash}}"></path></svg>
+<span style="font-size: 13px; line-height: 1.2; text-align: left">{{k.name}}</span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; gap: 12px">
+<button onClick="{{compare}}" style="height: 50px; padding: 0 14px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; text-decoration: none; flex-shrink: 0">Сравнить</button><div style="font-size: 15px; font-weight: 600; flex-grow: 1; text-align: center">Кол-во</div>
+<div style="display: flex; align-items: center; background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden">
+<button onClick="{{qtyMinus}}" aria-label="Меньше" style="width: 52px; height: 50px; border: 0; background: var(--card); color: var(--dk); font-size: 26px; font-weight: 700">−</button>
+<div style="width: 52px; text-align: center; font-size: 22px; font-weight: 800">{{qty}}</div>
+<button onClick="{{qtyPlus}}" aria-label="Больше" style="width: 52px; height: 50px; border: 0; background: var(--card); color: var(--dk); font-size: 26px; font-weight: 700">+</button>
+</div>
+</div>
+
+
+</sc-if>
+<sc-if value="{{isAuto}}" hint-placeholder-val="{{false}}">
+<sc-if value="{{noAuto}}" hint-placeholder-val="{{false}}">
+<div style="background: #FFF6E6; border: 1.5px solid #F0D9A8; border-radius: 14px; padding: 14px; font-size: 14px; color: #6B4A00; line-height: 1.4">У этого поставщика автоматика пока не заведена в прайс. Данные добавим, когда ты их пришлёшь.</div>
+</sc-if>
+<sc-if value="{{hasAuto}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 13px; color: var(--m1); font-weight: 600">Привод</div>
+<sc-for list="{{driveRows}}" as="d" hint-placeholder-count="1">
+<div style="{{d.style}}">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 15px; font-weight: 600">{{d.name}}</span>
+<span style="font-size: 12px; color: var(--m1)">{{d.sub}}</span>
+</div>
+<span style="font-size: 15px; font-weight: 800; white-space: nowrap">{{d.price}}</span>
+<div style="display: flex; align-items: center; background: var(--bg); border-radius: 12px; overflow: hidden">
+<button onClick="{{d.minus}}" aria-label="Меньше" style="width: 40px; height: 44px; border: 0; background: transparent; color: var(--dk); font-size: 22px; font-weight: 700">−</button>
+<div style="width: 26px; text-align: center; font-size: 18px; font-weight: 800">{{d.qty}}</div>
+<button onClick="{{d.plus}}" aria-label="Больше" style="width: 40px; height: 44px; border: 0; background: transparent; color: var(--dk); font-size: 22px; font-weight: 700">+</button>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 13px; color: var(--m1); font-weight: 600">Пульты</div>
+<sc-for list="{{remoteRows}}" as="d" hint-placeholder-count="2">
+<div style="{{d.style}}">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 15px; font-weight: 600">{{d.name}}</span>
+<span style="font-size: 12px; color: var(--m1)">{{d.sub}}</span>
+</div>
+<span style="font-size: 15px; font-weight: 800; white-space: nowrap">{{d.price}}</span>
+<div style="display: flex; align-items: center; background: var(--bg); border-radius: 12px; overflow: hidden">
+<button onClick="{{d.minus}}" aria-label="Меньше" style="width: 40px; height: 44px; border: 0; background: transparent; color: var(--dk); font-size: 22px; font-weight: 700">−</button>
+<div style="width: 26px; text-align: center; font-size: 18px; font-weight: 800">{{d.qty}}</div>
+<button onClick="{{d.plus}}" aria-label="Больше" style="width: 40px; height: 44px; border: 0; background: transparent; color: var(--dk); font-size: 22px; font-weight: 700">+</button>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</sc-if>
 </main>
+<div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 6px">
+<sc-if value="{{isBlinds}}" hint-placeholder-val="{{true}}">
+<sc-if value="{{showCheck}}" hint-placeholder-val="{{true}}"><div style="background: var(--card); border-radius: 18px; box-shadow: 0 4px 14px rgba(40,20,10,0.18); padding: 6px 12px; display: flex; flex-direction: column; gap: 1px">
+<div style="font-size: 12px; color: var(--m1)">{{breakText}}<span> {{weightText}}</span></div>
+<div style="{{checkStyle}}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="{{checkIcon}}"></path></svg>
+<span>{{checkText}}</span>
+</div>
+<sc-if value="{{hasStockWarn}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #8A4B00"><span style="{{stockWarnDot}}"></span><span>{{stockWarn}}</span></div>
+</sc-if>
+<sc-if value="{{justAdded}}" hint-placeholder-val="{{false}}"><div style="font-size: 13px; color: #1E6B24; font-weight: 600">Добавлено. Параметры сохранены, меняй размеры.</div></sc-if>
+</div></sc-if>
+<div style="height: 56px; border-radius: 28px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; padding: 0 8px 0 22px; gap: 10px; box-shadow: 0 8px 20px rgba(40,20,10,0.35)">
+<div style="flex-grow: 1">
+<div style="{{priceStyle}}">{{priceText}}</div>
+<sc-if value="{{showProfit}}" hint-placeholder-val="{{true}}"><div style="font-size: 12px; opacity: 0.75">прибыль {{profitText}}</div></sc-if>
+</div>
+<button onClick="{{addToCart}}" style="{{addStyle}}">{{addLabel}}</button>
+</div>
+</sc-if>
+<sc-if value="{{isAuto}}" hint-placeholder-val="{{false}}">
+<div style="height: 56px; border-radius: 28px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; padding: 0 8px 0 22px; gap: 10px; box-shadow: 0 8px 20px rgba(40,20,10,0.35)"><div style="flex-grow: 1; font-size: 15px; font-weight: 600">{{autoSummary}}</div><button onClick="{{openCart}}" style="height: 48px; border: 0; border-radius: 24px; background: var(--ac); color: #FFFFFF; font-size: 15px; font-weight: 800; padding: 0 20px">В корзину</button></div>
+</sc-if>
+<div style="height: 52px; border-radius: 26px; background: var(--card); box-shadow: 0 4px 14px rgba(40,20,10,0.2); display: flex; align-items: center; gap: 4px; padding: 0 6px; font-size: 13px; font-weight: 700">
+<div style="flex: 1.7 1 0; height: 48px; border-radius: 24px; background: var(--dk); color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span>Расчёт</span></div>
+<button onClick="{{openCart}}" aria-label="Корзина" style="position: relative; flex: 1 1 0; height: 48px; border: 0; background: transparent; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L22 7H6"></path></svg><b style="position: absolute; top: 2px; left: calc(50% + 4px); min-width: 18px; height: 18px; border-radius: 9px; background: var(--ac); color: #FFFFFF; font-size: 11px; line-height: 18px; text-align: center">{{cartCount}}</b></button>
+<button onClick="{{openOrders}}" aria-label="Заказы" style="border: 0; background: transparent; flex: 1 1 0; height: 48px; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"></path><circle cx="3.5" cy="6" r="1"></circle><circle cx="3.5" cy="12" r="1"></circle><circle cx="3.5" cy="18" r="1"></circle></svg></button>
+<button onClick="{{openSettings}}" aria-label="Настройки" style="border: 0; background: transparent; flex: 1 1 0; height: 48px; color: var(--m2); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg></button>
+</div>
+</div>
+<sc-if value="{{colorOpen}}" hint-placeholder-val="{{false}}">
+<div onClick="{{closeColors}}" style="position: fixed; inset: 0; z-index: 10; background: rgba(15,25,40,0.45)"></div>
+<div style="position: fixed; z-index: 11; left: 0; right: 0; bottom: 0; height: min(640px, 88vh); padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--card); border-radius: 22px 22px 0 0; display: flex; flex-direction: column; box-shadow: 0 -4px 20px rgba(0,0,0,0.2)">
+<div style="padding: 10px 0 4px 0; display: flex; justify-content: center"><span style="width: 40px; height: 4px; border-radius: 2px; background: #C9D2DC"></span></div>
+<div style="padding: 4px 16px 8px 16px; display: flex; align-items: center; gap: 8px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px">
+<div style="font-size: 18px; font-weight: 700">Цвет · {{colorProd}}</div>
+<div style="font-size: 12px; color: var(--m1)">{{colorHint}}</div>
+</div>
+<button onClick="{{closeColors}}" aria-label="Закрыть" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: var(--bg); color: var(--m1); font-size: 20px">✕</button>
+</div>
+<div style="padding: 0 12px 6px 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="position: relative">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7A6453" stroke-width="2.2" stroke-linecap="round" style="position: absolute; left: 12px; top: 14px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+<input type="text" placeholder="Поиск цвета" value="{{q}}" onInput="{{setQ}}" onChange="{{setQ}}" style="width: 100%; height: 48px; border: 1.5px solid var(--line); border-radius: 14px; font-size: 16px; padding: 0 14px 0 40px; box-sizing: border-box; color: var(--ink); background: var(--card)">
+</div>
+
+</div>
+<div style="overflow-y: auto; padding: 4px 12px 16px 12px; display: flex; flex-direction: column; gap: 6px">
+<sc-for list="{{colors}}" as="c" hint-placeholder-count="8">
+<button onClick="{{c.pick}}" style="{{c.style}}">
+<span style="{{c.dotStyle}}"></span>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px; text-align: left">
+<span style="font-size: 16px; font-weight: 600">{{c.name}}</span>
+<span style="font-size: 12px; color: var(--m1)">{{c.ser}}</span>
+</span>
+<span style="{{c.tagStyle}}">{{c.tag}}</span>
+</button>
+</sc-for>
+<sc-if value="{{colorsEmpty}}" hint-placeholder-val="{{false}}">
+<div style="text-align: center; color: var(--m1); font-size: 15px; padding: 24px 0">Такого цвета нет</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+</template>
 
 <main id="cart" hidden>
   <div class="card" id="cartList"></div>
@@ -106,7 +362,7 @@ body[data-tab=calc] #capCart,body[data-tab=cart] #capCalc,body[data-tab=ord] #ca
 
 <main id="settings" hidden>
   <div class="card flat"><button class="rowc" id="setProfit" aria-pressed="false"><span class="cb">✓</span><span>Показывать закуп и прибыль</span></button></div>
-  <p class="sub" style="padding:0 6px">Версия приложения: <span id="verTxt">v9</span>. Цены ниже можно загрузить заново, если ты их менял в таблице.</p>
+  <p class="sub" style="padding:0 6px">Версия приложения: <span id="verTxt">v10</span>. Цены ниже можно загрузить заново, если ты их менял в таблице.</p>
 </main>
 
 <main id="orders" hidden>
@@ -143,7 +399,6 @@ body[data-tab=calc] #capCart,body[data-tab=cart] #capCalc,body[data-tab=ord] #ca
 </main>
 
 <div id="bottom">
-  <div class="cap" id="capCalc"><div><div class="price" id="price">—</div><div class="sub" id="profit" hidden></div></div><button class="btn go" id="add" disabled>В корзину</button></div>
   <div class="cap" id="capCart"><div><div class="sub">Итого</div><div class="price" id="total">0 ₽</div><div class="sub" id="totalProfit" hidden></div></div><button class="btn go" id="mkOrder">Оформить заказ</button></div>
   <div class="navc">
     <button id="tCalc" aria-label="Расчёт" aria-current="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg><span class="lb">Расчёт</span></button>
@@ -154,9 +409,13 @@ body[data-tab=calc] #capCart,body[data-tab=cart] #capCalc,body[data-tab=ord] #ca
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/calc.js?v=9"></script>
-<script src="src/orders.js?v=9"></script>
-<script src="src/docs.js?v=9"></script>
-<script src="src/app.js?v=9"></script>
+<script src="src/calc.js?v=10"></script>
+<script src="src/orders.js?v=10"></script>
+<script src="src/docs.js?v=10"></script>
+<script src="src/data.js?v=10"></script>
+<script src="src/limits.js?v=10"></script>
+<script src="src/tpl.js?v=10"></script>
+<script src="src/calcscreen.js?v=10"></script>
+<script src="src/app.js?v=10"></script>
 </body>
 </html>
