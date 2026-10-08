@@ -1,7 +1,7 @@
 /* Документы файлами: PDF (картинка страниц по макету) и Word (редактируемый .docx). Библиотеки лежат в vendor/ и грузятся при первом использовании. */
 (function () {
   'use strict';
-  const V = '?v=36', loaded = {};
+  const V = '?v=37', loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src + V; s.onload = ok; s.onerror = () => { delete loaded[src]; bad(new Error('Не загрузилась библиотека ' + src + '. Нужен интернет при первом разе.')); }; document.head.appendChild(s); }));
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
   const sigs = () => ({ sign: lsGet('jal_sign'), stamp: lsGet('jal_stamp') });
@@ -14,9 +14,9 @@
     try {
       const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4', compress: true });
       for (let i = 0; i < pg.els.length; i++) {
-        const c = await window.html2canvas(pg.els[i], { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+        const c = await window.html2canvas(pg.els[i], { scale: 3, backgroundColor: '#ffffff', useCORS: true, logging: false });
         if (i) doc.addPage();
-        doc.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 595.28, 841.89);
+        doc.addImage(c.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 595.28, 841.89);
       }
       return new File([doc.output('blob')], baseName(fn, order) + '.pdf', { type: 'application/pdf' });
     } finally { pg.done(); }

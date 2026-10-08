@@ -308,7 +308,7 @@
     let lim = []; try { lim = LM.sizeLimits({ sup, mat: it.mat, lam: it.lam, w: W, h: H, opts: it.opts || {}, ctrl: it.ctrl, fix: it.fix || '' }, null, null); } catch (e) {}
     return { unit: r.price, profit: r.profit, miss, warn: lim.map(x => x.t), hard: lim.some(x => x.hard) };
   }
-  const VARIANTS = [{ name: 'Стандарт', sup: 'Amigo', cat: null, about: 'Надёжный выбор по цене' }, { name: 'Тренд', sup: 'Foroom', cat: 1, about: 'Больше цветов и фактур, голландская фурнитура', best: true }, { name: 'Премиум', sup: 'Уют', cat: null, about: 'Лучшие материалы и отделка' }];
+  const VARIANTS = [{ name: 'Стандарт', sup: 'Amigo', cat: null, about: 'Надёжный выбор по цене' }, { name: 'Классик', sup: 'Интерьер', cat: null, about: 'Классическая коллекция, голландская фурнитура', best: true }, { name: 'Премиум', sup: 'Уют', cat: null, about: 'Лучшие материалы и отделка' }];
   function compareRows() {
     const out = [];
     SUPS.forEach(sup => (sup === 'Foroom' ? [0, 1, 2, 3] : [null]).forEach(cat => {

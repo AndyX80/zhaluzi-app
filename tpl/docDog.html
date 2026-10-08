@@ -3,7 +3,7 @@
 <div style="width: 595px; height: 842px; box-sizing: border-box; background: #FFFFFF; padding: 30px 38px 24px 38px; display: flex; flex-direction: column; gap: 5px; font-size: 8.4px; line-height: 1.34">
 <div style="text-align: center; font-size: 12px; font-weight: 700">ДОГОВОР ПОСТАВКИ № {{num}}</div>
 <div style="display: flex"><span style="flex-grow: 1">г. Санкт-Петербург</span><span>{{dateText}}</span></div>
-<div style="text-align: justify">Индивидуальный предприниматель Хорошавин Андрей Владимирович (ОГРНИП 318574900000760, ИНН 575404581100), именуемый в дальнейшем «Поставщик», с одной стороны, и <b style="color: #1F4E78">{{buyer}}</b>, именуемый в дальнейшем «Покупатель», с другой стороны, вместе именуемые «Стороны», заключили настоящий Договор о нижеследующем:</div>
+<div style="text-align: justify">Индивидуальный предприниматель Хорошавин Андрей Владимирович (ОГРНИП 318574900000760, ИНН 575404581100), именуемый в дальнейшем «Поставщик», с одной стороны, и <b style="color: #111111">{{buyer}}</b>, именуемый в дальнейшем «Покупатель», с другой стороны, вместе именуемые «Стороны», заключили настоящий Договор о нижеследующем:</div>
 <sc-for list="{{p1}}" as="b" hint-placeholder-count="2">
 <div style="display: flex; flex-direction: column; gap: 2px">
 <b style="margin-top: 3px">{{b.h}}</b>
@@ -15,11 +15,11 @@
 <span style="padding: 2px">№</span><span style="padding: 2px">Наименование</span><span style="padding: 2px">Кол-во</span><span style="padding: 2px">Ед.</span><span style="padding: 2px">Цена</span><span style="padding: 2px">Сумма</span>
 </div>
 <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
-<div style="display: grid; grid-template-columns: 22px minmax(0, 1fr) 40px 28px 66px 72px; border-top: 0.7px solid #111111; color: #1F4E78">
+<div style="display: grid; grid-template-columns: 22px minmax(0, 1fr) 40px 28px 66px 72px; border-top: 0.7px solid #111111; color: #111111">
 <span style="padding: 2px; text-align: center">{{r.n}}</span><span style="padding: 2px 4px">{{r.name}}</span><span style="padding: 2px; text-align: center">{{r.qty}}</span><span style="padding: 2px; text-align: center">шт.</span><span style="padding: 2px 4px; text-align: right">{{r.price}}</span><span style="padding: 2px 4px; text-align: right">{{r.sum}}</span>
 </div>
 </sc-for>
-<div style="display: flex; border-top: 0.7px solid #111111; font-weight: 700"><span style="flex-grow: 1; padding: 2px 4px; text-align: right">Итого:</span><span style="width: 72px; padding: 2px 4px; text-align: right; color: #1F4E78">{{totalRub}}</span></div>
+<div style="display: flex; border-top: 0.7px solid #111111; font-weight: 700"><span style="flex-grow: 1; padding: 2px 4px; text-align: right">Итого:</span><span style="width: 72px; padding: 2px 4px; text-align: right; color: #111111">{{totalRub}}</span></div>
 </div>
 <sc-for list="{{p2}}" as="b" hint-placeholder-count="4">
 <div style="display: flex; flex-direction: column; gap: 2px">
@@ -42,18 +42,18 @@
 <div style="display: flex; flex-direction: column; gap: 1px">
 <b>Поставщик</b>
 <sc-for list="{{seller}}" as="l" hint-placeholder-count="8"><span>{{l}}</span></sc-for>
-<div style="position: relative; height: 90px; margin-top: 6px">
+<div style="position: relative; height: 90px; margin-top: auto">
 <span style="position: absolute; left: 0; bottom: 14px">_______________ / Хорошавин А.В. /</span>
-<sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="подпись" style="position: absolute; left: 36px; bottom: 20px; height: 56px; width: auto"></sc-if>
+<sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="подпись" style="position: absolute; left: 14px; bottom: 13px; height: 56px; width: auto"></sc-if>
 <sc-if value="{{hasStamp}}"><img src="{{stampSrc}}" alt="печать" style="position: absolute; left: -30px; bottom: -30px; width: 127px; height: 127px; transform: rotate(-9deg); mix-blend-mode: multiply; opacity: 0.93"></sc-if>
 </div>
 </div>
 <div style="display: flex; flex-direction: column; gap: 1px">
 <b>Покупатель</b>
-<sc-for list="{{buyerReq}}" as="l" hint-placeholder-count="6"><span style="color: #1F4E78">{{l}}</span></sc-for>
-<div style="height: 90px; margin-top: 6px; display: flex; align-items: flex-end; padding-bottom: 14px; box-sizing: border-box">_______________ / {{buyerShort}} /</div>
+<sc-for list="{{buyerReq}}" as="l" hint-placeholder-count="6"><span style="color: #111111">{{l}}</span></sc-for>
+<div style="height: 90px; margin-top: auto; display: flex; align-items: flex-end; padding-bottom: 14px; box-sizing: border-box">_______________ / {{buyerShort}} /</div>
 </div>
 </div>
-<div style="margin-top: 36px; border: 1px dashed #1F4E78; border-radius: 4px; padding: 8px; color: #1F4E78; font-family: Arial, sans-serif; font-size: 8px">Приложение № 1 — бланк заказа (замерный лист) № {{num}} — прикладывается к договору третьей страницей того же PDF.</div>
+<div style="margin-top: 36px; border: 1px dashed #111111; border-radius: 4px; padding: 8px; color: #111111; font-family: Arial, sans-serif; font-size: 8px">Приложение № 1 — бланк заказа (замерный лист) № {{num}} — прикладывается к договору третьей страницей того же PDF.</div>
 </div>
 </div>
