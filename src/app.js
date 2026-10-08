@@ -13,7 +13,7 @@
   function setPrices(sheets) {
     st.P = JalCalc.makePrice(sheets);
     $('load').hidden = true; $('calc').hidden = false;
-    $('pstat').textContent = 'v8';
+    $('pstat').textContent = 'v9';
     draw();
   }
   window.JalSetPrices = setPrices; // для тестов
