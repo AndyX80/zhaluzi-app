@@ -60,6 +60,7 @@
     const ch = CH.find(c => c.key === s.ch), ok = !(empty || none);
     const toggle = (on, plain) => 'height: 46px; border: 0; border-radius: 12px; display: flex; align-items: center; gap: 12px; padding: 0 12px; color: var(--ink); width: 100%; box-sizing: border-box; background: ' + (on ? 'var(--sel)' : plain) + '; font-weight: ' + (on ? 700 : 400);
     const box = (on, off) => 'width: 22px; height: 22px; border-radius: 6px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 15px; font-weight: 800; border: 2px solid ' + (on ? 'var(--ac)' : off) + '; background: ' + (on ? 'var(--ac)' : 'transparent');
+    const toast = m => { const d = document.createElement('div'); d.textContent = m; d.setAttribute('style', 'position: fixed; left: 12px; right: 12px; bottom: 90px; z-index: 99; background: #222; color: #fff; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.35; box-shadow: 0 4px 16px rgba(0,0,0,.3)'); document.body.appendChild(d); setTimeout(() => d.remove(), 9000); };
     const send = async () => {
       if (!ok) return;
       const enc = encodeURIComponent, subj = 'Жалюзи-СПБ' + (o ? ', заказ № ' + o.no : '');
@@ -67,6 +68,9 @@
       if (prep && prep.state === 'err') alert('Файлы не собрались: ' + prep.err + '. Уйдёт только текст.');
       if (prep && prep.state === 'busy') { alert('Файлы ещё готовятся, подожди несколько секунд и нажми «Отправить» снова.'); return; }
       if (prep && prep.state === 'ready' && prep.files.length) {
+        /* Telegram и часть мессенджеров при отправке файлов выбрасывают текст: кладём его в буфер и говорим об этом */
+        let copied = false; try { await navigator.clipboard.writeText(text); copied = true; } catch (e) {}
+        if (copied) toast('Текст сообщения скопирован. Если он не подставился сам, вставь его в подпись или сообщение.');
         done = await JalExport.share(prep.files, text, subj);
         if (!done) { prep.files.forEach((f, i) => setTimeout(() => JalExport.save(f), i * 600)); alert('Телефон не умеет прикладывать файлы сам. Файлы скачаны, приложи их из «Загрузок» в открывшемся чате.'); }
       }
