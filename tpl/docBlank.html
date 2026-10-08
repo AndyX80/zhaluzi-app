@@ -32,22 +32,23 @@
 
 <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px">
 <sc-for list="{{fields}}" as="f" hint-placeholder-count="5">
-<div style="display: flex; gap: 4px; align-items: baseline"><b style="white-space: nowrap">{{f.k}}</b><span style="flex-grow: 1; border-bottom: 1px solid #999999; color: #1F4E78; min-height: 11px">{{f.v}}</span></div>
+<div style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 4px; align-items: baseline"><b style="white-space: nowrap">{{f.k}}</b><span style="border-bottom: 1px solid #999999; color: #1F4E78; min-height: 11px">{{f.v}}</span></div>
 </sc-for>
 <div style="border: 1px solid #111111; padding: 6px; display: flex; flex-direction: column; gap: 4px">
 <b>Примечания:</b>
-<div style="color: #1F4E78; line-height: 1.35; white-space: pre-line; min-height: 70px">{{notes}}</div>
+<div style="color: #1F4E78; line-height: 1.35; white-space: pre-line; min-height: 40px">{{notes}}</div>
 <div style="display: flex; gap: 6px; align-items: center"><b>Установка:</b><span>{{instYes}}</span><span>{{instNo}}</span></div>
 <sc-if value="{{pg.inst}}" hint-placeholder-val="{{true}}">
 <sc-for list="{{mount}}" as="m" hint-placeholder-count="5">
-<div style="display: flex; gap: 4px"><b style="white-space: nowrap">{{m.k}}</b><span style="flex-grow: 1; border-bottom: 1px solid #999999; color: #1F4E78">{{m.v}}&nbsp;</span></div>
+<div style="display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 4px; align-items: baseline"><b style="white-space: nowrap; font-size: 8.5px">{{m.k}}</b><span style="border-bottom: 1px solid #999999; color: #1F4E78">{{m.v}}&nbsp;</span></div>
 </sc-for>
 </sc-if>
 </div>
 <sc-if value="{{pg.inst}}" hint-placeholder-val="{{true}}">
 <div style="border: 1px solid #111111; padding: 6px; display: flex; flex-direction: column; gap: 4px; font-size: 8.5px">
 <b>Заполняется Потребителем (представителем Потребителя)</b>
-<div>Есть ли «Часы тишины» в доме? {{quietText}}</div>
+<div>Есть ли «Часы тишины» в доме? {{quietYn}}</div>
+<div style="white-space: nowrap">Время: с {{quietFrom}} до {{quietTo}}</div>
 <div style="color: #333333">При установке изделий обязуюсь предоставить доступ для проведения работ, проинформировать мастера о скрытых коммуникациях в области установки (трубы, электропроводка и т.п.)</div>
 <div><b>Стадия ремонта:</b> {{stageText}}</div>
 </div>

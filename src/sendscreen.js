@@ -7,7 +7,7 @@
   const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const MON = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
   const form = (x, f) => { const a = x % 100, b = x % 10; return a > 10 && a < 20 ? f[2] : b === 1 ? f[0] : b > 1 && b < 5 ? f[1] : f[2]; };
-  const S = { kind: '', cat: true, ch: 'wa', edited: null, vars: false, qrSum: '5 000' };
+  const S = { kinds: [], cat: true, ch: 'wa', edited: null, vars: false, qrSum: '5 000' };
   const KINDS = [['catalog', 'Каталог', []], ['kp', 'КП', ['КП № {no}.pdf']], ['blank', 'Замерник', ['Замерник № {no}.pdf']], ['dogovor', 'Договор', ['Договор № {no}.pdf']], ['remind', 'Напоминание о КП', []], ['review', 'Запрос отзыва', []], ['qr', 'QR на оплату', []]];
   const CAT = 'Каталог деревянных жалюзи.pdf';
   const CH = [
@@ -30,11 +30,12 @@
     const V = { 'имя': D.name, 'изделия': D.items, 'сумма': D.sum, 'срок': D.term, 'до': D.until, 'предоплата': D.pre, 'номер': D.no, 'qrсумма': s.qrSum || '5 000',
       'каталог': s.cat ? '\n\n' + JalDrive.text('kp_katalog') : '' };
     const T = {}; ['kp', 'catalog', 'blank', 'dogovor', 'review', 'qr', 'remind'].forEach(k => { T[k] = JalDrive.fill(JalDrive.text(k), V); });
-    const kd = KINDS.find(k => k[0] === s.kind) || [0, 0, []], key = s.kind + (s.kind === 'kp' && s.cat ? ':cat' : '');
-    const text = s.edited && s.edited.key === key ? s.edited.v : (T[s.kind] || ''), none = !s.kind, empty = !none && !text.trim();
-    const withCat = s.kind === 'catalog' || (s.kind === 'kp' && s.cat), qrBlank = lsGet('jal_qr_blank') === '1';
-    const extra = s.kind === 'review' ? ['QR отзыв Яндекс.png', 'QR отзыв Авито.png'] : (s.kind === 'qr' ? ['QR оплаты ' + (s.qrSum || '5 000') + ' ₽.png'] : (s.kind === 'blank' && qrBlank ? ['QR оплаты предоплаты.png'] : []));
-    const files = kd[2].map(n => n.replace('{no}', D.no)).map(n => (s.kind === 'kp' && s.vars ? n.replace('.pdf', ' (3 варианта).pdf') : n)).reduce((a, n) => a.concat([n, n.replace(/\.pdf$/, '.docx')]), []).concat(withCat ? [CAT] : []).concat(extra);
+    const sel = KINDS.filter(k => s.kinds.indexOf(k[0]) >= 0), has = k => s.kinds.indexOf(k) >= 0;
+    const key = s.kinds.join('+') + (has('kp') && s.cat ? ':cat' : '');
+    const text = s.edited && s.edited.key === key ? s.edited.v : sel.map((k, i) => (i ? T[k[0]].replace(/^Добрый день, [^!]*!\s*/, '') : T[k[0]])).join('\n\n'), none = !sel.length, empty = !none && !text.trim();
+    const withCat = has('catalog') || (has('kp') && s.cat), qrBlank = lsGet('jal_qr_blank') === '1';
+    const extra = [].concat(has('review') ? ['QR отзыв Яндекс.png', 'QR отзыв Авито.png'] : [], has('qr') ? ['QR оплаты ' + (s.qrSum || '5 000') + ' ₽.png'] : [], has('blank') && qrBlank ? ['QR оплаты предоплаты.png'] : []);
+    const files = sel.reduce((a, k) => a.concat(k[2]), []).map(n => n.replace('{no}', D.no)).map(n => (has('kp') && s.vars ? n.replace('КП № ' + D.no + '.pdf', 'КП № ' + D.no + ' (3 варианта).pdf') : n)).reduce((a, n) => a.concat([n, n.replace(/\.pdf$/, '.docx')]), []).concat(withCat ? [CAT] : []).concat(extra);
     const ch = CH.find(c => c.key === s.ch), ok = !(empty || none);
     const toggle = (on, plain) => 'height: 46px; border: 0; border-radius: 12px; display: flex; align-items: center; gap: 12px; padding: 0 12px; color: var(--ink); width: 100%; box-sizing: border-box; background: ' + (on ? 'var(--sel)' : plain) + '; font-weight: ' + (on ? 700 : 400);
     const box = (on, off) => 'width: 22px; height: 22px; border-radius: 6px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 15px; font-weight: 800; border: 2px solid ' + (on ? 'var(--ac)' : off) + '; background: ' + (on ? 'var(--ac)' : 'transparent');
@@ -46,14 +47,14 @@
       else if (s.ch === 'tg') window.open('https://t.me/share/url?url=%20&text=' + enc(text), '_blank');
       else if (navigator.share) navigator.share({ title: subj, text }).catch(() => {});
       else { try { navigator.clipboard.writeText(text); alert('Текст скопирован, вставь его в нужное приложение'); } catch (e) { prompt('Скопируй текст', text); } }
-      if (o && s.kind === 'kp' && o.status === 'Черновик') { JalOrders.setStatus(o.no, 'КП отправлено'); JalOrders.addVersion(o.no, 'КП отправлено (' + ch.name + ')', D.sum); }
+      if (o && has('kp') && o.status === 'Черновик') { JalOrders.setStatus(o.no, 'КП отправлено'); JalOrders.addVersion(o.no, 'КП отправлено (' + ch.name + ')', D.sum); }
     };
     scr.render({
       go: JalScreen.go, back: () => A.tab(A.st.sendBack || 'calc'),
-      kinds: KINDS.map((k, i) => ({ name: k[1], pick: () => set({ kind: k[0] }),
-        style: 'grid-column: span ' + (i < 3 ? 2 : 3) + '; min-height: 48px; padding: 0 8px; border-radius: 14px; font-size: 14px; text-align: center; border: 1.5px solid ' + (s.kind === k[0] ? 'var(--dk)' : 'var(--line)') + '; background: ' + (s.kind === k[0] ? 'var(--sel)' : 'var(--card)') + '; color: var(--ink); font-weight: ' + (s.kind === k[0] ? 700 : 500) })),
-      showQr: s.kind === 'qr', qrSum: s.qrSum, setQrSum: e => { S.qrSum = e.target.value; render(); },
-      showCatSwitch: s.kind === 'kp', catOn: s.cat, toggleCat: () => set({ cat: !s.cat }), catRow: toggle(s.cat, 'var(--card)'), catBox: box(s.cat, 'var(--chk)'), catMark: s.cat ? '✓' : '',
+      kinds: KINDS.map((k, i) => ({ name: k[1], pick: () => set({ kinds: has(k[0]) ? s.kinds.filter(x => x !== k[0]) : s.kinds.concat([k[0]]) }),
+        style: 'grid-column: span ' + (i < 3 ? 2 : 3) + '; min-height: 48px; padding: 0 8px; border-radius: 14px; font-size: 14px; text-align: center; border: 1.5px solid ' + (has(k[0]) ? 'var(--dk)' : 'var(--line)') + '; background: ' + (has(k[0]) ? 'var(--sel)' : 'var(--card)') + '; color: var(--ink); font-weight: ' + (has(k[0]) ? 700 : 500) })),
+      showQr: has('qr'), qrSum: s.qrSum, setQrSum: e => { S.qrSum = e.target.value; render(); },
+      showCatSwitch: has('kp'), catOn: s.cat, toggleCat: () => set({ cat: !s.cat }), catRow: toggle(s.cat, 'var(--card)'), catBox: box(s.cat, 'var(--chk)'), catMark: s.cat ? '✓' : '',
       varOn: s.vars, toggleVar: () => { if (!s.vars) alert('КП на три варианта добавим вместе с экраном «Сравнить». Пока уйдёт обычное КП.'); },
       varRow: toggle(s.vars, 'var(--chip)'), varBox: box(s.vars, 'var(--ac)'), varMark: s.vars ? '✓' : '',
       files: files.length ? files.map(n => ({ name: n, ext: /\.docx$/.test(n) ? 'DOC' : (/\.png$/.test(n) ? 'QR' : 'PDF'), size: '' })) : [{ name: 'Без вложений, только текст', size: '' }], hasKind: !none,

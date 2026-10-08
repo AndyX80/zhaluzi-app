@@ -70,7 +70,7 @@ body[data-tab=calc] #capCart,body[data-tab=cart] #capCalc,body[data-tab=ord] #ca
 @media print{body{background:#fff;padding:0}header,nav,.noprint,main:not(#doc){display:none!important}.doc{padding:0}}
 @page{margin:14mm}
 @page{size:A4;margin:0}
-@media print{.docp{zoom:1.3345!important}body{background:#fff}header,#bottom,.noprint,main:not(#doc){display:none!important}main#doc{padding:0}.doc{padding:0;box-shadow:none}}
+@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.docp{zoom:1.3345!important}.docp div[style*="height: 842px"]{height:840px!important;border-bottom:0!important}body{background:#fff}header,#bottom,.noprint,main:not(#doc){display:none!important}main#doc{padding:0!important;display:block!important;gap:0!important}#docBody:empty{display:none}.doc{padding:0;box-shadow:none}}
 /* экран «Расчёт» по макету: тема и «Aero»-оформление действуют только внутри .scr */
 .scr input{min-height:0;border-radius:0;padding:0;border:0;background:none;width:auto;margin:0;color:inherit}
 body[data-own]>header,body[data-own] #bottom{display:none}
@@ -131,7 +131,7 @@ html,body{overflow-x:clip}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v21</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v22</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -1114,6 +1114,7 @@ html,body{overflow-x:clip}
 
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
 <h2 style="margin: 0; font-size: 16px; font-weight: 700">Что отправляем</h2>
+<div style="font-size: 12px; color: var(--m1); margin-top: -6px">Можно выбрать несколько: например замерник и договор.</div>
 <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px"><sc-for list="{{kinds}}" as="k" hint-placeholder-count="5">
 <button onClick="{{k.pick}}" style="{{k.style}}">{{k.name}}</button>
 </sc-for></div>
@@ -1290,22 +1291,23 @@ html,body{overflow-x:clip}
 
 <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px">
 <sc-for list="{{fields}}" as="f" hint-placeholder-count="5">
-<div style="display: flex; gap: 4px; align-items: baseline"><b style="white-space: nowrap">{{f.k}}</b><span style="flex-grow: 1; border-bottom: 1px solid #999999; color: #1F4E78; min-height: 11px">{{f.v}}</span></div>
+<div style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 4px; align-items: baseline"><b style="white-space: nowrap">{{f.k}}</b><span style="border-bottom: 1px solid #999999; color: #1F4E78; min-height: 11px">{{f.v}}</span></div>
 </sc-for>
 <div style="border: 1px solid #111111; padding: 6px; display: flex; flex-direction: column; gap: 4px">
 <b>Примечания:</b>
-<div style="color: #1F4E78; line-height: 1.35; white-space: pre-line; min-height: 70px">{{notes}}</div>
+<div style="color: #1F4E78; line-height: 1.35; white-space: pre-line; min-height: 40px">{{notes}}</div>
 <div style="display: flex; gap: 6px; align-items: center"><b>Установка:</b><span>{{instYes}}</span><span>{{instNo}}</span></div>
 <sc-if value="{{pg.inst}}" hint-placeholder-val="{{true}}">
 <sc-for list="{{mount}}" as="m" hint-placeholder-count="5">
-<div style="display: flex; gap: 4px"><b style="white-space: nowrap">{{m.k}}</b><span style="flex-grow: 1; border-bottom: 1px solid #999999; color: #1F4E78">{{m.v}}&nbsp;</span></div>
+<div style="display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 4px; align-items: baseline"><b style="white-space: nowrap; font-size: 8.5px">{{m.k}}</b><span style="border-bottom: 1px solid #999999; color: #1F4E78">{{m.v}}&nbsp;</span></div>
 </sc-for>
 </sc-if>
 </div>
 <sc-if value="{{pg.inst}}" hint-placeholder-val="{{true}}">
 <div style="border: 1px solid #111111; padding: 6px; display: flex; flex-direction: column; gap: 4px; font-size: 8.5px">
 <b>Заполняется Потребителем (представителем Потребителя)</b>
-<div>Есть ли «Часы тишины» в доме? {{quietText}}</div>
+<div>Есть ли «Часы тишины» в доме? {{quietYn}}</div>
+<div style="white-space: nowrap">Время: с {{quietFrom}} до {{quietTo}}</div>
 <div style="color: #333333">При установке изделий обязуюсь предоставить доступ для проведения работ, проинформировать мастера о скрытых коммуникациях в области установки (трубы, электропроводка и т.п.)</div>
 <div><b>Стадия ремонта:</b> {{stageText}}</div>
 </div>
@@ -1462,21 +1464,21 @@ html,body{overflow-x:clip}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/calc.js?v=21"></script>
-<script src="src/orders.js?v=21"></script>
-<script src="src/docs.js?v=21"></script>
-<script src="src/drive.js?v=21"></script>
-<script src="src/data.js?v=21"></script>
-<script src="src/limits.js?v=21"></script>
-<script src="src/tpl.js?v=21"></script>
-<script src="src/screen.js?v=21"></script>
-<script src="src/calcscreen.js?v=21"></script>
-<script src="src/cartscreen.js?v=21"></script>
-<script src="src/ordersscreen.js?v=21"></script>
-<script src="src/orderscreen.js?v=21"></script>
-<script src="src/settingsscreen.js?v=21"></script>
-<script src="src/docscreens.js?v=21"></script>
-<script src="src/sendscreen.js?v=21"></script>
-<script src="src/app.js?v=21"></script>
+<script src="src/calc.js?v=22"></script>
+<script src="src/orders.js?v=22"></script>
+<script src="src/docs.js?v=22"></script>
+<script src="src/drive.js?v=22"></script>
+<script src="src/data.js?v=22"></script>
+<script src="src/limits.js?v=22"></script>
+<script src="src/tpl.js?v=22"></script>
+<script src="src/screen.js?v=22"></script>
+<script src="src/calcscreen.js?v=22"></script>
+<script src="src/cartscreen.js?v=22"></script>
+<script src="src/ordersscreen.js?v=22"></script>
+<script src="src/orderscreen.js?v=22"></script>
+<script src="src/settingsscreen.js?v=22"></script>
+<script src="src/docscreens.js?v=22"></script>
+<script src="src/sendscreen.js?v=22"></script>
+<script src="src/app.js?v=22"></script>
 </body>
 </html>

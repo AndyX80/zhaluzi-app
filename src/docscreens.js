@@ -92,8 +92,8 @@
     return { pages, num: order.no, measurer: order.measurer || '', date: dmy(new Date(order.created)), payText: PAY[z.pay] || 'Оплата QR-кодом',
       fields: [{ k: 'Заказчик', v: yur ? (order.company || order.name) : order.name }, { k: 'Адрес замера', v: order.addr || '' }, { k: 'Телефон', v: order.phone || '' }, { k: 'Срок изготовления', v: days(+order.term || 12) }],
       notes: order.note || '', instYes: inst ? '☑ есть' : '☐ есть', instNo: inst ? '☐ нет' : '☑ нет',
-      mount: MOUNT.map((k, i) => ({ k, v: (z.mount && z.mount[i]) || '' })),
-      quietText: (q1 || q2) ? '☑ да ☐ нет Время: с ' + q1 + ' до ' + q2 : '☐ да ☐ нет Время: с ____ до ____',
+      mount: MOUNT.map((k, i) => ({ k, v: (z.mount && z.mount[i]) || '' })).filter(m => m.v),
+      quietYn: (q1 || q2) ? '☑ да ☐ нет' : '☐ да ☐ нет', quietFrom: q1 || '____', quietTo: q2 || '____',
       stageText: z.rep === 'rough' ? '☑ черновая отделка ☐ чистовая отделка' : (z.rep === 'fine' ? '☐ черновая отделка ☑ чистовая отделка' : '☐ черновая отделка ☐ чистовая отделка'),
       total: fmt(total), prepayText: pct + '% · ' + fmt(pre), rest: fmt(total - pre) };
   }
@@ -106,8 +106,8 @@
     if (+order.disc > 0) tr.push({ n: '', name: 'Скидка', qty: '', price: '', sum: '−' + rubZ(+order.disc) });
     const prepay = order.preU === '₽' ? (total ? Math.round(+order.pre / total * 100) : 100) : (+order.pre || 100), pre = order.preU === '₽' ? +order.pre : Math.round(total * prepay / 100);
     const pay = prepay >= 100
-      ? '2.2. Оплата по настоящему Договору производится следующим образом: предоплата в размере 100% стоимости настоящего Договора вносится на расчётный счёт или в кассу Поставщика при подписании настоящего Договора.'
-      : '2.2. Оплата по настоящему Договору производится следующим образом: предоплата в размере ' + prepay + '% стоимости настоящего Договора (' + rubZ(pre) + ') вносится на расчётный счёт или в кассу Поставщика при подписании настоящего Договора; оставшаяся сумма ' + rubZ(total - pre) + ' оплачивается ' + (inst ? 'в день установки Товара.' : 'до передачи Товара.');
+      ? '2.2. Оплата по настоящему Договору производится следующим образом: предоплата в размере 100% стоимости настоящего Договора (' + rubZ(total) + ', ' + words(total) + ') вносится на расчётный счёт или в кассу Поставщика при подписании настоящего Договора.'
+      : '2.2. Оплата по настоящему Договору производится следующим образом: предоплата в размере ' + prepay + '% стоимости настоящего Договора (' + rubZ(pre) + ', ' + words(pre) + ') вносится на расчётный счёт или в кассу Поставщика при подписании настоящего Договора; оставшаяся сумма ' + rubZ(total - pre) + ' (' + words(total - pre) + ') оплачивается ' + (inst ? 'в день установки Товара.' : 'до передачи Товара.');
     const rep = order.name || '', buyer = yur ? (order.company || '') + ', в лице представителя ' + rep : rep;
     const w = rep.trim().split(/\s+/), short = w.length >= 2 ? w[0] + ' ' + w.slice(1).map(x => x[0].toUpperCase() + '.').join('') : rep;
     const buyerReq = (yur ? ['Наименование: ' + order.company, 'ИНН: ' + order.inn, 'Юр. адрес: ' + order.uaddr, 'Телефон: ' + order.phone, inst ? 'Адрес установки: ' + order.addr : '', 'E-mail: ' + order.email, 'Представитель: ' + rep]

@@ -8,6 +8,7 @@
 
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
 <h2 style="margin: 0; font-size: 16px; font-weight: 700">Что отправляем</h2>
+<div style="font-size: 12px; color: var(--m1); margin-top: -6px">Можно выбрать несколько: например замерник и договор.</div>
 <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px"><sc-for list="{{kinds}}" as="k" hint-placeholder-count="5">
 <button onClick="{{k.pick}}" style="{{k.style}}">{{k.name}}</button>
 </sc-for></div>

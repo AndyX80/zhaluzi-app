@@ -73,9 +73,9 @@
   function autoNotes(gs) {
     const out = [];
     gs.filter(g => g.num).forEach(g => {
-      const it = g.it, chain = (it.o.opts || []).indexOf('Цепочка') >= 0;
+      const it = g.it;
       out.push('Поз. ' + g.num + ': ГЖ ' + it.lam + ' ' + supUi(it.sup) + ', ' + lc(it.mat) + (it.o.color ? ', ' + lc(it.o.color) : '') + (it.o.opts && it.o.opts.length ? ', ' + it.o.opts.map(lc).join(', ') : '') +
-        '; управление: ' + ((chain ? CTRL_CHAIN : CTRL_TXT)[it.ctrl] || CTRL_TXT.TR) + '.');
+        '.');
       if (it.o.fix) out.push('Поз. ' + g.num + ': ' + lc(it.o.fix) + '.');
     });
     return out.join('\n');
@@ -85,7 +85,7 @@
     if (!co.items.length) { alert('Корзина пуста'); return null; }
     const yur = S.ctype === 'yur', gs = groups(co);
     const mount = S.inst ? MOUNT.map((l, i) => S.mount[i] ? l + ': ' + S.mount[i] : '').filter(Boolean).join('; ') : '';
-    const note = [S.notes == null ? autoNotes(gs) : S.notes, S.inst && S.mnotes ? 'Монтажнику: ' + S.mnotes : '', mount].filter(Boolean).join('\n');
+    const note = [S.notes == null ? autoNotes(gs) : S.notes, S.inst && S.mnotes ? 'Монтажнику: ' + S.mnotes : ''].filter(Boolean).join('\n');
     const lad = gs.filter(g => g.num && S.lad[g.num] && S.lad[g.num].own && S.lad[g.num].v).map(g => 'Поз. ' + g.num + ': лесенка/тесьма ' + S.lad[g.num].v);
     const total = JalDocs.orderTotal(Object.assign({}, co));
     const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: S.inst ? co.delivery : 0, install: S.inst, buyer: yur ? 'юр' : 'физ',
@@ -101,7 +101,14 @@
       if (S.no && S.no !== 'new' && !JalOrders.get(S.no)) data.no = S.no;
       o = JalOrders.create(data, co.items);
     }
-    S.savedNo = o.no; persist();
+    const want = String(S.no || '').trim();
+    if (want && want !== o.no && !JalOrders.get(want)) {
+      const old = o.no; JalOrders.update(old, { no: want }); o = JalOrders.get(want);
+      if (S.key === old) S.key = want;
+      if (JalCart.C.editNo === old) { JalCart.C.editNo = want; try { JalCart.saveCfg(); } catch (e) {} }
+    }
+    S.no = o.no; S.savedNo = o.no; persist();
+    JalOrders.update(o.no, { zam: JSON.parse(JSON.stringify(S)) });
     return o;
   }
 
