@@ -110,11 +110,30 @@
     if (name === 'cart') drawCart(); if (name === 'ord') drawOrders();
   }
 
+  const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+  function showDoc(fn, o) {
+    const sig = { sign: lsGet('jal_sign'), stamp: lsGet('jal_stamp') };
+    $('docBody').innerHTML = JalDocs[fn](o, sig); $('sigBox').hidden = fn !== 'dogovorHtml';
+    st.curDoc = [fn, o]; tab('doc');
+  }
+  function pickImg(id, key) {
+    $(id).onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => { try { localStorage.setItem(key, rd.result); } catch (er) { alert('Картинка слишком большая'); } if (st.curDoc) showDoc(st.curDoc[0], st.curDoc[1]); };
+      rd.readAsDataURL(f);
+    };
+  }
+  pickImg('sigFile', 'jal_sign'); pickImg('stampFile', 'jal_stamp');
+  st.buyer = 'физ';
+  function setBuyer(b) { st.buyer = b; $('urBox').hidden = b !== 'юр'; $('bFiz').setAttribute('aria-pressed', b === 'физ'); $('bUr').setAttribute('aria-pressed', b === 'юр'); }
+  $('bFiz').onclick = () => setBuyer('физ'); $('bUr').onclick = () => setBuyer('юр');
+
   function drawOrders() {
     const list = JalOrders.load(), box = $('ordList');
     $('ordEmpty').hidden = list.length > 0; box.innerHTML = '';
     list.forEach(o => {
-      const sum = o.items.reduce((a, b) => a + b.price, 0);
+      const sum = JalDocs.orderTotal(o);
       const d = document.createElement('div'); d.className = 'card';
       d.innerHTML = '<div class="item" style="border:0;padding:0"><div><b>№ ' + o.no + ' · ' + (o.name || 'без имени') + '</b>' +
         '<div class="sub">' + [o.phone, o.addr].filter(Boolean).join(' · ') + '</div>' +
@@ -128,9 +147,11 @@
         b.onclick = () => { JalOrders.setStatus(o.no, s); drawOrders(); };
         r.appendChild(b);
       });
-      const kp = document.createElement('button'); kp.className = 'chip'; kp.textContent = 'КП (PDF)';
-      kp.onclick = () => { $('docBody').innerHTML = JalDocs.kpHtml(o); tab('doc'); };
-      r.appendChild(kp);
+      [['КП (PDF)', 'kpHtml'], ['Замерник', 'zamernikHtml'], ['Договор', 'dogovorHtml']].forEach(([lbl, fn]) => {
+        const b = document.createElement('button'); b.className = 'chip'; b.textContent = lbl;
+        b.onclick = () => { showDoc(fn, o); };
+        r.appendChild(b);
+      });
       box.appendChild(d);
     });
   }
@@ -162,6 +183,8 @@
   $('fSave').onclick = () => {
     const v = id => $(id).value.trim();
     JalOrders.create({ name: v('fName'), phone: v('fPhone'), addr: v('fAddr'), meas: v('fMeas'), inst: v('fInst'),
+      buyer: st.buyer, company: v('fCompany'), inn: v('fInn'), uaddr: v('fUaddr'), email: v('fEmail'),
+      delivery: +v('fDeliv') || 0, measurer: v('fMeasurer'),
       pre: v('fPre') || '100', preU: $('fPreU').value, term: v('fTerm') || '12', note: v('fNote') }, st.cart);
     st.cart = []; save(); drawCart(); tab('ord');
   };

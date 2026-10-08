@@ -30,7 +30,8 @@ input,select{font:inherit;color:var(--ink);background:var(--card);border:1px sol
 .x{background:none;border:0;color:var(--m1);font-size:20px;cursor:pointer}
 .doc{background:#fff;color:#111;border-radius:10px;padding:18px}
 .doc .logo{height:42px;display:block;margin-bottom:10px}.doc h2{margin:6px 0}.doc .s{font-size:12px;color:#666}
-.doc table{width:100%;border-collapse:collapse;margin:12px 0}.doc th,.doc td{border-bottom:1px solid #ddd;padding:6px 4px;text-align:left;vertical-align:top;font-size:13px}.doc .r{text-align:right}
+.doc table{width:100%;border-collapse:collapse;margin:12px 0}.doc th,.doc td{border-bottom:1px solid #ddd;padding:6px 4px;text-align:left;vertical-align:top;font-size:13px}.doc .r{text-align:right;white-space:nowrap}.doc h4{margin:12px 0 4px;font-size:13px}.doc p{margin:4px 0;font-size:12px;line-height:1.35}.doc .c{text-align:center}
+.doc .sign{display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:11px}.doc .sg{margin-top:14px;position:relative;min-height:60px}.doc .sig{height:36px}.doc .stamp{height:90px;position:absolute;left:40px;top:-20px;opacity:.9}
 @page{margin:14mm}
 @media print{body{background:#fff;padding:0}header,nav,.noprint,main:not(#doc){display:none!important}.doc{padding:0}}
 nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
@@ -40,7 +41,7 @@ nav button{flex:1;white-space:nowrap;padding-inline:6px}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v5</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v7</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -82,6 +83,12 @@ nav button{flex:1;white-space:nowrap;padding-inline:6px}
     <input id="fName" placeholder="Имя" autocomplete="off">
     <input id="fPhone" type="tel" inputmode="tel" placeholder="Телефон" style="margin-top:8px">
     <input id="fAddr" placeholder="Адрес" style="margin-top:8px"></div>
+  <div class="card"><p class="lbl">Покупатель</p>
+    <div class="row"><button class="chip" id="bFiz" aria-pressed="true">Физлицо</button><button class="chip" id="bUr" aria-pressed="false">Юрлицо</button></div>
+    <div id="urBox" hidden><input id="fCompany" placeholder="Название организации" style="margin-top:8px"><input id="fInn" inputmode="numeric" placeholder="ИНН" style="margin-top:8px"><input id="fUaddr" placeholder="Юридический адрес" style="margin-top:8px"></div>
+    <input id="fEmail" type="email" placeholder="E-mail (необязательно)" style="margin-top:8px"></div>
+  <div class="card"><p class="lbl">Доставка и установка, ₽ (0 = самовывоз)</p><input id="fDeliv" type="number" inputmode="numeric" placeholder="0">
+    <p class="lbl" style="margin-top:12px">Замерил (если замер делал ты, укажи имя)</p><input id="fMeasurer" placeholder="Например: Андрей"></div>
   <div class="card"><p class="lbl">Даты</p>
     <div class="sz"><div><div class="sub">Замер</div><input id="fMeas" type="datetime-local"></div>
     <div><div class="sub">Монтаж</div><input id="fInst" type="datetime-local"></div></div></div>
@@ -94,15 +101,17 @@ nav button{flex:1;white-space:nowrap;padding-inline:6px}
 
 <main id="doc" hidden>
   <div id="docBody"></div>
+  <div class="card noprint" id="sigBox" style="margin-top:12px" hidden><p class="lbl">Подпись и печать (хранятся только на этом телефоне)</p>
+    <p class="sub">Подпись</p><input type="file" id="sigFile" accept="image/*"><p class="sub" style="margin-top:8px">Печать</p><input type="file" id="stampFile" accept="image/*"></div>
   <div class="row noprint" style="margin-top:12px"><button class="btn" id="docPrint" style="flex:1">Сохранить PDF / печать</button><button class="btn sec" id="docBack" style="flex:1">Назад</button></div>
 </main>
 
 <nav><button class="btn" id="tCalc">Расчёт</button><button class="btn sec" id="tCart">Корзина (0)</button><button class="btn sec" id="tOrd">Заказы</button></nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/calc.js?v=5"></script>
-<script src="src/orders.js?v=5"></script>
-<script src="src/docs.js?v=5"></script>
-<script src="src/app.js?v=5"></script>
+<script src="src/calc.js?v=7"></script>
+<script src="src/orders.js?v=7"></script>
+<script src="src/docs.js?v=7"></script>
+<script src="src/app.js?v=7"></script>
 </body>
 </html>
