@@ -6,7 +6,7 @@
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { alert('Не хватает места в телефоне'); } };
   const App = () => window.JalApp;
   const scr = JalScreen.make('settingsRoot', 'tpl_settingsRoot');
-  const T = { tab: 0, openSup: '', sched: +lsGet('jal_sched') || 0, busy: false, err: '', url: lsGet('jal_prices_url') };
+  const T = { drv: false, drvErr: '', drvOk: '', tab: 0, openSup: '', sched: +lsGet('jal_sched') || 0, busy: false, err: '', url: lsGet('jal_prices_url') };
   const PAL = [['Орех', '#4A2C18'], ['Хвоя', '#1F4A3D'], ['Графит', '#2A3550'], ['Бордо', '#6B2C3B'], ['Индиго', '#34306B']];
   const SZ = [['Мелкий', 13], ['Обычный', 15], ['Крупный', 17], ['Очень крупный', 19]];
   const FN = [['Обычный', 'system-ui, -apple-system, Segoe UI, sans-serif'], ['Читаемый', 'Verdana, Tahoma, sans-serif'], ['С засечками', 'Georgia, Times New Roman, serif'], ['Узкий', 'Arial Narrow, Roboto Condensed, sans-serif']];
@@ -64,6 +64,11 @@
         thumb: 'width: 44px; height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; border: 1.5px ' + (has ? 'solid var(--dk)' : 'dashed var(--line)') + '; color: ' + (has ? 'var(--dk)' : 'var(--m3)') }; };
     const vm = {
       go: JalScreen.go, cartCount: JalCart.count(), rootCls: '',
+      driveLabel: T.drv ? 'Обновляю…' : 'Обновить файлы с диска',
+      driveRefresh: async () => { if (T.drv) return; T.drvErr = ''; T.drvOk = ''; T.drv = true; render();
+        try { const r = await JalDrive.refresh(); T.drvOk = 'Готово: файлов ' + r.files + ', текстов ' + r.tpl; } catch (e) { T.drvErr = 'Не получилось: ' + (e.message || e); } T.drv = false; render(); },
+      driveNote: T.drvErr || T.drvOk || (JalDrive.at() ? 'Обновлено ' + dstr(JalDrive.at()) : 'Ещё не обновляли: пока берутся загруженные вручную файлы и стандартные тексты'),
+      driveNoteStyle: 'font-size: 13px; color: ' + (T.drvErr ? '#B3261E' : (T.drvOk || JalDrive.at() ? '#1E6B24' : 'var(--m1)')),
       tabs: ['Цены', 'Прибыль', 'Документы', 'Вид', 'Данные'].map((n, i) => ({ name: n, pick: () => { set({ tab: i }); window.scrollTo(0, 0); },
         style: 'min-height: 48px; border: 0; background: transparent; padding: 0 2px; font-size: 13px; text-align: center; border-bottom: 3px solid ' + (T.tab === i ? 'var(--ac)' : 'transparent') + '; font-weight: ' + (T.tab === i ? 800 : 600) + '; color: ' + (T.tab === i ? 'var(--ink)' : 'var(--m3)') })),
       tab0: T.tab === 0, tab1: T.tab === 1, tab2: T.tab === 2, tab3: T.tab === 3, tab4: T.tab === 4,

@@ -7,7 +7,7 @@
 <div style="font-size: 13px; color: #DCC8B0">Необязательно · данные изделий из корзины</div>
 </div>
 </header>
-<div style="padding: 12px 12px 0 12px"><div style="background: var(--card); border-radius: 14px; padding: 2px 6px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px">
+<div style="position: sticky; top: 0; z-index: 4; background: var(--bg); padding: 12px 12px 6px 12px"><div style="background: var(--card); border-radius: 14px; padding: 2px 6px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px">
 <sc-for list="{{steps}}" as="st" hint-placeholder-count="5"><button onClick="{{st.pick}}" style="{{st.style}}">{{st.name}}</button></sc-for>
 </div></div>
 
@@ -20,7 +20,7 @@
 <sc-for list="{{head}}" as="f" hint-placeholder-count="4">
 <div style="display: flex; flex-direction: column; gap: 4px">
 <label style="font-size: 12px; color: var(--m1); font-weight: 600">{{f.label}}</label>
-<input value="{{f.value}}" placeholder="{{f.ph}}" onInput="{{f.set}}" style="height: 46px; border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 0 12px; font-size: 15px; box-sizing: border-box; width: 100%; color: var(--ink); background: var(--card)">
+<sc-if value="{{f.isDate}}"><button onClick="{{f.open}}" style="height: 46px; border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 0 12px; font-size: 15px; box-sizing: border-box; width: 100%; color: var(--ink); background: var(--card); text-align: left">{{f.text}}</button></sc-if><sc-if value="{{f.isInput}}"><input value="{{f.value}}" placeholder="{{f.ph}}" onInput="{{f.set}}" style="height: 46px; border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 0 12px; font-size: 15px; box-sizing: border-box; width: 100%; color: var(--ink); background: var(--card)"></sc-if>
 </div>
 </sc-for>
 </div>
@@ -125,12 +125,13 @@
 </div>
 </sc-for>
 </sc-if>
+<sc-if value="{{inst}}">
 <div style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #EADFD1; padding-top: 10px">
 <sc-for list="{{dates}}" as="d" hint-placeholder-count="2">
 <div style="display: flex; flex-direction: column; gap: 6px">
 <div style="display: flex; align-items: center; gap: 8px"><span style="{{d.dot}}"></span><span style="font-size: 15px; font-weight: 700">{{d.name}}</span></div>
 <div style="display: flex; align-items: center; gap: 8px">
-<input type="date" value="{{d.value}}" onChange="{{d.setVal}}" aria-label="{{d.name}}" style="flex: 1 1 0; min-width: 0; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 12px; padding: 0 8px; font-size: 15px; box-sizing: border-box; color: var(--ink); background: var(--card)">
+<button onClick="{{d.open}}" aria-label="{{d.name}}" style="flex: 1 1 0; min-width: 0; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 12px; padding: 0 12px; font-size: 15px; box-sizing: border-box; color: var(--ink); background: var(--card); text-align: left">{{d.text}}</button>
 <button onClick="{{d.cal}}" style="{{d.calStyle}}">{{d.calText}}</button>
 </div>
 </div>
@@ -140,6 +141,7 @@
 <label for="mnotes" style="font-size: 15px; font-weight: 700">Нюансы для монтажника</label>
 <textarea id="mnotes" rows="3" onInput="{{setMnotes}}" placeholder="Этаж, лифт, домофон, ключи, подоконник, батарея, во сколько ждут" style="border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 10px 12px; font-size: 15px; line-height: 1.4; color: var(--ink); resize: vertical; font-family: inherit; background: var(--card)">{{mnotes}}</textarea>
 </div>
+</sc-if>
 </section>
 <sc-if value="{{inst}}" hint-placeholder-val="{{true}}"><section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
 <h2 style="margin: 0; font-size: 16px; font-weight: 700">Со слов заказчика</h2>
@@ -240,3 +242,24 @@
 </div>
 </div>
 
+<sc-if value="{{calOpen}}">
+<div onClick="{{calClose}}" style="position: fixed; inset: 0; z-index: 30; background: rgba(20,10,5,0.45)"></div>
+<div style="position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 31; background: var(--card); border-radius: 20px; padding: 14px; box-shadow: 0 12px 40px rgba(20,10,5,0.4); display: flex; flex-direction: column; gap: 10px; max-width: 420px; margin: 0 auto">
+<div style="display: flex; align-items: center; gap: 8px">
+<button onClick="{{calPrev}}" aria-label="Прошлый месяц" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: var(--chip); color: var(--dk); font-size: 20px">‹</button>
+<div style="flex-grow: 1; text-align: center; font-size: 17px; font-weight: 700">{{calTitle}}</div>
+<button onClick="{{calNext}}" aria-label="Следующий месяц" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: var(--chip); color: var(--dk); font-size: 20px">›</button>
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; font-size: 12px; color: var(--m1); font-weight: 600">
+<span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+<sc-for list="{{calDays}}" as="c" hint-placeholder-count="35"><button onClick="{{c.pick}}" style="{{c.style}}">{{c.n}}</button></sc-for>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<button onClick="{{calToday}}" style="height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 600">Сегодня</button>
+<button onClick="{{calClear}}" style="height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 600">Очистить</button>
+<button onClick="{{calClose}}" style="height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 600">Закрыть</button>
+</div>
+</div>
+</sc-if>

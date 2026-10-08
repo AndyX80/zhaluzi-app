@@ -4,7 +4,7 @@
 </button>
 <h1 style="margin: 0; font-size: 19px; font-weight: 700">Настройки</h1>
 </header>
-<div style="padding: 12px 12px 0 12px"><div style="background: var(--card); border-radius: 14px; padding: 2px 6px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px">
+<div style="position: sticky; top: 0; z-index: 4; background: var(--bg); padding: 12px 12px 6px 12px"><div style="background: var(--card); border-radius: 14px; padding: 2px 6px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px">
 <sc-for list="{{tabs}}" as="st" hint-placeholder-count="5"><button onClick="{{st.pick}}" style="{{st.style}}">{{st.name}}</button></sc-for>
 </div></div>
 
@@ -97,6 +97,12 @@
 <button onClick="{{q.pick}}" style="height: 40px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 13px; font-weight: 700; padding: 0 12px; flex-shrink: 0">{{q.btn}}</button>
 </div>
 </sc-for>
+</section>
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Файлы с Google Диска</h2>
+<div style="font-size: 13px; color: var(--m1)">Подпись, печать, QR-коды и тексты сообщений лежат в папке на Диске: правишь их с компьютера, здесь нажимаешь одну кнопку.</div>
+<button onClick="{{driveRefresh}}" style="height: 48px; border: 0; border-radius: 14px; background: var(--ac); color: #FFFFFF; font-size: 15px; font-weight: 800">{{driveLabel}}</button>
+<div style="{{driveNoteStyle}}">{{driveNote}}</div>
 </section>
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
 <h2 style="margin: 0; font-size: 16px; font-weight: 700">Документы: КП и договор</h2>

@@ -16,7 +16,13 @@
   const scr = JalScreen.make('orderRoot', 'tpl_orderRoot');
   const App = () => window.JalApp;
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
-  const today = () => { const d = new Date(); return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear(); };
+  const p2 = n => String(n).padStart(2, '0');
+  const iso = d => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+  const today = () => iso(new Date());
+  const toIso = v => { v = String(v || '').trim(); const m = v.match(/^(\d{2})\.(\d{2})\.(\d{4})$/); return m ? m[3] + '-' + m[2] + '-' + m[1] : (/^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : ''); };
+  const ru = v => { const m = toIso(v).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + '.' + m[2] + '.' + m[1] : ''; };
+  const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+  let CAL = null; /* {k, y, m} открытый календарь */
   const myMail = () => lsGet('jal_mail') || '89817645545@mail.ru';
 
   function nextNo() {
@@ -25,15 +31,15 @@
     return y + '-' + String((n.length ? Math.max.apply(null, n) : 0) + 1).padStart(3, '0');
   }
   function fresh(key) {
-    return { key, to: 'client', ctype: 'fiz', pmode: 'pct', copy: true, inst: true, rep: 'fine', prepay: 100, term: '', pay: 'QR', step: 0, lad: {}, dm: '', di: '', cm: false, ci: false,
-      mnotes: '', mount: ['', '', '', '', ''], no: key === 'new' ? nextNo() : key, date: today(), measurer: lsGet('jal_measurer') || 'Хорошавин', deliv: '', name: '', phone: '', addr: '', email: '',
+    return { key, to: 'client', ctype: 'fiz', pmode: 'pct', copy: true, inst: true, rep: 'fine', prepay: 100, term: '', pay: 'QR', step: 0, lad: {}, di: '', ci: false,
+      mnotes: '', mount: ['', '', '', '', ''], no: key === 'new' ? '' : key, date: today(), measurer: lsGet('jal_measurer') || 'Хорошавин', deliv: '', name: '', phone: '', addr: '', email: '',
       company: '', inn: '', uaddr: '', repr: '', notes: null, qFrom: '12', qTo: '14', qrBlank: lsGet('jal_qr_blank') === '1', savedNo: null };
   }
   function fromOrder(o) {
     if (o.zam) return Object.assign(fresh(o.no), o.zam, { key: o.no, savedNo: o.no });
     const s = fresh(o.no), yur = o.buyer === 'юр';
     Object.assign(s, { ctype: yur ? 'yur' : 'fiz', savedNo: o.no, date: today(), measurer: o.measurer || s.measurer, phone: o.phone || '', addr: o.addr || '', email: o.email || '',
-      company: o.company || '', inn: o.inn || '', uaddr: o.uaddr || '', dm: String(o.meas || '').slice(0, 10), di: String(o.inst || '').slice(0, 10), inst: o.install !== false && +o.delivery > 0,
+      company: o.company || '', inn: o.inn || '', uaddr: o.uaddr || '', di: toIso(o.inst), inst: o.install !== false && +o.delivery > 0,
       prepay: +o.pre || 100, pmode: o.preU === '₽' ? 'rub' : 'pct', term: String(o.term || ''), notes: o.note || null });
     if (yur) s.repr = o.name || ''; else s.name = o.name || '';
     return s;
@@ -46,6 +52,8 @@
     let saved = null; try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
     if (saved && saved.key === key) S = Object.assign(fresh(key), saved);
     else S = key === 'new' ? fresh('new') : fromOrder(JalOrders.get(key));
+    if (key === 'new' && /^\d{4}-\d{3}$/.test(S.no || '') && !JalOrders.get(S.no)) S.no = '';
+    S.date = toIso(S.date) || today(); S.deliv = toIso(S.deliv); S.di = toIso(S.di); delete S.dm; delete S.cm;
     persist();
   }
 
@@ -82,7 +90,7 @@
     const total = JalDocs.orderTotal(Object.assign({}, co));
     const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: S.inst ? co.delivery : 0, install: S.inst, buyer: yur ? 'юр' : 'физ',
       name: yur ? S.repr : S.name, phone: S.phone, addr: S.addr, email: S.email, company: yur ? S.company : '', inn: yur ? S.inn : '', uaddr: yur ? S.uaddr : '',
-      meas: S.dm, inst: S.di, measurer: S.measurer, pre: String(S.prepay || 100), preU: S.pmode === 'pct' ? '%' : '₽', term: String(S.term || 12), note: note + (lad.length ? '\n' + lad.join('\n') : ''),
+      meas: '', inst: S.inst ? S.di : '', measurer: S.measurer, pre: String(S.prepay || 100), preU: S.pmode === 'pct' ? '%' : '₽', term: String(S.term || 12), note: note + (lad.length ? '\n' + lad.join('\n') : ''),
       cart: JalCart.snapshot(), zam: JSON.parse(JSON.stringify(S)) };
     const no = S.savedNo || (JalCart.C.editNo && JalOrders.get(JalCart.C.editNo) ? JalCart.C.editNo : null);
     let o;
@@ -114,15 +122,28 @@
     const client = (yur ? [fld('Название', 'company'), fld('ИНН', 'inn', 'numeric'), fld('Юридический адрес', 'uaddr'), fld('Телефон', 'phone', 'tel')]
       .concat(S.inst ? [fld('Адрес установки', 'addr')] : []).concat([fld('E-mail', 'email', 'email'), fld('ФИО представителя', 'repr')])
       : [fld('ФИО', 'name'), fld('Телефон', 'phone', 'tel'), fld('Адрес' + (S.inst ? ' установки' : ''), 'addr'), fld('E-mail (необязательно)', 'email', 'email')]);
-    const head = [['Заказ №', 'no', ''], ['Дата', 'date', ''], ['Замерил', 'measurer', ''], ['Дата поставки', 'deliv', 'дд.мм.гггг']].map(a => Object.assign({ label: a[0], ph: a[2] }, quiet(a[1])));
+    const dField = (label, k) => ({ label, isDate: true, isInput: false, text: ru(S[k]) || 'Выбрать дату', open: () => { const b = S[k] ? new Date(S[k] + 'T00:00:00') : new Date(); CAL = { k, y: b.getFullYear(), m: b.getMonth() }; render(); } });
+    const head = [Object.assign({ label: 'Заказ №', ph: 'авто', isDate: false, isInput: true }, quiet('no')), dField('Дата', 'date'),
+      Object.assign({ label: 'Замерил', ph: '', isDate: false, isInput: true }, quiet('measurer')), dField('Дата поставки', 'deliv')];
     const calUrl = (title, v) => { const d = v.replace(/-/g, ''), e = new Date(v + 'T00:00:00'); e.setDate(e.getDate() + 1);
-      const n = e.getFullYear() + String(e.getMonth() + 1).padStart(2, '0') + String(e.getDate()).padStart(2, '0');
+      const n = e.getFullYear() + p2(e.getMonth() + 1) + p2(e.getDate());
       return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(title) + '&dates=' + d + '/' + n + '&details=' + encodeURIComponent((S.name || S.repr || '') + ' ' + (S.phone || '') + ' ' + (S.addr || '')); };
-    const dates = [['Дата замера', 'dm', 'cm', '#E0A800', 'Замеры'], ['Дата монтажа', 'di', 'ci', '#1C7FC0', 'Работа']].map(d => ({ name: d[0], value: S[d[1]],
-      setVal: e => set({ [d[1]]: e.target.value, [d[2]]: false }), dot: 'width: 14px; height: 14px; border-radius: 7px; flex-shrink: 0; background: ' + d[3],
-      calText: S[d[2]] ? 'В календаре «' + d[4] + '»' : 'В календарь',
-      cal: () => { if (!S[d[1]]) { alert('Сначала выбери дату'); return; } window.open(calUrl((d[1] === 'dm' ? 'Замер' : 'Монтаж') + ': ' + (S.name || S.repr || 'клиент'), S[d[1]]), '_blank'); set({ [d[2]]: true }); },
-      calStyle: 'height: 48px; border-radius: 12px; padding: 0 12px; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1.5px solid ' + (S[d[2]] ? 'transparent' : 'var(--line)') + '; background: ' + (S[d[2]] ? '#E1F3E3' : 'var(--card)') + '; color: ' + (S[d[2]] ? '#1E6B24' : 'var(--dk)') }));
+    const dates = [{ name: 'Дата монтажа', k: 'di', c: 'ci', dot: '#1C7FC0', cal: 'Работа' }].map(d => Object.assign({ name: d.name, text: ru(S[d.k]) || 'Выбрать дату',
+      open: () => { const b = S[d.k] ? new Date(S[d.k] + 'T00:00:00') : new Date(); CAL = { k: d.k, y: b.getFullYear(), m: b.getMonth() }; render(); },
+      dot: 'width: 14px; height: 14px; border-radius: 7px; flex-shrink: 0; background: ' + d.dot,
+      calText: S[d.c] ? 'В календаре «' + d.cal + '»' : 'В календарь',
+      cal: () => { if (!S[d.k]) { alert('Сначала выбери дату'); return; } window.open(calUrl('Монтаж: ' + (S.name || S.repr || 'клиент'), S[d.k]), '_blank'); set({ [d.c]: true }); },
+      calStyle: 'height: 48px; border-radius: 12px; padding: 0 12px; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1.5px solid ' + (S[d.c] ? 'transparent' : 'var(--line)') + '; background: ' + (S[d.c] ? '#E1F3E3' : 'var(--card)') + '; color: ' + (S[d.c] ? '#1E6B24' : 'var(--dk)') }));
+    const calDays = [];
+    if (CAL) {
+      const first = new Date(CAL.y, CAL.m, 1), lead = (first.getDay() + 6) % 7, dim = new Date(CAL.y, CAL.m + 1, 0).getDate(), td = today();
+      const base = 'height: 42px; border: 0; border-radius: 21px; font-size: 15px; ';
+      for (let i = 0; i < lead; i++) calDays.push({ n: '', style: 'visibility: hidden; ' + base, pick: () => {} });
+      for (let d = 1; d <= dim; d++) { const v = CAL.y + '-' + p2(CAL.m + 1) + '-' + p2(d), sel = S[CAL.k] === v, now = v === td;
+        calDays.push({ n: String(d), style: base + 'font-weight: ' + (sel || now ? 800 : 500) + '; color: ' + (sel ? '#FFFFFF' : (now ? 'var(--ac)' : 'var(--ink)')) + '; background: ' + (sel ? 'var(--ac)' : 'transparent') + (now && !sel ? '; box-shadow: inset 0 0 0 1.5px var(--ac)' : ''),
+          pick: () => { const k = CAL.k; CAL = null; const p = { [k]: v }; if (k === 'di') p.ci = false; set(p); } }); }
+    }
+    const calShift = n => () => { const d = new Date(CAL.y, CAL.m + n, 1); CAL.y = d.getFullYear(); CAL.m = d.getMonth(); render(); };
     const chk = (on, bg) => 'width: 22px; height: 22px; border-radius: 6px; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 15px; font-weight: 800; border: 2px solid ' + (on ? 'var(--ac)' : (bg || 'var(--chk)')) + '; background: ' + (on ? 'var(--ac)' : 'transparent');
     const doc = fn => () => { const o = save(JalCart.toOrder()); if (o) App().showDoc(fn, o, 'order'); };
     const noSend = S.inst && !(service > 0);
@@ -143,6 +164,8 @@
       notes: S.notes == null ? autoNotes(gs) : S.notes, setNotes: e => { S.notes = e.target.value; persist(); },
       instY: seg(S.inst), instN: seg(!S.inst), setInstY: () => set({ inst: true }), setInstN: () => set({ inst: false }), inst: S.inst, instWarn: noSend,
       mount: MOUNT.map((l, i) => ({ label: l, value: S.mount[i], set: e => { S.mount[i] = e.target.value; persist(); } })),
+      calOpen: !!CAL, calTitle: CAL ? MONTHS[CAL.m] + ' ' + CAL.y : '', calDays, calPrev: CAL ? calShift(-1) : () => {}, calNext: CAL ? calShift(1) : () => {},
+      calClose: () => { CAL = null; render(); }, calToday: () => { if (!CAL) return; const k = CAL.k; CAL = null; set({ [k]: today() }); }, calClear: () => { if (!CAL) return; const k = CAL.k; CAL = null; set({ [k]: '' }); },
       dates, mnotes: S.mnotes, setMnotes: e => { S.mnotes = e.target.value; persist(); },
       qFrom: S.qFrom, qTo: S.qTo, setQFrom: e => { S.qFrom = e.target.value; persist(); }, setQTo: e => { S.qTo = e.target.value; persist(); },
       repRough: seg(S.rep === 'rough'), repFine: seg(S.rep === 'fine'), setRepRough: () => set({ rep: 'rough' }), setRepFine: () => set({ rep: 'fine' }),
