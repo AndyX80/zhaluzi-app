@@ -218,12 +218,12 @@
       sendLabel: S.to === 'self' ? 'Отправить себе' : 'Выбрать и отправить',
       sendStyle: 'height: 48px; border: 0; border-radius: 24px; background: var(--ac); color: #FFFFFF; font-size: 14px; font-weight: 800; padding: 0 14px; line-height: 1.1; min-width: 0; opacity: ' + (noSend ? '0.45' : '1'),
       sendDo: () => {
-        const S0self = S.to === 'self';
+        const S0self = S.to === 'self', S0copy = !!S.copy;
         if (noSend) { alert('В корзине сумма доставки и установки 0 ₽. Укажи сумму в корзине.'); return; }
         const o = save(JalCart.toOrder()); if (!o) return;
         JalCart.clear(); S = null; try { localStorage.removeItem(KEY); } catch (e) {}
         window.JalOrdersScreen.F.openNo = o.no;
-        const A = App(); A.st.sendNo = o.no; A.st.sendBack = 'orderOpen'; A.st.sendPreset = { kinds: ['blank'].concat(co.needDog ? ['dogovor'] : []), self: S0self, copy: S.copy };
+        const A = App(); A.st.sendNo = o.no; A.st.sendBack = 'orderOpen'; A.st.sendPreset = { kinds: ['blank'].concat(co.needDog ? ['dogovor'] : []), self: S0self, copy: S0copy };
         A.tab('send');
       }
     };

@@ -94,7 +94,7 @@
   });
   /* старт: заставка на секунду, потом PIN, если включён */
   splash();
-  setTimeout(() => { if (pinOn()) ask(); else hide(); }, 1100);
+  setTimeout(() => { if (pinOn()) ask(); else hide(); }, 2500);
 
   window.JalLock = {
     setPin: cb => keypad({ mode: 'new', cancel: true, onOk: cb, onCancel: cb }),
