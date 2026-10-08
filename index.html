@@ -121,17 +121,17 @@ body[data-own]>header,body[data-own] #bottom{display:none}
 .scr input::placeholder{color:var(--m3);opacity:.55}
 .scr [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:linear-gradient(rgba(255,255,255,.97),rgba(255,255,255,.93))!important}
 .scr.nt [style*="position: fixed"] [style*="background: var(--card)"]:not(button):not(a){background:color-mix(in srgb,var(--dk) 30%,#0b0807)!important}
-.scr{overflow-x:hidden;max-width:100vw}
+.scr{overflow-x:clip;max-width:100vw}
 .scr button{min-width:0;padding-left:2px;padding-right:2px}
 .scr [style*="flex: 1 1 0; height: 46px"]{font-size:13.5px!important;padding:0 1px!important;white-space:nowrap;overflow:hidden}
 .scr input:focus{outline:none}
-html,body{overflow-x:hidden}
+html,body{overflow-x:clip}
 .scr div,.scr span{min-width:0}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v17</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v18</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -373,9 +373,9 @@ html,body{overflow-x:hidden}
 <button onClick="{{clearCart}}" style="height: 40px; border: 1px solid rgba(255,255,255,0.5); border-radius: 20px; background: transparent; color: #FFFFFF; font-size: 14px; padding: 0 14px">Очистить</button>
 </header>
 <main style="padding: 14px 12px calc(150px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 10px">
-<div style="background: var(--card); border-radius: 14px; padding: 2px 6px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px">
+<div style="position: sticky; top: 0; z-index: 4; background: var(--bg); padding: 6px 0 4px 0; margin: -6px 0 -4px 0"><div style="background: var(--card); border-radius: 14px; padding: 2px 6px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px">
 <sc-for list="{{cartTabs}}" as="tb" hint-placeholder-count="2"><button onClick="{{tb.pick}}" style="{{tb.style}}">{{tb.name}}</button></sc-for>
-</div>
+</div></div>
 <sc-if value="{{tabItems}}" hint-placeholder-val="{{true}}">
 <sc-if value="{{undoOn}}" hint-placeholder-val="{{false}}"><div style="display: flex; align-items: center; gap: 10px; background: var(--dk); color: #FFFFFF; border-radius: 14px; padding: 6px 8px 6px 14px"><span style="flex-grow: 1; font-size: 14px">{{undoText}}</span><button onClick="{{undo}}" style="height: 40px; border: 0; border-radius: 10px; background: var(--ac); color: #FFFFFF; font-size: 14px; font-weight: 700; padding: 0 16px">Отменить</button></div></sc-if>
 <div style="background: var(--card); border-radius: 16px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); overflow: hidden">
@@ -429,7 +429,7 @@ html,body{overflow-x:hidden}
 <div style="background: var(--card); border-radius: 16px; box-shadow: 0 1px 3px rgba(20,40,60,0.12); padding: 12px; display: flex; flex-direction: column; gap: 8px">
 <div style="font-size: 15px; font-weight: 700">Предложить клиенту</div>
 <sc-for list="{{upsell}}" as="u" hint-placeholder-count="2">
-<button onClick="{{u.act}}" style="min-height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--sel); color: var(--ink); font-size: 14px; font-weight: 600; padding: 6px 12px; text-align: left; display: flex; align-items: center; gap: 8px"><span style="flex-grow: 1">{{u.text}}</span><span style="font-size: 13px; color: var(--ac); font-weight: 700; white-space: nowrap">{{u.cta}}</span></button>
+<button onClick="{{u.act}}" style="min-height: 48px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--sel); color: var(--ink); font-size: 14px; font-weight: 600; padding: 6px 12px; text-align: left; display: flex; align-items: center; gap: 8px"><span style="flex: 1 1 0; min-width: 0">{{u.text}}</span><span style="flex-shrink: 0; font-size: 13px; color: var(--ac); font-weight: 700; white-space: nowrap">{{u.cta}}</span></button>
 </sc-for>
 </div>
 </sc-if>
@@ -1433,20 +1433,20 @@ html,body{overflow-x:hidden}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="src/calc.js?v=17"></script>
-<script src="src/orders.js?v=17"></script>
-<script src="src/docs.js?v=17"></script>
-<script src="src/data.js?v=17"></script>
-<script src="src/limits.js?v=17"></script>
-<script src="src/tpl.js?v=17"></script>
-<script src="src/screen.js?v=17"></script>
-<script src="src/calcscreen.js?v=17"></script>
-<script src="src/cartscreen.js?v=17"></script>
-<script src="src/ordersscreen.js?v=17"></script>
-<script src="src/orderscreen.js?v=17"></script>
-<script src="src/settingsscreen.js?v=17"></script>
-<script src="src/docscreens.js?v=17"></script>
-<script src="src/sendscreen.js?v=17"></script>
-<script src="src/app.js?v=17"></script>
+<script src="src/calc.js?v=18"></script>
+<script src="src/orders.js?v=18"></script>
+<script src="src/docs.js?v=18"></script>
+<script src="src/data.js?v=18"></script>
+<script src="src/limits.js?v=18"></script>
+<script src="src/tpl.js?v=18"></script>
+<script src="src/screen.js?v=18"></script>
+<script src="src/calcscreen.js?v=18"></script>
+<script src="src/cartscreen.js?v=18"></script>
+<script src="src/ordersscreen.js?v=18"></script>
+<script src="src/orderscreen.js?v=18"></script>
+<script src="src/settingsscreen.js?v=18"></script>
+<script src="src/docscreens.js?v=18"></script>
+<script src="src/sendscreen.js?v=18"></script>
+<script src="src/app.js?v=18"></script>
 </body>
 </html>

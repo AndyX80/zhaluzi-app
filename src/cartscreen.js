@@ -125,7 +125,7 @@
         wireNote: isDr && !it.wire ? 'выбери сторону' : '', wireNoteStyle: 'font-size: 12px; color: #B35F00; font-weight: 600' }, base);
     };
     const setWire = (i, side) => { C.cart[i] = Object.assign({}, C.cart[i], { wire: side }); save(); rerender(); };
-    const redWarn = on => on ? 'flex-grow: 1; font-size: 12px; color: #B3261E; font-weight: 600; align-self: center' : 'flex-grow: 1';
+    const redWarn = on => on ? 'flex: 1 1 100%; font-size: 12px; color: #B3261E; font-weight: 600; text-align: left; line-height: 1.3' : 'display: none';
     const cartRows = s.cart.map((it, i) => {
       const c = calcs[i];
       const rm = () => { const gone = C.cart[i]; C.cart = C.cart.filter((_, j) => j !== i); C.undoItem = { it: gone, i }; save();
@@ -203,7 +203,7 @@
       suggStyle: 'height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: ' + (S === sugg ? 'var(--chip)' : '#FFFFFF') + '; color: var(--dk); font-size: 13px; font-weight: 700; padding: 0 12px; white-space: nowrap; flex-shrink: 0',
       applySugg: () => set({ service: sugg }),
       disc: s.disc || '', setDisc: e => set({ disc: e.target.value }),
-      discPct: () => set({ discMode: 'pct' }), discRub: () => set({ discMode: 'rub' }), discPctStyle: tabBtn(pctOn), discRubStyle: tabBtn(!pctOn),
+      discPct: () => set({ discMode: 'pct', disc: '' }), discRub: () => set({ discMode: 'rub', disc: '' }), discPctStyle: tabBtn(pctOn), discRubStyle: tabBtn(!pctOn),
       hasDisc: discAmt > 0, discLine: 'Сумма без скидки ' + fmt(total) + ' ₽ · скидка −' + fmt(discAmt) + ' ₽' + (pctOn ? ' (' + dv + '%)' : ''),
       hasBelow: showProfit && below.length > 0, belowText: 'Ниже минимальной прибыли: позиции ' + below.join(', ') + (discAmt > 0 ? '. Скидка съедает прибыль, уменьши её.' : '.'),
       needDog: s.needDog, toggleDog: () => set({ needDog: !C.needDog }),
