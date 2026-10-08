@@ -1,5 +1,5 @@
 /* Офлайн: оболочка приложения кэшируется, обновления берутся из сети, когда она есть. Версия меняется при каждом выпуске. */
-const V = 'jal-v29';
+const V = 'jal-v30';
 self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim()));
