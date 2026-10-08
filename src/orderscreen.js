@@ -31,7 +31,7 @@
     return y + '-' + String((n.length ? Math.max.apply(null, n) : 0) + 1).padStart(3, '0');
   }
   function fresh(key) {
-    return { key, to: 'client', ctype: 'fiz', pmode: 'pct', copy: true, inst: true, rep: 'fine', prepay: 100, term: '', pay: 'QR', step: 0, lad: {}, di: '', ci: false,
+    return { key, to: 'client', ctype: 'fiz', pmode: 'pct', copy: true, inst: (+(window.JalCart && JalCart.C.service) || 0) > 0, rep: 'fine', prepay: 100, term: '', pay: 'QR', step: 0, lad: {}, di: '', ci: false,
       mnotes: '', mount: ['', '', '', '', ''], no: key === 'new' ? '' : key, date: today(), measurer: lsGet('jal_measurer') || 'Хорошавин', deliv: '', name: '', phone: '', addr: '', email: '',
       company: '', inn: '', uaddr: '', repr: '', notes: null, qFrom: '', qTo: '', qrBlank: true, savedNo: null, media: [] };
   }
@@ -61,11 +61,13 @@
   function persist() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function ensure() {
     const en = JalCart.C.editNo, key = en && JalOrders.get(en) ? en : 'new';
-    if (S && S.key === key) return;
+    const sync = () => { if (S.key === 'new' && !S.instTouched) S.inst = (+JalCart.C.service || 0) > 0; };
+    if (S && S.key === key) { sync(); return; }
     let saved = null; try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
     if (saved && saved.key === key) S = Object.assign(fresh(key), saved);
     else S = key === 'new' ? fresh('new') : fromOrder(JalOrders.get(key));
     if (key === 'new' && /^\d{4}-\d{3}$/.test(S.no || '') && !JalOrders.get(S.no)) S.no = '';
+    sync();
     S.date = toIso(S.date) || today(); S.deliv = toIso(S.deliv); S.di = toIso(S.di); delete S.dm; delete S.cm;
     persist();
   }
@@ -187,7 +189,7 @@
         remove: () => { S.media.splice(i, 1); persist(); render(); },
         next: () => { m.pos = ((m.pos || 0) + 1) > blinds.length ? 0 : (m.pos || 0) + 1; persist(); render(); } })),
       notes: S.notes == null ? autoNotes(gs) : S.notes, setNotes: e => { S.notes = e.target.value; persist(); },
-      instY: seg(S.inst), instN: seg(!S.inst), setInstY: () => set({ inst: true }), setInstN: () => set({ inst: false }), inst: S.inst, instWarn: noSend,
+      instY: seg(S.inst), instN: seg(!S.inst), setInstY: () => set({ inst: true, instTouched: true }), setInstN: () => set({ inst: false, instTouched: true }), inst: S.inst, instWarn: noSend,
       mount: MOUNT.map((l, i) => ({ label: l, value: S.mount[i], set: e => { S.mount[i] = e.target.value; persist(); } })),
       calOpen: !!CAL, calTitle: CAL ? MONTHS[CAL.m] + ' ' + CAL.y : '', calDays, calPrev: CAL ? calShift(-1) : () => {}, calNext: CAL ? calShift(1) : () => {},
       calClose: () => { CAL = null; render(); }, calToday: () => { if (!CAL) return; const k = CAL.k; CAL = null; set({ [k]: today() }); }, calClear: () => { if (!CAL) return; const k = CAL.k; CAL = null; set({ [k]: '' }); },
