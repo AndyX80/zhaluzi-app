@@ -3,7 +3,7 @@
 (function () {
   const A = App, S = A.S, e = A.esc, m = A.money;
   const F = { coll: 'Стандарт', lam: '50', mat: 'Дерево', color: 0, w: '1200', h: '1500', qty: 1, ctrl: 'TR', opts: {}, comment: '', own: '' };
-  const COLLS = [['Стандарт', 'Амиго'], ['Классик', 'Интерьер'], ['Урбан', 'РДО'], ['Тренд', 'Форум'], ['Премиум', 'Уют']];
+  const COLLS = [['Стандарт', 'Amigo'], ['Классик', 'Интерьер'], ['Урбан', 'РДО'], ['Тренд', 'Foroom'], ['Премиум', 'Уют']];
   const COLORS = [['Белый', 'павловния', 'g'], ['Слоновая кость', 'павловния', 'g'], ['Липа натуральная', 'липа', 'y'], ['Орех', 'липа', 'g'], ['Венге', 'липа', 'r']];
   const CTRL = { TR: 'Подъём справа, поворот слева', TL: 'Подъём слева, поворот справа', L: 'Подъём и поворот слева', R: 'Подъём и поворот справа' };
   const OPTS = ['Тесьма', 'Струна', 'Уголки', 'Цепочка'];
@@ -18,7 +18,7 @@
     const sup = COLLS.filter(c => c[0] === F.coll)[0][1], col = COLORS[F.color];
     return '<div class="card"><h2>Текущее изделие</h2><div class="stack" style="gap:12px;margin-top:10px">' +
       '<div class="field"><label>Группа товара</label><select class="in" data-c="cf" data-k="group"><option>Горизонтальные деревянные жалюзи</option><option disabled>Рулонные шторы (скоро)</option><option disabled>Зебра (скоро)</option><option disabled>Плиссе (скоро)</option><option disabled>Вертикальные (скоро)</option></select></div>' +
-      '<div class="field"><label>Коллекция</label><div class="chips">' + COLLS.map(c => '<button class="opt ' + (F.coll === c[0] ? 'on' : '') + '" data-a="cf" data-k="coll" data-v="' + c[0] + '">' + c[0] + '</button>').join('') + '</div></div>' +
+      '<div class="field"><label>Коллекция</label><div class="chips">' + COLLS.map(c => '<button class="opt ' + (F.coll === c[0] ? 'on' : '') + '" data-a="cf" data-k="coll" data-v="' + c[0] + '">' + c[0] + ' (' + c[1] + ')</button>').join('') + '</div></div>' +
       '<div class="row wrap"><div class="field"><label>Ламель, мм</label>' + seg('lam', [['25', '25'], ['50', '50']]) + '</div><div class="field"><label>Материал</label>' + seg('mat', [['Дерево', 'Дерево'], ['Бамбук', 'Бамбук']]) + '</div></div>' +
       '<div class="field"><label>Цвет</label><select class="in" data-c="cf" data-k="color">' + COLORS.map((c, i) => '<option value="' + i + '"' + (F.color == i ? ' selected' : '') + '>' + (c[2] === 'r' ? '● ' : c[2] === 'y' ? '◐ ' : '● ') + c[0] + ' (' + c[1] + ')' + (c[2] === 'r' ? ' — нет на складе' : '') + '</option>').join('') + '</select></div>' +
       '<div class="g2"><div class="field"><label>Ширина, мм</label><input class="in" type="number" value="' + e(F.w) + '" data-c="cf" data-k="w"></div><div class="field"><label>Высота, мм</label><input class="in" type="number" value="' + e(F.h) + '" data-c="cf" data-k="h"></div></div>' +
@@ -64,7 +64,7 @@
   A.act.cdel = el => { S.cart.splice(+el.dataset.i, 1); A.save(); A.render(); };
   A.act.cadd = () => {
     const p = unit(), col = COLORS[F.color], sup = COLLS.filter(c => c[0] === F.coll)[0][1];
-    S.cart.push({ name: F.mat + ' ' + F.lam + ' · ' + F.coll, sub: col[0] + ' · ' + CTRL[F.ctrl] + (Object.keys(F.opts).filter(k => F.opts[k]).length ? ' · ' + Object.keys(F.opts).filter(k => F.opts[k]).join(', ') : '') + ' · ' + sup, w: F.w, h: F.h, qty: +F.qty || 1, price: p, list: price(), cost: costOf() });
+    S.cart.push({ name: F.mat + ' ' + F.lam + ' · ' + F.coll + ' (' + sup + ')', sub: col[0] + ' · ' + CTRL[F.ctrl] + (Object.keys(F.opts).filter(k => F.opts[k]).length ? ' · ' + Object.keys(F.opts).filter(k => F.opts[k]).join(', ') : '') + ' · ' + sup, w: F.w, h: F.h, qty: +F.qty || 1, price: p, list: price(), cost: costOf() });
     F.own = ''; A.save(); A.render(); A.toast('Добавлено в корзину');
   };
   A.act.cown0 = () => { F.own = ''; A.render(); };
