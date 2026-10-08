@@ -158,8 +158,8 @@
     const selCol = colList.find(c => c.key === color);
     const selStock = selCol ? stockOf(prodKey, selCol.key, s.sup, +s.w || 0) : null;
     const seg = sel => sel
-      ? 'flex: 1 1 0; height: 40px; border: 0; border-radius: 11px; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700; box-shadow: 0 1px 2px rgba(20,40,60,0.18)'
-      : 'flex: 1 1 0; height: 40px; border: 0; border-radius: 11px; background: transparent; color: var(--m1); font-size: 15px; font-weight: 600';
+      ? 'flex: 1 1 0; height: 40px; border: 0; border-radius: 11px; background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700; box-shadow: 0 1px 2px rgba(20,40,60,0.18)'
+      : 'flex: 1 1 0; height: 40px; border: 0; border-radius: 11px; background: transparent; color: var(--m1); font-size: 14px; font-weight: 600; padding: 0 2px';
     const set = p => { Object.assign(S, p); render(); };
     const chg = p => set(Object.assign({ justAdded: false }, p));
     const pickSup = n => chg({ sup: n, lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {}, supOpen: false });
@@ -259,7 +259,7 @@
       noAuto: !JC.hasAuto(s.sup), hasAuto: JC.hasAuto(s.sup),
       driveRows: autoRows('drive'), remoteRows: autoRows('remote'),
       autoSummary: 'Приводов ' + JC.counts().drive + ', пультов ' + JC.counts().remote + ' в корзине',
-      showCheck: !waiting && (!good || (r.ok && !!selCol && selStock !== null && selStock < 2) || s.justAdded),
+      showCheck: !waiting && +s.w > 0 && +s.h > 0 && (!good || (r.ok && !!selCol && selStock !== null && selStock < 2) || s.justAdded),
       breakText: r.ok ? (s.qty > 1 ? fmt(unit) + ' ₽ × ' + s.qty + ' шт' : 'изделие ' + fmt(r.base) + ' + доп. ' + fmt(r.addSum)) : (waiting ? 'выбери цвет, и я посчитаю' : (r.msg ? '' : 'введи размеры')),
       weightText: kg ? 'вес ≈ ' + LM.fmtKg(kg * s.qty) + ' кг' + (s.qty > 1 ? ' (' + LM.fmtKg(kg) + ' кг × ' + s.qty + ')' : '') : '',
       checkText: waiting ? 'Ждёт выбора цвета' : (!r.ok ? (r.msg ? r.msg[0].toUpperCase() + r.msg.slice(1) : 'Не поставляется') : (r.warn.length ? (r.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + r.warn.join('; ') : 'Размеры в гарантии')),
