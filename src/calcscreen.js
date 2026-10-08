@@ -109,6 +109,7 @@
       (!o['Только_ламель'] || o['Только_ламель'] === lam)).map(o => o['Опция']);
   }
 
+  const isWh = () => !!(window.JalCart && JalCart.C.region);
   function calcItem(cur, colList) {
     const need = colList.length > 0, col = need ? colList.find(c => c.key === cur.color) : null;
     if (need && !col) return { ok: false, needColor: true, opts: {}, warn: [] };
@@ -117,7 +118,7 @@
     let res;
     try {
       res = JalCalc.calc(P, eng(cur.sup), cur.mat, cur.lam, W / 10, H / 10,
-        { color: col && (cur.sup === 'Amigo' || cur.sup === 'Foroom') ? col.key : null, opts: Object.keys(cur.opts), fix: cur.fix || null });
+        { color: col && (cur.sup === 'Amigo' || cur.sup === 'Foroom') ? col.key : null, opts: Object.keys(cur.opts), fix: cur.fix || null, wh: isWh() });
     } catch (e) { return { ok: false, msg: String(e.message || e), opts: {}, warn: [] }; }
     if (!res.ok) return { ok: false, msg: res.msg, opts: {}, warn: [] };
     const lim = LM.sizeLimits({ sup: cur.sup, mat: cur.mat, lam: cur.lam, w: W, h: H, opts: cur.opts, ctrl: cur.ctrl, fix: cur.fix }, col, col && col.serRaw);
@@ -215,6 +216,8 @@
       supTiles,
       isBlinds: s.mode === 'blinds', isAuto: s.mode === 'auto',
       modeBlinds: () => set({ mode: 'blinds' }), modeAuto: () => set({ mode: 'auto' }),
+      regionSpb: () => JalCart.setRegion(false), regionReg: () => JalCart.setRegion(true),
+      regionSpbStyle: seg(!isWh()), regionRegStyle: seg(isWh()),
       modeBlindsStyle: seg(s.mode === 'blinds'), modeAutoStyle: seg(s.mode === 'auto'),
       calcHeader: s.editIdx >= 0, calcTitle: s.mode === 'auto' ? 'Автоматика' : 'Изменение позиции ' + (s.editIdx + 1), posText: 'позиция ' + (s.editIdx >= 0 ? s.editIdx + 1 : JC.count() + 1),
       w: s.w, h: s.h,
@@ -303,7 +306,7 @@
     if (sup === 'Foroom') { const c = P.forum.filter(x => x['Материал'] === it.mat && x['Категория'] === cat)[0]; if (!c) return null; color = c['Код']; }
     const av = availOpts(sup, it.lam), fx = availFixes(sup, it.lam), sel = Object.keys(it.opts || {}).filter(k => it.opts[k]);
     const miss = sel.filter(n => av.indexOf(n) < 0), fix = it.fix && fx.indexOf(it.fix) >= 0 ? it.fix : null; if (it.fix && !fix) miss.push(it.fix);
-    let r; try { r = JalCalc.calc(P, eng(sup), it.mat, it.lam, W / 10, H / 10, { color, opts: sel.filter(n => av.indexOf(n) >= 0), fix }); } catch (e) { return null; }
+    let r; try { r = JalCalc.calc(P, eng(sup), it.mat, it.lam, W / 10, H / 10, { color, opts: sel.filter(n => av.indexOf(n) >= 0), fix, wh: isWh() }); } catch (e) { return null; }
     if (!r.ok) return null;
     let lim = []; try { lim = LM.sizeLimits({ sup, mat: it.mat, lam: it.lam, w: W, h: H, opts: it.opts || {}, ctrl: it.ctrl, fix: it.fix || '' }, null, null); } catch (e) {}
     return { unit: r.price, profit: r.profit, miss, warn: lim.map(x => x.t), hard: lim.some(x => x.hard) };

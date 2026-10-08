@@ -76,6 +76,7 @@
 <span>Общая площадь</span><span style="text-align: right; color: var(--ink); font-weight: 600">{{cartArea}}</span>
 <span>Общий вес</span><span style="text-align: right; color: var(--ink); font-weight: 600">{{cartWeight}}</span>
 </div>
+<sc-if value="{{notReg}}" hint-placeholder-val="{{true}}">
 <div style="display: flex; align-items: center; gap: 10px">
 <label for="dlv" style="flex-grow: 1; font-size: 15px; font-weight: 600">Доставка + установка</label>
 <input id="dlv" type="number" inputmode="numeric" placeholder="нет" value="{{service}}" onChange="{{setService}}" style="width: 120px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; font-size: 18px; font-weight: 700; text-align: right; padding: 0 12px; box-sizing: border-box; color: var(--ink); background: var(--card)">
@@ -83,6 +84,13 @@
 </div>
 <sc-if value="{{hasSugg}}" hint-placeholder-val="{{true}}">
 <div style="display: flex; align-items: center; gap: 8px"><div style="flex: 1 1 0; min-width: 0; font-size: 12px; color: var(--m1); line-height: 1.35">{{suggText}}</div><button onClick="{{applySugg}}" style="{{suggStyle}}">Подставить</button></div>
+</sc-if>
+</sc-if>
+<sc-if value="{{isReg}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<label for="pvz" style="font-size: 15px; font-weight: 600">Адрес ПВЗ и транспортная компания</label>
+<textarea id="pvz" rows="2" placeholder="Например: СДЭК, Казань, ул. Баумана 1, ПВЗ KZN12" onInput="{{setPvz}}" style="border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 10px 12px; font-size: 15px; line-height: 1.4; color: var(--ink); resize: vertical; font-family: inherit; background: var(--card); box-sizing: border-box; width: 100%">{{pvz}}</textarea>
+</div>
 </sc-if>
 <div style="display: flex; align-items: center; gap: 10px">
 <label for="disc" style="flex-grow: 1; font-size: 15px; font-weight: 600">Скидка на заказ</label>

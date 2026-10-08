@@ -31,7 +31,7 @@
     return y + '-' + String((n.length ? Math.max.apply(null, n) : 0) + 1).padStart(3, '0');
   }
   function fresh(key) {
-    return { key, to: 'client', ctype: 'fiz', pmode: 'pct', copy: true, inst: (+(window.JalCart && JalCart.C.service) || 0) > 0, rep: 'fine', prepay: 100, term: '', pay: 'QR', step: 0, lad: {}, di: '', ci: false,
+    return { key, to: 'client', ctype: 'fiz', pmode: 'pct', copy: true, inst: !JalCart.C.region && (+(window.JalCart && JalCart.C.service) || 0) > 0, rep: 'fine', prepay: 100, term: '', pay: 'QR', step: 0, lad: {}, di: '', ci: false,
       mnotes: '', mount: ['', '', '', '', ''], no: key === 'new' ? '' : key, date: today(), measurer: lsGet('jal_measurer') || 'Хорошавин', deliv: '', name: '', phone: '', addr: '', email: '',
       company: '', inn: '', uaddr: '', repr: '', notes: null, qFrom: '', qTo: '', qrBlank: true, savedNo: null, media: [] };
   }
@@ -61,7 +61,7 @@
   function persist() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function ensure() {
     const en = JalCart.C.editNo, key = en && JalOrders.get(en) ? en : 'new';
-    const sync = () => { if (S.key === 'new' && !S.instTouched) S.inst = (+JalCart.C.service || 0) > 0; };
+    const sync = () => { if (JalCart.C.region) S.inst = false; else if (S.key === 'new' && !S.instTouched) S.inst = (+JalCart.C.service || 0) > 0; };
     if (S && S.key === key) { sync(); return; }
     let saved = null; try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
     if (saved && saved.key === key) S = Object.assign(fresh(key), saved);
@@ -100,10 +100,11 @@
     if (!co.items.length) { alert('Корзина пуста'); return null; }
     const yur = S.ctype === 'yur', gs = groups(co);
     const mount = S.inst ? MOUNT.map((l, i) => S.mount[i] ? l + ': ' + S.mount[i] : '').filter(Boolean).join('; ') : '';
-    const note = [S.notes == null ? autoNotes(gs) : S.notes, S.inst && S.mnotes ? 'Монтажнику: ' + S.mnotes : ''].filter(Boolean).join('\n');
+    const reg = !!JalCart.C.region, pvz = (JalCart.C.pvz || '').trim();
+    const note = [S.notes == null ? autoNotes(gs) : S.notes, reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '', S.inst && S.mnotes ? 'Монтажнику: ' + S.mnotes : ''].filter(Boolean).join('\n');
     const lad = gs.filter(g => g.num && S.lad[g.num] && S.lad[g.num].own && S.lad[g.num].v).map(g => 'Поз. ' + g.num + ': лесенка/тесьма ' + S.lad[g.num].v);
     const total = JalDocs.orderTotal(Object.assign({}, co));
-    const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: S.inst ? co.delivery : 0, install: S.inst, buyer: yur ? 'юр' : 'физ',
+    const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: S.inst ? co.delivery : 0, install: S.inst, region: reg, pvz: reg ? pvz : '', buyer: yur ? 'юр' : 'физ',
       name: yur ? S.repr : S.name, phone: S.phone, addr: S.addr, email: S.email, company: yur ? S.company : '', inn: yur ? S.inn : '', uaddr: yur ? S.uaddr : '',
       meas: '', inst: S.inst ? S.di : '', measurer: S.measurer, pre: String(S.prepay || 100), preU: S.pmode === 'pct' ? '%' : '₽', term: String(S.term || 12), note: note + (lad.length ? '\n' + lad.join('\n') : ''),
       cart: JalCart.snapshot(), zam: JSON.parse(JSON.stringify(S)) };
@@ -189,6 +190,7 @@
         remove: () => { S.media.splice(i, 1); persist(); render(); },
         next: () => { m.pos = ((m.pos || 0) + 1) > blinds.length ? 0 : (m.pos || 0) + 1; persist(); render(); } })),
       notes: S.notes == null ? autoNotes(gs) : S.notes, setNotes: e => { S.notes = e.target.value; persist(); },
+      isReg: !!JalCart.C.region, notReg: !JalCart.C.region, pvz: JalCart.C.pvz || '', setPvz: e => { JalCart.C.pvz = e.target.value; try { localStorage.setItem('jal_cart2', JSON.stringify(Object.assign(JSON.parse(localStorage.getItem('jal_cart2') || '{}'), { pvz: e.target.value }))); } catch (x) {} },
       instY: seg(S.inst), instN: seg(!S.inst), setInstY: () => set({ inst: true, instTouched: true }), setInstN: () => set({ inst: false, instTouched: true }), inst: S.inst, instWarn: noSend,
       mount: MOUNT.map((l, i) => ({ label: l, value: S.mount[i], set: e => { S.mount[i] = e.target.value; persist(); } })),
       calOpen: !!CAL, calTitle: CAL ? MONTHS[CAL.m] + ' ' + CAL.y : '', calDays, calPrev: CAL ? calShift(-1) : () => {}, calNext: CAL ? calShift(1) : () => {},

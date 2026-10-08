@@ -37,6 +37,7 @@
     P.x = {}; rows(sheets['Прибыль']).forEach(r => { P.x[r['Продукт']] = r['X_руб_м2']; });
     P.sup = {}; rows(sheets['Поставщики']).forEach(r => { P.sup[r['Поставщик']] = r; });
     P.rates = {}; rows(sheets['Ставки']).forEach(r => { P.rates[r['Продукт']] = r; });
+    P.opt = {}; if (sheets['Опт']) rows(sheets['Опт']).forEach(r => { if (typeof r['Наценка'] === 'number') P.opt[r['Поставщик'] + '|' + r['Продукт']] = r['Наценка']; });
     P.amigo = rows(sheets['Амиго_цвета']);
     P.opts = rows(sheets['Опции']);
     P.forum = rows(sheets['Форум_цвета']);
@@ -53,7 +54,7 @@
   /* opts: [{...}] не нужен — опции именами. fix: имя нижней фиксации. sides: число боковин валанса. */
   function calc(P, sup, mat, lam, W, H, o) {
     o = o || {};
-    const color = o.color || null, opts = o.opts || [], fix = o.fix || null, sides = o.sides || 0;
+    const wh = !!o.wh, color = o.color || null, opts = o.opts || [], fix = o.fix || null, sides = o.sides || 0;
     const prod = mat + ' ' + lam;
     const S = W * H / 10000;
     const par = P.par, s = P.sup[sup];
@@ -93,9 +94,12 @@
     } else {
       throw new Error('поставщик? ' + sup);
     }
+    const whM = wh ? P.opt[sup + '|' + prod] : undefined;
+    if (wh && whM === undefined) return fail('нет оптовой наценки (лист «Опт»)');
     const dlv = 0; /* доставка от поставщика считается в корзине: 1500 ₽ на партию производителя */
     const profitM2 = P.x[prod] + s['Доп_к_X'];
-    const base = ceilTo(zak + dlv + profitM2 * Math.max(S, par['мин_площадь_прибыли']), par['округление']);
+    const base = wh ? ceilTo(zak * (1 + whM), par['округление'])
+      : ceilTo(zak + dlv + profitM2 * Math.max(S, par['мин_площадь_прибыли']), par['округление']);
     const pr = base - zak - dlv;
     let totalOpts = 0, optProfit = 0;
     const optPrices = {};
@@ -118,7 +122,7 @@
           : op['Единица'] === 'шт' ? rnd(zr * sides)
           : rnd(zr * Math.max(S, par['мин_площадь_опций']));
       }
-      optPrices[name] = ceilTo(zo * s['Коэф_опций'], par['округление']);
+      optPrices[name] = ceilTo(wh ? zo * (1 + whM) : zo * s['Коэф_опций'], par['округление']);
       totalOpts += optPrices[name];
       optProfit += optPrices[name] - zo;
     }

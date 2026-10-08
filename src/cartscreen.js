@@ -5,9 +5,9 @@
   const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const ceil100 = x => Math.ceil(x / 100 - 1e-9) * 100;
   const K0 = 'jal_cart2';
-  const C = { cart: [], service: 0, disc: '', discMode: 'pct', needDog: true, cf: null, undoItem: null };
+  const C = { cart: [], service: 0, region: false, pvz: '', disc: '', discMode: 'pct', needDog: true, cf: null, undoItem: null };
   try { Object.assign(C, JSON.parse(localStorage.getItem(K0) || '{}')); C.cf = null; C.undoItem = null; } catch (e) {}
-  const save = () => { try { localStorage.setItem(K0, JSON.stringify({ cart: C.cart, service: C.service, disc: C.disc, discMode: C.discMode, needDog: C.needDog })); } catch (e) {} };
+  const save = () => { try { localStorage.setItem(K0, JSON.stringify({ cart: C.cart, service: C.service, region: C.region, pvz: C.pvz, disc: C.disc, discMode: C.discMode, needDog: C.needDog })); } catch (e) {} };
 
   const CTRL_TXT = { L: 'поворот и подъём слева', R: 'поворот и подъём справа', TL: 'поворот слева, подъём справа', TR: 'поворот справа, подъём слева' };
   const CTRL_TXT_CHAIN = { L: 'цепочка слева', R: 'цепочка справа' };
@@ -69,11 +69,11 @@
   function compute(st, ov) {
     const App = window.JalApp, s = st || C;
     const calcs = ov ? ov.calcs : s.cart.map(calcRow);
-    const S = Number(s.service) || 0;
+    const reg = !!s.region, S = reg ? 0 : (Number(s.service) || 0);
     const adds = spread(s.cart.map((it, i) => ({ ok: calcs[i].ok && it.kind !== 'custom', qty: it.qty })), S);
     /* доставка от производителя: RATES.ship на каждую партию (кроме Уюта и Форума), делится на жалюзи этой партии */
     const ships = s.cart.map(() => 0), bySup = {};
-    s.cart.forEach((it, i) => { const sp = ov ? ov.sups[i] : it.sup; if (!it.kind && calcs[i].ok && !FREE_SHIP[sp]) (bySup[sp] = bySup[sp] || []).push(i); });
+    s.cart.forEach((it, i) => { const sp = ov ? ov.sups[i] : it.sup; if (!reg && !it.kind && calcs[i].ok && !FREE_SHIP[sp]) (bySup[sp] = bySup[sp] || []).push(i); });
     Object.keys(bySup).forEach(k => { const ix = bySup[k], part = spread(ix.map(i => ({ ok: true, qty: s.cart[i].qty })), Number(RATES.ship) || 0); ix.forEach((i, j) => { ships[i] = part[j]; }); });
     const lineSum = s.cart.map((it, i) => (calcs[i].ok ? ceil100(calcs[i].unit + ships[i] + adds[i]) * it.qty : 0));
     const total = lineSum.reduce((x, y) => x + y, 0);
@@ -180,7 +180,7 @@
     const hasDr = s.cart.some(x => x.kind === 'drive'), hasDem = s.cart.some(x => x.kind === 'custom' && /демонтаж/i.test(x.title || ''));
     const up = [];
     if (w50.length && !hasDr) up.push({ text: 'Автоматика для 50 мм: привод и пульт (' + w50.length + ' ' + (w50.length === 1 ? 'окно' : 'окна') + ')', cta: 'Подобрать', act: () => { JalCalcScreen.editAuto(w50[0].sup); window.JalApp.tab('calc'); } });
-    if (goods.length && !hasDem) up.push({ text: 'Демонтаж старых жалюзи: ' + goods.reduce((a, x) => a + x.qty, 0) + ' шт по 500 ₽', cta: 'Добавить', act: () => set({ cart: C.cart.concat([{ kind: 'custom', title: 'Демонтаж старых жалюзи', qty: goods.reduce((a, x) => a + x.qty, 0), price: 500, cost: '' }]) }) });
+    if (!s.region && goods.length && !hasDem) up.push({ text: 'Демонтаж старых жалюзи: ' + goods.reduce((a, x) => a + x.qty, 0) + ' шт по 500 ₽', cta: 'Добавить', act: () => set({ cart: C.cart.concat([{ kind: 'custom', title: 'Демонтаж старых жалюзи', qty: goods.reduce((a, x) => a + x.qty, 0), price: 500, cost: '' }]) }) });
 
     const cf = s.cf, cfOk = cf && Number(cf.price) > 0;
     const setCf = (k, v) => { C.cf = Object.assign({}, C.cf, { [k]: v }); rerender(); };
@@ -203,6 +203,7 @@
       addCustom: () => set({ cf: { i: -1, title: '', qty: '1', price: '', cost: '' } }),
       cartArea: (Math.round(areaSum * 100) / 100).toFixed(2).replace('.', ',') + ' м²',
       cartWeight: kgSum ? (kgPart ? '' : 'от ') + LM.fmtKg(kgSum) + ' кг' : '—',
+      isReg: !!s.region, notReg: !s.region, pvz: s.pvz || '', setPvz: e => { C.pvz = e.target.value; save(); },
       service: s.service || '', setService: e => set({ service: Number(e.target.value) || 0 }),
       hasSugg: sugg > 0, suggText: 'По ставкам монтажа: ' + sp.join(' + ') + ' = ' + fmt(sugg) + ' ₽ (ориентировочно)',
       suggStyle: 'height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: ' + (S === sugg ? 'var(--chip)' : '#FFFFFF') + '; color: var(--dk); font-size: 13px; font-weight: 700; padding: 0 12px; white-space: nowrap; flex-shrink: 0',
@@ -275,11 +276,12 @@
   /* для главного экрана */
   function addItem(item) { C.cart.push(item); save(); }
   function replaceItem(i, item) { C.cart[i] = item; save(); }
-  const snapshot = () => JSON.parse(JSON.stringify({ cart: C.cart, service: C.service, disc: C.disc, discMode: C.discMode, needDog: C.needDog }));
-  function restore(snap, no) { Object.assign(C, JSON.parse(JSON.stringify(snap)), { editNo: no || null, cf: null, undoItem: null }); save(); }
-  function clear() { C.editNo = null; C.cart = []; C.service = 0; C.disc = ''; save(); }
+  const snapshot = () => JSON.parse(JSON.stringify({ cart: C.cart, service: C.service, region: C.region, pvz: C.pvz, disc: C.disc, discMode: C.discMode, needDog: C.needDog }));
+  function restore(snap, no) { Object.assign(C, { region: false, pvz: '' }, JSON.parse(JSON.stringify(snap)), { editNo: no || null, cf: null, undoItem: null }); save(); }
+  function clear() { C.editNo = null; C.cart = []; C.service = 0; C.pvz = ''; C.disc = ''; save(); }
 
-  window.JalCart = { RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
+  const setRegion = on => { C.region = !!on; save(); rerender(); };
+  window.JalCart = { setRegion, RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
     autoList: (sup, kind) => (AUTO && AUTO[sup] ? AUTO[sup][kind] : null), autoQty, autoStep, hasAuto: sup => !!(AUTO && AUTO[sup]),
     counts: () => ({ drive: C.cart.filter(x => x.kind === 'drive').reduce((a, x) => a + x.qty, 0), remote: C.cart.filter(x => x.kind === 'remote').reduce((a, x) => a + x.qty, 0) }) };
 })();

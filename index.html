@@ -134,7 +134,7 @@ html,body{overflow-x:clip}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v48</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v49</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -154,6 +154,11 @@ html,body{overflow-x:clip}
 </header></sc-if>
 
 <main style="padding: 8px 14px calc(160px + env(safe-area-inset-bottom, 0px)) 14px; display: flex; flex-direction: column; gap: 8px">
+
+<div style="display: flex; background: var(--track); border-radius: 14px; padding: 3px; gap: 3px">
+<button onClick="{{regionSpb}}" style="{{regionSpbStyle}}">СПб</button>
+<button onClick="{{regionReg}}" style="{{regionRegStyle}}">Регионы</button>
+</div>
 
 <div style="display: flex; background: var(--track); border-radius: 14px; padding: 3px; gap: 3px">
 <button onClick="{{modeBlinds}}" style="{{modeBlindsStyle}}">Жалюзи</button>
@@ -444,6 +449,7 @@ html,body{overflow-x:clip}
 <span>Общая площадь</span><span style="text-align: right; color: var(--ink); font-weight: 600">{{cartArea}}</span>
 <span>Общий вес</span><span style="text-align: right; color: var(--ink); font-weight: 600">{{cartWeight}}</span>
 </div>
+<sc-if value="{{notReg}}" hint-placeholder-val="{{true}}">
 <div style="display: flex; align-items: center; gap: 10px">
 <label for="dlv" style="flex-grow: 1; font-size: 15px; font-weight: 600">Доставка + установка</label>
 <input id="dlv" type="number" inputmode="numeric" placeholder="нет" value="{{service}}" onChange="{{setService}}" style="width: 120px; height: 48px; border: 1.5px solid #E3D5C3; border-radius: 14px; font-size: 18px; font-weight: 700; text-align: right; padding: 0 12px; box-sizing: border-box; color: var(--ink); background: var(--card)">
@@ -451,6 +457,13 @@ html,body{overflow-x:clip}
 </div>
 <sc-if value="{{hasSugg}}" hint-placeholder-val="{{true}}">
 <div style="display: flex; align-items: center; gap: 8px"><div style="flex: 1 1 0; min-width: 0; font-size: 12px; color: var(--m1); line-height: 1.35">{{suggText}}</div><button onClick="{{applySugg}}" style="{{suggStyle}}">Подставить</button></div>
+</sc-if>
+</sc-if>
+<sc-if value="{{isReg}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<label for="pvz" style="font-size: 15px; font-weight: 600">Адрес ПВЗ и транспортная компания</label>
+<textarea id="pvz" rows="2" placeholder="Например: СДЭК, Казань, ул. Баумана 1, ПВЗ KZN12" onInput="{{setPvz}}" style="border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 10px 12px; font-size: 15px; line-height: 1.4; color: var(--ink); resize: vertical; font-family: inherit; background: var(--card); box-sizing: border-box; width: 100%">{{pvz}}</textarea>
+</div>
 </sc-if>
 <div style="display: flex; align-items: center; gap: 10px">
 <label for="disc" style="flex-grow: 1; font-size: 15px; font-weight: 600">Скидка на заказ</label>
@@ -752,6 +765,13 @@ html,body{overflow-x:clip}
 </sc-if>
 
 <sc-if value="{{step2}}" hint-placeholder-val="{{false}}">
+<sc-if value="{{isReg}}" hint-placeholder-val="{{false}}">
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Отправка в регион</h2>
+<textarea rows="2" placeholder="Адрес ПВЗ и транспортная компания" onInput="{{setPvz}}" style="border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 10px 12px; font-size: 15px; line-height: 1.4; color: var(--ink); resize: vertical; font-family: inherit; background: var(--card)">{{pvz}}</textarea>
+</section>
+</sc-if>
+<sc-if value="{{notReg}}" hint-placeholder-val="{{true}}">
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
 <h2 style="margin: 0; font-size: 16px; font-weight: 700">Монтаж</h2>
 <div style="display: flex; align-items: center; gap: 10px">
@@ -790,6 +810,7 @@ html,body{overflow-x:clip}
 </div>
 </sc-if>
 </section>
+</sc-if>
 <sc-if value="{{inst}}" hint-placeholder-val="{{true}}"><section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
 <h2 style="margin: 0; font-size: 16px; font-weight: 700">Со слов заказчика</h2>
 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
@@ -1096,7 +1117,7 @@ html,body{overflow-x:clip}
 <div style="{{archStyle}}">{{archNote}}</div>
 </section>
 </sc-if>
-<div style="text-align: center; font-size: 12px; color: var(--m1); padding: 8px 0">Версия приложения: <span>v48</span></div>
+<div style="text-align: center; font-size: 12px; color: var(--m1); padding: 8px 0">Версия приложения: <span>v49</span></div>
 </main>
 <div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
 <div style="height: 60px; border-radius: 30px; background: var(--card); box-shadow: 0 4px 14px rgba(40,20,10,0.2); display: flex; align-items: center; gap: 4px; padding: 0 6px; font-size: 13px; font-weight: 700">
@@ -1608,26 +1629,26 @@ html,body{overflow-x:clip}
   }, 5000);
 })();
 </script>
-<script src="src/look.js?v=48"></script>
-<script src="src/calc.js?v=48"></script>
-<script src="src/orders.js?v=48"></script>
-<script src="src/docs.js?v=48"></script>
-<script src="src/drive.js?v=48"></script>
-<script src="src/data.js?v=48"></script>
-<script src="src/limits.js?v=48"></script>
-<script src="src/tpl.js?v=48"></script>
-<script src="src/screen.js?v=48"></script>
-<script src="src/calcscreen.js?v=48"></script>
-<script src="src/cartscreen.js?v=48"></script>
-<script src="src/ordersscreen.js?v=48"></script>
-<script src="src/orderscreen.js?v=48"></script>
-<script src="src/comparescreen.js?v=48"></script>
-<script src="src/settingsscreen.js?v=48"></script>
-<script src="src/docscreens.js?v=48"></script>
-<script src="src/export.js?v=48"></script>
-<script src="src/sendscreen.js?v=48"></script>
-<script src="src/lock.js?v=48"></script>
-<script src="src/app.js?v=48"></script>
+<script src="src/look.js?v=49"></script>
+<script src="src/calc.js?v=49"></script>
+<script src="src/orders.js?v=49"></script>
+<script src="src/docs.js?v=49"></script>
+<script src="src/drive.js?v=49"></script>
+<script src="src/data.js?v=49"></script>
+<script src="src/limits.js?v=49"></script>
+<script src="src/tpl.js?v=49"></script>
+<script src="src/screen.js?v=49"></script>
+<script src="src/calcscreen.js?v=49"></script>
+<script src="src/cartscreen.js?v=49"></script>
+<script src="src/ordersscreen.js?v=49"></script>
+<script src="src/orderscreen.js?v=49"></script>
+<script src="src/comparescreen.js?v=49"></script>
+<script src="src/settingsscreen.js?v=49"></script>
+<script src="src/docscreens.js?v=49"></script>
+<script src="src/export.js?v=49"></script>
+<script src="src/sendscreen.js?v=49"></script>
+<script src="src/lock.js?v=49"></script>
+<script src="src/app.js?v=49"></script>
 <script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 </body>
 </html>

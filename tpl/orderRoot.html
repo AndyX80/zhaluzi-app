@@ -105,6 +105,13 @@
 </sc-if>
 
 <sc-if value="{{step2}}" hint-placeholder-val="{{false}}">
+<sc-if value="{{isReg}}" hint-placeholder-val="{{false}}">
+<section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Отправка в регион</h2>
+<textarea rows="2" placeholder="Адрес ПВЗ и транспортная компания" onInput="{{setPvz}}" style="border: 1.5px solid #E3D5C3; border-radius: 14px; padding: 10px 12px; font-size: 15px; line-height: 1.4; color: var(--ink); resize: vertical; font-family: inherit; background: var(--card)">{{pvz}}</textarea>
+</section>
+</sc-if>
+<sc-if value="{{notReg}}" hint-placeholder-val="{{true}}">
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
 <h2 style="margin: 0; font-size: 16px; font-weight: 700">Монтаж</h2>
 <div style="display: flex; align-items: center; gap: 10px">
@@ -143,6 +150,7 @@
 </div>
 </sc-if>
 </section>
+</sc-if>
 <sc-if value="{{inst}}" hint-placeholder-val="{{true}}"><section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
 <h2 style="margin: 0; font-size: 16px; font-weight: 700">Со слов заказчика</h2>
 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
