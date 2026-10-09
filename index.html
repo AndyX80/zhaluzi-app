@@ -134,7 +134,7 @@ html,body{overflow-x:clip}
 </style>
 </head>
 <body>
-<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v55</span></header>
+<header><h1>Жалюзи-СПБ</h1><span class="sub" id="pstat">v56</span></header>
 
 <section id="load" class="card" hidden>
   <p class="lbl">Нужна таблица цен (файл «Цены для приложения.xlsx»). Один раз выбери — она останется в телефоне.</p>
@@ -629,6 +629,9 @@ html,body{overflow-x:clip}
 <button onClick="{{act.dup}}" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Дублировать заказ</button>
 <button onClick="{{act.arch}}" style="height: 52px; border-radius: 14px; border: 1.5px solid #E7B7B7; background: var(--card); color: #B3261E; font-size: 14px; font-weight: 700">{{act.archLabel}}</button>
 </div>
+<sc-if value="{{delOff}}"><button onClick="{{act.delAsk}}" style="height: 52px; border-radius: 14px; border: 1.5px solid #E7B7B7; background: var(--card); color: #B3261E; font-size: 14px; font-weight: 700">Удалить заказ</button></sc-if>
+<sc-if value="{{delOn}}"><div style="font-size: 15px; font-weight: 700; text-align: center">{{delText}}</div>
+<div style="display: flex; gap: 8px"><button onClick="{{act.delYes}}" style="flex: 1; height: 52px; border: 0; border-radius: 14px; background: #C0392B; color: #FFFFFF; font-size: 15px; font-weight: 700">Да, удалить</button><button onClick="{{act.delNo}}" style="flex: 1; height: 52px; border: 0; border-radius: 14px; background: #2E8B57; color: #FFFFFF; font-size: 15px; font-weight: 700">Нет</button></div></sc-if>
 </section>
 
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
@@ -1125,7 +1128,7 @@ html,body{overflow-x:clip}
 <div style="{{archStyle}}">{{archNote}}</div>
 </section>
 </sc-if>
-<div style="text-align: center; font-size: 12px; color: var(--m1); padding: 8px 0">Версия приложения: <span>v55</span></div>
+<div style="text-align: center; font-size: 12px; color: var(--m1); padding: 8px 0">Версия приложения: <span>v56</span></div>
 </main>
 <div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; display: flex; flex-direction: column; gap: 8px">
 <div style="height: 60px; border-radius: 30px; background: var(--card); box-shadow: 0 4px 14px rgba(40,20,10,0.2); display: flex; align-items: center; gap: 4px; padding: 0 6px; font-size: 13px; font-weight: 700">
@@ -1637,26 +1640,26 @@ html,body{overflow-x:clip}
   }, 5000);
 })();
 </script>
-<script src="src/look.js?v=55"></script>
-<script src="src/calc.js?v=55"></script>
-<script src="src/orders.js?v=55"></script>
-<script src="src/docs.js?v=55"></script>
-<script src="src/drive.js?v=55"></script>
-<script src="src/data.js?v=55"></script>
-<script src="src/limits.js?v=55"></script>
-<script src="src/tpl.js?v=55"></script>
-<script src="src/screen.js?v=55"></script>
-<script src="src/calcscreen.js?v=55"></script>
-<script src="src/cartscreen.js?v=55"></script>
-<script src="src/ordersscreen.js?v=55"></script>
-<script src="src/orderscreen.js?v=55"></script>
-<script src="src/comparescreen.js?v=55"></script>
-<script src="src/settingsscreen.js?v=55"></script>
-<script src="src/docscreens.js?v=55"></script>
-<script src="src/export.js?v=55"></script>
-<script src="src/sendscreen.js?v=55"></script>
-<script src="src/lock.js?v=55"></script>
-<script src="src/app.js?v=55"></script>
+<script src="src/look.js?v=56"></script>
+<script src="src/calc.js?v=56"></script>
+<script src="src/orders.js?v=56"></script>
+<script src="src/docs.js?v=56"></script>
+<script src="src/drive.js?v=56"></script>
+<script src="src/data.js?v=56"></script>
+<script src="src/limits.js?v=56"></script>
+<script src="src/tpl.js?v=56"></script>
+<script src="src/screen.js?v=56"></script>
+<script src="src/calcscreen.js?v=56"></script>
+<script src="src/cartscreen.js?v=56"></script>
+<script src="src/ordersscreen.js?v=56"></script>
+<script src="src/orderscreen.js?v=56"></script>
+<script src="src/comparescreen.js?v=56"></script>
+<script src="src/settingsscreen.js?v=56"></script>
+<script src="src/docscreens.js?v=56"></script>
+<script src="src/export.js?v=56"></script>
+<script src="src/sendscreen.js?v=56"></script>
+<script src="src/lock.js?v=56"></script>
+<script src="src/app.js?v=56"></script>
 <script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 </body>
 </html>

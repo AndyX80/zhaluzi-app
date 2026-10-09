@@ -50,13 +50,19 @@
     if (syncing) return syncing;
     const base = lsGet('jal_prices_url'); if (!base) throw new Error('Сначала вставь ссылку на цены (вкладка «Цены»)');
     return (syncing = (async () => {
-      const r = await fetch(base.split('?')[0], { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: decodeURIComponent(keyOf(base)), sync: JalOrders.raw() }) });
+      /* уходит только то, что изменилось после прошлой отправки; приходит только то, что принято сервером после прошлой синхронизации */
+      const all = JalOrders.raw(), pushAt = lsGet('jal_push_at'), since = lsGet('jal_sync_since');
+      const list = pushAt ? all.filter(o => String(o.upd || '') > pushAt) : all;
+      const r = await fetch(base.split('?')[0], { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: decodeURIComponent(keyOf(base)), sync: list, since }) });
       const j = await r.json();
       if (!j.ok) throw new Error(j.error === 'bad key' ? 'Неверный пароль в ссылке' : (j.error || 'Скрипт не ответил (обнови скрипт)'));
-      const n = JalOrders.applyRemote(j.orders || []); lsSet('jal_backup_at', String(Date.now())); return n;
+      const got = j.orders || [], n = JalOrders.applyRemote(got);
+      let mx = pushAt; list.concat(got).forEach(o => { if (String(o.upd || '') > mx) mx = String(o.upd); });
+      if (mx) lsSet('jal_push_at', mx); if (j.now) lsSet('jal_sync_since', j.now);
+      lsSet('jal_backup_at', String(Date.now())); return n;
     })().finally(() => { syncing = null; }));
   }
-  const backup = sync, restore = sync;
+  const backup = sync, restore = () => { lsSet('jal_sync_since', ''); lsSet('jal_push_at', ''); return sync(); }; /* полная сверка в обе стороны */
   /* после правки заказа через несколько секунд отправляем в общую базу (тихо, без сообщений) */
   let tm = 0; window.addEventListener('jal-orders', () => { if (!lsGet('jal_prices_url')) return; clearTimeout(tm); tm = setTimeout(() => sync().catch(() => {}), 4000); });
   const b64 = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = () => no(new Error('файл не прочитался')); r.readAsDataURL(f); });

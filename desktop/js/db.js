@@ -76,21 +76,139 @@
     return { clients, orders, ops: ops.slice().sort((a, b) => (a.d < b.d ? 1 : a.d > b.d ? -1 : 0)) };
   };
 
-  DB.apply = function (data) {
+
+  /* ===== Общая база =====
+     Единственный источник заказов — список записей (raw), такой же, как на телефоне и в файле «заказы.json» на Диске.
+     Запись бывает двух видов: заказ с телефона (изделия внутри) и заказ из Excel-учёта (legacy:true, поля учёта как есть).
+     Из записей собираются D.orders и D.clients; правки пишутся обратно в запись и уходят на Диск. */
+  const RAW = 'jald_ph_v1', OPS = 'jald_ops_v1', OLD = 'jald_db_v1';
+  const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
+  const nowIso = () => new Date().toISOString();
+  const STAGE_PH = { 'Черновик': 2, 'КП отправлено': 2, 'Договор': 3, 'Оплачен': 4 };
+  DB.raw = () => { try { return JSON.parse(lsGet(RAW) || '[]') || []; } catch (e) { return []; } };
+  DB.phRaw = DB.raw;
+  DB.setRaw = list => lsSet(RAW, JSON.stringify(list));
+  const statusOf = o => (o.sum > 0 && o.paid >= o.sum) || (o.fl && o.fl.closed) ? 'Оплачен' : 'Договор';
+
+  /* заказ из Excel → запись; имя и телефон берутся у клиента */
+  function toRec(o, c) {
+    const r = Object.assign({}, o); delete r.client; delete r.id; delete r.ph; delete r.dupOf;
+    r.uid = o.uid || ('x' + String(o.id).slice(1)); r.legacy = true; r.name = (c && c.name) || ''; r.phone = (c && c.phone) || '';
+    r.status = statusOf(o); r.created = o.created || ''; return r;
+  }
+  function fromRec(r) {
+    const o = Object.assign({}, r); o.id = 'o' + String(r.uid).slice(1); o._n = r.name; o._p = r.phone; delete o.name; delete o.phone; delete o.sat; delete o.upd; delete o.status; delete o.legacy;
+    o.uid = r.uid; o.legacy = true; o.archived = !!r.archived; return o;
+  }
+  function fromPhone(r) {
+    const items = r.items || [], goods = items.reduce((a, i) => a + (+i.price || 0), 0), prof = items.reduce((a, i) => a + (+i.profit || 0), 0);
+    const sum = Math.max(0, goods + (r.priced ? 0 : (+r.delivery || 0)) - (+r.disc || 0)), cat = items.some(i => /дерев|бамбук/i.test(i.mat || i.title || '')) ? 'Дерево' : 'Разное';
+    const sups = {}; items.forEach(i => { if (i.sup) sups[i.sup] = 1; });
+    return { id: 'ph' + r.uid, no: String(r.no), uid: r.uid, ph: true, sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: '', factory: '',
+      inst: !!r.install, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: 0,
+      created: (r.created || '').slice(0, 10), due: '', tk: r.note || '', review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: false, legacy: false, archived: !!r.archived,
+      _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '' };
+  }
+  DB.dups = [];
+  DB.dupPick = () => { try { return JSON.parse(lsGet('jald_dup_v1') || '{}') || {}; } catch (e) { return {}; } };
+
+  /* сборка D.orders и D.clients из записей */
+  DB.derive = function () {
+    const live = DB.raw().filter(r => !r.del), pick = DB.dupPick(); DB.dups = [];
+    const legacyNo = {}; live.forEach(r => { if (r.legacy) legacyNo[String(r.no)] = r; });
+    const orders = [];
+    live.forEach(r => {
+      if (r.legacy) { orders.push(fromRec(r)); return; }
+      const lg = legacyNo[String(r.no)];
+      if (lg) { const ch = pick[r.uid]; if (ch === 'phone') { const i = orders.findIndex(x => x.uid === lg.uid); if (i >= 0) orders.splice(i, 1); } else { if (!ch) DB.dups.push(r); return; } }
+      orders.push(fromPhone(r));
+    });
+    /* пометка «phone» стирает Excel-версию только на экране; в базе она остаётся, пока Андрей её не удалит */
+    orders.forEach(o => { o.name = o._n; o.phone = o._p; delete o._n; delete o._p; });
+    const data = DB.build(orders, DB.loadOps());
+    data.orders.forEach(o => { const c = data.clients.find(x => x.id === o.client); if (c && !c.addr && o._a) c.addr = o._a; delete o._a; });
     D.clients = data.clients; D.orders = data.orders; D.ops = data.ops; D.events = []; D.real = DB.real = true;
-    const ph = DB.phRaw && DB.phRaw(); if (ph && ph.length) DB.applyPhone(ph);
+    return orders.length;
   };
-  DB.save = function () {
-    try { localStorage.setItem(KEY, JSON.stringify({ v: 1, at: Date.now(), clients: D.clients, orders: D.orders, ops: D.ops })); return true; } catch (e) { return false; }
+  DB.loadOps = () => { try { return JSON.parse(lsGet(OPS) || '[]') || []; } catch (e) { return []; } };
+  DB.saveOps = () => lsSet(OPS, JSON.stringify(D.ops || []));
+
+  /* запись → в список, с меткой правки */
+  function put(rec) {
+    const list = DB.raw(), i = list.findIndex(x => x.uid === rec.uid); rec.upd = nowIso();
+    if (i >= 0) list[i] = rec; else list.push(rec); DB.setRaw(list); DB.later(); return rec;
+  }
+  DB.patchRec = function (uid, patch) { const r = DB.raw().find(x => x.uid === uid); if (!r) return; put(Object.assign({}, r, patch)); DB.derive(); };
+  /* после правки заказа на экране */
+  DB.commit = function (o) {
+    if (!o) return;
+    if (o.legacy) put(toRec(o, D.clients.find(c => c.id === o.client)));
+    else if (o.ph) { const r = DB.raw().find(x => x.uid === o.uid); if (r) put(Object.assign({}, r, { archived: !!o.archived })); }
+    DB.later();
+  };
+  DB.delOrder = function (o) { DB.patchRec(o.uid, { del: true }); };
+  DB.archive = function (o, on) { DB.patchRec(o.uid, { archived: !!on }); };
+  DB.delPhone = uid => DB.patchRec(uid, { del: true });
+  DB.dupSet = (uid, v) => { const p = DB.dupPick(); p[uid] = v; lsSet('jald_dup_v1', JSON.stringify(p)); DB.derive(); };
+
+  /* Excel → записи. Повторная загрузка обновляет только изменившееся и не воскрешает удалённое */
+  DB.importExcel = function (data) {
+    const list = DB.raw(), byUid = {}; list.forEach(r => { byUid[r.uid] = r; });
+    const cl = {}; data.clients.forEach(c => { cl[c.id] = c; });
+    let n = 0, t = nowIso();
+    data.orders.forEach(o => {
+      const rec = toRec(o, cl[o.client]), old = byUid[rec.uid];
+      if (old && old.del) return;
+      const strip = x => { const y = Object.assign({}, x); delete y.upd; delete y.sat; delete y.archived; return JSON.stringify(y, Object.keys(y).sort()); };
+      if (old && strip(old) === strip(rec)) return;
+      rec.upd = t; rec.archived = old ? !!old.archived : false; byUid[rec.uid] = rec; n++;
+    });
+    DB.setRaw(Object.keys(byUid).map(k => byUid[k])); lsSet(OPS, JSON.stringify(data.ops || []));
+    DB.derive(); return n;
   };
   DB.load = function () {
-    try { const j = JSON.parse(localStorage.getItem(KEY) || 'null'); if (j && j.orders && j.orders.length) { DB.apply(j); DB.at = j.at || 0; return true; } } catch (e) {}
-    return false;
+    let raw = DB.raw();
+    /* перенос из прежнего хранилища (v1): заказы из Excel и операции */
+    const old = lsGet(OLD);
+    if (old) { try {
+      const j = JSON.parse(old), cl = {}; (j.clients || []).forEach(c => { cl[c.id] = c; });
+      const have = {}; raw.forEach(r => { have[r.uid] = 1; }); const t = nowIso();
+      (j.orders || []).filter(o => o.legacy).forEach(o => { const rec = toRec(o, cl[o.client]); if (!have[rec.uid]) { rec.upd = t; raw.push(rec); } });
+      DB.setRaw(raw); if (j.ops && j.ops.length && !lsGet(OPS)) lsSet(OPS, JSON.stringify(j.ops));
+    } catch (e) {} try { localStorage.removeItem(OLD); } catch (e) {} }
+    raw = DB.raw();
+    if (!raw.length) return false;
+    DB.derive(); return true;
   };
-  DB.clear = function () { try { localStorage.removeItem(KEY); } catch (e) {} };
-  DB.exportJson = function () { return JSON.stringify({ v: 1, at: Date.now(), clients: D.clients, orders: D.orders, ops: D.ops }); };
-  DB.importJson = function (text) { const j = JSON.parse(text); if (!j || !Array.isArray(j.orders) || !Array.isArray(j.clients)) throw new Error('Это не файл базы'); DB.apply({ clients: j.clients, orders: j.orders, ops: j.ops || [] }); return DB.save(); };
+  DB.clear = function () { [RAW, OPS, OLD, 'jald_dup_v1', 'jald_ph_since', 'jald_push_at'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} }); };
+  DB.save = DB.saveOps; /* прежние вызовы: операции */
+  DB.exportJson = () => JSON.stringify({ v: 2, at: Date.now(), raw: DB.raw(), ops: DB.loadOps() });
+  DB.importJson = function (text) {
+    const j = JSON.parse(text);
+    if (j && j.v === 2 && Array.isArray(j.raw)) { const m = {}; DB.raw().concat(j.raw).forEach(r => { if (!m[r.uid] || String(r.upd || '') >= String(m[r.uid].upd || '')) m[r.uid] = r; }); DB.setRaw(Object.keys(m).map(k => m[k])); lsSet(OPS, JSON.stringify(j.ops || [])); DB.derive(); return true; }
+    if (j && Array.isArray(j.orders) && Array.isArray(j.clients)) { lsSet(OLD, JSON.stringify(j)); DB.load(); return true; }
+    throw new Error('Это не файл базы');
+  };
 
+  /* ===== синхронизация через Диск ===== */
+  DB.scriptUrl = () => lsGet('jal_prices_url');
+  DB.syncPhone = async function () {
+    const base = DB.scriptUrl(); if (!base) throw new Error('Вставь ссылку на скрипт (Настройки → Данные)');
+    const m = base.match(/[?&]key=([^&]+)/), all = DB.raw(), pushAt = lsGet('jald_push_at'), since = lsGet('jald_ph_since');
+    const list = pushAt ? all.filter(o => String(o.upd || '') > pushAt) : all;
+    const r = await fetch(base.split('?')[0], { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: m ? decodeURIComponent(m[1]) : '', sync: list, since }) });
+    const j = await r.json(); if (!j.ok) throw new Error(j.error === 'bad key' ? 'Неверный пароль в ссылке' : (j.error || 'Скрипт не ответил (обнови скрипт)'));
+    const got = j.orders || [], cur = DB.raw(), mp = {}; cur.forEach(x => { mp[x.uid] = x; });
+    got.forEach(x => { const c = mp[x.uid]; if (!c || String(x.upd || '') > String(c.upd || '')) mp[x.uid] = x; });
+    DB.setRaw(Object.keys(mp).map(k => mp[k]));
+    let mx = pushAt; list.concat(got).forEach(o => { if (String(o.upd || '') > mx) mx = String(o.upd); });
+    if (mx) lsSet('jald_push_at', mx); if (j.now) lsSet('jald_ph_since', j.now); lsSet('jald_ph_at', String(Date.now()));
+    DB.derive(); return got.length;
+  };
+  DB.fullSync = () => { lsSet('jald_push_at', ''); lsSet('jald_ph_since', ''); return DB.syncPhone(); };
+  let tm = 0;
+  DB.later = function () { if (!DB.scriptUrl()) return; clearTimeout(tm); tm = setTimeout(() => DB.syncPhone().then(() => { if (window.App && App.render) App.render(); }).catch(() => {}), 3000); };
   DB.readFile = function (file) {
     return new Promise((ok, no) => {
       if (!window.XLSX) { no(new Error('Не загрузилась библиотека чтения Excel (нужен интернет при первом запуске)')); return; }
@@ -101,55 +219,6 @@
     });
   };
 
-
-  /* заказы с телефона (общая база на Google Диске). Сырой список хранится отдельно и уходит в Диск как есть; в D.orders попадает пересчитанная копия (ph:true) */
-  const PHKEY = 'jald_ph_v1';
-  const STAGE_PH = { 'Черновик': 2, 'КП отправлено': 2, 'Договор': 3, 'Оплачен': 4 };
-  const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
-  DB.phRaw = () => { try { return JSON.parse(lsGet(PHKEY) || '[]') || []; } catch (e) { return []; } };
-  function fromPhone(o) {
-    const items = o.items || [], goods = items.reduce((a, i) => a + (+i.price || 0), 0), prof = items.reduce((a, i) => a + (+i.profit || 0), 0);
-    const sum = Math.max(0, goods + (o.priced ? 0 : (+o.delivery || 0)) - (+o.disc || 0)), cat = items.some(i => /дерев|бамбук/i.test(i.mat || i.title || '')) ? 'Дерево' : 'Разное';
-    const sups = {}; items.forEach(i => { if (i.sup) sups[i.sup] = 1; });
-    return { id: 'ph' + o.uid, no: String(o.no), uid: o.uid, ph: true, sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: '', factory: '',
-      inst: !!o.install, zone: o.region ? 'Регионы' : 'СПб', sum, paid: o.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: 0,
-      created: (o.created || '').slice(0, 10), due: '', tk: o.note || '', review: '', stage: STAGE_PH[o.status] != null ? STAGE_PH[o.status] : 2, status: o.status, claim: false, legacy: false,
-      _c: { name: o.company || o.name || 'Без имени', phone: o.phone || '', addr: o.addr || '' } };
-  }
-  DB.applyPhone = function (list) {
-    const live = list.filter(o => !o.del); try { localStorage.setItem(PHKEY, JSON.stringify(list)); } catch (e) {}
-    D.orders = D.orders.filter(o => !o.ph);
-    const byPhone = {}; D.clients.forEach(c => { const d = phoneDigits(c.phone); if (d.length >= 10) byPhone[d.slice(-10)] = c; });
-    const pick = DB.dupPick(); DB.dups = [];
-    const legacy = {}; D.orders.forEach(o => { legacy[o.no] = 1; });
-    live.forEach(r => {
-      if (legacy[String(r.no)]) { /* тот же номер уже есть в Excel-учёте: решает Андрей */
-        const ch = pick[r.uid];
-        if (ch === 'phone') D.orders = D.orders.filter(x => x.no !== String(r.no)); else { if (!ch) DB.dups.push(r); return; }
-      }
-      const o = fromPhone(r), c0 = o._c; delete o._c; const pd = phoneDigits(c0.phone).slice(-10);
-      let c = pd.length >= 10 ? byPhone[pd] : D.clients.find(x => x.name.toLowerCase() === c0.name.toLowerCase());
-      if (!c) { c = { id: 'cp' + r.uid, name: c0.name, phone: phoneFmt(c0.phone), addr: c0.addr, src: '', note: '' }; D.clients.unshift(c); if (pd.length >= 10) byPhone[pd] = c; }
-      if (!c.addr && c0.addr) c.addr = c0.addr;
-      o.client = c.id; D.orders.unshift(o);
-    });
-    D.orders.sort((a, b) => (a.created < b.created ? 1 : a.created > b.created ? -1 : (+b.no) - (+a.no)));
-    return live.length;
-  };
-  DB.dups = [];
-  DB.dupPick = () => { try { return JSON.parse(lsGet('jald_dup_v1') || '{}') || {}; } catch (e) { return {}; } };
-  DB.dupSet = (uid, v) => { const p = DB.dupPick(); p[uid] = v; try { localStorage.setItem('jald_dup_v1', JSON.stringify(p)); } catch (e) {} DB.applyPhone(DB.phRaw()); DB.save(); };
-  DB.delPhone = function (uid) {
-    const list = DB.phRaw(), r = list.find(x => x.uid === uid); if (r) { r.del = true; r.upd = new Date().toISOString(); }
-    DB.applyPhone(list); DB.save(); if (DB.scriptUrl()) DB.syncPhone().catch(() => {});
-  };
-  DB.scriptUrl = () => lsGet('jal_prices_url');
-  DB.syncPhone = async function () {
-    const base = DB.scriptUrl(); if (!base) throw new Error('Вставь ссылку на скрипт (Настройки → Данные)');
-    const m = base.match(/[?&]key=([^&]+)/), r = await fetch(base.split('?')[0], { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: m ? decodeURIComponent(m[1]) : '', sync: DB.phRaw() }) });
-    const j = await r.json(); if (!j.ok) throw new Error(j.error === 'bad key' ? 'Неверный пароль в ссылке' : (j.error || 'Скрипт не ответил (обнови скрипт)'));
-    const n = DB.applyPhone(j.orders || []); DB.save(); try { localStorage.setItem('jald_ph_at', String(Date.now())); } catch (e) {} return n;
-  };
 
   /* показатели за период [from, to] (ISO-даты включительно) */
   DB.stats = function (from, to, orders) {

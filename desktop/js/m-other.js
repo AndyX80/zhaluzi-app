@@ -26,10 +26,10 @@
   const INTEG = [['Google Таблицы (цены)', 'работает в телефоне'], ['Google Calendar', 'этап 2'], ['Эльба (Контур)', 'этап 3'], ['Диадок', 'этап 3'], ['Почта (письма клиентам)', 'работает в телефоне'], ['Telegram, MAX', 'отправка документов, этап 1']];
   const dataCard = () => {
     const real = window.DB && DB.real, n = real ? D.orders.length : 0;
-    return (real ? '<p class="mut">В базе: заказов ' + n + ', клиентов ' + D.clients.length + ', операций ' + D.ops.length + (DB.at ? '. Сохранено ' + new Date(DB.at).toLocaleString('ru-RU') : '') + '. Данные хранятся только в этом браузере.</p>' : '<p class="mut">Сейчас на экране демонстрационные данные. Загрузи «Учёт заказов.xlsm» — подтянутся заказы, клиенты и доходы-расходы с 2024 года.</p>') +
+    return (real ? '<p class="mut">В базе: заказов ' + n + ', клиентов ' + D.clients.length + ', операций ' + D.ops.length + '' + '. Данные хранятся только в этом браузере.</p>' : '<p class="mut">Сейчас на экране демонстрационные данные. Загрузи «Учёт заказов.xlsm» — подтянутся заказы, клиенты и доходы-расходы с 2024 года.</p>') +
       '<div class="stack" style="gap:8px;margin-top:10px"><label class="btn">Загрузить Excel (.xlsm)<input type="file" accept=".xlsm,.xlsx" data-file="xls" hidden></label>' +
       '<div class="field"><label>Ссылка на скрипт (та же, что «Цены» на телефоне)</label><input id="scr" value="' + e(DB.scriptUrl()) + '" placeholder="https://script.google.com/…?key=…" data-file="url"></div>' +
-      '<button class="btn" data-a="phsync">Синхронизировать заказы с телефоном</button><p class="mut">' + (+localStorage.getItem('jald_ph_at') ? 'Последняя синхронизация: ' + new Date(+localStorage.getItem('jald_ph_at')).toLocaleString('ru-RU') : 'Заказы с телефона подтянутся из общей базы на Google Диске.') + '</p>' +
+      '<div class="row" style="gap:8px"><button class="btn" data-a="phsync">Синхронизировать с телефоном</button><button class="btn sm" data-a="phfull" title="Отправить и получить всё заново, если что-то не сошлось">Полная сверка</button></div><p class="mut">' + (+localStorage.getItem('jald_ph_at') ? 'Последняя синхронизация: ' + new Date(+localStorage.getItem('jald_ph_at')).toLocaleString('ru-RU') : 'Заказы с телефона подтянутся из общей базы на Google Диске.') + '</p>' +
       (real ? '<button class="btn" data-a="dbexp">Скачать копию базы (файл)</button>' : '') +
       '<label class="btn">Загрузить копию базы<input type="file" accept=".json" data-file="json" hidden></label>' +
       (real ? '<button class="btn" data-a="dbclr">Удалить базу и вернуть демо</button>' : '') +
@@ -47,14 +47,14 @@
   A.act.scol = el => { S.collapsed = el.dataset.v === '1'; A.save(); A.render(); };
   A.act.phsync = () => {
     const u = document.getElementById('scr'); if (u && u.value.trim()) { try { localStorage.setItem('jal_prices_url', u.value.trim()); } catch (x) {} }
-    if (!D.real) { A.toast('Сначала загрузи Excel'); return; }
-    A.toast('Синхронизирую…'); DB.syncPhone().then(n => { A.toast('Готово, заказов с телефона: ' + n); A.render(); }).catch(x => A.toast('Ошибка: ' + x.message));
+    A.toast('Синхронизирую…'); DB.syncPhone().then(n => { A.toast('Готово, получено записей: ' + n); A.render(); }).catch(x => A.toast('Ошибка: ' + x.message));
   };
+  A.act.phfull = () => { A.toast('Полная сверка…'); DB.fullSync().then(n => { A.toast('Готово, получено записей: ' + n); A.render(); }).catch(x => A.toast('Ошибка: ' + x.message)); };
   A.act.dbexp = () => { const u = URL.createObjectURL(new Blob([DB.exportJson()], { type: 'application/json' })), a = document.createElement('a'); a.href = u; a.download = 'jalousie-base-' + new Date().toISOString().slice(0, 10) + '.json'; a.click(); setTimeout(() => URL.revokeObjectURL(u), 1000); };
   A.act.dbclr = () => { if (!A.S.dbclr) { A.S.dbclr = 1; A.toast('Нажми ещё раз, чтобы удалить базу'); setTimeout(() => { A.S.dbclr = 0; }, 4000); return; } DB.clear(); location.reload(); };
   document.addEventListener('change', ev => {
     const f = ev.target && ev.target.dataset && ev.target.dataset.file, file = ev.target && ev.target.files && ev.target.files[0]; if (!f || !file) return;
-    if (f === 'xls') DB.readFile(file).then(d => { DB.apply(d); DB.save(); A.toast('Загружено: заказов ' + d.orders.length); location.reload(); }).catch(x => A.toast('Ошибка: ' + x.message));
+    if (f === 'xls') DB.readFile(file).then(d => { const n = DB.importExcel(d); A.toast('Загружено из Excel: ' + d.orders.length + ' заказов, новых или изменённых ' + n); setTimeout(() => location.reload(), 600); }).catch(x => A.toast('Ошибка: ' + x.message));
     else { const r = new FileReader(); r.onload = () => { try { DB.importJson(r.result); location.reload(); } catch (x) { A.toast('Ошибка: ' + x.message); } }; r.readAsText(file); }
   });
   A.act.sreset = () => { try { localStorage.removeItem('jald_state_v1'); } catch (x) {} location.reload(); };

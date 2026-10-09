@@ -63,6 +63,9 @@
 <button onClick="{{act.dup}}" style="height: 52px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--dk); font-size: 14px; font-weight: 700">Дублировать заказ</button>
 <button onClick="{{act.arch}}" style="height: 52px; border-radius: 14px; border: 1.5px solid #E7B7B7; background: var(--card); color: #B3261E; font-size: 14px; font-weight: 700">{{act.archLabel}}</button>
 </div>
+<sc-if value="{{delOff}}"><button onClick="{{act.delAsk}}" style="height: 52px; border-radius: 14px; border: 1.5px solid #E7B7B7; background: var(--card); color: #B3261E; font-size: 14px; font-weight: 700">Удалить заказ</button></sc-if>
+<sc-if value="{{delOn}}"><div style="font-size: 15px; font-weight: 700; text-align: center">{{delText}}</div>
+<div style="display: flex; gap: 8px"><button onClick="{{act.delYes}}" style="flex: 1; height: 52px; border: 0; border-radius: 14px; background: #C0392B; color: #FFFFFF; font-size: 15px; font-weight: 700">Да, удалить</button><button onClick="{{act.delNo}}" style="flex: 1; height: 52px; border: 0; border-radius: 14px; background: #2E8B57; color: #FFFFFF; font-size: 15px; font-weight: 700">Нет</button></div></sc-if>
 </section>
 
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">

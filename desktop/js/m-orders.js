@@ -1,10 +1,11 @@
 /* Заказы: центральный объект. Список, канбан, карточка с воронкой, вкладки. */
 (function () {
   const A = App, D = A.D, S = A.S, e = A.esc, m = A.money;
-  const FILTERS = [['all', 'Все'], ['work', 'В работе'], ['pay', 'Ждут оплаты'], ['claim', 'Рекламации'], ['done', 'Закрытые']];
+  const FILTERS = [['all', 'Все'], ['work', 'В работе'], ['pay', 'Ждут оплаты'], ['claim', 'Рекламации'], ['done', 'Закрытые'], ['arch', 'Архив']];
   const closed = o => o.fl ? !!o.fl.closed : o.stage === 9;
   const pass = o => {
     const f = S.ordersFilter;
+    if (f === 'arch') return !!o.archived; if (o.archived) return false;
     if (S.oyear && S.oyear !== 'all' && String(o.created || '').slice(0, 4) !== S.oyear && /^\d{4}/.test(o.created || '')) return false;
     const q = (S.oq || '').trim().toLowerCase();
     if (q && ((o.no + ' ' + o.title + ' ' + (o.sup || '') + ' ' + (o.factory || '') + ' ' + ((A.client(o.client) || {}).name || '') + ' ' + ((A.client(o.client) || {}).phone || '')).toLowerCase().indexOf(q) < 0)) return false;
@@ -44,7 +45,7 @@
 
   function card(id, full) {
     const o = A.order(id) || D.orders[0], c = A.client(o.client) || { name: '' };
-    return '<div class="card" style="min-height:100%"><div class="row wrap" style="margin-bottom:6px"><h1>Заказ № ' + o.no + '</h1>' + A.stagePill(o) + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '<span class="sp"></span>' + (D.real ? (S.odelId === o.id ? '<span class="mut">Удалить заказ?</span><button class="btn sm" style="width:120px;background:#c0392b;border-color:#c0392b;color:#fff" data-a="odel" data-id="' + o.id + '" data-y="1">Да, удалить</button><button class="btn sm" id="odelno" style="width:120px;background:#2e8b57;border-color:#2e8b57;color:#fff" data-a="odelno">Нет</button>' : '<button class="btn sm" data-a="odel" data-id="' + o.id + '">Удалить заказ</button>') : '') +
+    return '<div class="card" style="min-height:100%"><div class="row wrap" style="margin-bottom:6px"><h1>Заказ № ' + o.no + '</h1>' + A.stagePill(o) + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '<span class="sp"></span>' + (D.real ? (S.odelId === o.id ? '<span class="mut">Удалить заказ?</span><button class="btn sm" style="width:120px;background:#c0392b;border-color:#c0392b;color:#fff" data-a="odel" data-id="' + o.id + '" data-y="1">Да, удалить</button><button class="btn sm" id="odelno" style="width:120px;background:#2e8b57;border-color:#2e8b57;color:#fff" data-a="odelno">Нет</button>' : '<button class="btn sm" data-a="oarch" data-id="' + o.id + '">' + (o.archived ? 'Вернуть из архива' : 'В архив') + '</button><button class="btn sm" data-a="odel" data-id="' + o.id + '">Удалить заказ</button>') : '') +
       (full ? '' : '<button class="btn sm" data-a="opn" data-id="order:' + o.id + '">Открыть во вкладке</button>') + '</div>' + dupBox(o) + '<div class="mut" style="margin-bottom:10px">' + e(c.name) + ' · ' + e(o.title) + (o.created ? ' · ' + e(dmy(o.created)) : '') + '</div>' + stepper(o) +
       '<div class="itabs">' + tabs.map(t => '<button class="' + (S.orderTab === t[0] ? 'on' : '') + '" data-a="otab" data-t="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' + body(o) +
       '<div class="sumbar"><div><small>Сумма заказа</small><b>' + m(o.sum) + '</b></div><div><small>Оплачено</small><b>' + m(o.paid) + '</b></div><div><small>Долг</small><b>' + m(Math.max(0, o.sum - o.paid)) + '</b></div><div><small>Закуп</small><b>' + m(o.cost) + '</b></div><div><small>Прибыль</small><b>' + m(prof(o)) + '</b></div></div></div>';
@@ -81,15 +82,16 @@
     if (!el.dataset.y) { S.odelId = o.id; S.odelAt = Date.now(); A.render(); const n = document.getElementById('odelno'); if (n) n.focus(); return; }
     if (Date.now() - (S.odelAt || 0) < 800) return; /* защита от случайного двойного клика */
     S.odelId = null; S.selOrder = null;
-    if (o.ph) DB.delPhone(o.uid); else { D.orders = D.orders.filter(x => x.id !== o.id); DB.save(); }
+    DB.delOrder(o);
     A.toast('Заказ № ' + o.no + ' удалён'); A.render();
   };
+  A.act.oarch = el => { const o = A.order(el.dataset.id); if (!o) return; const on = !o.archived; DB.archive(o, on); S.selOrder = null; A.toast(on ? 'Заказ № ' + o.no + ' в архиве' : 'Заказ № ' + o.no + ' возвращён'); A.render(); };
   A.act.odelno = () => { S.odelId = null; A.render(); };
   A.act.dupres = el => { DB.dupSet(el.dataset.uid, el.dataset.v); S.selOrder = null; A.toast('Готово'); A.render(); };
   A.act.oflag = el => {
-    const o = A.order(el.dataset.id); if (!o || !o.fl) return; o.fl[el.dataset.k] = !o.fl[el.dataset.k]; o.stage = DB.stageOf(o.fl); DB.save(); A.render();
+    const o = A.order(el.dataset.id); if (!o || !o.fl) return; o.fl[el.dataset.k] = !o.fl[el.dataset.k]; o.stage = DB.stageOf(o.fl); DB.commit(o); A.render();
   };
   A.fld.oq = v => { S.oq = v; S.olimit = LIM; A.render(); const q = document.querySelector('[data-c="oq"]'); if (q) { q.focus(); q.setSelectionRange(v.length, v.length); } };
   A.fld.oyear = v => { S.oyear = v; S.olimit = LIM; A.save(); A.render(); };
-  A.fld.ofld = (v, el) => { const o = A.order(el.dataset.id); if (!o) return; o[el.dataset.k] = v; if (window.DB && DB.real) DB.save(); };
+  A.fld.ofld = (v, el) => { const o = A.order(el.dataset.id); if (!o) return; o[el.dataset.k] = v; if (window.DB && DB.real) DB.commit(o); };
 })();

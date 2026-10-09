@@ -10,6 +10,7 @@
     const out = [], today = todayIso();
     (window.DB && DB.dups || []).forEach(r => { const o = D.orders.find(x => x.no === String(r.no)); if (o) out.push([9e9, 'order:' + o.id, 'bad', 'Заказ № ' + r.no + ' задвоен (Excel и телефон): выбери, какой оставить']); });
     D.orders.forEach(o => {
+      if (o.archived) return;
       const f = o.fl || {}, base = '№ ' + o.no + ' ' + cname(o) + ': ', debt = o.sum - o.paid;
       if (debt > 0) out.push([debt, 'order:' + o.id, o.created < today.slice(0, 8) + '01' ? 'bad' : 'warn', base + 'долг клиента ' + m(debt)]);
       if (f.closed) return;
