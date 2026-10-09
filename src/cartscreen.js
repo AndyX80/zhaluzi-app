@@ -77,11 +77,13 @@
     s.cart.forEach((it, i) => { const sp = ov ? ov.sups[i] : it.sup; if (!reg && !it.kind && calcs[i].ok && !calcs[i].ownPrice && !FREE_SHIP[sp]) (bySup[sp] = bySup[sp] || []).push(i); });
     Object.keys(bySup).forEach(k => { const ix = bySup[k], part = spread(ix.map(i => ({ ok: true, qty: s.cart[i].qty })), Number(RATES.ship) || 0); ix.forEach((i, j) => { ships[i] = part[j]; }); });
     const lineSum = s.cart.map((it, i) => (calcs[i].ok ? (calcs[i].ownPrice || it.kind === 'custom' ? calcs[i].unit : ceil100(calcs[i].unit + ships[i] + adds[i])) * it.qty : 0));
-    const total = lineSum.reduce((x, y) => x + y, 0);
+    /* доставка и установка некуда разложить (все строки со своей ценой или свои товары): идёт отдельной суммой, чтобы не пропадала */
+    const svcLeft = S && !s.cart.some((it, i) => calcs[i].ok && it.kind !== 'custom' && !calcs[i].ownPrice) ? S : 0;
+    const total = lineSum.reduce((x, y) => x + y, 0) + svcLeft;
     const dv = Math.max(0, Number(s.disc) || 0);
     const discAmt = Math.min(total, s.discMode === 'pct' ? Math.round(total * Math.min(dv, 50) / 100 / 100) * 100 : Math.min(dv, total * 0.5));
     const goodsSum = s.cart.reduce((x, it, i) => x + (calcs[i].ok ? calcs[i].unit * it.qty : 0), 0);
-    return { calcs, S, adds, ships, lineSum, total, dv, discAmt, goodsSum, netTotal: total - discAmt };
+    return { calcs, S, svcLeft, adds, ships, lineSum, total, dv, discAmt, goodsSum, netTotal: total - discAmt };
   }
 
   function build() {
@@ -261,6 +263,7 @@
       sC.cart.forEach((it, i) => { if (!F.calcs[i].ok) return;
         for (let q = 0; q < it.qty; q++, k++) items[k].pv = vs.map(x => (x.F.calcs[i].ok ? (x.F.calcs[i].ownPrice ? x.F.calcs[i].unit : ceil100(x.F.calcs[i].unit + x.F.ships[i] + x.F.adds[i])) : null)); });
     } catch (e) { vars = null; }
+    if (F.svcLeft) items.push({ kind: 'custom', title: 'Доставка и установка', price: F.svcLeft, profit: F.svcLeft, cost: 0, costOk: true, ci: -1, pv: (vars || []).map(() => F.svcLeft) });
     return { items, priced: true, delivery: F.S, disc: F.discAmt, needDog: sC.needDog, vars };
   }
 
