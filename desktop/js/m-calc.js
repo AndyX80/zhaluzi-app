@@ -43,7 +43,33 @@
       (E.url() ? '' : '<div class="field" style="margin-bottom:10px"><label>Ссылка на скрипт цен (та же, что во вкладке «Цены» на телефоне)</label><input class="in" data-c="cscript" placeholder="https://script.google.com/…?key=…"></div>');
   }
 
+  /* ===== автоматика: приводы и пульты по поставщику, отдельными позициями корзины ===== */
+  const COLLN = () => CS().COLL_ALL;
+  function autoPanel() {
+    const J = JC(), cs = CS();
+    const rows = kind => (J.autoList(F.sup, kind) || []).map(f => { const q = J.autoQty(F.sup, kind, f.key);
+      return '<div class="row" style="padding:8px 10px;border-radius:10px;border:1.5px solid ' + (q ? 'var(--acc)' : 'var(--line,#ddd)') + ';background:' + (q ? 'var(--acc-s)' : 'transparent') + '"><div style="flex:1;min-width:0"><b>' + e(f.name) + '</b>' + (f.sub ? '<div class="mut" style="font-size:12px">' + e(f.sub) + '</div>' : '') + '</div>' +
+        '<div class="num b" style="white-space:nowrap">' + m(f.price) + '</div><div class="row" style="gap:4px"><button class="btn sm" data-a="cast" data-kind="' + kind + '" data-key="' + e(f.key) + '" data-d="-1">−</button><b class="num" style="min-width:22px;text-align:center">' + q + '</b><button class="btn sm" data-a="cast" data-kind="' + kind + '" data-key="' + e(f.key) + '" data-d="1">+</button></div></div>'; }).join('');
+    const cnt = J.counts();
+    return '<div class="card"><div class="row"><h2>Автоматика</h2><span class="sp"></span><span class="mut" style="font-size:13px">приводов ' + cnt.drive + ', пультов ' + cnt.remote + ' в корзине</span></div>' +
+      '<div class="field" style="margin:8px 0"><label>Коллекция (у каждого поставщика свой набор)</label><div class="chips">' + SUPS.map(x => '<button class="opt ' + (F.sup === x ? 'on' : '') + '" data-a="cf" data-k="sup" data-v="' + x + '">' + cs.COLL_ALL[x] + ' (' + ru(x) + ')</button>').join('') + '</div></div>' +
+      (J.hasAuto(F.sup) ? '<h3 style="margin:12px 0 6px">Приводы</h3><div class="stack" style="gap:6px">' + (rows('drive') || '<div class="mut">Нет в таблице</div>') + '</div><h3 style="margin:14px 0 6px">Пульты и выключатели</h3><div class="stack" style="gap:6px">' + (rows('remote') || '<div class="mut">Нет в таблице</div>') + '</div><div class="mut" style="font-size:12px;margin-top:10px">К каждому приводу нужен пульт или выключатель того же поставщика; каналов в пультах не меньше, чем приводов.</div>'
+        : '<div class="empty" style="padding:24px">По этому поставщику в таблице нет данных по автоматике.</div>') + '</div>';
+  }
+  function autoErrors(FF) {
+    const grp = {}, C = JC().C;
+    C.cart.forEach((it, i) => { if (it.kind !== 'drive' && it.kind !== 'remote') return; const f = FF.calcs[i].auto, ln = (f && f.line) || '', g = it.sup + ln, o = grp[g] || (grp[g] = { sup: it.sup, ln, D: 0, R: 0, C: 0 });
+      if (it.kind === 'drive') o.D += it.qty; else { const mm = f && /(\d+)[‑-]канал/.exec(f.name || ''); o.R += it.qty; o.C += (mm ? +mm[1] : 1) * it.qty; } });
+    const nm = o => ru(o.sup) + (o.ln === 'ws' ? ' (серия WS)' : o.ln === 'd' ? ' (серия D)' : '');
+    return Object.keys(grp).map(g => grp[g]).map(o => o.D && !o.R ? nm(o) + ': приводов ' + o.D + ', а пультов или выключателей нет.' : (o.D && o.C < o.D ? 'ОШИБКА, ' + nm(o) + ': приводов ' + o.D + ', а каналов в пультах только ' + o.C + '. Нужны 1-канальные пульты на каждый привод или один многоканальный.' : '')).filter(Boolean);
+  }
+  const kindName = (it, c) => it.kind === 'custom' ? { title: it.title || 'Услуга', sub: 'своя строка' } : { title: COLLN()[it.sup] + ' (' + ru(it.sup) + ')', sub: (c.auto ? c.auto.name : it.key) + (it.kind === 'drive' ? ' · привод' : ' · пульт') };
+
   function form() {
+    const E = window.Eng; if (!E || !E.ready) return form0();
+    return '<div class="seg" style="margin-bottom:10px"><button class="' + (F.mode !== 'auto' ? 'on' : '') + '" data-a="cmode" data-v="blinds">Жалюзи</button><button class="' + (F.mode === 'auto' ? 'on' : '') + '" data-a="cmode" data-v="auto">Автоматика</button></div>' + (F.mode === 'auto' ? autoPanel() : form0());
+  }
+  function form0() {
     const E = window.Eng; if (!E || !E.ready) return '<div class="card"><h2>Текущее изделие</h2>' + pricesBar() + '<div class="empty">Загрузи цены, и расчёт заработает.</div></div>';
     const cs = CS(), n = norm(), r = n.r, s = F, showProfit = !S.hideProfit;
     const stock = n.selCol ? cs.stockOf(n.prodKey, n.selCol.key, s.sup, +s.w || 0) : null;
@@ -101,13 +127,14 @@
       '<div class="seg" title="СПб: розница с доставкой и монтажом. Регионы: опт без доставки и монтажа"><button class="' + (!C.region ? 'on' : '') + '" data-a="creg" data-v="0">СПб</button><button class="' + (C.region ? 'on' : '') + '" data-a="creg" data-v="1">Регионы</button></div>' +
       '<button class="btn sm ' + (hide ? 'on' : '') + '" data-a="chide" title="Скрыть закуп и прибыль, когда клиент смотрит экран">Скрыть закуп</button></div>' +
       (items.length ? '<table class="tbl cartline"><thead><tr><th>№</th><th>Изделие</th><th>Размер</th><th class="r">Шт</th><th class="r">Цена за шт</th><th class="r">Сумма</th><th></th></tr></thead><tbody>' + items.map((it, i) => {
-        const c = FF.calcs[i], nm = itemName(it, c), lineUnit = c.ok ? FF.lineSum[i] / it.qty : 0;
+        const c = FF.calcs[i], nm = it.kind ? kindName(it, c) : itemName(it, c), lineUnit = c.ok ? FF.lineSum[i] / it.qty : 0;
         const warn = c.ok && c.warn && c.warn.length ? '<div style="color:var(--bad,#b3261e);font-size:12px">' + (c.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + e(c.warn.join('; ')) + '</div>' : '';
         return '<tr><td>' + (i + 1) + '</td><td><b>' + e(nm.title) + '</b><div class="mut" style="font-size:12px">' + e(nm.sub) + '</div>' + (it.note ? '<div class="mut" style="font-size:12px">' + e(it.note) + '</div>' : '') + warn +
-          (!hide && c.ok ? '<div style="font-size:12px;color:' + (c.profit < 0 ? 'var(--bad,#b3261e)' : 'var(--mut)') + '">прибыль ' + m(c.profit) + ' за шт</div>' : '') + '</td><td class="num">' + it.w + '×' + it.h + '</td><td class="r">' + it.qty + '</td>' +
-          '<td class="r">' + (c.ok ? '<input class="in num" style="width:96px;text-align:right' + (c.ownPrice ? ';border-color:var(--acc)' : '') + '" value="' + (c.ownPrice ? Math.round(c.unit) : '') + '" placeholder="' + Math.round(lineUnit) + '" data-c="cprice" data-i="' + i + '" title="' + (c.ownPrice ? 'своя цена, по прайсу было ' + fmt(c.listUnit) : 'впиши свою цену за шт') + '">' : '<span class="mut">нет цены</span>') + '</td>' +
-          '<td class="r num b">' + (c.ok ? m(FF.lineSum[i]) : '—') + '</td><td class="r" style="white-space:nowrap"><button class="btn sm" data-a="cedit" data-i="' + i + '">Изм.</button> <button class="btn sm" data-a="cdup" data-i="' + i + '">Копия</button> <button class="btn sm" data-a="cdel" data-i="' + i + '">✕</button></td></tr>'; }).join('') + '</tbody></table>' :
+          (!hide && c.ok ? '<div style="font-size:12px;color:' + (c.profit < 0 ? 'var(--bad,#b3261e)' : 'var(--mut)') + '">прибыль ' + m(c.profit) + ' за шт</div>' : '') + '</td><td class="num">' + (it.kind ? '—' : it.w + '×' + it.h) + '</td><td class="r">' + (it.kind && it.kind !== 'custom' ? '<button class="btn sm" data-a="cast" data-kind="' + it.kind + '" data-key="' + e(it.key) + '" data-d="-1" data-sup="' + e(it.sup) + '">−</button> ' + it.qty + ' <button class="btn sm" data-a="cast" data-kind="' + it.kind + '" data-key="' + e(it.key) + '" data-d="1" data-sup="' + e(it.sup) + '">+</button>' : it.qty) + '</td>' +
+          '<td class="r">' + (it.kind ? (c.ok ? m(lineUnit) : '<span class="mut">нет цены</span>') : c.ok ? '<input class="in num" style="width:96px;text-align:right' + (c.ownPrice ? ';border-color:var(--acc)' : '') + '" value="' + (c.ownPrice ? Math.round(c.unit) : '') + '" placeholder="' + Math.round(lineUnit) + '" data-c="cprice" data-i="' + i + '" title="' + (c.ownPrice ? 'своя цена, по прайсу было ' + fmt(c.listUnit) : 'впиши свою цену за шт') + '">' : '<span class="mut">нет цены</span>') + '</td>' +
+          '<td class="r num b">' + (c.ok ? m(FF.lineSum[i]) : '—') + '</td><td class="r" style="white-space:nowrap">' + (it.kind ? '' : '<button class="btn sm" data-a="cedit" data-i="' + i + '">Изм.</button> <button class="btn sm" data-a="cdup" data-i="' + i + '">Копия</button> ') + '<button class="btn sm" data-a="cdel" data-i="' + i + '">✕</button></td></tr>'; }).join('') + '</tbody></table>' :
         '<div class="empty" style="padding:30px">Корзина пуста. Соберите изделие слева и нажмите «В корзину».</div>') +
+      autoErrors(FF).map(t => '<div class="callout bad" style="margin-top:8px;font-size:13px">' + e(t) + '</div>').join('') +
       '<div class="stack" style="gap:10px;margin-top:14px">' +
       (C.region ? '<div class="field"><label>Адрес ПВЗ и транспортная компания</label><textarea class="in" rows="2" data-c="cpvz" placeholder="Например: СДЭК, Казань, ул. Баумана 1, ПВЗ KZN12">' + e(C.pvz || '') + '</textarea></div><div class="mut" style="font-size:12px">В опте доставка и монтаж в стоимость заказа не входят.</div>' :
         '<div class="row"><label style="flex:1">Доставка и установка (размазывается по позициям)</label><input class="in num" style="width:130px;text-align:right" value="' + (C.service || '') + '" placeholder="0" data-c="cserv"></div>') +
@@ -156,6 +183,8 @@
   A.act.cclear = () => { JC().clear(); O.open = false; rr(); };
   A.act.cocancel = () => { O.open = false; rr(); };
   const load = (it, edit) => { Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
+  A.act.cmode = el => { F.mode = el.dataset.v; rr(); };
+  A.act.cast = el => { JC().autoStep(el.dataset.sup || F.sup, el.dataset.kind, el.dataset.key, +el.dataset.d); rr(); };
   A.act.cedit = el => load(JC().C.cart[+el.dataset.i], +el.dataset.i);
   A.act.cdup = el => load(JC().C.cart[+el.dataset.i], -1);
   A.act.cedcancel = () => { F.edit = -1; rr(); };
