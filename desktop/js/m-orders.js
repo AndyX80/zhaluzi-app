@@ -46,7 +46,7 @@
     if (t === 'main') return '<div class="g2"><div class="stack" style="gap:10px"><div class="field"><label>Клиент</label><div class="b" style="cursor:pointer" data-a="opn" data-id="client:' + c.id + '">' + e(c.name) + '</div><div class="mut">' + e(c.phone) + (c.addr ? ' · ' + e(c.addr) : '') + '</div></div>' +
         '<div class="field"><label>Источник</label><div>' + e(o.src || c.src || 'не указан') + '</div></div><div class="field"><label>Заметка</label><div>' + e(o.note || '—') + '</div></div>' +
         (o.yur ? '<div class="field"><label>Юридическое лицо</label><div>' + e(o.yur.name) + '</div><div class="mut">ЭДО: ' + (o.yur.edo ? 'есть' : 'нет') + ' · УПД отдали: ' + (o.yur.upd ? 'да' : 'нет') + ' · УПД подписан: ' + (o.yur.sign ? 'да' : 'нет') + (o.yur.note ? ' · ' + e(o.yur.note) : '') + '</div></div>' : '') + '</div>' +
-        '<div class="card flat"><h2>Признаки заказа' + (real ? ' <span class="soon">нажми, чтобы отметить</span>' : '') + '</h2><div class="chips" style="margin-top:8px">' + flags(o).map(f => '<span class="pill ' + (f[1] ? 'ok' : '') + '"' + (real ? ' style="cursor:pointer" data-a="oflag" data-k="' + f[2] + '" data-id="' + o.id + '"' : '') + '>' + (f[1] ? '✓ ' : '') + f[0] + '</span>').join('') + '</div>' +
+        '<div class="card flat"><h2>Признаки заказа' + (real ? ' <span class="soon">нажми, чтобы отметить</span>' : '') + '</h2><div class="chips" style="margin-top:8px">' + flags(o).map(f => '<span class="pill ' + (f[1] ? 'ok' : '') + '"' + (real ? ' style="cursor:pointer" data-a="oflag" data-k="' + f[2] + '" data-id="' + o.id + '"' : '') + '>' + (f[1] ? '✓ ' : '') + f[0] + '</span>').join('') + '<span class="pill ' + (o.claim ? 'bad' : '') + '" style="cursor:pointer' + (o.claim ? ';font-weight:700' : '') + '" data-a="oclaim" data-id="' + o.id + '">' + (o.claim ? '✓ ' : '') + 'Рекламация</span></div>' +
         (o.ph ? '<div class="row" style="margin-top:10px"><button class="btn ' + (o.supSent ? '' : 'pri') + '" data-a="osup" data-id="' + o.id + '">' + (o.supSent ? '✓ Отправлен поставщику (снять)' : 'Отметить: заказ отправлен поставщику') + '</button></div>' + (o.supSent && o.needCost.length ? '<div class="callout bad" style="margin-top:8px;font-size:13px">Укажи закуп на вкладке «Изделия»: ' + e(o.needCost.join(', ')) + '. Без него прибыль считается неверно.</div>' : '') : '') +
         '<div class="row wrap" style="margin-top:10px"><span class="pill info">' + e(o.zone) + '</span><span class="pill">Категория: ' + e(o.cat) + '</span><span class="pill">' + (o.inst ? 'С монтажом' : 'Без монтажа') + '</span>' + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '</div></div></div>';
     if (t === 'meas') return '<div class="callout info">Замер может не понадобиться: КП часто даётся по размерам клиента до выезда. Этап «Замер» в воронке пропускаемый.</div><p class="mut" style="margin-top:12px">Здесь будет замерный лист из телефонной версии: таблица изделий, часы тишины, примечания, монтаж, печать бланка.</p>';
@@ -83,14 +83,99 @@
   }
   const years = () => { const y = {}; D.orders.forEach(o => { if (/^\d{4}/.test(o.created || '')) y[o.created.slice(0, 4)] = 1; }); return Object.keys(y).sort().reverse(); };
 
+  /* ===== табличный вид: как в Excel, столбцы на выбор, фильтры по каждому ===== */
+  const cn = o => (A.client(o.client) || {}).name || o.name || '', cph = o => (A.client(o.client) || {}).phone || o.phone || '';
+  const itemTxt = o => { const u = {}; (o.items || []).forEach(i => { u[i.kind ? (i.title || 'Услуга') : [i.sup, i.mat, i.lam ? i.lam + ' мм' : ''].filter(Boolean).join(' ')] = 1; }); return Object.keys(u).join('; '); };
+  const COLS = [
+    { k: 'no', l: 'Номер', t: 'n', v: o => +o.no || 0, f: o => o.no },
+    { k: 'created', l: 'Дата', t: 'd', v: o => o.created || '', f: o => dmy(o.created) },
+    { k: 'name', l: 'Клиент', t: 't', v: cn, f: cn },
+    { k: 'phone', l: 'Телефон', t: 't', v: cph, f: cph },
+    { k: 'cat', l: 'Категория', t: 's', v: o => o.cat || '', f: o => o.cat || '' },
+    { k: 'sup', l: 'Поставщик', t: 's', v: o => o.sup || '', f: o => o.sup || '' },
+    { k: 'items', l: 'Состав', t: 't', v: itemTxt, f: itemTxt, wide: 1 },
+    { k: 'src', l: 'Источник', t: 's', v: o => o.src || '', f: o => o.src || '' },
+    { k: 'inst', l: 'Установка', t: 's', v: o => o.inst ? 'да' : 'нет', f: o => o.inst ? 'да' : 'нет' },
+    { k: 'zone', l: 'Регион', t: 's', v: o => o.zone || '', f: o => o.zone || '' },
+    { k: 'sum', l: 'Стоимость', t: 'n', v: o => +o.sum || 0, f: o => m(o.sum), r: 1, tot: 1 },
+    { k: 'paid', l: 'Оплачено', t: 'n', v: o => +o.paid || 0, f: o => m(o.paid), r: 1, tot: 1 },
+    { k: 'debt', l: 'Долг', t: 'n', v: o => Math.max(0, (+o.sum || 0) - (+o.paid || 0)), f: o => m(Math.max(0, (+o.sum || 0) - (+o.paid || 0))), r: 1, tot: 1 },
+    { k: 'cost', l: 'Закуп', t: 'n', v: o => +o.cost || 0, f: o => m(o.cost), r: 1, tot: 1 },
+    { k: 'instCost', l: 'Стоимость установки', t: 'n', v: o => +o.instCost || 0, f: o => m(o.instCost), r: 1, tot: 1 },
+    { k: 'profit', l: 'Прибыль', t: 'n', v: prof, f: o => m(prof(o)), r: 1, tot: 1 },
+    { k: 'stage', l: 'Этап', t: 's', v: o => D.STAGES[o.stage] || '', f: o => D.STAGES[o.stage] || '' },
+    { k: 'claim', l: 'Рекламация', t: 's', v: o => o.claim ? 'да' : 'нет', f: o => o.claim ? 'да' : '' },
+    { k: 'due', l: 'Дата изготовления', t: 'd', v: o => o.due || '', f: o => dmy(o.due) },
+    { k: 'tk', l: 'Примечания', t: 't', v: o => o.tk || '', f: o => o.tk || '', wide: 1 },
+    { k: 'factory', l: 'Заводской №', t: 't', v: o => o.factory || '', f: o => o.factory || '' },
+    { k: 'review', l: 'Отзыв', t: 't', v: o => o.review || '', f: o => o.review || '' }
+  ];
+  const DEFCOLS = ['no', 'created', 'name', 'cat', 'sup', 'sum', 'stage'];
+  const PERS = [['', 'Всё время'], ['m0', 'Этот месяц'], ['m1', 'Прошлый месяц'], ['y0', 'Этот год'], ['y1', 'Прошлый год']];
+  const p2 = n => String(n).padStart(2, '0'), iso = d => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+  function perRange(k) {
+    const n = new Date(), y = n.getFullYear(), mo = n.getMonth();
+    if (k === 'm0') return [iso(new Date(y, mo, 1)), iso(new Date(y, mo + 1, 0))];
+    if (k === 'm1') return [iso(new Date(y, mo - 1, 1)), iso(new Date(y, mo, 0))];
+    if (k === 'y0') return [y + '-01-01', y + '-12-31'];
+    if (k === 'y1') return [(y - 1) + '-01-01', (y - 1) + '-12-31'];
+    return null;
+  }
+  const tcols = () => (S.tcols && S.tcols.length ? S.tcols : DEFCOLS).filter(k => COLS.some(c => c.k === k));
+  const tfilt = () => S.tf || (S.tf = {});
+  function trows() {
+    const F = tfilt(), pr = perRange(S.tper), act = COLS.filter(c => { const f = F[c.k]; return f && (typeof f === 'object' ? (f.a !== '' && f.a != null) || (f.b !== '' && f.b != null) : f !== ''); });
+    let rows = D.orders.filter(pass).filter(o => {
+      if (pr && !(o.created && o.created >= pr[0] && o.created <= pr[1])) return false;
+      return act.every(c => { const f = F[c.k], v = c.v(o);
+        if (c.t === 't') return String(v).toLowerCase().indexOf(String(f).trim().toLowerCase()) >= 0;
+        if (c.t === 's') return String(v) === f;
+        if (c.t === 'n') { const a = f.a === '' || f.a == null ? null : +String(f.a).replace(/\s/g, ''), b = f.b === '' || f.b == null ? null : +String(f.b).replace(/\s/g, ''); return (a == null || v >= a) && (b == null || v <= b); }
+        return (!f.a || (v && v >= f.a)) && (!f.b || (v && v <= f.b)); });
+    });
+    const so = S.tsort || { k: 'no', d: -1 }, sc = COLS.find(c => c.k === so.k) || COLS[0];
+    rows = rows.slice().sort((x, y) => { const a = sc.v(x), b = sc.v(y); return (a < b ? -1 : a > b ? 1 : 0) * so.d; });
+    return rows;
+  }
+  function table() {
+    const F = tfilt(), cols = tcols().map(k => COLS.find(c => c.k === k)), rows = trows(), lim = S.tlim || 200, so = S.tsort || { k: 'no', d: -1 };
+    const opts = c => { const u = {}; D.orders.forEach(o => { const v = c.v(o); if (v !== '') u[v] = 1; }); return Object.keys(u).sort((a, b) => c.k === 'stage' ? D.STAGES.indexOf(a) - D.STAGES.indexOf(b) : a.localeCompare(b, 'ru')); };
+    const fcell = c => { const f = F[c.k];
+      if (c.t === 't') return '<input class="in tf" value="' + e(f || '') + '" data-c="otf" data-k="' + c.k + '">';
+      if (c.t === 's') return '<select class="in tf" data-c="otf" data-k="' + c.k + '"><option value="">все</option>' + opts(c).map(v => '<option' + (f === v ? ' selected' : '') + '>' + e(v) + '</option>').join('') + '</select>';
+      const a = (f && f.a) || '', b = (f && f.b) || '';
+      return c.t === 'n' ? '<div class="tfr"><input class="in tf" placeholder="от" value="' + e(a) + '" data-c="otf" data-k="' + c.k + '" data-p="a"><input class="in tf" placeholder="до" value="' + e(b) + '" data-c="otf" data-k="' + c.k + '" data-p="b"></div>'
+        : '<div class="tfr"><input class="in tf" type="date" value="' + e(a) + '" data-c="otf" data-k="' + c.k + '" data-p="a"><input class="in tf" type="date" value="' + e(b) + '" data-c="otf" data-k="' + c.k + '" data-p="b"></div>'; };
+    const nf = Object.keys(F).filter(k => { const f = F[k]; return f && (typeof f === 'object' ? f.a || f.b : f !== ''); }).length + (S.tper ? 1 : 0);
+    const tot = c => rows.reduce((a, o) => a + c.v(o), 0);
+    return '<div class="tbar"><div class="tmw"><button class="btn" data-a="otmenu">' + A.icon('list', 16) + ' Столбцы (' + cols.length + ')</button>' +
+      (S.tmenu ? '<div class="tmenu sc"><div class="row" style="gap:6px;margin-bottom:6px"><button class="btn sm" data-a="otcolall">Все</button><button class="btn sm" data-a="otcolreset">По умолчанию</button></div>' + COLS.map(c => '<button class="tmi ' + (cols.indexOf(c) >= 0 ? 'on' : '') + '" data-a="otcol" data-k="' + c.k + '"><i>' + (cols.indexOf(c) >= 0 ? '✓' : '') + '</i>' + e(c.l) + '</button>').join('') + '</div>' : '') + '</div>' +
+      '<select class="in" style="width:150px" data-c="otper">' + PERS.map(p => '<option value="' + p[0] + '"' + ((S.tper || '') === p[0] ? ' selected' : '') + '>' + p[1] + '</option>').join('') + '</select>' +
+      (nf ? '<button class="btn" data-a="otclear">Сбросить фильтры (' + nf + ')</button>' : '') + '<span class="sp"></span><span class="mut">Найдено: <b>' + rows.length + '</b>' + (cols.some(c => c.k === 'sum') ? ' · на сумму <b>' + m(tot(COLS.find(c => c.k === 'sum'))) + '</b>' : '') + '</span></div>' +
+      '<div class="tscroll sc"><table class="tbl ttab"><thead><tr>' + cols.map(c => '<th class="' + (c.r ? 'r' : '') + '" data-a="otsort" data-k="' + c.k + '">' + e(c.l) + (so.k === c.k ? (so.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr><tr class="tfrow">' + cols.map(c => '<th>' + fcell(c) + '</th>').join('') + '</tr></thead><tbody>' +
+      rows.slice(0, lim).map(o => '<tr class="tr" data-a="opn" data-id="order:' + o.id + '">' + cols.map(c => '<td class="' + (c.r ? 'r num' : '') + (c.wide ? ' tw' : '') + '" title="' + (c.wide ? e(c.f(o)) : '') + '">' + e(c.f(o)) + '</td>').join('') + '</tr>').join('') +
+      '</tbody>' + (cols.some(c => c.tot) ? '<tfoot><tr>' + cols.map((c, i) => '<td class="' + (c.r ? 'r num' : '') + '"><b>' + (c.tot ? m(tot(c)) : i === 0 ? 'Итого' : '') + '</b></td>').join('') + '</tr></tfoot>' : '') + '</table>' +
+      (rows.length > lim ? '<div style="padding:10px;text-align:center"><button class="btn sm" data-a="otmore">Показать ещё (осталось ' + (rows.length - lim) + ')</button></div>' : '') + (rows.length ? '' : '<div class="empty" style="padding:24px">Ничего не найдено</div>') + '</div>';
+  }
+  A.act.otmenu = () => { S.tmenu = !S.tmenu; A.render(); };
+  A.act.otcol = el => { const cur = tcols().slice(), k = el.dataset.k, i = cur.indexOf(k); if (i >= 0) cur.splice(i, 1); else cur.push(k); S.tcols = COLS.map(c => c.k).filter(x => cur.indexOf(x) >= 0); A.save(); A.render(); };
+  A.act.otcolall = () => { S.tcols = COLS.map(c => c.k); A.save(); A.render(); };
+  A.act.otcolreset = () => { S.tcols = DEFCOLS.slice(); A.save(); A.render(); };
+  A.act.otsort = el => { const so = S.tsort || { k: 'no', d: -1 }; S.tsort = { k: el.dataset.k, d: so.k === el.dataset.k ? -so.d : (COLS.find(c => c.k === el.dataset.k).t === 'n' || COLS.find(c => c.k === el.dataset.k).t === 'd' ? -1 : 1) }; A.save(); A.render(); };
+  A.act.otclear = () => { S.tf = {}; S.tper = ''; S.tlim = 200; A.save(); A.render(); };
+  A.act.otmore = () => { S.tlim = (S.tlim || 200) + 300; A.render(); };
+  A.fld.otf = (v, el) => { const F = tfilt(), k = el.dataset.k, p = el.dataset.p; if (p) F[k] = Object.assign({ a: '', b: '' }, F[k] || {}, { [p]: v }); else F[k] = v; S.tlim = 200; A.save(); A.render(); };
+  A.fld.otper = v => { S.tper = v; S.tlim = 200; A.save(); A.render(); };
+  document.addEventListener('click', ev => { if (S.tmenu && ev.target.closest && !ev.target.closest('.tmw')) { S.tmenu = false; A.render(); } }, true);
+
   A.module('orders', {
     card,
     render() {
       return '<div class="head"><h1>Заказы</h1><div class="seg">' + FILTERS.map(f => '<button class="' + (S.ordersFilter === f[0] ? 'on' : '') + '" data-a="ofilter" data-f="' + f[0] + '">' + f[1] + '</button>').join('') + '</div><div class="sp"></div>' +
         (D.real ? '<input class="in" style="width:200px" placeholder="Найти в списке…" value="' + e(S.oq || '') + '" data-c="oq">' + '<select class="in" style="width:110px" data-c="oyear"><option value="all">Все годы</option>' + years().map(y => '<option' + (S.oyear === y ? ' selected' : '') + '>' + y + '</option>').join('') + '</select>' : '') +
-        '<div class="seg"><button class="' + (S.ordersView === 'list' ? 'on' : '') + '" data-a="oview" data-v="list" title="Список и карточка">' + A.icon('list', 16) + ' Список</button><button class="' + (S.ordersView === 'kanban' ? 'on' : '') + '" data-a="oview" data-v="kanban" title="Канбан по этапам">' + A.icon('kanban', 16) + ' Канбан</button></div>' +
+        '<div class="seg"><button class="' + (S.ordersView === 'list' ? 'on' : '') + '" data-a="oview" data-v="list" title="Список и карточка">' + A.icon('list', 16) + ' Список</button><button class="' + (S.ordersView === 'kanban' ? 'on' : '') + '" data-a="oview" data-v="kanban" title="Канбан по этапам">' + A.icon('kanban', 16) + ' Канбан</button><button class="' + (S.ordersView === 'table' ? 'on' : '') + '" data-a="oview" data-v="table" title="Таблица с фильтрами">' + A.icon('table', 16) + ' Таблица</button></div>' +
         '<button class="btn pri" data-a="new-order">' + A.icon('plus', 16) + ' Заказ</button></div>' +
-        (S.ordersView === 'kanban' ? kanban() : '<div class="split">' + list() + card(S.selOrder, false) + '</div>');
+        (S.ordersView === 'table' ? table() : S.ordersView === 'kanban' ? kanban() : '<div class="split">' + list() + card(S.selOrder, false) + '</div>');
     }
   });
   A.act.oreopen = el => {
@@ -115,6 +200,7 @@
   A.act.oarch = el => { const o = A.order(el.dataset.id); if (!o) return; const on = !o.archived; DB.archive(o, on); S.selOrder = null; A.toast(on ? 'Заказ № ' + o.no + ' в архиве' : 'Заказ № ' + o.no + ' возвращён'); A.render(); };
   A.act.odelno = () => { S.odelId = null; A.render(); };
   A.act.dupres = el => { DB.dupSet(el.dataset.uid, el.dataset.v); S.selOrder = null; A.toast('Готово'); A.render(); };
+  A.act.oclaim = el => { const o = A.order(el.dataset.id); if (!o) return; o.claim = !o.claim; if (o.ph) DB.patchRec(o.uid, { claim: o.claim }); else DB.commit(o); A.render(); };
   A.act.oflag = el => {
     const o = A.order(el.dataset.id); if (!o || !o.fl) return; o.fl[el.dataset.k] = !o.fl[el.dataset.k]; o.stage = DB.stageOf(o.fl); DB.commit(o); A.render();
   };
