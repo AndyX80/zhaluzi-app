@@ -8,7 +8,7 @@
   /* raw: все заказы, включая удалённые (метка del) — они нужны синхронизации; load: только живые */
   function raw() {
     let a = []; try { a = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) {}
-    a.forEach(o => { uidOf(o); if (STATUSES.indexOf(o.status) < 0) o.status = 'Черновик'; });
+    a.forEach(o => { uidOf(o); if (!Array.isArray(o.items)) o.items = []; if (!o.created) o.created = o.upd || '2026-01-01T00:00:00.000Z'; if (STATUSES.indexOf(o.status) < 0) o.status = 'Черновик'; });
     return a;
   }
   const load = () => raw().filter(o => !o.del);

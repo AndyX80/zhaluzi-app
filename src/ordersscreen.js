@@ -15,9 +15,9 @@
   const nPos = o => (o.cart && o.cart.cart ? o.cart.cart.length : o.items.length);
 
   function renderList() {
-    const all = JalOrders.load().filter(o => !o.archived), today = new Date(), T = iso(today);
+    const all = JalOrders.load().filter(o => F.f === 'Архив' ? o.archived : !o.archived), today = new Date(), T = iso(today);
     const q = F.q.trim().toLowerCase();
-    const list = all.filter(o => (F.f === 'Все' || o.status === F.f) && (!F.from || o.created.slice(0, 10) >= F.from) && (!F.to || o.created.slice(0, 10) <= F.to) &&
+    const list = all.filter(o => (F.f === 'Все' || F.f === 'Архив' || o.status === F.f) && (!F.from || o.created.slice(0, 10) >= F.from) && (!F.to || o.created.slice(0, 10) <= F.to) &&
       (!q || (String(o.name || '') + ' ' + (o.phone || '') + ' ' + o.no).toLowerCase().indexOf(q) >= 0));
     const day = d => { const x = new Date(today); x.setDate(x.getDate() - d); return iso(x); };
     const QK = [['Сегодня', T, T], ['7 дней', day(6), T], ['Этот месяц', T.slice(0, 8) + '01', T], ['Всё время', '', '']];
@@ -27,7 +27,7 @@
       count: list.length, q: F.q, setQ: e => set({ q: e.target.value }),
       from: F.from, to: F.to, setFrom: e => set({ from: e.target.value }), setTo: e => set({ to: e.target.value }),
       quick: QK.map(q => ({ name: q[0], pick: () => set({ from: q[1], to: q[2] }), style: qs(F.from === q[1] && F.to === q[2]) })),
-      chips: ['Все'].concat(JalOrders.STATUSES.filter(s => s !== 'Черновик' || true)).map((n, k) => { const on = F.f === n; return { name: n, pick: () => set({ f: n }),
+      chips: ['Все'].concat(JalOrders.STATUSES).concat(['Архив']).map((n, k) => { const on = F.f === n; return { name: n, pick: () => set({ f: n }),
         style: 'grid-column: span ' + (k < 3 ? 2 : 3) + '; height: 44px; min-width: 0; padding: 0 4px; border-radius: 12px; font-size: 14px; font-weight: 600; color: var(--ink); background: ' + (on ? 'var(--sel)' : 'var(--chip)') + '; border: 1.5px solid ' + (on ? 'var(--ac)' : 'transparent') }; }),
       orders: list.map(o => {
         const s = total(o), old = o.status === 'КП отправлено' && o.sent && (today - new Date(o.sent)) / 86400000 > 14, last = (o.history || [])[0];
@@ -85,9 +85,10 @@
           JalOrders.addVersion(o.no, 'Пересчёт по новым ценам', fmt(newSum) + ' ₽', 'позиции пересчитаны'); render('orderOpen'); },
         kp: () => doc('kpHtml', 'КП'),
         self: () => { alert('Word добавим позже. Сейчас откроется КП: в окне печати выбери «Сохранить как PDF».'); doc('kpHtml', 'КП (себе)'); },
-        dup: () => { const c0 = Object.assign({}, o, { status: 'Черновик', created: new Date().toISOString(), history: [], archived: false }); delete c0.no; delete c0.sent;
+        dup: () => { const c0 = Object.assign({}, o, { status: 'Черновик', created: new Date().toISOString(), history: [], archived: false }); delete c0.no; delete c0.sent; delete c0.uid; delete c0.upd; delete c0.del;
           const c = JalOrders.create(c0, o.items); F.openNo = c.no; render('orderOpen'); },
-        arch: () => { JalOrders.update(o.no, { archived: true }); App().tab('ord'); },
+        archLabel: o.archived ? 'Вернуть из архива' : 'В архив',
+        arch: () => { JalOrders.update(o.no, { archived: !o.archived }); App().tab('ord'); },
         cal: () => { const ds = new Date(d); ds.setHours(10, 0, 0, 0); const e = new Date(ds.getTime() + 30 * 60000);
           const f = x => x.getFullYear() + String(x.getMonth() + 1).padStart(2, '0') + String(x.getDate()).padStart(2, '0') + 'T' + String(x.getHours()).padStart(2, '0') + String(x.getMinutes()).padStart(2, '0') + '00';
           window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('Позвонить ' + (o.name || 'клиенту') + ' по КП') + '&dates=' + f(ds) + '/' + f(e) + '&details=' + encodeURIComponent('Заказ № ' + o.no), '_blank'); },
