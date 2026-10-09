@@ -68,14 +68,15 @@
   /* Все расчётные величины корзины в одном месте: для экрана и для заказа. */
   function compute(st, ov) {
     const App = window.JalApp, s = st || C;
-    const calcs = ov ? ov.calcs : s.cart.map(calcRow);
+    const calcs = (ov ? ov.calcs : s.cart.map(calcRow)).map((c, i) => { const it = s.cart[i], o = it && !it.kind && it.own !== '' && it.own != null ? Number(it.own) : NaN;
+      return c.ok && o >= 0 ? Object.assign({}, c, { ownPrice: true, listUnit: c.unit, unit: o, profit: c.profit + (o - c.unit) }) : c; });
     const reg = !!s.region, S = reg ? 0 : (Number(s.service) || 0);
-    const adds = spread(s.cart.map((it, i) => ({ ok: calcs[i].ok && it.kind !== 'custom', qty: it.qty })), S);
+    const adds = spread(s.cart.map((it, i) => ({ ok: calcs[i].ok && it.kind !== 'custom' && !calcs[i].ownPrice, qty: it.qty })), S);
     /* доставка от производителя: RATES.ship на каждую партию (кроме Уюта и Форума), делится на жалюзи этой партии */
     const ships = s.cart.map(() => 0), bySup = {};
-    s.cart.forEach((it, i) => { const sp = ov ? ov.sups[i] : it.sup; if (!reg && !it.kind && calcs[i].ok && !FREE_SHIP[sp]) (bySup[sp] = bySup[sp] || []).push(i); });
+    s.cart.forEach((it, i) => { const sp = ov ? ov.sups[i] : it.sup; if (!reg && !it.kind && calcs[i].ok && !calcs[i].ownPrice && !FREE_SHIP[sp]) (bySup[sp] = bySup[sp] || []).push(i); });
     Object.keys(bySup).forEach(k => { const ix = bySup[k], part = spread(ix.map(i => ({ ok: true, qty: s.cart[i].qty })), Number(RATES.ship) || 0); ix.forEach((i, j) => { ships[i] = part[j]; }); });
-    const lineSum = s.cart.map((it, i) => (calcs[i].ok ? ceil100(calcs[i].unit + ships[i] + adds[i]) * it.qty : 0));
+    const lineSum = s.cart.map((it, i) => (calcs[i].ok ? (calcs[i].ownPrice ? calcs[i].unit : ceil100(calcs[i].unit + ships[i] + adds[i])) * it.qty : 0));
     const total = lineSum.reduce((x, y) => x + y, 0);
     const dv = Math.max(0, Number(s.disc) || 0);
     const discAmt = Math.min(total, s.discMode === 'pct' ? Math.round(total * Math.min(dv, 50) / 100 / 100) * 100 : Math.min(dv, total * 0.5));
@@ -154,7 +155,9 @@
       return mkRow(it, i, { title: it.sup, sub: it.mat + ' ' + it.lam + (colName ? ' · ' + colName.toLowerCase() : '') + ' · ' + (isChain ? CTRL_TXT_CHAIN : CTRL_TXT)[it.ctrl || 'L'] + (extra.length ? ' · ' + extra.join(', ').toLowerCase() : ''),
         size: it.w + '×' + it.h, sum: c.ok ? fmt(lineSum[i]) : '—', warn: w1, warnStyle: redWarn(!!w1),
         edit: () => { JalCalcScreen.edit(it, i); window.JalApp.tab('calc'); },
-        dupShow: true, dup: () => { JalCalcScreen.edit(it, -1); window.JalApp.tab('calc'); }, remove: rm });
+        dupShow: true, dup: () => { JalCalcScreen.edit(it, -1); window.JalApp.tab('calc'); }, remove: rm,
+        ownShow: c.ok, ownVal: c.ownPrice ? String(c.unit) : '', ownPh: c.ok ? String((c.ownPrice ? c.listUnit : lineSum[i] / it.qty) || '') : '', ownHint: c.ownPrice ? 'своя цена за шт, по прайсу было ' + fmt(Math.round(c.listUnit)) + ' ₽ (доставка и установка в неё не добавляются)' : 'своя цена за шт, ₽',
+        ownSet: e => { const v = String(e.target.value).replace(/\s/g, ''); C.cart[i] = Object.assign({}, C.cart[i], { own: v === '' ? '' : Math.max(0, Math.round(Number(v) || 0)) }); save(); rerender(); } });
     });
 
     let pcs = 0, areaSum = 0, kgSum = 0, kgPart = true, prof = 0, n50 = 0, n25 = 0, nAuto50 = 0, nAuto25 = 0;
@@ -243,7 +246,7 @@
     const sC = st || C, F = compute(sC), items = [];
     sC.cart.forEach((it, i) => {
       const c = F.calcs[i]; if (!c.ok) return;
-      const price = ceil100(c.unit + F.ships[i] + F.adds[i]);
+      const price = c.ownPrice ? c.unit : ceil100(c.unit + F.ships[i] + F.adds[i]);
       for (let k = 0; k < it.qty; k++) {
         if (it.kind === 'custom') items.push({ kind: 'custom', title: it.title || 'Услуга', price, profit: c.profit });
         else if (it.kind) items.push({ kind: it.kind, sup: SUPNAME[it.sup] || it.sup, title: c.auto.name + (it.kind === 'drive' ? ' (привод)' : ''), price, profit: c.profit });
@@ -256,7 +259,7 @@
       const vs = variants(sC); vars = vs.map(x => ({ name: x.v.name, about: x.v.about, best: !!x.v.best, miss: x.miss, total: x.F.total }));
       let k = 0;
       sC.cart.forEach((it, i) => { if (!F.calcs[i].ok) return;
-        for (let q = 0; q < it.qty; q++, k++) items[k].pv = vs.map(x => (x.F.calcs[i].ok ? ceil100(x.F.calcs[i].unit + x.F.ships[i] + x.F.adds[i]) : null)); });
+        for (let q = 0; q < it.qty; q++, k++) items[k].pv = vs.map(x => (x.F.calcs[i].ok ? (x.F.calcs[i].ownPrice ? x.F.calcs[i].unit : ceil100(x.F.calcs[i].unit + x.F.ships[i] + x.F.adds[i])) : null)); });
     } catch (e) { vars = null; }
     return { items, priced: true, delivery: F.S, disc: F.discAmt, needDog: sC.needDog, vars };
   }

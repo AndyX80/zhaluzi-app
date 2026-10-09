@@ -9,10 +9,12 @@
     return a;
   }
   function save(a) { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
+  /* сквозная нумерация: №1326, 1327…; продолжается от самого большого номера на телефоне и в общей базе (jal_no_max пишет синхронизация) */
+  const FLOOR = 1325;
   function nextNo(a) {
-    const y = new Date().getFullYear();
-    const n = a.filter(o => String(o.no).startsWith(y + '-')).map(o => +String(o.no).split('-')[1]);
-    return y + '-' + String((n.length ? Math.max.apply(null, n) : 0) + 1).padStart(3, '0');
+    a = a || load(); let mx = FLOOR; try { mx = Math.max(mx, +localStorage.getItem('jal_no_max') || 0); } catch (e) {}
+    a.forEach(x => { if (/^\d+$/.test(String(x.no))) mx = Math.max(mx, +x.no); });
+    return String(mx + 1);
   }
   function create(data, items) {
     const a = load();
@@ -27,6 +29,6 @@
     o.history = o.history || []; o.history.unshift({ v: o.history.length + 1, title, sum, at: new Date().toISOString(), sub: sub || '' }); save(a);
   }
   function remove(no) { save(load().filter(x => x.no !== no)); }
-  const api = { STATUSES, load, get, create, update, setStatus, addVersion, remove };
+  const api = { STATUSES, nextNo, load, get, create, update, setStatus, addVersion, remove };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.JalOrders = api;
 })(typeof self !== 'undefined' ? self : this);

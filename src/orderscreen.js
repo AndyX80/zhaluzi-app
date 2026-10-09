@@ -25,11 +25,7 @@
   let CAL = null; /* {k, y, m} открытый календарь */
   const myMail = () => lsGet('jal_mail') || '89817645545@mail.ru';
 
-  function nextNo() {
-    const a = JalOrders.load(), y = new Date().getFullYear();
-    const n = a.filter(o => String(o.no).startsWith(y + '-')).map(o => +String(o.no).split('-')[1]);
-    return y + '-' + String((n.length ? Math.max.apply(null, n) : 0) + 1).padStart(3, '0');
-  }
+  const nextNo = () => JalOrders.nextNo();
   function fresh(key) {
     return { key, to: 'client', ctype: 'fiz', pmode: 'pct', copy: true, inst: !JalCart.C.region && (+(window.JalCart && JalCart.C.service) || 0) > 0, rep: 'fine', prepay: 100, term: '', pay: 'QR', step: 0, lad: {}, di: '', ci: false,
       mnotes: '', mount: ['', '', '', '', ''], no: key === 'new' ? '' : key, date: today(), measurer: lsGet('jal_measurer') || 'Хорошавин', deliv: '', name: '', phone: '', addr: '', email: '',

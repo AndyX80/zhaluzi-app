@@ -24,6 +24,7 @@
 <span style="text-align: center">{{it.qty}}</span>
 <span style="text-align: right; font-weight: 800; color: #1E6B24">{{it.sum}}</span>
 </div>
+<sc-if value="{{it.ownShow}}" hint-placeholder-val="{{true}}"><label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--m1)"><span style="flex: 1 1 auto">{{it.ownHint}}</span><input type="number" inputmode="numeric" placeholder="{{it.ownPh}}" value="{{it.ownVal}}" onChange="{{it.ownSet}}" style="width: 96px; height: 36px; border: 1.5px solid #E3D5C3; border-radius: 10px; padding: 0 8px; font-size: 14px; box-sizing: border-box; text-align: right; color: var(--ink); background: var(--card)"></label></sc-if>
 <sc-if value="{{it.profShow}}" hint-placeholder-val="{{true}}"><div style="{{it.profStyle}}">{{it.profLine}}</div></sc-if>
 <sc-if value="{{it.isDrive}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--m1)"><span>Вывод провода: <span style="{{it.wireNoteStyle}}">{{it.wireNote}}</span></span><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,0.12)"><button onClick="{{it.wireL}}" style="{{it.wireLStyle}}">Слева</button><button onClick="{{it.wireR}}" style="{{it.wireRStyle}}">Справа</button></div></div></sc-if>
 <div style="display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px">
