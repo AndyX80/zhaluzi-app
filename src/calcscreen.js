@@ -83,6 +83,13 @@
     return null;
   }
 
+  /* наличие по длинам ламели (Амиго: см, РДО: футы): [{cm, lv}] */
+  function stockLens(prod, key, sup) {
+    if (sup === 'Amigo') { const d = STOCK.am[prod + '|' + String(key).toLowerCase()]; return d ? Object.keys(d).map(Number).filter(Boolean).sort((a, b) => a - b).map(cm => ({ cm, lv: d[cm] })) : []; }
+    if (sup === 'РДО') { const d = STOCK.rdo[prod + '|' + String(key).toLowerCase()]; return d ? Object.keys(d).map(Number).filter(f => FT_MM[f]).sort((a, b) => a - b).map(f => ({ cm: Math.round(FT_MM[f] / 10), lv: d[f] - 1 })) : []; }
+    return [];
+  }
+
   function colorsFor(sup, prod) {
     if (sup === 'Amigo') {
       const par = P.par, k = (1 - par['скидка_амиго']) * par['курс_usd'];
@@ -325,5 +332,5 @@
     Object.keys(S.opts).forEach(k => { if (S.opts[k] && av.indexOf(k) >= 0) opts[k] = true; });
     Object.assign(S, { sup, color: '', opts, fix: fx.indexOf(S.fix) >= 0 ? S.fix : '', colorOpen: false, supOpen: false, justAdded: false });
   }
-  window.JalCalcScreen = { colorsFor, availOpts, availFixes, stockOf, calcItem, CTRL_NAMES, CTRL_ORDER, FIXLBL, COLL_ALL: COLL, priceFor, compareRows, pickSupplier, VARIANTS, COLL, render, setSheets, state: S, calcRow, edit, editAuto };
+  window.JalCalcScreen = { colorsFor, availOpts, availFixes, stockOf, stockLens, calcItem, CTRL_NAMES, CTRL_ORDER, FIXLBL, COLL_ALL: COLL, priceFor, compareRows, pickSupplier, VARIANTS, COLL, render, setSheets, state: S, calcRow, edit, editAuto };
 })();

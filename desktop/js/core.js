@@ -3,6 +3,7 @@
   const D = window.DEMO;
   const KEY = 'jald_state_v1';
   const ICONS = {
+    edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>', copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/>',
     home: '<path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/>',
     clients: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6M16 5.5a3 3 0 010 5.8M18 14.5c2 .7 3 2.6 3 5.5"/>',
     orders: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
@@ -108,6 +109,8 @@
   }
 
   function renderTabs() {
+    document.getElementById('app').classList.toggle('notabs', S.tabs.length < 2);
+    document.getElementById('tabs').hidden = S.tabs.length < 2;
     document.getElementById('tabs').innerHTML = S.tabs.map(t =>
       '<div class="tab' + (t.id === S.active ? ' on' : '') + '" data-a="tab" data-id="' + esc(t.id) + '"><span>' + esc(tabTitle(t.id)) + '</span>' +
       (t.id.indexOf(':') < 0 ? '' : '<button class="x" data-a="close" data-id="' + esc(t.id) + '" title="Закрыть">' + icon('close', 13) + '</button>') + '</div>').join('');

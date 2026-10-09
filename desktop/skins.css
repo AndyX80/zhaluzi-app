@@ -3,20 +3,20 @@
 :root[data-skin=glass] body,:root[data-skin=dock] body{font-family:var(--fnt);background:var(--bg);background-image:var(--bgx);background-attachment:fixed;letter-spacing:-.005em}
 
 /* ---------- СТЕКЛО ---------- */
-:root[data-skin=glass]{--bg:#eef0f7;--bgx:radial-gradient(60% 50% at 12% 8%,#ffd9c2 0,transparent 60%),radial-gradient(50% 50% at 88% 12%,#cfe0ff 0,transparent 60%),radial-gradient(60% 60% at 70% 95%,#e5d4ff 0,transparent 60%);
+:root[data-skin=glass]{--pop:#fff;--bg:#eef0f7;--bgx:radial-gradient(60% 50% at 12% 8%,#ffd9c2 0,transparent 60%),radial-gradient(50% 50% at 88% 12%,#cfe0ff 0,transparent 60%),radial-gradient(60% 60% at 70% 95%,#e5d4ff 0,transparent 60%);
 --panel:rgba(255,255,255,.62);--panel2:rgba(255,255,255,.5);--ink:#1d1d1f;--mut:#6e6e73;--line:rgba(255,255,255,.9);--acc:#0071e3;--acc-i:#fff;--acc-s:rgba(0,113,227,.12);
 --ok:#1f9d6a;--ok-s:rgba(31,157,106,.14);--warn:#b87a00;--warn-s:rgba(255,159,10,.17);--bad:#d9453a;--bad-s:rgba(217,69,58,.13);--info:#2c68ad;--info-s:rgba(44,104,173,.13);--gray-s:rgba(60,60,67,.09);
 --side:rgba(255,255,255,.5);--side-i:#1d1d1f;--side-m:#5d5d63;--sh:0 1px 1px rgba(255,255,255,.8) inset,0 12px 40px rgba(60,70,120,.12);--glass:blur(26px) saturate(1.4)}
-:root[data-skin=glass][data-theme=dark]{--bg:#0a0b12;--bgx:radial-gradient(55% 50% at 10% 0,#33406e 0,transparent 62%),radial-gradient(45% 45% at 95% 10%,#5a2f6e 0,transparent 60%),radial-gradient(55% 55% at 60% 100%,#12515a 0,transparent 62%);
+:root[data-skin=glass][data-theme=dark]{--pop:#20212e;--bg:#0a0b12;--bgx:radial-gradient(55% 50% at 10% 0,#33406e 0,transparent 62%),radial-gradient(45% 45% at 95% 10%,#5a2f6e 0,transparent 60%),radial-gradient(55% 55% at 60% 100%,#12515a 0,transparent 62%);
 --panel:rgba(255,255,255,.07);--panel2:rgba(255,255,255,.06);--ink:#f5f5f7;--mut:#a1a1aa;--line:rgba(255,255,255,.13);--acc:#4da3ff;--acc-i:#04131f;--acc-s:rgba(77,163,255,.18);
 --ok:#4cc08c;--ok-s:rgba(76,192,140,.16);--warn:#ffb340;--warn-s:rgba(255,179,64,.16);--bad:#ff7a6e;--bad-s:rgba(255,122,110,.16);--info:#7db5f0;--info-s:rgba(125,181,240,.16);--gray-s:rgba(255,255,255,.09);
 --side:rgba(255,255,255,.06);--side-i:#f5f5f7;--side-m:#a1a1aa;--sh:0 1px 1px rgba(255,255,255,.1) inset,0 16px 50px rgba(0,0,0,.45)}
 
 /* ---------- ДОК ---------- */
-:root[data-skin=dock]{--bg:#e9edf3;--bgx:linear-gradient(180deg,#f3f6fa,#e4e9f1);--panel:#fff;--panel2:#f4f7fb;--ink:#0b3558;--mut:#5d7a99;--line:#e1e7f0;--acc:#006bff;--acc-i:#fff;--acc-s:rgba(0,107,255,.1);
+:root[data-skin=dock]{--pop:#fff;--bg:#e9edf3;--bgx:linear-gradient(180deg,#f3f6fa,#e4e9f1);--panel:#fff;--panel2:#f4f7fb;--ink:#0b3558;--mut:#5d7a99;--line:#e1e7f0;--acc:#006bff;--acc-i:#fff;--acc-s:rgba(0,107,255,.1);
 --ok:#1f9d6a;--ok-s:#e2f5ec;--warn:#b87a00;--warn-s:#fdf0d4;--bad:#d9453a;--bad-s:#fbe6e3;--info:#2c68ad;--info-s:#e4eefa;--gray-s:#eaeff6;
 --side:rgba(255,255,255,.85);--side-i:#0b3558;--side-m:#5d7a99;--sh:0 2px 4px rgba(11,53,88,.04),0 14px 34px rgba(11,53,88,.07)}
-:root[data-skin=dock][data-theme=dark]{--bg:#0a1220;--bgx:linear-gradient(180deg,#0e1830,#08101d);--panel:#121c30;--panel2:#182440;--ink:#e6eefc;--mut:#8aa0c2;--line:#1e2b46;--acc:#4d97ff;--acc-i:#04101f;--acc-s:rgba(77,151,255,.16);
+:root[data-skin=dock][data-theme=dark]{--pop:#121c30;--bg:#0a1220;--bgx:linear-gradient(180deg,#0e1830,#08101d);--panel:#121c30;--panel2:#182440;--ink:#e6eefc;--mut:#8aa0c2;--line:#1e2b46;--acc:#4d97ff;--acc-i:#04101f;--acc-s:rgba(77,151,255,.16);
 --ok:#4cc08c;--ok-s:#143226;--warn:#ffb340;--warn-s:#33280f;--bad:#ff7a6e;--bad-s:#3a1f1d;--info:#7db5f0;--info-s:#172b45;--gray-s:#1b2742;--side:rgba(18,28,48,.88);--side-i:#e6eefc;--side-m:#8aa0c2;--sh:0 14px 34px rgba(0,0,0,.4)}
 
 /* ---------- общее для обоих ---------- */
@@ -94,3 +94,11 @@
 :root[data-skin=glass] .callout,:root[data-skin=dock] .callout{border-color:transparent;border-left:4px solid var(--acc)}
 :root[data-skin=glass] .callout.bad,:root[data-skin=dock] .callout.bad{border-left-color:var(--bad)}
 :root[data-skin=glass] .callout.info,:root[data-skin=dock] .callout.info{border-left-color:var(--info)}
+
+:root[data-skin=glass] .app.notabs,:root[data-skin=dock] .app.notabs{grid-template-rows:auto 0 minmax(0,1fr) 38px}
+:root[data-skin=glass] .ul,:root[data-skin=dock] .ul{border-bottom-color:color-mix(in srgb,var(--ink) 55%,transparent)}
+:root[data-skin=glass] .ctr,:root[data-skin=glass] .oc,:root[data-skin=dock] .ctr,:root[data-skin=dock] .oc{border-radius:16px}
+:root[data-skin=glass] .oc,:root[data-skin=dock] .oc{border-radius:99px}
+:root[data-skin=glass] .sumbar,:root[data-skin=dock] .sumbar{border-radius:18px}
+:root[data-skin=glass] .view.v-calc,:root[data-skin=dock] .view.v-calc{padding-bottom:10px}
+:root[data-skin=dock] .view.v-calc{padding-bottom:96px}
