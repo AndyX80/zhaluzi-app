@@ -1,7 +1,7 @@
 /* Документы файлами: PDF (картинка страниц по макету) и Word (редактируемый .docx). Библиотеки лежат в vendor/ и грузятся при первом использовании. */
 (function () {
   'use strict';
-  const V = '?v=49', loaded = {};
+  const V = '?v=50', loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src + V; s.onload = ok; s.onerror = () => { delete loaded[src]; bad(new Error('Не загрузилась библиотека ' + src + '. Нужен интернет при первом разе.')); }; document.head.appendChild(s); }));
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
   const sigs = () => ({ sign: lsGet('jal_sign'), stamp: lsGet('jal_stamp') });
@@ -74,9 +74,9 @@
       ch.push(P('ИТОГО к оплате: ' + vm.total, { alignment: X.AlignmentType.RIGHT, spacing: { before: 100 } }, { bold: true }));
       ch.push(P('Оплата: ' + vm.payText + '. Предоплата: ' + vm.prepayText + '. Оставшаяся сумма: ' + vm.rest));
     } else if (fn === 'dogovorHtml') {
-      ch.push(P('ДОГОВОР ПОСТАВКИ № ' + vm.num, { alignment: X.AlignmentType.CENTER }, { bold: true, size: 26 }));
+      ch.push(P(vm.title + ' № ' + vm.num, { alignment: X.AlignmentType.CENTER }, { bold: true, size: 26 }));
       ch.push(P('г. Санкт-Петербург    ' + vm.dateText));
-      ch.push(P('Индивидуальный предприниматель Хорошавин Андрей Владимирович (ОГРНИП 318574900000760, ИНН 575404581100), именуемый в дальнейшем «Поставщик», с одной стороны, и ' + vm.buyer + ', именуемый в дальнейшем «Покупатель», с другой стороны, вместе именуемые «Стороны», заключили настоящий Договор о нижеследующем:', { alignment: X.AlignmentType.JUSTIFIED }));
+      ch.push(P('Индивидуальный предприниматель Хорошавин Андрей Владимирович, именуемый в дальнейшем «' + vm.role + '», с одной стороны, и ' + vm.buyer + ', именуемый в дальнейшем «Покупатель», с другой стороны, вместе именуемые «Стороны», заключили настоящий Договор о нижеследующем:', { alignment: X.AlignmentType.JUSTIFIED }));
       const sec = a => a.forEach(b => { ch.push(P(b.h, { spacing: { before: 120 } }, { bold: true })); b.t.forEach(t => ch.push(P(t, { alignment: X.AlignmentType.JUSTIFIED }))); });
       sec(vm.p1);
       ch.push(table([['№', 'Наименование', 'Кол-во', 'Цена', 'Сумма']].concat(vm.rows.map(r => [r.n, r.name, r.qty + ' шт.', r.price, r.sum])), [6, 44, 10, 20, 20], true));
@@ -84,8 +84,8 @@
       sec(vm.p2); sec(vm.p3);
       ch.push(P('9. РЕКВИЗИТЫ И ПОДПИСИ СТОРОН', { spacing: { before: 160 } }, { bold: true }));
       const col = (title, lines, who) => [title, ...lines, '', '_______________ / ' + who + ' /'].join('\n');
-      ch.push(table([[col('Поставщик', vm.seller, 'Хорошавин А.В.'), col('Покупатель', vm.buyerReq, vm.buyerShort)]], [50, 50]));
-      if (sign || stamp) { const a = [T('Подпись и печать Поставщика:  ')]; if (sign) a.push(sign); if (stamp) a.push(stamp); ch.push(P(a, { spacing: { before: 120 } })); }
+      ch.push(table([[col(vm.role, vm.seller, 'Хорошавин А.В.'), col('Покупатель', vm.buyerReq, vm.buyerShort)]], [50, 50]));
+      if (sign || stamp) { const a = [T('Подпись и печать:   ')]; if (sign) a.push(sign); if (stamp) a.push(stamp); ch.push(P(a, { spacing: { before: 120 } })); }
       ch.push(P('Приложение № 1: замерный лист (бланк заказа) № ' + vm.num + '. Скачай его отдельно (кнопка «Замерник» в заказе).', null, { italics: true, size: 16 }));
     }
     const d = new X.Document({ sections: [{ properties: { page: { margin: { top: 720, bottom: 720, left: 900, right: 900 } } }, children: ch }] });

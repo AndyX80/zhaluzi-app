@@ -27,9 +27,10 @@
 </section>
 <section style="background: var(--card); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
 <h2 style="margin: 0; font-size: 16px; font-weight: 700">Заказчик</h2>
-<div style="background: var(--card); border-radius: 14px; box-shadow: 0 0 0 1px #EFE3D3; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+<div style="background: var(--card); border-radius: 14px; box-shadow: 0 0 0 1px #EFE3D3; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))">
 <button onClick="{{setFiz}}" style="{{typeFiz}}">Физлицо</button>
 <button onClick="{{setYur}}" style="{{typeYur}}">Юрлицо</button>
+<button onClick="{{setIp}}" style="{{typeIp}}">ИП</button>
 </div>
 <sc-for list="{{client}}" as="f" hint-placeholder-count="4">
 <div style="display: flex; flex-direction: column; gap: 4px">

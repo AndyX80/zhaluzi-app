@@ -33,13 +33,13 @@
   function fresh(key) {
     return { key, to: 'client', ctype: 'fiz', pmode: 'pct', copy: true, inst: !JalCart.C.region && (+(window.JalCart && JalCart.C.service) || 0) > 0, rep: 'fine', prepay: 100, term: '', pay: 'QR', step: 0, lad: {}, di: '', ci: false,
       mnotes: '', mount: ['', '', '', '', ''], no: key === 'new' ? '' : key, date: today(), measurer: lsGet('jal_measurer') || 'Хорошавин', deliv: '', name: '', phone: '', addr: '', email: '',
-      company: '', inn: '', uaddr: '', repr: '', notes: null, qFrom: '', qTo: '', qrBlank: true, savedNo: null, media: [] };
+      company: '', inn: '', uaddr: '', ogrn: '', bank: '', repr: '', notes: null, qFrom: '', qTo: '', qrBlank: true, savedNo: null, media: [] };
   }
   function fromOrder(o) {
     if (o.zam) return Object.assign(fresh(o.no), o.zam, { key: o.no, savedNo: o.no });
-    const s = fresh(o.no), yur = o.buyer === 'юр';
-    Object.assign(s, { ctype: yur ? 'yur' : 'fiz', savedNo: o.no, date: today(), measurer: o.measurer || s.measurer, phone: o.phone || '', addr: o.addr || '', email: o.email || '',
-      company: o.company || '', inn: o.inn || '', uaddr: o.uaddr || '', di: toIso(o.inst), inst: o.install !== false && +o.delivery > 0,
+    const s = fresh(o.no), yur = o.buyer === 'юр', ip = o.buyer === 'ип';
+    Object.assign(s, { ctype: yur ? 'yur' : ip ? 'ip' : 'fiz', savedNo: o.no, date: today(), measurer: o.measurer || s.measurer, phone: o.phone || '', addr: o.addr || '', email: o.email || '',
+      company: o.company || '', inn: o.inn || '', uaddr: o.uaddr || '', ogrn: o.ogrn || '', bank: o.bank || '', di: toIso(o.inst), inst: o.install !== false && +o.delivery > 0,
       prepay: +o.pre || 100, pmode: o.preU === '₽' ? 'rub' : 'pct', term: String(o.term || ''), notes: o.note || null });
     if (yur) s.repr = o.name || ''; else s.name = o.name || '';
     return s;
@@ -98,14 +98,14 @@
 
   function save(co) {
     if (!co.items.length) { alert('Корзина пуста'); return null; }
-    const yur = S.ctype === 'yur', gs = groups(co);
+    const yur = S.ctype === 'yur', ip = S.ctype === 'ip', gs = groups(co);
     const mount = S.inst ? MOUNT.map((l, i) => S.mount[i] ? l + ': ' + S.mount[i] : '').filter(Boolean).join('; ') : '';
     const reg = !!JalCart.C.region, pvz = (JalCart.C.pvz || '').trim();
     const note = [S.notes == null ? autoNotes(gs) : S.notes, reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '', S.inst && S.mnotes ? 'Монтажнику: ' + S.mnotes : ''].filter(Boolean).join('\n');
     const lad = gs.filter(g => g.num && S.lad[g.num] && S.lad[g.num].own && S.lad[g.num].v).map(g => 'Поз. ' + g.num + ': лесенка/тесьма ' + S.lad[g.num].v);
     const total = JalDocs.orderTotal(Object.assign({}, co));
-    const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: S.inst ? co.delivery : 0, install: S.inst, region: reg, pvz: reg ? pvz : '', buyer: yur ? 'юр' : 'физ',
-      name: yur ? S.repr : S.name, phone: S.phone, addr: S.addr, email: S.email, company: yur ? S.company : '', inn: yur ? S.inn : '', uaddr: yur ? S.uaddr : '',
+    const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: S.inst ? co.delivery : 0, install: S.inst, region: reg, pvz: reg ? pvz : '', buyer: yur ? 'юр' : ip ? 'ип' : 'физ',
+      name: yur ? S.repr : S.name, phone: S.phone, addr: S.addr, email: S.email, company: yur ? S.company : '', inn: yur || ip ? S.inn : '', uaddr: yur || ip ? S.uaddr : '', ogrn: yur || ip ? S.ogrn : '', bank: yur || ip ? S.bank : '',
       meas: '', inst: S.inst ? S.di : '', measurer: S.measurer, pre: String(S.prepay || 100), preU: S.pmode === 'pct' ? '%' : '₽', term: String(S.term || 12), note: note + (lad.length ? '\n' + lad.join('\n') : ''),
       cart: JalCart.snapshot(), zam: JSON.parse(JSON.stringify(S)) };
     const no = S.savedNo || (JalCart.C.editNo && JalOrders.get(JalCart.C.editNo) ? JalCart.C.editNo : null);
@@ -140,10 +140,12 @@
     const termMax = sups.reduce((m, x) => Math.max(m, SUP_TERM[x] || 12), 0) || 12, termSup = supUi(sups.filter(x => (SUP_TERM[x] || 12) === termMax)[0] || '');
     if (S.term === '') { S.term = String(termMax); persist(); }
     const preRub = S.pmode === 'pct' ? Math.round(total * Math.min(100, +S.prepay || 0) / 100) : Math.min(total, +S.prepay || 0);
-    const yur = S.ctype === 'yur', s = S.step;
+    const yur = S.ctype === 'yur', ip = S.ctype === 'ip', s = S.step;
     const fld = (label, k, mode) => Object.assign({ label, mode: mode || 'text' }, quiet(k));
-    const client = (yur ? [fld('Название', 'company'), fld('ИНН', 'inn', 'numeric'), fld('Юридический адрес', 'uaddr'), fld('Телефон', 'phone', 'tel')]
-      .concat(S.inst ? [fld('Адрес установки', 'addr')] : []).concat([fld('E-mail', 'email', 'email'), fld('ФИО представителя', 'repr')])
+    const client = (yur ? [fld('Название', 'company'), fld('ИНН', 'inn', 'numeric'), fld('ОГРН', 'ogrn', 'numeric'), fld('Юридический адрес', 'uaddr'), fld('Телефон', 'phone', 'tel')]
+      .concat(S.inst ? [fld('Адрес установки', 'addr')] : []).concat([fld('E-mail', 'email', 'email'), fld('ФИО представителя', 'repr'), fld('Банковские реквизиты (необязательно)', 'bank')])
+      : ip ? [fld('ФИО индивидуального предпринимателя', 'name'), fld('ИНН', 'inn', 'numeric'), fld('ОГРНИП', 'ogrn', 'numeric'), fld('Адрес регистрации', 'uaddr'), fld('Телефон', 'phone', 'tel')]
+      .concat(S.inst ? [fld('Адрес установки', 'addr')] : []).concat([fld('E-mail', 'email', 'email'), fld('Банковские реквизиты (необязательно)', 'bank')])
       : [fld('ФИО', 'name'), fld('Телефон', 'phone', 'tel'), fld('Адрес' + (S.inst ? ' установки' : ''), 'addr'), fld('E-mail (необязательно)', 'email', 'email')]);
     const dField = (label, k) => ({ label, isDate: true, isInput: false, text: ru(S[k]) || 'Выбрать дату', open: () => { const b = S[k] ? new Date(S[k] + 'T00:00:00') : new Date(); CAL = { k, y: b.getFullYear(), m: b.getMonth() }; render(); } });
     const head = [Object.assign({ label: 'Заказ №', ph: 'авто', isDate: false, isInput: true }, quiet('no')), dField('Дата', 'date'),
@@ -176,7 +178,7 @@
       step0: s === 0, step1: s === 1, step2: s === 2, step3: s === 3, step4: s === 4, notLast: s < 4, isLast: s === 4,
       nextStep: () => { set({ step: Math.min(4, s + 1) }); window.scrollTo(0, 0); },
       stepHint: 'Шаг ' + (s + 1) + ' из 5',
-      head, client, typeFiz: seg(!yur), typeYur: seg(yur), setFiz: () => set({ ctype: 'fiz' }), setYur: () => set({ ctype: 'yur' }),
+      head, client, typeFiz: seg(!yur && !ip), typeYur: seg(yur), typeIp: seg(ip), setFiz: () => set({ ctype: 'fiz' }), setYur: () => set({ ctype: 'yur' }), setIp: () => set({ ctype: 'ip' }),
       sketch: blinds.map(g => { const it = g.it, d = (DRAW[it.lam] || DRAW[50])[it.ctrl] || (DRAW[it.lam] || DRAW[50]).TR;
         return { n: String(g.num), w: String(Math.round(it.W * 10)), h: String(Math.round(it.H * 10)), thin: d[0], thick: d[1], note: 'ГЖ ' + it.lam + (short(it).length ? ' · ' + short(it).join(', ') : '') }; }),
       ladder: blinds.map(g => { const n = g.num, own = !!(S.lad[n] && S.lad[n].own); const sg = on => 'height: 40px; flex: 1 1 0; min-width: 0; border: 0; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--ink); background: ' + (on ? 'var(--sel)' : 'var(--chip)');
