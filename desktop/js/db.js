@@ -108,7 +108,7 @@
     return { id: 'ph' + r.uid, no: String(r.no), uid: r.uid, ph: true, sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: '', factory: '',
       inst: !!r.install, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: 0,
       created: (r.created || '').slice(0, 10), due: '', tk: r.note || '', review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: false, legacy: false, archived: !!r.archived,
-      _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '' };
+      _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '', items, disc: +r.disc || 0, delivery: +r.delivery || 0, priced: !!r.priced, hasCart: !!(r.cart && r.cart.cart) };
   }
   DB.dups = [];
   DB.dupPick = () => { try { return JSON.parse(lsGet('jald_dup_v1') || '{}') || {}; } catch (e) { return {}; } };
@@ -139,6 +139,25 @@
     const list = DB.raw(), i = list.findIndex(x => x.uid === rec.uid); rec.upd = nowIso();
     if (i >= 0) list[i] = rec; else list.push(rec); DB.setRaw(list); DB.later(); return rec;
   }
+  /* сквозной номер: больше всех номеров в базе (Excel и телефон) и отметки телефона jal_no_max */
+  DB.nextNo = function () {
+    let mx = 1325; mx = Math.max(mx, +lsGet('jal_no_max') || 0);
+    DB.raw().forEach(r => { if (/^\d+$/.test(String(r.no))) mx = Math.max(mx, +r.no); });
+    return String(mx + 1);
+  };
+  /* заказ из корзины: новый или (editNo) обновление уже оформленного; запись такая же, как делает телефон */
+  DB.saveOrder = function (data, items, editNo, title, sum) {
+    const t = nowIso(), old = editNo ? DB.raw().find(r => String(r.no) === String(editNo) && !r.del && !r.legacy) : null;
+    let rec;
+    if (old) {
+      rec = Object.assign({}, old, data, { items });
+      rec.history = [{ v: (old.history || []).length + 1, title, sum, at: t, sub: '' }].concat(old.history || []);
+    } else {
+      rec = Object.assign({ uid: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), no: DB.nextNo(), status: 'Черновик', created: t, history: [], rev: true, rem: 0 }, data, { items });
+    }
+    put(rec); try { lsSet('jal_no_max', String(Math.max(+lsGet('jal_no_max') || 0, +rec.no || 0))); } catch (e) {}
+    DB.derive(); return rec;
+  };
   DB.patchRec = function (uid, patch) { const r = DB.raw().find(x => x.uid === uid); if (!r) return; put(Object.assign({}, r, patch)); DB.derive(); };
   /* после правки заказа на экране */
   DB.commit = function (o) {

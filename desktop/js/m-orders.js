@@ -25,6 +25,22 @@
   const tabs = [['main', 'Общая'], ['meas', 'Замер'], ['items', 'Изделия'], ['fin', 'Финансы'], ['docs', 'Документы'], ['sup', 'Поставщик и доставка'], ['hist', 'История']];
   const inp = (k, o, label, ph) => '<div class="field"><label>' + label + '</label><input class="in" value="' + e(o[k] || '') + '" placeholder="' + (ph || '') + '" data-c="ofld" data-k="' + k + '" data-id="' + o.id + '"></div>';
 
+  /* состав заказа, собранного в расчёте: одинаковые позиции склеены */
+  function itemsPh(o) {
+    const g = [], idx = {};
+    (o.items || []).forEach(i => {
+      const nm = i.kind ? (i.title || 'Услуга') : [i.sup, i.mat, i.lam ? i.lam + ' мм' : '', i.o && i.o.color].filter(Boolean).join(', ');
+      const sz = i.W ? Math.round(i.W * 10) + '×' + Math.round(i.H * 10) : '', k = nm + '|' + sz + '|' + i.price;
+      if (idx[k] == null) { idx[k] = g.length; g.push({ nm, sz, price: +i.price || 0, n: 0, sub: i.o ? [(i.o.opts || []).join(', '), i.o.fix || ''].filter(Boolean).join(' · ') : '' }); }
+      g[idx[k]].n++;
+    });
+    const sum = (o.items || []).reduce((a, i) => a + (+i.price || 0), 0);
+    return '<table class="tbl"><thead><tr><th>№</th><th>Изделие</th><th>Размер, мм</th><th class="r">Шт</th><th class="r">Цена за шт</th><th class="r">Сумма</th></tr></thead><tbody>' +
+      g.map((x, n) => '<tr><td>' + (n + 1) + '</td><td><b>' + e(x.nm) + '</b>' + (x.sub ? '<div class="mut" style="font-size:12px">' + e(x.sub) + '</div>' : '') + '</td><td class="num">' + e(x.sz) + '</td><td class="r">' + x.n + '</td><td class="r num">' + m(x.price) + '</td><td class="r num">' + m(x.price * x.n) + '</td></tr>').join('') +
+      '</tbody></table><div class="mut" style="margin-top:8px">Цены с доставкой и монтажом' + (o.disc ? '. Скидка: −' + m(o.disc) : '') + '. Итого: <b>' + m(Math.max(0, sum - (o.disc || 0))) + '</b></div>' +
+      (o.hasCart ? '<div class="row" style="margin-top:12px"><button class="btn pri" data-a="oreopen" data-id="' + o.id + '">Открыть в расчёте</button></div>' : '');
+  }
+
   function body(o) {
     const c = A.client(o.client) || { id: '', name: '', phone: '', addr: '', src: '' }, t = S.orderTab, real = !!o.fl;
     if (t === 'main') return '<div class="g2"><div class="stack" style="gap:10px"><div class="field"><label>Клиент</label><div class="b" style="cursor:pointer" data-a="opn" data-id="client:' + c.id + '">' + e(c.name) + '</div><div class="mut">' + e(c.phone) + (c.addr ? ' · ' + e(c.addr) : '') + '</div></div>' +
@@ -33,6 +49,7 @@
         '<div class="card flat"><h2>Признаки заказа' + (real ? ' <span class="soon">нажми, чтобы отметить</span>' : '') + '</h2><div class="chips" style="margin-top:8px">' + flags(o).map(f => '<span class="pill ' + (f[1] ? 'ok' : '') + '"' + (real ? ' style="cursor:pointer" data-a="oflag" data-k="' + f[2] + '" data-id="' + o.id + '"' : '') + '>' + (f[1] ? '✓ ' : '') + f[0] + '</span>').join('') + '</div>' +
         '<div class="row wrap" style="margin-top:10px"><span class="pill info">' + e(o.zone) + '</span><span class="pill">Категория: ' + e(o.cat) + '</span><span class="pill">' + (o.inst ? 'С монтажом' : 'Без монтажа') + '</span>' + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '</div></div></div>';
     if (t === 'meas') return '<div class="callout info">Замер может не понадобиться: КП часто даётся по размерам клиента до выезда. Этап «Замер» в воронке пропускаемый.</div><p class="mut" style="margin-top:12px">Здесь будет замерный лист из телефонной версии: таблица изделий, часы тишины, примечания, монтаж, печать бланка.</p>';
+    if (t === 'items' && o.ph) return itemsPh(o);
     if (t === 'items') return real && o.legacy ? '<div class="callout info">Это заказ из вашего Excel-учёта: состав изделий там не вёлся (только категория «' + e(o.cat) + '» и поставщик «' + e(o.sup || '—') + '»). Новые заказы, собранные в расчёте, сохраняют полный список изделий.</div>' :
       '<table class="tbl"><thead><tr><th>№</th><th>Изделие</th><th>Размер</th><th class="r">Шт</th><th class="r">Сумма</th></tr></thead><tbody><tr><td>1</td><td>Дерево 50, Белый (павловния)</td><td>1200×1500</td><td class="r">2</td><td class="r num">18 400 ₽</td></tr><tr><td>2</td><td>Дерево 50, Белый (павловния)</td><td>900×1400</td><td class="r">1</td><td class="r num">8 200 ₽</td></tr></tbody></table><div class="row" style="margin-top:12px"><button class="btn pri" data-a="nav" data-id="calc">Открыть в расчёте</button><button class="btn" data-a="stub" data-t="пересчёт по новым ценам">Пересчитать по новым ценам</button></div>';
     if (t === 'fin') return '<div class="g3"><div class="kpi"><small>Сумма заказа</small><b>' + m(o.sum) + '</b></div><div class="kpi"><small>Получено</small><b>' + m(o.paid) + '</b></div><div class="kpi"><small>Долг клиента</small><b>' + m(Math.max(0, o.sum - o.paid)) + '</b></div></div>' +
@@ -73,6 +90,10 @@
         (S.ordersView === 'kanban' ? kanban() : '<div class="split">' + list() + card(S.selOrder, false) + '</div>');
     }
   });
+  A.act.oreopen = el => {
+    const o = A.order(el.dataset.id), r = o && DB.raw().find(x => x.uid === o.uid); if (!r || !r.cart) return;
+    JalCart.restore(r.cart, String(r.no)); A.toast('Заказ № ' + r.no + ' открыт в расчёте'); A.open('calc');
+  };
   A.act.otab = el => { S.orderTab = el.dataset.t; A.save(); A.render(); };
   A.act.ofilter = el => { S.ordersFilter = el.dataset.f; S.olimit = LIM; A.save(); A.render(); };
   A.act.oview = el => { S.ordersView = el.dataset.v; A.save(); A.render(); };
