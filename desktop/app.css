@@ -174,3 +174,10 @@ button.ul.sel .ph{color:var(--bad)}.sm{font-size:12px}
 .app{transition:none}
 .modal .btn:not(.pri){background:var(--gray-s);border:1px solid var(--line)}
 .modal{min-height:0}
+/* v21.1 список цветов */
+.colist{overflow-x:hidden!important;scrollbar-width:none;-ms-overflow-style:none}.colist::-webkit-scrollbar{display:none}
+.colpop .in{height:40px;border:1.5px solid var(--ink);background:var(--panel);color:var(--ink);font-size:14px;font-weight:600;padding:0 12px}
+.colpop .in:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-s)}
+.colpop .in::placeholder{color:var(--mut);font-weight:500}
+.coli{font-weight:500;font-size:13.5px}.coli b{font-weight:700}
+.ln{font-weight:700}
