@@ -1,7 +1,7 @@
 /* Документы файлами: PDF (картинка страниц по макету) и Word (редактируемый .docx). Библиотеки лежат в vendor/ и грузятся при первом использовании. */
 (function () {
   'use strict';
-  const V = '?v=53', loaded = {};
+  const V = '?v=54', loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src + V; s.onload = ok; s.onerror = () => { delete loaded[src]; bad(new Error('Не загрузилась библиотека ' + src + '. Нужен интернет при первом разе.')); }; document.head.appendChild(s); }));
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
   const sigs = () => ({ sign: lsGet('jal_sign'), stamp: lsGet('jal_stamp') });

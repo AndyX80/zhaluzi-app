@@ -120,9 +120,13 @@
     const live = list.filter(o => !o.del); try { localStorage.setItem(PHKEY, JSON.stringify(list)); } catch (e) {}
     D.orders = D.orders.filter(o => !o.ph);
     const byPhone = {}; D.clients.forEach(c => { const d = phoneDigits(c.phone); if (d.length >= 10) byPhone[d.slice(-10)] = c; });
+    const pick = DB.dupPick(); DB.dups = [];
     const legacy = {}; D.orders.forEach(o => { legacy[o.no] = 1; });
     live.forEach(r => {
-      if (legacy[String(r.no)]) return; /* тот же номер уже есть в Excel-учёте: берём Excel */
+      if (legacy[String(r.no)]) { /* тот же номер уже есть в Excel-учёте: решает Андрей */
+        const ch = pick[r.uid];
+        if (ch === 'phone') D.orders = D.orders.filter(x => x.no !== String(r.no)); else { if (!ch) DB.dups.push(r); return; }
+      }
       const o = fromPhone(r), c0 = o._c; delete o._c; const pd = phoneDigits(c0.phone).slice(-10);
       let c = pd.length >= 10 ? byPhone[pd] : D.clients.find(x => x.name.toLowerCase() === c0.name.toLowerCase());
       if (!c) { c = { id: 'cp' + r.uid, name: c0.name, phone: phoneFmt(c0.phone), addr: c0.addr, src: '', note: '' }; D.clients.unshift(c); if (pd.length >= 10) byPhone[pd] = c; }
@@ -132,6 +136,9 @@
     D.orders.sort((a, b) => (a.created < b.created ? 1 : a.created > b.created ? -1 : (+b.no) - (+a.no)));
     return live.length;
   };
+  DB.dups = [];
+  DB.dupPick = () => { try { return JSON.parse(lsGet('jald_dup_v1') || '{}') || {}; } catch (e) { return {}; } };
+  DB.dupSet = (uid, v) => { const p = DB.dupPick(); p[uid] = v; try { localStorage.setItem('jald_dup_v1', JSON.stringify(p)); } catch (e) {} DB.applyPhone(DB.phRaw()); DB.save(); };
   DB.delPhone = function (uid) {
     const list = DB.phRaw(), r = list.find(x => x.uid === uid); if (r) { r.del = true; r.upd = new Date().toISOString(); }
     DB.applyPhone(list); DB.save(); if (DB.scriptUrl()) DB.syncPhone().catch(() => {});

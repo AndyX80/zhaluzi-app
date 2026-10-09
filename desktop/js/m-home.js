@@ -8,6 +8,7 @@
   A.attention = () => {
     if (!D.real) return [['order:o6', 'bad', 'Заказ 1321: открыта рекламация (перекос ламелей), ответ поставщику не отправлен'], ['order:o3', 'warn', 'Заказ 1324: до монтажа 9 дней, остаток 59 200 ₽ ещё не получен'], ['order:o2', 'warn', 'Заказ 1325: КП отправлено вчера, клиент не ответил'], ['order:o1', 'info', 'Заказ 1326: подтвердить время замера на завтра']];
     const out = [], today = todayIso();
+    (window.DB && DB.dups || []).forEach(r => { const o = D.orders.find(x => x.no === String(r.no)); if (o) out.push([9e9, 'order:' + o.id, 'bad', 'Заказ № ' + r.no + ' задвоен (Excel и телефон): выбери, какой оставить']); });
     D.orders.forEach(o => {
       const f = o.fl || {}, base = '№ ' + o.no + ' ' + cname(o) + ': ', debt = o.sum - o.paid;
       if (debt > 0) out.push([debt, 'order:' + o.id, o.created < today.slice(0, 8) + '01' ? 'bad' : 'warn', base + 'долг клиента ' + m(debt)]);

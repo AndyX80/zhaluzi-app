@@ -102,7 +102,7 @@
     const cur = baseOf(S.active);
     document.getElementById('side').innerHTML = NAV.map(n =>
       '<button class="ni' + (cur === n[0] ? ' on' : '') + '" data-a="nav" data-id="' + n[0] + '" title="' + n[1] + '">' + icon(n[0], 21) + '<span>' + n[1] + '</span></button>').join('') +
-      '<div class="sp"></div><div class="ver">' + (D.real ? 'версия 2<br>ваши данные' : 'каркас v1<br>данные демо') + '</div>';
+      '<div class="sp"></div><div class="ver">' + (D.real ? 'версия ' + (window.JALD_VER || 2) + '<br>ваши данные' : 'каркас v1<br>данные демо') + '</div>';
     document.getElementById('app').classList.toggle('collapsed', !!S.collapsed);
   }
 

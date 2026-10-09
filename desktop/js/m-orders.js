@@ -12,6 +12,11 @@
   };
   const prof = o => o.instCost != null ? o.sum - o.cost - o.instCost : o.sum - o.cost - (o.inst ? Math.round(o.sum * 0.12) : 0);
   const dmy = s => (window.DB && /^\d{4}-/.test(s || '')) ? DB.dmy(s) : (s || '');
+  const dupBox = o => {
+    const r = (DB.dups || []).find(x => String(x.no) === String(o.no)); if (!r) return '';
+    const it = r.items || [], sum = it.reduce((a, i) => a + (+i.price || 0), 0) - (+r.disc || 0);
+    return '<div class="callout warn" style="margin-bottom:10px"><b>Заказ № ' + e(o.no) + ' есть и в Excel, и на телефоне.</b><br>Excel: ' + e(o.title) + ', ' + m(o.sum) + (o.created ? ', ' + e(dmy(o.created)) : '') + '.<br>Телефон: ' + e(r.name || r.company || 'без имени') + ', ' + it.length + ' поз., ' + m(Math.max(0, sum)) + (r.created ? ', ' + e(dmy(r.created.slice(0, 10))) : '') + '.<div class="row" style="margin-top:8px;gap:8px"><button class="btn sm" data-a="dupres" data-uid="' + e(r.uid) + '" data-v="excel">Оставить из Excel</button><button class="btn sm" data-a="dupres" data-uid="' + e(r.uid) + '" data-v="phone">Оставить с телефона</button></div></div>';
+  };
   const stepper = o => '<div class="stepper">' + D.STAGES.map((s, i) => '<div class="step ' + (i < o.stage ? 'done' : i === o.stage ? 'cur' : '') + '"><i>' + (i < o.stage ? '✓' : i + 1) + '</i>' + e(s) + '</div>').join('') + '</div>';
 
   const FL = [['work', 'В работе'], ['sup', 'Оплачен поставщику'], ['sent', 'Отправлен'], ['got', 'Получен'], ['zp', 'ЗП монтажнику отдана'], ['closed', 'Закрыто']];
@@ -39,8 +44,8 @@
 
   function card(id, full) {
     const o = A.order(id) || D.orders[0], c = A.client(o.client) || { name: '' };
-    return '<div class="card" style="min-height:100%"><div class="row wrap" style="margin-bottom:6px"><h1>Заказ № ' + o.no + '</h1>' + A.stagePill(o) + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '<span class="sp"></span>' + (D.real ? '<button class="btn sm" data-a="odel" data-id="' + o.id + '">' + (S.odelId === o.id ? 'Точно удалить?' : 'Удалить заказ') + '</button>' : '') +
-      (full ? '' : '<button class="btn sm" data-a="opn" data-id="order:' + o.id + '">Открыть во вкладке</button>') + '</div><div class="mut" style="margin-bottom:10px">' + e(c.name) + ' · ' + e(o.title) + (o.created ? ' · ' + e(dmy(o.created)) : '') + '</div>' + stepper(o) +
+    return '<div class="card" style="min-height:100%"><div class="row wrap" style="margin-bottom:6px"><h1>Заказ № ' + o.no + '</h1>' + A.stagePill(o) + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '<span class="sp"></span>' + (D.real ? (S.odelId === o.id ? '<span class="mut">Удалить заказ?</span><button class="btn sm" data-a="odel" data-id="' + o.id + '" data-y="1">Да, удалить</button><button class="btn sm" data-a="odelno">Нет</button>' : '<button class="btn sm" data-a="odel" data-id="' + o.id + '">Удалить заказ</button>') : '') +
+      (full ? '' : '<button class="btn sm" data-a="opn" data-id="order:' + o.id + '">Открыть во вкладке</button>') + '</div>' + dupBox(o) + '<div class="mut" style="margin-bottom:10px">' + e(c.name) + ' · ' + e(o.title) + (o.created ? ' · ' + e(dmy(o.created)) : '') + '</div>' + stepper(o) +
       '<div class="itabs">' + tabs.map(t => '<button class="' + (S.orderTab === t[0] ? 'on' : '') + '" data-a="otab" data-t="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' + body(o) +
       '<div class="sumbar"><div><small>Сумма заказа</small><b>' + m(o.sum) + '</b></div><div><small>Оплачено</small><b>' + m(o.paid) + '</b></div><div><small>Долг</small><b>' + m(Math.max(0, o.sum - o.paid)) + '</b></div><div><small>Закуп</small><b>' + m(o.cost) + '</b></div><div><small>Прибыль</small><b>' + m(prof(o)) + '</b></div></div></div>';
   }
@@ -73,11 +78,13 @@
   A.act.omore = () => { S.olimit = (S.olimit || LIM) + 200; A.render(); };
   A.act.odel = el => {
     const o = A.order(el.dataset.id); if (!o) return;
-    if (S.odelId !== o.id) { S.odelId = o.id; A.render(); setTimeout(() => { if (S.odelId === o.id) { S.odelId = null; A.render(); } }, 4000); return; }
+    if (!el.dataset.y) { S.odelId = o.id; A.render(); return; }
     S.odelId = null; S.selOrder = null;
     if (o.ph) DB.delPhone(o.uid); else { D.orders = D.orders.filter(x => x.id !== o.id); DB.save(); }
     A.toast('Заказ № ' + o.no + ' удалён'); A.render();
   };
+  A.act.odelno = () => { S.odelId = null; A.render(); };
+  A.act.dupres = el => { DB.dupSet(el.dataset.uid, el.dataset.v); S.selOrder = null; A.toast('Готово'); A.render(); };
   A.act.oflag = el => {
     const o = A.order(el.dataset.id); if (!o || !o.fl) return; o.fl[el.dataset.k] = !o.fl[el.dataset.k]; o.stage = DB.stageOf(o.fl); DB.save(); A.render();
   };
