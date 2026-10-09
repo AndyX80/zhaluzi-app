@@ -4,7 +4,7 @@
   const LM = window.JalLimits;
   const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const ceil100 = x => Math.ceil(x / 100 - 1e-9) * 100;
-  const K0 = 'jal_cart2';
+  const K0 = window.JAL_CART_KEY || 'jal_cart2'; /* десктоп ведёт свою корзину под другим ключом */
   const C = { cart: [], service: 0, region: false, pvz: '', disc: '', discMode: 'pct', needDog: true, cf: null, undoItem: null };
   try { Object.assign(C, JSON.parse(localStorage.getItem(K0) || '{}')); C.cf = null; C.undoItem = null; } catch (e) {}
   const save = () => { try { localStorage.setItem(K0, JSON.stringify({ cart: C.cart, service: C.service, region: C.region, pvz: C.pvz, disc: C.disc, discMode: C.discMode, needDog: C.needDog })); } catch (e) {} };
@@ -284,7 +284,7 @@
   function clear() { C.editNo = null; C.cart = []; C.service = 0; C.pvz = ''; C.disc = ''; save(); }
 
   const setRegion = on => { C.region = !!on; save(); rerender(); };
-  window.JalCart = { setRegion, RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
+  window.JalCart = { save, rerender, setRegion, RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
     autoList: (sup, kind) => (AUTO && AUTO[sup] ? AUTO[sup][kind] : null), autoQty, autoStep, hasAuto: sup => !!(AUTO && AUTO[sup]),
     counts: () => ({ drive: C.cart.filter(x => x.kind === 'drive').reduce((a, x) => a + x.qty, 0), remote: C.cart.filter(x => x.kind === 'remote').reduce((a, x) => a + x.qty, 0) }) };
 })();

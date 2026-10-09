@@ -1,76 +1,154 @@
-/* Продажи и расчёт: слева набирается текущее изделие, справа корзина, справка по модели под рукой.
-   Цены здесь демонстрационные: настоящий расчёт переносится из телефонной версии на этапе 1. */
+/* Продажи и расчёт: слева изделие (форма как в ЛК Амиго), справа корзина.
+   Расчёт, наличие, ограничения размеров, доставка партии и скидка — тот же код, что на телефоне (engine.js подключает ../src). */
 (function () {
   const A = App, S = A.S, e = A.esc, m = A.money;
-  const F = { coll: 'Стандарт', lam: '50', mat: 'Дерево', color: 0, w: '1200', h: '1500', qty: 1, ctrl: 'TR', opts: {}, comment: '', own: '' };
-  const COLLS = [['Стандарт', 'Amigo'], ['Классик', 'Интерьер'], ['Урбан', 'РДО'], ['Тренд', 'Foroom'], ['Премиум', 'Уют']];
-  const COLORS = [['Белый', 'павловния', 'g'], ['Слоновая кость', 'павловния', 'g'], ['Липа натуральная', 'липа', 'y'], ['Орех', 'липа', 'g'], ['Венге', 'липа', 'r']];
-  const CTRL = { TR: 'Подъём справа, поворот слева', TL: 'Подъём слева, поворот справа', L: 'Подъём и поворот слева', R: 'Подъём и поворот справа' };
-  const OPTS = ['Тесьма', 'Струна', 'Уголки', 'Цепочка'];
-  const area = () => Math.max((+F.w || 0) * (+F.h || 0) / 1e6, 0.8);
-  const price = () => { const a = area(), base = (F.lam === '25' ? 5200 : 6100) + (F.mat === 'Бамбук' ? 600 : 0) + COLLS.map(c => c[0]).indexOf(F.coll) * 900; let p = base * a + Object.keys(F.opts).filter(k => F.opts[k]).length * 700; if (S.region) p *= 0.88; return Math.ceil(p / 100) * 100; };
-  const hasOwn = () => F.own !== '' && !isNaN(+F.own) && +F.own >= 0;
-  const unit = () => hasOwn() ? Math.round(+F.own) : price();
-  const costOf = () => Math.round(price() * 0.62);
-  const seg = (k, vals) => '<div class="seg">' + vals.map(v => '<button class="' + (F[k] === v[0] ? 'on' : '') + '" data-a="cf" data-k="' + k + '" data-v="' + v[0] + '">' + v[1] + '</button>').join('') + '</div>';
+  const SUPS = ['Amigo', 'Интерьер', 'РДО', 'Foroom', 'Уют'];
+  const RU = { Amigo: 'Амиго', Foroom: 'Форум' };
+  const ru = s => RU[s] || s;
+  const DOT = { 2: '#2E9E48', 1: '#E0A800', 0: '#D64545' };
+  const STOCK_TXT = { 2: 'есть на складе', 1: 'мало, уточни у технологов', 0: 'нет на складе' };
+  const CTRL_TXT = { L: 'подъём и поворот слева', R: 'подъём и поворот справа', TL: 'поворот слева, подъём справа', TR: 'поворот справа, подъём слева' };
+  const CHAIN_TXT = { L: 'цепочка слева', R: 'цепочка справа' };
+  const F = { sup: 'Amigo', lam: 50, mat: 'Дерево', color: '', colOpen: false, cq: '', w: '', h: '', qty: 1, ctrl: 'TR', fix: '', opts: {}, own: '', note: '', edit: -1 };
+  const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const CS = () => window.JalCalcScreen, JC = () => window.JalCart;
+
+  /* приводим форму к допустимому виду для выбранного поставщика (как на телефоне) */
+  function norm() {
+    const cs = CS(), s = F;
+    const lamOk = s.sup === 'Foroom' ? [50] : [25, 50];
+    const lam = lamOk.indexOf(s.lam) >= 0 ? s.lam : 50;
+    const matOk = (s.sup === 'Интерьер' && lam === 25) ? ['Дерево'] : (s.sup === 'Amigo' && lam === 50 ? ['Дерево', 'Бамбук', 'Пластик'] : ['Дерево', 'Бамбук']);
+    const mat = matOk.indexOf(s.mat) >= 0 ? s.mat : 'Дерево';
+    const prodKey = mat + ' ' + lam, colList = cs.colorsFor(s.sup, prodKey);
+    const color = colList.some(c => c.key === s.color) ? s.color : '';
+    const optNames = cs.availOpts(s.sup, lam), opts = {}; optNames.forEach(n => { if (s.opts[n]) opts[n] = true; });
+    const chain = !!opts['Цепочка'], splitOnly = s.sup === 'РДО' && lam === 50;
+    const ctrl = chain ? (s.ctrl === 'R' || s.ctrl === 'TL' ? 'R' : 'L') : (splitOnly ? (s.ctrl === 'TL' ? 'TL' : 'TR') : (cs.CTRL_NAMES[s.ctrl] ? s.ctrl : 'TR'));
+    const ctrlKeys = chain ? ['L', 'R'] : (splitOnly ? ['TL', 'TR'] : cs.CTRL_ORDER[lam]);
+    const fixNames = cs.availFixes(s.sup, lam), fix = fixNames.indexOf(s.fix) >= 0 ? s.fix : '';
+    const cur = { sup: s.sup, lam, mat, color, ctrl, fix, w: s.w, h: s.h, opts };
+    const r = cs.calcItem(cur, colList);
+    return { lamOk, lam, matOk, mat, prodKey, colList, color, optNames, opts, chain, ctrl, ctrlKeys, fixNames, fix, cur, r, selCol: colList.find(c => c.key === color) };
+  }
+  const seg = (items, on, act, key) => '<div class="seg">' + items.map(v => '<button class="' + (on === v[0] ? 'on' : '') + '" data-a="' + act + '" data-k="' + key + '" data-v="' + e(v[0]) + '">' + e(v[1]) + '</button>').join('') + '</div>';
+
+  function pricesBar() {
+    const E = window.Eng;
+    if (!E || E.err && !E.ready) return '<div class="callout bad">' + e(E ? E.err : 'Движок расчёта не загрузился') + '</div>';
+    const when = E.at ? new Date(E.at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+    return '<div class="row wrap" style="gap:8px;margin-bottom:10px">' + (E.ready ? '<span class="mut" style="font-size:13px">Цены из таблицы: ' + e(when) + '</span>' : '<span class="mut">Цены ещё не загружены</span>') +
+      '<span class="sp"></span><button class="btn sm" data-a="cprices">Обновить цены</button></div>' +
+      (E.url() ? '' : '<div class="field" style="margin-bottom:10px"><label>Ссылка на скрипт цен (та же, что во вкладке «Цены» на телефоне)</label><input class="in" data-c="cscript" placeholder="https://script.google.com/…?key=…"></div>');
+  }
 
   function form() {
-    const sup = COLLS.filter(c => c[0] === F.coll)[0][1], col = COLORS[F.color];
-    return '<div class="card"><h2>Текущее изделие</h2><div class="stack" style="gap:12px;margin-top:10px">' +
-      '<div class="field"><label>Группа товара</label><select class="in" data-c="cf" data-k="group"><option>Горизонтальные деревянные жалюзи</option><option disabled>Рулонные шторы (скоро)</option><option disabled>Зебра (скоро)</option><option disabled>Плиссе (скоро)</option><option disabled>Вертикальные (скоро)</option></select></div>' +
-      '<div class="field"><label>Коллекция</label><div class="chips">' + COLLS.map(c => '<button class="opt ' + (F.coll === c[0] ? 'on' : '') + '" data-a="cf" data-k="coll" data-v="' + c[0] + '">' + c[0] + ' (' + c[1] + ')</button>').join('') + '</div></div>' +
-      '<div class="row wrap"><div class="field"><label>Ламель, мм</label>' + seg('lam', [['25', '25'], ['50', '50']]) + '</div><div class="field"><label>Материал</label>' + seg('mat', [['Дерево', 'Дерево'], ['Бамбук', 'Бамбук']]) + '</div></div>' +
-      '<div class="field"><label>Цвет</label><select class="in" data-c="cf" data-k="color">' + COLORS.map((c, i) => '<option value="' + i + '"' + (F.color == i ? ' selected' : '') + '>' + (c[2] === 'r' ? '● ' : c[2] === 'y' ? '◐ ' : '● ') + c[0] + ' (' + c[1] + ')' + (c[2] === 'r' ? ' — нет на складе' : '') + '</option>').join('') + '</select></div>' +
-      '<div class="g2"><div class="field"><label>Ширина, мм</label><input class="in" type="number" value="' + e(F.w) + '" data-c="cf" data-k="w"></div><div class="field"><label>Высота, мм</label><input class="in" type="number" value="' + e(F.h) + '" data-c="cf" data-k="h"></div></div>' +
-      '<div class="field"><label>Управление</label><div class="chips">' + Object.keys(CTRL).map(k => '<button class="opt ' + (F.ctrl === k ? 'on' : '') + '" data-a="cf" data-k="ctrl" data-v="' + k + '">' + CTRL[k] + '</button>').join('') + '</div></div>' +
-      '<div class="field"><label>Опции</label><div class="chips">' + OPTS.map(o => '<button class="opt ' + (F.opts[o] ? 'on' : '') + '" data-a="copt" data-v="' + o + '">' + o + '</button>').join('') + '</div></div>' +
-      '<div class="row"><div class="field" style="width:100px"><label>Кол-во</label><input class="in" type="number" min="1" value="' + F.qty + '" data-c="cf" data-k="qty"></div><div class="field" style="flex:1"><label>Комментарий к позиции</label><input class="in" value="' + e(F.comment) + '" data-c="cf" data-k="comment"></div></div>' +
-      '<div class="row wrap"><div class="field" style="width:190px"><label>Цена по прайсу, за шт</label><div class="in num" style="display:flex;align-items:center;background:var(--bg2,transparent)">' + m(price()) + '</div></div><div class="field" style="width:190px"><label>Своя цена, за шт (любая)</label><input class="in num" type="number" min="0" placeholder="как в прайсе" value="' + e(F.own) + '" data-c="cf" data-k="own"></div>' + (hasOwn() ? '<button class="btn sm ghost" data-a="cown0" title="Вернуть цену по прайсу">Сбросить</button>' : '') + '</div>' +
-      (hasOwn() && unit() < costOf() ? '<div class="warn" style="color:var(--bad,#d33);font-size:13px">Ниже закупа: убыток ' + m((costOf() - unit()) * (+F.qty || 1)) + ' на позицию. Можно добавить, это ваше решение.</div>' : '') +
-      '<div class="row"><div><small class="mut">Площадь ' + area().toFixed(2) + ' м²' + (hasOwn() ? ' · своя цена' : '') + '</small><div style="font-size:24px;font-weight:700" class="num">' + m(unit() * (+F.qty || 1)) + '</div></div><span class="sp"></span><button class="btn pri" data-a="cadd" style="height:42px;padding:0 22px">В корзину</button></div></div></div>' +
-      '<div class="card refp" style="margin-top:14px"><div class="row"><h2>Справка по модели</h2><span class="soon">данные из справочника</span><span class="sp"></span><button class="btn sm ghost" data-a="cref">' + (S.refOpen ? 'Свернуть' : 'Развернуть') + '</button></div>' +
-      (S.refOpen ? '<dl style="margin-top:10px"><dt>Коллекция</dt><dd>' + F.coll + ' (' + sup + ')</dd><dt>Размеры</dt><dd>ширина 250–2400 мм, высота до ' + (F.lam === '25' ? '2500' : '3000') + ' мм</dd><dt>Минимальная площадь</dt><dd>0,8 м² (меньше — считается как 0,8)</dd><dt>Фурнитура</dt><dd>' + (F.coll === 'Стандарт' || F.coll === 'Урбан' ? 'тайваньская (дешевле)' : 'голландская') + '</dd><dt>Срок</dt><dd>' + (F.coll === 'Стандарт' ? '≈ 5 дней' : '≈ 10–12 дней') + '</dd><dt>Наличие цвета</dt><dd><span class="dotc ' + col[2] + '"></span>' + e(col[0]) + ': ' + (col[2] === 'g' ? 'есть' : col[2] === 'y' ? 'мало' : 'нет') + '</dd><dt>Нюансы</dt><dd>Тесьма только на 50 мм. Привод требует ширину от 700 мм.</dd></dl>' : '') + '</div>';
+    const E = window.Eng; if (!E || !E.ready) return '<div class="card"><h2>Текущее изделие</h2>' + pricesBar() + '<div class="empty">Загрузи цены, и расчёт заработает.</div></div>';
+    const cs = CS(), n = norm(), r = n.r, s = F, showProfit = !S.hideProfit;
+    const stock = n.selCol ? cs.stockOf(n.prodKey, n.selCol.key, s.sup, +s.w || 0) : null;
+    const minRate = n.colList.length && n.colList[0].rate ? Math.min.apply(null, n.colList.map(c => c.rate)) : 0;
+    const own = s.own !== '' && !isNaN(+s.own) && +s.own >= 0, unit = own ? Math.round(+s.own) : (r.ok ? r.unit : 0);
+    const kg = r.ok ? JalLimits.weightKg(n.mat, n.lam, +s.w, +s.h) : 0;
+    const q = (s.cq || '').trim().toLowerCase();
+    const shown = n.colList.filter(c => !q || (c.name + ' ' + c.ser).toLowerCase().indexOf(q) >= 0);
+    const waiting = !!r.needColor, good = r.ok && !r.warn.length;
+    let h = '<div class="card"><div class="row"><h2>' + (s.edit >= 0 ? 'Изделие, позиция ' + (s.edit + 1) : 'Текущее изделие') + '</h2><span class="sp"></span>' + (s.edit >= 0 ? '<button class="btn sm" data-a="cedcancel">Отменить правку</button>' : '') + '</div>' + pricesBar() + '<div class="stack" style="gap:12px">';
+    h += '<div class="field"><label>Коллекция</label><div class="chips">' + SUPS.map(x => '<button class="opt ' + (s.sup === x ? 'on' : '') + '" data-a="cf" data-k="sup" data-v="' + x + '">' + cs.COLL_ALL[x] + ' (' + ru(x) + ')</button>').join('') + '</div></div>';
+    h += '<div class="row wrap"><div class="field"><label>Ламель</label>' + seg(n.lamOk.map(l => [l, l + ' мм']), n.lam, 'cf', 'lam') + '</div><div class="field"><label>Материал</label>' + seg(n.matOk.map(x => [x, x]), n.mat, 'cf', 'mat') + '</div></div>';
+    if (n.colList.length) {
+      h += '<div class="field"><label>Цвет</label><button class="in" style="text-align:left;display:flex;align-items:center;gap:8px;cursor:pointer" data-a="ccol">' +
+        (n.selCol ? (stock !== null ? '<span style="width:10px;height:10px;border-radius:5px;background:' + DOT[stock] + '"></span>' : '') + '<b>' + e(n.selCol.name) + '</b><span class="mut" style="font-size:12px">' + e([n.selCol.ser, minRate && n.selCol.rate > minRate ? '+' + fmt(n.selCol.rate - minRate) + ' ₽/м²' : ''].filter(Boolean).join(' · ')) + '</span>' : '<span style="color:var(--bad,#b35f00)">Выбери цвет</span>') + '<span class="sp"></span>▾</button>';
+      if (s.colOpen) {
+        h += '<div class="card flat" style="margin-top:6px;padding:8px"><input class="in" data-c="ccolq" placeholder="Поиск цвета" value="' + e(s.cq) + '" id="ccolq" style="margin-bottom:6px"><div style="max-height:280px;overflow:auto" class="stack">' +
+          (shown.length ? shown.map(c => { const st = cs.stockOf(n.prodKey, c.key, s.sup, +s.w || 0), ex = c.rate && c.rate > minRate;
+            return '<button class="opt ' + (c.key === n.color ? 'on' : '') + '" style="height:auto;min-height:36px;text-align:left;display:flex;align-items:center;gap:8px;padding:4px 10px" data-a="ccolpick" data-v="' + e(c.key) + '">' + (st !== null ? '<span style="width:10px;height:10px;border-radius:5px;flex-shrink:0;background:' + DOT[st] + '"></span>' : '<span style="width:10px"></span>') + '<span><b>' + e(c.name) + '</b> <span class="mut" style="font-size:12px">' + e(c.ser) + '</span></span><span class="sp"></span>' + (ex ? '<span class="pill">+' + fmt(c.rate - minRate) + ' ₽/м²</span>' : (c.cat !== undefined ? '<span class="pill">кат.' + c.cat + '</span>' : '')) + '</button>'; }).join('') : '<div class="mut">Ничего не найдено</div>') + '</div></div>';
+      }
+      h += '</div>';
+    }
+    h += '<div class="g2"><div class="field"><label>Ширина, мм</label><input class="in" type="number" min="0" value="' + e(s.w) + '" data-c="cf" data-k="w"></div><div class="field"><label>Высота, мм</label><input class="in" type="number" min="0" value="' + e(s.h) + '" data-c="cf" data-k="h"></div></div>';
+    h += '<div class="field"><label>Управление' + (n.chain ? ' (цепочка)' : '') + '</label><div class="chips">' + n.ctrlKeys.map(k => '<button class="opt ' + (n.ctrl === k ? 'on' : '') + '" data-a="cf" data-k="ctrl" data-v="' + k + '">' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[k]) + '</button>').join('') + '</div></div>';
+    if (n.optNames.length) h += '<div class="field"><label>Опции</label><div class="chips">' + n.optNames.map(o => '<button class="opt ' + (n.opts[o] ? 'on' : '') + '" data-a="copt" data-v="' + e(o) + '">' + e(o) + (r.ok && n.opts[o] && r.optP[o] ? ' +' + fmt(r.optP[o]) : '') + '</button>').join('') + '</div></div>';
+    if (n.fixNames.length) h += '<div class="field"><label>Нижняя фиксация</label><div class="chips"><button class="opt ' + (!n.fix ? 'on' : '') + '" data-a="cf" data-k="fix" data-v="">Без фиксации</button>' + n.fixNames.map(f => '<button class="opt ' + (n.fix === f ? 'on' : '') + '" data-a="cf" data-k="fix" data-v="' + e(f) + '">' + e(cs.FIXLBL[f] || f) + (r.ok && n.fix === f && r.optP[f] !== undefined ? ' +' + fmt(r.optP[f]) : '') + '</button>').join('') + '</div></div>';
+    h += '<div class="row"><div class="field" style="width:100px"><label>Кол-во</label><input class="in" type="number" min="1" max="99" value="' + s.qty + '" data-c="cf" data-k="qty"></div><div class="field" style="flex:1"><label>Комментарий к изделию</label><input class="in" value="' + e(s.note) + '" data-c="cf" data-k="note" placeholder="Например: левое окно кухни"></div></div>';
+    /* проверка размеров, наличие, вес */
+    if (!waiting && +s.w > 0 && +s.h > 0) h += '<div class="callout ' + (good ? '' : 'bad') + '" style="font-size:14px">' + (!r.ok ? e(r.msg ? r.msg[0].toUpperCase() + r.msg.slice(1) : 'Не поставляется') : (r.warn.length ? '<b>' + (r.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + '</b>' + e(r.warn.join('; ')) : 'Размеры в гарантии')) + '</div>';
+    else if (waiting) h += '<div class="mut">Выбери цвет, и я посчитаю.</div>';
+    if (stock !== null && stock < 2) h += '<div class="callout" style="font-size:14px"><span style="display:inline-block;width:10px;height:10px;border-radius:5px;background:' + DOT[stock] + ';margin-right:6px"></span>' + e(STOCK_TXT[stock][0].toUpperCase() + STOCK_TXT[stock].slice(1)) + '</div>';
+    h += '<div class="row wrap"><div class="field" style="width:200px"><label>Своя цена за шт (необязательно)</label><input class="in num" style="text-align:right" value="' + e(s.own) + '" data-c="cf" data-k="own" placeholder="' + (r.ok ? Math.round(r.unit) : '') + '"></div>' +
+      '<div class="mut" style="flex:1;font-size:12px">Можно любую, даже ниже закупа. Доставка и установка в такую цену не добавляются.</div></div>';
+    if (own && r.ok && showProfit && unit < r.unit - r.profit) h += '<div class="callout bad" style="font-size:13px">Ниже закупа: убыток ' + m((r.unit - r.profit - unit) * (+s.qty || 1)) + ' на позицию.</div>';
+    h += '<div class="row"><div><small class="mut">' + (r.ok ? (s.qty > 1 ? fmt(unit) + ' ₽ × ' + s.qty + ' шт' : 'изделие ' + fmt(r.base) + ' + доп. ' + fmt(r.addSum)) : '') + (kg ? ' · вес ≈ ' + JalLimits.fmtKg(kg * s.qty) + ' кг' : '') + (own ? ' · своя цена' : '') + '</small>' +
+      '<div style="font-size:24px;font-weight:700" class="num">' + (r.ok ? m(unit * (+s.qty || 1)) : '—') + '</div>' + (showProfit && r.ok ? '<small class="mut">прибыль ' + m((r.profit + (own ? unit - r.unit : 0)) * (+s.qty || 1)) + '</small>' : '') + '</div><span class="sp"></span>' +
+      '<button class="btn pri" data-a="cadd" style="height:42px;padding:0 22px;opacity:' + (r.ok ? 1 : .45) + '">' + (s.edit >= 0 ? 'Сохранить' : 'В корзину') + '</button></div>';
+    return h + '</div></div>';
+  }
+
+  function itemName(it, c) {
+    const extra = Object.keys(it.opts || {}).filter(k => it.opts[k]); if (it.fix) extra.push(CS().FIXLBL[it.fix] || it.fix);
+    const col = c.col ? c.col.name : '';
+    const chain = !!(it.opts && it.opts['Цепочка']);
+    return { title: CS().COLL_ALL[it.sup] + ' (' + ru(it.sup) + ')', sub: it.mat + ' ' + it.lam + (col ? ' · ' + col : '') + ' · ' + (chain ? CHAIN_TXT : CTRL_TXT)[it.ctrl || 'L'] + (extra.length ? ' · ' + extra.join(', ').toLowerCase() : '') };
   }
 
   function cart() {
-    const items = S.cart, sum = items.reduce((a, i) => a + i.price * i.qty, 0);
-    const dv = Math.min(+S.disc || 0, 50), dAmt = Math.round(sum * dv / 100 / 100) * 100, total = sum - dAmt, cost = items.reduce((a, i) => a + i.cost * i.qty, 0);
-    const delivery = S.region ? 0 : (items.length ? 1500 : 0);
+    const E = window.Eng; if (!E || !E.ready) return '<div class="card"><h2>Корзина</h2><div class="empty">Нет цен.</div></div>';
+    const C = JC().C, FF = JC().compute(), items = C.cart, hide = S.hideProfit;
+    let prof = 0; items.forEach((it, i) => { const c = FF.calcs[i]; if (c.ok) prof += c.profit * it.qty; });
+    const netProf = prof - FF.discAmt, cost = FF.goodsSum - prof;
+    const pct = C.discMode !== 'rub';
     return '<div class="card"><div class="row wrap" style="margin-bottom:10px"><h2>Корзина</h2><span class="pill">' + items.length + ' поз.</span><span class="sp"></span>' +
-      '<div class="seg" title="СПб: розница с доставкой и монтажом. Регионы: опт без доставки и монтажа"><button class="' + (!S.region ? 'on' : '') + '" data-a="creg" data-v="0">СПб</button><button class="' + (S.region ? 'on' : '') + '" data-a="creg" data-v="1">Регионы</button></div>' +
-      '<button class="btn sm ' + (S.hideProfit ? 'on' : '') + '" data-a="chide" title="Скрыть закуп и прибыль, когда клиент смотрит экран">Скрыть закуп</button></div>' +
-      (items.length ? '<table class="tbl cartline"><thead><tr><th>№</th><th>Изделие</th><th>Размер</th><th class="r">Шт</th><th class="r">Цена</th><th class="r">Сумма</th><th></th></tr></thead><tbody>' + items.map((i, n) =>
-        '<tr><td>' + (n + 1) + '</td><td><b>' + e(i.name) + '</b><div class="mut" style="font-size:12px">' + e(i.sub) + '</div></td><td class="num">' + i.w + '×' + i.h + '</td><td class="r">' + i.qty + '</td><td class="r"><input class="in num" type="number" min="0" style="width:96px;text-align:right' + (i.price < i.cost ? ';color:var(--bad,#d33)' : '') + '" value="' + i.price + '" data-c="cprice" data-i="' + n + '" title="Цена за штуку, можно менять"></td><td class="r num">' + m(i.price * i.qty) + (i.price !== i.list ? '<div class="mut" style="font-size:11px">' + (i.price < i.cost ? 'ниже закупа' : 'своя цена') + (i.list ? ', прайс ' + m(i.list) : '') + '</div>' : '') + '</td><td class="r"><button class="x" data-a="cdel" data-i="' + n + '" title="Удалить">' + A.icon('trash', 15) + '</button></td></tr>').join('') + '</tbody></table>' :
+      '<div class="seg" title="СПб: розница с доставкой и монтажом. Регионы: опт без доставки и монтажа"><button class="' + (!C.region ? 'on' : '') + '" data-a="creg" data-v="0">СПб</button><button class="' + (C.region ? 'on' : '') + '" data-a="creg" data-v="1">Регионы</button></div>' +
+      '<button class="btn sm ' + (hide ? 'on' : '') + '" data-a="chide" title="Скрыть закуп и прибыль, когда клиент смотрит экран">Скрыть закуп</button></div>' +
+      (items.length ? '<table class="tbl cartline"><thead><tr><th>№</th><th>Изделие</th><th>Размер</th><th class="r">Шт</th><th class="r">Цена за шт</th><th class="r">Сумма</th><th></th></tr></thead><tbody>' + items.map((it, i) => {
+        const c = FF.calcs[i], nm = itemName(it, c), lineUnit = c.ok ? FF.lineSum[i] / it.qty : 0;
+        const warn = c.ok && c.warn && c.warn.length ? '<div style="color:var(--bad,#b3261e);font-size:12px">' + (c.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + e(c.warn.join('; ')) + '</div>' : '';
+        return '<tr><td>' + (i + 1) + '</td><td><b>' + e(nm.title) + '</b><div class="mut" style="font-size:12px">' + e(nm.sub) + '</div>' + (it.note ? '<div class="mut" style="font-size:12px">' + e(it.note) + '</div>' : '') + warn +
+          (!hide && c.ok ? '<div style="font-size:12px;color:' + (c.profit < 0 ? 'var(--bad,#b3261e)' : 'var(--mut)') + '">прибыль ' + m(c.profit) + ' за шт</div>' : '') + '</td><td class="num">' + it.w + '×' + it.h + '</td><td class="r">' + it.qty + '</td>' +
+          '<td class="r">' + (c.ok ? '<input class="in num" style="width:96px;text-align:right' + (c.ownPrice ? ';border-color:var(--acc)' : '') + '" value="' + (c.ownPrice ? Math.round(c.unit) : '') + '" placeholder="' + Math.round(lineUnit) + '" data-c="cprice" data-i="' + i + '" title="' + (c.ownPrice ? 'своя цена, по прайсу было ' + fmt(c.listUnit) : 'впиши свою цену за шт') + '">' : '<span class="mut">нет цены</span>') + '</td>' +
+          '<td class="r num b">' + (c.ok ? m(FF.lineSum[i]) : '—') + '</td><td class="r" style="white-space:nowrap"><button class="btn sm" data-a="cedit" data-i="' + i + '">Изм.</button> <button class="btn sm" data-a="cdup" data-i="' + i + '">Копия</button> <button class="btn sm" data-a="cdel" data-i="' + i + '">✕</button></td></tr>'; }).join('') + '</tbody></table>' :
         '<div class="empty" style="padding:30px">Корзина пуста. Соберите изделие слева и нажмите «В корзину».</div>') +
       '<div class="stack" style="gap:10px;margin-top:14px">' +
-      (S.region ? '<div class="field"><label>Адрес ПВЗ и транспортная компания</label><textarea class="in" rows="2" data-c="cpvz" placeholder="Например: СДЭК, Казань, ул. Баумана 1, ПВЗ KZN12">' + e(S.pvz || '') + '</textarea></div><div class="mut" style="font-size:12px">В опте доставка и монтаж в стоимость заказа не входят.</div>' :
-        '<div class="row"><label style="flex:1">Доставка и установка (размазывается по позициям)</label><input class="in" style="width:130px;text-align:right" value="' + (items.length ? 4500 : 0) + '" data-c="cstub"></div>') +
-      '<div class="row"><label style="flex:1">Скидка на заказ, % (не больше 50)</label><input class="in" type="number" min="0" max="50" style="width:130px;text-align:right" value="' + (S.disc || '') + '" data-c="cdisc" placeholder="0"></div></div>' +
-      '<div class="sumbar" style="grid-template-columns:repeat(' + (S.hideProfit ? 2 : 4) + ',1fr)"><div><small>Сумма без скидки</small><b>' + m(sum) + '</b></div><div><small>Итого' + (dAmt ? ' (скидка −' + m(dAmt) + ')' : '') + '</small><b style="color:var(--acc)">' + m(total) + '</b></div>' +
-      (S.hideProfit ? '' : '<div><small>Закуп (демо)</small><b>' + m(cost) + '</b></div><div><small>Прибыль (демо)</small>' + '<b' + (total - cost < 0 ? ' style="color:var(--bad,#d33)"' : '') + '>' + m(total - cost - delivery * 0) + '</b></div>') + '</div>' +
-      '<div class="row wrap" style="margin-top:14px"><button class="btn" data-a="stub" data-t="КП">КП</button><button class="btn" data-a="stub" data-t="три варианта КП">КП: три варианта</button><button class="btn" data-a="stub" data-t="замерный лист">Замерник</button><button class="btn" data-a="stub" data-t="договор">Договор</button><span class="sp"></span><button class="btn pri" data-a="cord" style="height:42px;padding:0 20px">Оформить заказ</button></div></div>' +
-      '<div class="card flat" style="margin-top:14px"><div class="row"><b>Клиент</b><span class="sp"></span><button class="btn sm" data-a="stub" data-t="выбор клиента">Выбрать</button><button class="btn sm" data-a="new-client">+ Новый</button></div><div class="mut" style="margin-top:4px">Заказ привязывается к клиенту. Пока клиент не выбран, это черновик расчёта.</div></div>';
+      (C.region ? '<div class="field"><label>Адрес ПВЗ и транспортная компания</label><textarea class="in" rows="2" data-c="cpvz" placeholder="Например: СДЭК, Казань, ул. Баумана 1, ПВЗ KZN12">' + e(C.pvz || '') + '</textarea></div><div class="mut" style="font-size:12px">В опте доставка и монтаж в стоимость заказа не входят.</div>' :
+        '<div class="row"><label style="flex:1">Доставка и установка (размазывается по позициям)</label><input class="in num" style="width:130px;text-align:right" value="' + (C.service || '') + '" placeholder="0" data-c="cserv"></div>') +
+      '<div class="row"><label style="flex:1">Скидка на заказ (не больше 50%)</label><div class="seg"><button class="' + (pct ? 'on' : '') + '" data-a="cdm" data-v="pct">%</button><button class="' + (!pct ? 'on' : '') + '" data-a="cdm" data-v="rub">₽</button></div><input class="in num" type="number" min="0" style="width:110px;text-align:right" value="' + (C.disc || '') + '" data-c="cdisc" placeholder="0"></div></div>' +
+      '<div class="sumbar" style="grid-template-columns:repeat(' + (hide ? 2 : 4) + ',1fr)"><div><small>Сумма без скидки</small><b>' + m(FF.total) + '</b></div><div><small>Итого' + (FF.discAmt ? ' (скидка −' + m(FF.discAmt) + ')' : '') + '</small><b style="color:var(--acc)">' + m(FF.netTotal) + '</b></div>' +
+      (hide ? '' : '<div><small>Закуп (оценка)</small><b>' + m(Math.max(0, cost)) + '</b></div><div><small>Прибыль</small><b' + (netProf < 0 ? ' style="color:var(--bad,#d33)"' : '') + '>' + m(netProf) + '</b></div>') + '</div>' +
+      '<div class="row wrap" style="margin-top:14px"><button class="btn" data-a="stub" data-t="КП">КП</button><button class="btn" data-a="stub" data-t="три варианта КП">КП: три варианта</button><button class="btn" data-a="stub" data-t="замерный лист">Замерник</button><button class="btn" data-a="stub" data-t="договор">Договор</button><span class="sp"></span>' +
+      '<button class="btn" data-a="cclear">Очистить</button><button class="btn pri" data-a="cord">Оформить заказ</button></div></div>';
   }
 
   A.module('calc', {
-    render() { return '<div class="head"><h1>Продажи и расчёт</h1><span class="soon">цены демонстрационные, настоящий расчёт переносится из телефона на этапе 1</span></div><div class="calc"><div>' + form() + '</div><div>' + cart() + '</div></div>'; }
+    render() { return '<div class="head"><h1>Продажи и расчёт</h1></div><div class="calc"><div>' + form() + '</div><div>' + cart() + '</div></div>'; }
   });
-  A.act.cf = el => { F[el.dataset.k] = el.dataset.v; if (F.lam === '25' && F.mat === 'Бамбук' && el.dataset.k === 'lam') F.mat = 'Дерево'; A.render(); };
-  A.fld.cf = (v, el) => { F[el.dataset.k] = v; A.render(); };
-  A.act.copt = el => { F.opts[el.dataset.v] = !F.opts[el.dataset.v]; A.render(); };
-  A.act.cref = () => { S.refOpen = !S.refOpen; A.save(); A.render(); };
-  A.act.creg = el => { S.region = el.dataset.v === '1'; A.save(); A.render(); };
-  A.act.chide = () => { S.hideProfit = !S.hideProfit; A.save(); A.render(); };
-  A.act.cdel = el => { S.cart.splice(+el.dataset.i, 1); A.save(); A.render(); };
+
+  const rr = () => A.render();
+  A.act.cf = el => { const k = el.dataset.k, v = el.dataset.v; F[k] = k === 'lam' ? +v : v; if (k === 'sup') { Object.assign(F, { lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {} }); } rr(); };
+  A.fld.cf = (v, el) => { const k = el.dataset.k; F[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
+  A.act.copt = el => { F.opts[el.dataset.v] = !F.opts[el.dataset.v]; rr(); };
+  A.act.ccol = () => { F.colOpen = !F.colOpen; F.cq = ''; rr(); };
+  A.act.ccolpick = el => { F.color = el.dataset.v; F.colOpen = false; F.cq = ''; rr(); };
+  A.fld.ccolq = v => { F.cq = v; rr(); const q = document.getElementById('ccolq'); if (q) { q.focus(); q.setSelectionRange(v.length, v.length); } };
+  A.act.cprices = () => { A.toast('Обновляю цены…'); Eng.refresh().then(() => { A.toast('Цены обновлены'); rr(); }).catch(x => A.toast('Ошибка: ' + x.message)); };
+  A.fld.cscript = v => { const u = String(v).trim(); if (!u) return; try { localStorage.setItem('jal_prices_url', u); } catch (x) {} A.toast('Загружаю цены…'); Eng.refresh().then(() => { A.toast('Цены загружены'); rr(); }).catch(x => A.toast('Ошибка: ' + x.message)); };
+  A.act.creg = el => { JC().setRegion(el.dataset.v === '1'); rr(); };
+  A.act.chide = () => { S.hideProfit = !S.hideProfit; A.save(); rr(); };
+  A.act.cdm = el => { JC().C.discMode = el.dataset.v; JC().save(); rr(); };
+  A.fld.cdisc = v => { const C = JC().C; C.disc = Math.max(0, +v || 0) || ''; JC().save(); rr(); };
+  A.fld.cserv = v => { JC().C.service = Math.max(0, Math.round(+String(v).replace(/\s/g, '') || 0)); JC().save(); rr(); };
+  A.fld.cpvz = v => { JC().C.pvz = v; JC().save(); };
+  A.fld.cprice = (v, el) => { const C = JC().C, i = +el.dataset.i, s = String(v).replace(/\s/g, ''); if (!C.cart[i]) return; C.cart[i] = Object.assign({}, C.cart[i], { own: s === '' ? '' : Math.max(0, Math.round(+s || 0)) }); JC().save(); rr(); };
+  A.act.cdel = el => { const C = JC().C; C.cart.splice(+el.dataset.i, 1); JC().save(); rr(); };
+  A.act.cclear = () => { JC().clear(); rr(); };
+  const load = (it, edit) => { Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
+  A.act.cedit = el => load(JC().C.cart[+el.dataset.i], +el.dataset.i);
+  A.act.cdup = el => load(JC().C.cart[+el.dataset.i], -1);
+  A.act.cedcancel = () => { F.edit = -1; rr(); };
   A.act.cadd = () => {
-    const p = unit(), col = COLORS[F.color], sup = COLLS.filter(c => c[0] === F.coll)[0][1];
-    S.cart.push({ name: F.mat + ' ' + F.lam + ' · ' + F.coll + ' (' + sup + ')', sub: col[0] + ' · ' + CTRL[F.ctrl] + (Object.keys(F.opts).filter(k => F.opts[k]).length ? ' · ' + Object.keys(F.opts).filter(k => F.opts[k]).join(', ') : '') + ' · ' + sup, w: F.w, h: F.h, qty: +F.qty || 1, price: p, list: price(), cost: costOf() });
-    F.own = ''; A.save(); A.render(); A.toast('Добавлено в корзину');
+    const n = norm(); if (!n.r.ok) { A.toast(n.r.needColor ? 'Выбери цвет' : (n.r.msg || 'Введи размеры')); return; }
+    const own = F.own !== '' && !isNaN(+F.own) && +F.own >= 0 ? Math.round(+F.own) : '';
+    const item = { sup: F.sup, lam: n.lam, mat: n.mat, color: n.color, ctrl: n.ctrl, fix: n.fix, opts: Object.assign({}, n.opts), w: +F.w, h: +F.h, qty: Math.max(1, +F.qty || 1), own, note: F.note };
+    if (F.edit >= 0) JC().replaceItem(F.edit, item); else JC().addItem(item);
+    Object.assign(F, { qty: 1, own: '', note: '', edit: -1 }); A.toast('Добавлено в корзину'); rr();
   };
-  A.act.cown0 = () => { F.own = ''; A.render(); };
-  A.fld.cprice = (v, el) => { const i = S.cart[+el.dataset.i]; if (i) { i.price = Math.max(0, Math.round(+v || 0)); A.save(); A.render(); } };
-  A.act.cord = () => A.stub('создание заказа из корзины (клиент, замер, документы)');
-  A.fld.cpvz = v => { S.pvz = v; A.save(); };
-  A.fld.cdisc = v => { S.disc = Math.max(0, Math.min(50, +v || 0)); A.save(); A.render(); };
-  A.fld.cstub = () => {};
+  A.act.cord = () => A.stub('создание заказа из корзины (клиент, документы)');
 })();

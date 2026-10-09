@@ -325,5 +325,5 @@
     Object.keys(S.opts).forEach(k => { if (S.opts[k] && av.indexOf(k) >= 0) opts[k] = true; });
     Object.assign(S, { sup, color: '', opts, fix: fx.indexOf(S.fix) >= 0 ? S.fix : '', colorOpen: false, supOpen: false, justAdded: false });
   }
-  window.JalCalcScreen = { priceFor, compareRows, pickSupplier, VARIANTS, COLL, render, setSheets, state: S, calcRow, edit, editAuto };
+  window.JalCalcScreen = { colorsFor, availOpts, availFixes, stockOf, calcItem, CTRL_NAMES, CTRL_ORDER, FIXLBL, COLL_ALL: COLL, priceFor, compareRows, pickSupplier, VARIANTS, COLL, render, setSheets, state: S, calcRow, edit, editAuto };
 })();
