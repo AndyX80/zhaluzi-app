@@ -197,3 +197,13 @@ button.ul.sel .ph{color:var(--bad)}.sm{font-size:12px}
 .ttab tbody tr{cursor:pointer}.ttab tbody tr:hover td{background:var(--acc-s)}
 .ttab tfoot td{position:sticky;bottom:0;background:var(--panel);border-top:1px solid var(--line)}
 .tf{height:30px;font-size:12.5px;min-width:80px;padding:0 8px}.tfr{display:flex;gap:4px}.tfr .tf{min-width:70px;width:90px}
+/* v22.1 контраст таблицы заказов */
+.tscroll{background:var(--pop,var(--panel));border:1.5px solid color-mix(in srgb,var(--ink) 28%,transparent)}
+.ttab th{background:color-mix(in srgb,var(--ink) 10%,var(--pop,var(--panel)));color:var(--ink);font-weight:700;border-bottom:1.5px solid color-mix(in srgb,var(--ink) 30%,transparent);border-right:1px solid color-mix(in srgb,var(--ink) 16%,transparent)}
+.ttab .tfrow th{background:color-mix(in srgb,var(--ink) 5%,var(--pop,var(--panel)))}
+.ttab td{color:var(--ink);font-weight:500;border-bottom:1px solid color-mix(in srgb,var(--ink) 16%,transparent);border-right:1px solid color-mix(in srgb,var(--ink) 10%,transparent)}
+.ttab tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--ink) 5%,var(--pop,var(--panel)))}
+.ttab tbody tr:nth-child(odd) td{background:var(--pop,var(--panel))}
+.ttab tbody tr:hover td{background:color-mix(in srgb,var(--acc) 16%,var(--pop,var(--panel)))}
+.ttab tfoot td{background:color-mix(in srgb,var(--ink) 10%,var(--pop,var(--panel)));border-top:1.5px solid color-mix(in srgb,var(--ink) 30%,transparent)}
+.ttab th[draggable=true]{cursor:grab}.ttab .tf{border:1px solid color-mix(in srgb,var(--ink) 30%,transparent);background:var(--pop,var(--panel))}

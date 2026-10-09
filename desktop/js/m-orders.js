@@ -152,13 +152,24 @@
       (S.tmenu ? '<div class="tmenu sc"><div class="row" style="gap:6px;margin-bottom:6px"><button class="btn sm" data-a="otcolall">Все</button><button class="btn sm" data-a="otcolreset">По умолчанию</button></div>' + COLS.map(c => '<button class="tmi ' + (cols.indexOf(c) >= 0 ? 'on' : '') + '" data-a="otcol" data-k="' + c.k + '"><i>' + (cols.indexOf(c) >= 0 ? '✓' : '') + '</i>' + e(c.l) + '</button>').join('') + '</div>' : '') + '</div>' +
       '<select class="in" style="width:150px" data-c="otper">' + PERS.map(p => '<option value="' + p[0] + '"' + ((S.tper || '') === p[0] ? ' selected' : '') + '>' + p[1] + '</option>').join('') + '</select>' +
       (nf ? '<button class="btn" data-a="otclear">Сбросить фильтры (' + nf + ')</button>' : '') + '<span class="sp"></span><span class="mut">Найдено: <b>' + rows.length + '</b>' + (cols.some(c => c.k === 'sum') ? ' · на сумму <b>' + m(tot(COLS.find(c => c.k === 'sum'))) + '</b>' : '') + '</span></div>' +
-      '<div class="tscroll sc"><table class="tbl ttab"><thead><tr>' + cols.map(c => '<th class="' + (c.r ? 'r' : '') + '" data-a="otsort" data-k="' + c.k + '">' + e(c.l) + (so.k === c.k ? (so.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr><tr class="tfrow">' + cols.map(c => '<th>' + fcell(c) + '</th>').join('') + '</tr></thead><tbody>' +
+      '<div class="tscroll sc"><table class="tbl ttab"><thead><tr>' + cols.map(c => '<th class="' + (c.r ? 'r' : '') + '" draggable="true" data-a="otsort" data-k="' + c.k + '" title="Потяни, чтобы переставить столбец">' + e(c.l) + (so.k === c.k ? (so.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr><tr class="tfrow">' + cols.map(c => '<th>' + fcell(c) + '</th>').join('') + '</tr></thead><tbody>' +
       rows.slice(0, lim).map(o => '<tr class="tr" data-a="opn" data-id="order:' + o.id + '">' + cols.map(c => '<td class="' + (c.r ? 'r num' : '') + (c.wide ? ' tw' : '') + '" title="' + (c.wide ? e(c.f(o)) : '') + '">' + e(c.f(o)) + '</td>').join('') + '</tr>').join('') +
       '</tbody>' + (cols.some(c => c.tot) ? '<tfoot><tr>' + cols.map((c, i) => '<td class="' + (c.r ? 'r num' : '') + '"><b>' + (c.tot ? m(tot(c)) : i === 0 ? 'Итого' : '') + '</b></td>').join('') + '</tr></tfoot>' : '') + '</table>' +
       (rows.length > lim ? '<div style="padding:10px;text-align:center"><button class="btn sm" data-a="otmore">Показать ещё (осталось ' + (rows.length - lim) + ')</button></div>' : '') + (rows.length ? '' : '<div class="empty" style="padding:24px">Ничего не найдено</div>') + '</div>';
   }
+  /* перестановка столбцов перетаскиванием заголовка */
+  let dragK = null;
+  document.addEventListener('dragstart', ev => { const th = ev.target.closest && ev.target.closest('.ttab th[data-k]'); if (!th) return; dragK = th.dataset.k; try { ev.dataTransfer.setData('text/plain', dragK); ev.dataTransfer.effectAllowed = 'move'; } catch (x) {} });
+  document.addEventListener('dragover', ev => { if (dragK && ev.target.closest && ev.target.closest('.ttab th[data-k]')) ev.preventDefault(); });
+  document.addEventListener('drop', ev => {
+    const th = ev.target.closest && ev.target.closest('.ttab th[data-k]'); if (!dragK || !th) return; ev.preventDefault();
+    const to = th.dataset.k, cur = tcols().slice(), from = cur.indexOf(dragK); dragK = null; if (from < 0 || to === cur[from]) return;
+    cur.splice(from, 1); cur.splice(cur.indexOf(to) + (from < cur.indexOf(to) ? 1 : 0), 0, ev.dataTransfer.getData('text/plain') || ''); 
+    S.tcols = cur.filter(Boolean); A.save(); A.render();
+  });
+  document.addEventListener('dragend', () => { dragK = null; });
   A.act.otmenu = () => { S.tmenu = !S.tmenu; A.render(); };
-  A.act.otcol = el => { const cur = tcols().slice(), k = el.dataset.k, i = cur.indexOf(k); if (i >= 0) cur.splice(i, 1); else cur.push(k); S.tcols = COLS.map(c => c.k).filter(x => cur.indexOf(x) >= 0); A.save(); A.render(); };
+  A.act.otcol = el => { const cur = tcols().slice(), k = el.dataset.k, i = cur.indexOf(k); if (i >= 0) cur.splice(i, 1); else cur.push(k); S.tcols = cur; A.save(); A.render(); };
   A.act.otcolall = () => { S.tcols = COLS.map(c => c.k); A.save(); A.render(); };
   A.act.otcolreset = () => { S.tcols = DEFCOLS.slice(); A.save(); A.render(); };
   A.act.otsort = el => { const so = S.tsort || { k: 'no', d: -1 }; S.tsort = { k: el.dataset.k, d: so.k === el.dataset.k ? -so.d : (COLS.find(c => c.k === el.dataset.k).t === 'n' || COLS.find(c => c.k === el.dataset.k).t === 'd' ? -1 : 1) }; A.save(); A.render(); };
