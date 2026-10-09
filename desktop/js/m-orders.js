@@ -65,7 +65,7 @@
 
   function card(id, full) {
     const o = A.order(id) || D.orders[0], c = A.client(o.client) || { name: '' };
-    return '<div class="card" style="min-height:100%"><div class="row wrap" style="margin-bottom:6px"><h1>Заказ № ' + o.no + '</h1>' + A.stagePill(o) + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '<span class="sp"></span>' + (D.real ? (S.odelId === o.id ? '<span class="mut">Удалить заказ?</span><button class="btn sm" style="width:120px;background:#c0392b;border-color:#c0392b;color:#fff" data-a="odel" data-id="' + o.id + '" data-y="1">Да, удалить</button><button class="btn sm" id="odelno" style="width:120px;background:#2e8b57;border-color:#2e8b57;color:#fff" data-a="odelno">Нет</button>' : '<button class="btn sm" data-a="oarch" data-id="' + o.id + '">' + (o.archived ? 'Вернуть из архива' : 'В архив') + '</button><button class="btn sm" data-a="odel" data-id="' + o.id + '">Удалить заказ</button>') : '') +
+    return '<div class="card" style="min-height:100%"><div class="row wrap" style="margin-bottom:6px">' + (full ? '<button class="btn" data-a="oback" data-id="order:' + o.id + '">← Назад</button>' : '') + '<h1>Заказ № ' + o.no + '</h1>' + A.stagePill(o) + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '<span class="sp"></span>' + (D.real ? (S.odelId === o.id ? '<span class="mut">Удалить заказ?</span><button class="btn sm" style="width:120px;background:#c0392b;border-color:#c0392b;color:#fff" data-a="odel" data-id="' + o.id + '" data-y="1">Да, удалить</button><button class="btn sm" id="odelno" style="width:120px;background:#2e8b57;border-color:#2e8b57;color:#fff" data-a="odelno">Нет</button>' : '<button class="btn sm" data-a="oarch" data-id="' + o.id + '">' + (o.archived ? 'Вернуть из архива' : 'В архив') + '</button><button class="btn sm" data-a="odel" data-id="' + o.id + '">Удалить заказ</button>') : '') +
       (full ? '' : '<button class="btn sm" data-a="opn" data-id="order:' + o.id + '">Открыть во вкладке</button>') + '</div>' + dupBox(o) + '<div class="mut" style="margin-bottom:10px">' + e(c.name) + ' · ' + e(o.title) + (o.created ? ' · ' + e(dmy(o.created)) : '') + '</div>' + stepper(o) +
       '<div class="itabs">' + tabs.map(t => '<button class="' + (S.orderTab === t[0] ? 'on' : '') + '" data-a="otab" data-t="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' + body(o) +
       '<div class="sumbar"><div><small>Сумма заказа</small><b>' + m(o.sum) + '</b></div><div><small>Оплачено</small><b>' + m(o.paid) + '</b></div><div><small>Долг</small><b>' + m(Math.max(0, o.sum - o.paid)) + '</b></div><div><small>Закуп</small><b>' + m(o.cost) + '</b></div><div><small>Прибыль</small><b>' + m(prof(o)) + '</b></div></div></div>';
@@ -84,7 +84,7 @@
   const years = () => { const y = {}; D.orders.forEach(o => { if (/^\d{4}/.test(o.created || '')) y[o.created.slice(0, 4)] = 1; }); return Object.keys(y).sort().reverse(); };
 
   /* ===== табличный вид: как в Excel, столбцы на выбор, фильтры по каждому ===== */
-  const cn = o => (A.client(o.client) || {}).name || o.name || '', cph = o => (A.client(o.client) || {}).phone || o.phone || '';
+  const cn = o => o.name || (A.client(o.client) || {}).name || '', cph = o => o.phone || (A.client(o.client) || {}).phone || '';
   const itemTxt = o => { const u = {}; (o.items || []).forEach(i => { u[i.kind ? (i.title || 'Услуга') : [i.sup, i.mat, i.lam ? i.lam + ' мм' : ''].filter(Boolean).join(' ')] = 1; }); return Object.keys(u).join('; '); };
   const COLS = [
     { k: 'no', l: 'Номер', t: 'n', v: o => +o.no || 0, f: o => o.no },
@@ -110,6 +110,30 @@
     { k: 'factory', l: 'Заводской №', t: 't', v: o => o.factory || '', f: o => o.factory || '' },
     { k: 'review', l: 'Отзыв', t: 't', v: o => o.review || '', f: o => o.review || '' }
   ];
+  /* какие ячейки правятся прямо в таблице: ed = тип поля, ph = можно у заказов с телефона */
+  const ED = { name: { ed: 'text', ph: 1 }, phone: { ed: 'text', ph: 1 }, created: { ed: 'date', ph: 1 }, cat: { ed: 'sel' }, sup: { ed: 'sel' }, src: { ed: 'sel' }, inst: { ed: 'bool', ph: 1 }, zone: { ed: 'sel' },
+    sum: { ed: 'num' }, paid: { ed: 'num' }, cost: { ed: 'num' }, instCost: { ed: 'num' }, stage: { ed: 'sel', ph: 1 }, claim: { ed: 'bool', ph: 1 }, due: { ed: 'date' }, tk: { ed: 'text', ph: 1 }, factory: { ed: 'text' }, review: { ed: 'text' } };
+  const PHST = ['Черновик', 'КП отправлено', 'Договор', 'Оплачен'];
+  const canEdit = (o, c) => { const x = ED[c.k]; return !!x && (o.ph ? !!x.ph : !!o.legacy); };
+  const optsOf = (o, c) => {
+    if (c.k === 'stage') return o.ph ? PHST.map(v => [v, v]) : D.STAGES.map((v, i) => [String(i), v]).filter(x => +x[0] >= 3);
+    if (c.k === 'zone') return [['СПб', 'СПб'], ['Регионы', 'Регионы']];
+    const u = {}; D.orders.forEach(x => { const v = c.v(x); if (v !== '') u[v] = 1; }); if (c.v(o) !== '') u[c.v(o)] = 1;
+    return Object.keys(u).sort((a, b) => a.localeCompare(b, 'ru')).map(v => [v, v]);
+  };
+  const numv = v => Math.max(0, Math.round(+String(v).replace(/\s/g, '').replace(',', '.') || 0));
+  function setCell(o, k, v) {
+    if (o.ph) {
+      const r = DB.raw().find(x => x.uid === o.uid); if (!r) return;
+      const P = { name: r.company ? { company: v } : { name: v }, phone: { phone: v }, created: { created: v }, tk: { note: v }, inst: { install: v === 'да' }, claim: { claim: v === 'да' }, stage: { status: v } }[k];
+      if (P) DB.patchRec(o.uid, P); return;
+    }
+    if (k === 'stage') { const n = +v; o.fl = o.fl || {}; ['work', 'sup', 'sent', 'got', 'zp', 'closed'].forEach((f, i) => { o.fl[f] = n >= i + 4; }); o.stage = DB.stageOf(o.fl); }
+    else if (k === 'inst' || k === 'claim') o[k] = v === 'да';
+    else if (k === 'sum' || k === 'paid' || k === 'cost' || k === 'instCost') o[k] = numv(v);
+    else { o[k] = v; if (k === 'cat' || k === 'sup') o.title = (o.cat || '') + (o.sup ? ' · ' + o.sup : ''); }
+    DB.commit(o); if (k === 'name' || k === 'phone') DB.derive();
+  }
   const DEFCOLS = ['no', 'created', 'name', 'cat', 'sup', 'sum', 'stage'];
   const PERS = [['', 'Всё время'], ['m0', 'Этот месяц'], ['m1', 'Прошлый месяц'], ['y0', 'Этот год'], ['y1', 'Прошлый год']];
   const p2 = n => String(n).padStart(2, '0'), iso = d => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
@@ -133,12 +157,35 @@
         if (c.t === 'n') { const a = f.a === '' || f.a == null ? null : +String(f.a).replace(/\s/g, ''), b = f.b === '' || f.b == null ? null : +String(f.b).replace(/\s/g, ''); return (a == null || v >= a) && (b == null || v <= b); }
         return (!f.a || (v && v >= f.a)) && (!f.b || (v && v <= f.b)); });
     });
-    const so = S.tsort || { k: 'no', d: -1 }, sc = COLS.find(c => c.k === so.k) || COLS[0];
+    const so = S.tsort || { k: 'no', d: 1 }, sc = COLS.find(c => c.k === so.k) || COLS[0];
     rows = rows.slice().sort((x, y) => { const a = sc.v(x), b = sc.v(y); return (a < b ? -1 : a > b ? 1 : 0) * so.d; });
     return rows;
   }
+  /* таблица открывается на последних заказах и помнит прокрутку при правках */
+  let TPOS = null;
+  document.addEventListener('scroll', ev => { const t = ev.target; if (t && t.classList && t.classList.contains('tscroll')) TPOS = t.scrollTop >= t.scrollHeight - t.clientHeight - 4 ? 'end' : t.scrollTop; }, true);
+  const r0 = A.render;
+  A.render = function () { const r = r0.apply(this, arguments); const t = document.querySelector('.tscroll'); if (t) t.scrollTop = TPOS == null || TPOS === 'end' ? t.scrollHeight : TPOS; return r; };
+  const TE = () => S.tedit || {};
+  function cell(o, c) {
+    const x = ED[c.k], ok = canEdit(o, c), ed = ok && TE().id === o.id && TE().k === c.k; let base = (c.r ? 'r num' : '') + (c.wide ? ' tw' : '');
+    const debt = Math.max(0, (+o.sum || 0) - (+o.paid || 0)) > 0 && !closed(o), red = debt && (c.k === 'debt' || (c.k === 'sum' && tcols().indexOf('debt') < 0)) ? ' cdbt' : '';
+    base += red;
+    if (!ok) return '<td class="' + base + '" title="' + (c.wide ? e(c.f(o)) : '') + '">' + e(c.f(o)) + '</td>';
+    if (!ed) return '<td class="' + base + ' ted" data-a="otcell" data-id="' + o.id + '" data-k="' + c.k + '" title="' + (c.wide ? e(c.f(o)) : 'Нажми, чтобы изменить') + '">' + (e(c.f(o)) || '<span class="mut">·</span>') + '</td>';
+    const at = ' data-c="otedit" data-id="' + o.id + '" data-k="' + c.k + '"', raw = c.v(o);
+    let inner;
+    if (x.ed === 'bool') inner = '<select class="in tf"' + at + '><option' + (raw === 'нет' ? ' selected' : '') + '>нет</option><option' + (raw === 'да' ? ' selected' : '') + '>да</option></select>';
+    else if (x.ed === 'sel') { const cur = c.k === 'stage' ? (o.ph ? D.STAGES[o.stage] && PHST.find(p => p === o.status) : String(o.stage)) : raw; inner = '<select class="in tf"' + at + '>' + optsOf(o, c).map(v => '<option value="' + e(v[0]) + '"' + (String(v[0]) === String(c.k === 'stage' ? (o.ph ? o.status : o.stage) : raw) ? ' selected' : '') + '>' + e(v[1]) + '</option>').join('') + '</select>'; }
+    else if (x.ed === 'date') inner = '<input class="in tf" type="date" value="' + e(raw) + '"' + at + '>';
+    else inner = '<input class="in tf" value="' + e(x.ed === 'num' ? raw : raw) + '"' + at + '>';
+    return '<td class="' + base + ' tedit">' + inner + '</td>';
+  }
+  A.act.otcell = el => { S.tedit = { id: el.dataset.id, k: el.dataset.k }; A.render(); setTimeout(() => { const x = document.querySelector('.ttab [data-c=otedit]'); if (!x) return; x.focus(); if (x.tagName === 'SELECT') { try { x.showPicker(); } catch (er) {} } else if (x.select) x.select(); }, 0); };
+  A.fld.otedit = (v, el) => { const o = A.order(el.dataset.id); S.tedit = null; if (o) setCell(o, el.dataset.k, v); A.render(); };
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && S.tedit) { S.tedit = null; A.render(); } }, true);
   function table() {
-    const F = tfilt(), cols = tcols().map(k => COLS.find(c => c.k === k)), rows = trows(), lim = S.tlim || 200, so = S.tsort || { k: 'no', d: -1 };
+    const F = tfilt(), cols = tcols().map(k => COLS.find(c => c.k === k)), rows = trows(), lim = S.tlim || 200, so = S.tsort || { k: 'no', d: 1 }, tail = so.d > 0, shown = tail ? rows.slice(Math.max(0, rows.length - lim)) : rows.slice(0, lim), more = rows.length > lim ? '<div style="padding:10px;text-align:center"><button class="btn sm" data-a="otmore">' + (tail ? 'Показать более ранние' : 'Показать ещё') + ' (осталось ' + (rows.length - lim) + ')</button></div>' : '';
     const opts = c => { const u = {}; D.orders.forEach(o => { const v = c.v(o); if (v !== '') u[v] = 1; }); return Object.keys(u).sort((a, b) => c.k === 'stage' ? D.STAGES.indexOf(a) - D.STAGES.indexOf(b) : a.localeCompare(b, 'ru')); };
     const fcell = c => { const f = F[c.k];
       if (c.t === 't') return '<input class="in tf" value="' + e(f || '') + '" data-c="otf" data-k="' + c.k + '">';
@@ -152,10 +199,10 @@
       (S.tmenu ? '<div class="tmenu sc"><div class="row" style="gap:6px;margin-bottom:6px"><button class="btn sm" data-a="otcolall">Все</button><button class="btn sm" data-a="otcolreset">По умолчанию</button></div>' + COLS.map(c => '<button class="tmi ' + (cols.indexOf(c) >= 0 ? 'on' : '') + '" data-a="otcol" data-k="' + c.k + '"><i>' + (cols.indexOf(c) >= 0 ? '✓' : '') + '</i>' + e(c.l) + '</button>').join('') + '</div>' : '') + '</div>' +
       '<select class="in" style="width:150px" data-c="otper">' + PERS.map(p => '<option value="' + p[0] + '"' + ((S.tper || '') === p[0] ? ' selected' : '') + '>' + p[1] + '</option>').join('') + '</select>' +
       (nf ? '<button class="btn" data-a="otclear">Сбросить фильтры (' + nf + ')</button>' : '') + '<span class="sp"></span><span class="mut">Найдено: <b>' + rows.length + '</b>' + (cols.some(c => c.k === 'sum') ? ' · на сумму <b>' + m(tot(COLS.find(c => c.k === 'sum'))) + '</b>' : '') + '</span></div>' +
-      '<div class="tscroll sc"><table class="tbl ttab"><thead><tr>' + cols.map(c => '<th class="' + (c.r ? 'r' : '') + '" draggable="true" data-a="otsort" data-k="' + c.k + '" title="Потяни, чтобы переставить столбец">' + e(c.l) + (so.k === c.k ? (so.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr><tr class="tfrow">' + cols.map(c => '<th>' + fcell(c) + '</th>').join('') + '</tr></thead><tbody>' +
-      rows.slice(0, lim).map(o => '<tr class="tr" data-a="opn" data-id="order:' + o.id + '">' + cols.map(c => '<td class="' + (c.r ? 'r num' : '') + (c.wide ? ' tw' : '') + '" title="' + (c.wide ? e(c.f(o)) : '') + '">' + e(c.f(o)) + '</td>').join('') + '</tr>').join('') +
-      '</tbody>' + (cols.some(c => c.tot) ? '<tfoot><tr>' + cols.map((c, i) => '<td class="' + (c.r ? 'r num' : '') + '"><b>' + (c.tot ? m(tot(c)) : i === 0 ? 'Итого' : '') + '</b></td>').join('') + '</tr></tfoot>' : '') + '</table>' +
-      (rows.length > lim ? '<div style="padding:10px;text-align:center"><button class="btn sm" data-a="otmore">Показать ещё (осталось ' + (rows.length - lim) + ')</button></div>' : '') + (rows.length ? '' : '<div class="empty" style="padding:24px">Ничего не найдено</div>') + '</div>';
+      '<div class="tscroll sc">' + (tail ? more : '') + '<table class="tbl ttab"><thead><tr><th class="topen"></th>' + cols.map(c => '<th class="' + (c.r ? 'r' : '') + '" draggable="true" data-a="otsort" data-k="' + c.k + '" title="Потяни, чтобы переставить столбец">' + e(c.l) + (so.k === c.k ? (so.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr><tr class="tfrow"><th class="topen"></th>' + cols.map(c => '<th>' + fcell(c) + '</th>').join('') + '</tr></thead><tbody>' +
+      shown.map(o => '<tr class="tr' + (closed(o) ? ' trc' : '') + (o.zone === 'Регионы' ? ' trg' : '') + '"><td class="topen"><button class="ib" data-a="opn" data-id="order:' + o.id + '" title="Открыть карточку заказа">↗</button></td>' + cols.map(c => cell(o, c)).join('') + '</tr>').join('') +
+      '</tbody>' + (cols.some(c => c.tot) ? '<tfoot><tr><td></td>' + cols.map((c, i) => '<td class="' + (c.r ? 'r num' : '') + '"><b>' + (c.tot ? m(tot(c)) : i === 0 ? 'Итого' : '') + '</b></td>').join('') + '</tr></tfoot>' : '') + '</table>' +
+      (tail ? '' : more) + (rows.length ? '' : '<div class="empty" style="padding:24px">Ничего не найдено</div>') + '</div>';
   }
   /* перестановка столбцов перетаскиванием заголовка */
   let dragK = null;
@@ -168,15 +215,17 @@
     S.tcols = cur.filter(Boolean); A.save(); A.render();
   });
   document.addEventListener('dragend', () => { dragK = null; });
+  /* из карточки назад в таблицу: вкладка заказа закрывается, список остаётся как был */
+  A.act.oback = el => { const i = S.tabs.findIndex(t => t.id === el.dataset.id); if (i > 0) S.tabs.splice(i, 1); A.open('orders'); };
   A.act.otmenu = () => { S.tmenu = !S.tmenu; A.render(); };
   A.act.otcol = el => { const cur = tcols().slice(), k = el.dataset.k, i = cur.indexOf(k); if (i >= 0) cur.splice(i, 1); else cur.push(k); S.tcols = cur; A.save(); A.render(); };
   A.act.otcolall = () => { S.tcols = COLS.map(c => c.k); A.save(); A.render(); };
   A.act.otcolreset = () => { S.tcols = DEFCOLS.slice(); A.save(); A.render(); };
-  A.act.otsort = el => { const so = S.tsort || { k: 'no', d: -1 }; S.tsort = { k: el.dataset.k, d: so.k === el.dataset.k ? -so.d : (COLS.find(c => c.k === el.dataset.k).t === 'n' || COLS.find(c => c.k === el.dataset.k).t === 'd' ? -1 : 1) }; A.save(); A.render(); };
-  A.act.otclear = () => { S.tf = {}; S.tper = ''; S.tlim = 200; A.save(); A.render(); };
-  A.act.otmore = () => { S.tlim = (S.tlim || 200) + 300; A.render(); };
-  A.fld.otf = (v, el) => { const F = tfilt(), k = el.dataset.k, p = el.dataset.p; if (p) F[k] = Object.assign({ a: '', b: '' }, F[k] || {}, { [p]: v }); else F[k] = v; S.tlim = 200; A.save(); A.render(); };
-  A.fld.otper = v => { S.tper = v; S.tlim = 200; A.save(); A.render(); };
+  A.act.otsort = el => { const so = S.tsort || { k: 'no', d: 1 }; TPOS = 'end'; S.tsort = { k: el.dataset.k, d: so.k === el.dataset.k ? -so.d : 1 }; A.save(); A.render(); };
+  A.act.otclear = () => { TPOS = 'end'; S.tf = {}; S.tper = ''; S.tlim = 200; A.save(); A.render(); };
+  A.act.otmore = () => { TPOS = 0; S.tlim = (S.tlim || 200) + 300; A.render(); };
+  A.fld.otf = (v, el) => { TPOS = 'end'; const F = tfilt(), k = el.dataset.k, p = el.dataset.p; if (p) F[k] = Object.assign({ a: '', b: '' }, F[k] || {}, { [p]: v }); else F[k] = v; S.tlim = 200; A.save(); A.render(); };
+  A.fld.otper = v => { TPOS = 'end'; S.tper = v; S.tlim = 200; A.save(); A.render(); };
   document.addEventListener('click', ev => { if (S.tmenu && ev.target.closest && !ev.target.closest('.tmw')) { S.tmenu = false; A.render(); } }, true);
 
   A.module('orders', {

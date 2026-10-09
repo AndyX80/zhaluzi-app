@@ -94,7 +94,7 @@
   /* заказ из Excel → запись; имя и телефон берутся у клиента */
   function toRec(o, c) {
     const r = Object.assign({}, o); delete r.client; delete r.id; delete r.ph; delete r.dupOf;
-    r.uid = o.uid || ('x' + String(o.id).slice(1)); r.legacy = true; r.name = (c && c.name) || ''; r.phone = (c && c.phone) || '';
+    r.uid = o.uid || ('x' + String(o.id).slice(1)); r.legacy = true; r.name = o.name != null && o.name !== '' ? o.name : ((c && c.name) || ''); r.phone = o.phone != null && o.phone !== '' ? o.phone : ((c && c.phone) || '');
     r.status = statusOf(o); r.created = o.created || ''; return r;
   }
   function fromRec(r) {

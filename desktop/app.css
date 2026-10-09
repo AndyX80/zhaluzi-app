@@ -216,3 +216,19 @@ button.ul.sel .ph{color:var(--bad)}.sm{font-size:12px}
 .ttab tbody tr:nth-child(odd) td{background:var(--tbd)}.ttab tbody tr:nth-child(even) td{background:var(--tev)}
 .ttab tbody tr:hover td{background:var(--thv)}.ttab tfoot td{background:var(--thd)}
 .ttab .tf{background:var(--tbd)}
+/* v22.3 правка ячеек таблицы */
+.ttab .topen{width:34px;min-width:34px;padding:2px 4px;text-align:center;cursor:default}.ttab td.topen .ib{width:26px;height:26px;font-size:15px}
+.ttab td.ted{cursor:cell}.ttab td.ted:hover{outline:2px solid var(--acc);outline-offset:-2px;background:var(--pop,#fff)!important}
+.ttab td.tedit{padding:2px 4px;outline:2px solid var(--acc);outline-offset:-2px;background:var(--pop,#fff)!important}.ttab td.tedit .tf{width:100%;min-width:90px;height:28px}
+.ttab tbody tr{cursor:default}
+/* v22.4 цвета строк: долг красным, регион бежевым, закрытый бледным */
+:root{--trg:#f3e8d2;--trd:#c62828}:root[data-theme=dark]{--trg:#3b3322;--trd:#ff7b7b}
+.ttab tbody tr.trg td{background:var(--trg)!important}
+.ttab tbody tr.trd td{color:var(--trd);font-weight:600}
+.ttab tbody tr.trc td{color:color-mix(in srgb,var(--ink) 38%,transparent);font-weight:400}
+.ttab tbody tr.trc td{opacity:.75}
+.ttab tbody tr.trc:not(.trg) td{background:color-mix(in srgb,var(--ink) 3%,var(--tbd))!important}
+.ttab tbody tr.trd td{color:inherit;font-weight:inherit}
+.ttab td.cdbt{color:var(--trd)!important;font-weight:700}
+.ttab td.topen .ib{border:1.5px solid color-mix(in srgb,var(--ink) 35%,transparent);background:var(--pop,#fff);color:var(--ink);border-radius:8px;width:28px;height:28px;font-weight:700}
+.ttab td.topen .ib:hover{background:var(--acc);border-color:var(--acc);color:#fff}
