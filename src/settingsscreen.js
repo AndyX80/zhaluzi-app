@@ -121,8 +121,8 @@
         if (!confirm('Загрузить заказов: ' + list.length + '. Заказы с теми же номерами заменятся.')) return;
         const cur = JalOrders.load().filter(o => !list.some(x => x.no === o.no)); lsSet('jal_orders', JSON.stringify(list.concat(cur))); render(); }),
       sched: ['Выкл.', 'Каждую ночь', 'Раз в неделю'].map((n, i) => ({ name: n, pick: () => { lsSet('jal_sched', String(i)); set({ sched: i }); }, style: seg(T.sched === i) })),
-      driveNow: async () => { T.arch = 'Сохраняю…'; T.archBad = false; render(); try { const n = await JalDrive.backup(); T.arch = 'Сохранено заказов: ' + n; } catch (e) { T.arch = e.message || String(e); T.archBad = true; } render(); },
-      driveRestore: async () => { T.arch = 'Загружаю…'; T.archBad = false; render(); try { const n = await JalDrive.restore(); T.arch = 'Добавлено заказов: ' + n; } catch (e) { T.arch = e.message || String(e); T.archBad = true; } render(); },
+      driveNow: async () => { T.arch = 'Сохраняю…'; T.archBad = false; render(); try { const n = await JalDrive.backup(); T.arch = 'Общая база обновлена, заказов: ' + n; } catch (e) { T.arch = e.message || String(e); T.archBad = true; } render(); },
+      driveRestore: async () => { T.arch = 'Загружаю…'; T.archBad = false; render(); try { const n = await JalDrive.restore(); T.arch = 'Общая база обновлена, заказов: ' + n; } catch (e) { T.arch = e.message || String(e); T.archBad = true; } render(); },
       archNote: T.arch || (JalDrive.backupAt() ? 'Последняя копия: ' + dstr(JalDrive.backupAt()) : 'Архив в Диск ещё не делался'),
       archStyle: 'font-size: 13px; color: ' + (T.archBad ? '#B3261E' : 'var(--m1)')
     };

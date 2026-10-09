@@ -78,6 +78,7 @@
 
   DB.apply = function (data) {
     D.clients = data.clients; D.orders = data.orders; D.ops = data.ops; D.events = []; D.real = DB.real = true;
+    const ph = DB.phRaw && DB.phRaw(); if (ph && ph.length) DB.applyPhone(ph);
   };
   DB.save = function () {
     try { localStorage.setItem(KEY, JSON.stringify({ v: 1, at: Date.now(), clients: D.clients, orders: D.orders, ops: D.ops })); return true; } catch (e) { return false; }
@@ -100,6 +101,43 @@
     });
   };
 
+
+  /* заказы с телефона (общая база на Google Диске). Сырой список хранится отдельно и уходит в Диск как есть; в D.orders попадает пересчитанная копия (ph:true) */
+  const PHKEY = 'jald_ph_v1';
+  const STAGE_PH = { 'Черновик': 2, 'КП отправлено': 2, 'Договор': 3, 'Оплачен': 4 };
+  const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+  DB.phRaw = () => { try { return JSON.parse(lsGet(PHKEY) || '[]') || []; } catch (e) { return []; } };
+  function fromPhone(o) {
+    const items = o.items || [], goods = items.reduce((a, i) => a + (+i.price || 0), 0), prof = items.reduce((a, i) => a + (+i.profit || 0), 0);
+    const sum = Math.max(0, goods + (o.priced ? 0 : (+o.delivery || 0)) - (+o.disc || 0)), cat = items.some(i => /дерев|бамбук/i.test(i.mat || i.title || '')) ? 'Дерево' : 'Разное';
+    const sups = {}; items.forEach(i => { if (i.sup) sups[i.sup] = 1; });
+    return { id: 'ph' + o.uid, no: String(o.no), uid: o.uid, ph: true, sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: '', factory: '',
+      inst: !!o.install, zone: o.region ? 'Регионы' : 'СПб', sum, paid: o.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: 0,
+      created: (o.created || '').slice(0, 10), due: '', tk: o.note || '', review: '', stage: STAGE_PH[o.status] != null ? STAGE_PH[o.status] : 2, status: o.status, claim: false, legacy: false,
+      _c: { name: o.company || o.name || 'Без имени', phone: o.phone || '', addr: o.addr || '' } };
+  }
+  DB.applyPhone = function (list) {
+    const live = list.filter(o => !o.del); try { localStorage.setItem(PHKEY, JSON.stringify(list)); } catch (e) {}
+    D.orders = D.orders.filter(o => !o.ph);
+    const byPhone = {}; D.clients.forEach(c => { const d = phoneDigits(c.phone); if (d.length >= 10) byPhone[d.slice(-10)] = c; });
+    live.forEach(r => {
+      const o = fromPhone(r), c0 = o._c; delete o._c; const pd = phoneDigits(c0.phone).slice(-10);
+      let c = pd.length >= 10 ? byPhone[pd] : D.clients.find(x => x.name.toLowerCase() === c0.name.toLowerCase());
+      if (!c) { c = { id: 'cp' + r.uid, name: c0.name, phone: phoneFmt(c0.phone), addr: c0.addr, src: '', note: '' }; D.clients.unshift(c); if (pd.length >= 10) byPhone[pd] = c; }
+      if (!c.addr && c0.addr) c.addr = c0.addr;
+      o.client = c.id; D.orders.unshift(o);
+    });
+    D.orders.sort((a, b) => (a.created < b.created ? 1 : a.created > b.created ? -1 : (+b.no) - (+a.no)));
+    return live.length;
+  };
+  DB.scriptUrl = () => lsGet('jal_prices_url');
+  DB.syncPhone = async function () {
+    const base = DB.scriptUrl(); if (!base) throw new Error('Вставь ссылку на скрипт (Настройки → Данные)');
+    const m = base.match(/[?&]key=([^&]+)/), r = await fetch(base.split('?')[0], { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: m ? decodeURIComponent(m[1]) : '', sync: DB.phRaw() }) });
+    const j = await r.json(); if (!j.ok) throw new Error(j.error === 'bad key' ? 'Неверный пароль в ссылке' : (j.error || 'Скрипт не ответил (обнови скрипт)'));
+    const n = DB.applyPhone(j.orders || []); DB.save(); try { localStorage.setItem('jald_ph_at', String(Date.now())); } catch (e) {} return n;
+  };
+
   /* показатели за период [from, to] (ISO-даты включительно) */
   DB.stats = function (from, to, orders) {
     const os = (orders || D.orders).filter(o => o.created >= from && o.created <= to && o.cat !== undefined);
@@ -112,4 +150,6 @@
   DB.dmy = dmy; DB.iso = iso; DB.phoneFmt = phoneFmt;
   window.DB = DB;
   DB.load();
+  /* при запуске тихо подтягиваем заказы с телефона */
+  setTimeout(() => { if (DB.real && DB.scriptUrl()) DB.syncPhone().then(() => { if (window.App && App.render) App.render(); }).catch(() => {}); }, 1500);
 })();

@@ -44,17 +44,21 @@
     return { files: n, tpl: Object.keys(t).length, folder: j.folder || '' };
   }
   const keyOf = u => (u.match(/[?&]key=([^&]+)/) || [])[1] || '';
-  /* копия заказов на Диск: запись без чтения ответа (браузер не отдаёт его для такого запроса), поэтому потом проверяем чтением */
-  async function backup() {
+  /* общая база заказов: отправляем свои заказы (с метками правки и удаления), скрипт сливает с файлом на Диске и отдаёт общий список */
+  let syncing = null;
+  async function sync() {
+    if (syncing) return syncing;
     const base = lsGet('jal_prices_url'); if (!base) throw new Error('Сначала вставь ссылку на цены (вкладка «Цены»)');
-    const orders = JalOrders.load();
-    await fetch(base.split('?')[0], { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: decodeURIComponent(keyOf(base)), orders }) });
-    const j = await (await fetch(base + '&orders=1')).json();
-    if (!j.ok) throw new Error(j.error || 'Скрипт не ответил');
-    if (j.orders === undefined) throw new Error('Скрипт старой версии: вставь новый код и сделай новое развёртывание');
-    if (j.orders.length !== orders.length) throw new Error('Копия не записалась: запусти razreshenie в скрипте (доступ к Диску) и повтори');
-    lsSet('jal_backup_at', String(Date.now())); return orders.length;
+    return (syncing = (async () => {
+      const r = await fetch(base.split('?')[0], { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: decodeURIComponent(keyOf(base)), sync: JalOrders.raw() }) });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error === 'bad key' ? 'Неверный пароль в ссылке' : (j.error || 'Скрипт не ответил (обнови скрипт)'));
+      const n = JalOrders.applyRemote(j.orders || []); lsSet('jal_backup_at', String(Date.now())); return n;
+    })().finally(() => { syncing = null; }));
   }
+  const backup = sync, restore = sync;
+  /* после правки заказа через несколько секунд отправляем в общую базу (тихо, без сообщений) */
+  let tm = 0; window.addEventListener('jal-orders', () => { if (!lsGet('jal_prices_url')) return; clearTimeout(tm); tm = setTimeout(() => sync().catch(() => {}), 4000); });
   const b64 = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = () => no(new Error('файл не прочитался')); r.readAsDataURL(f); });
   /* письмо с файлами через скрипт: Apps Script шлёт с твоей почты; ответ читаем, чтобы знать, что письмо ушло */
   async function mail(to, subject, body, files) {
@@ -81,15 +85,8 @@
     const bin = atob(j.b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
     return (catFile = new File([u], 'Каталог.pdf', { type: j.mime || 'application/pdf' }));
   }
-  async function restore() {
-    const base = lsGet('jal_prices_url'); if (!base) throw new Error('Сначала вставь ссылку на цены (вкладка «Цены»)');
-    const j = await (await fetch(base + '&orders=1')).json(); if (!j.ok) throw new Error(j.error || 'Скрипт не отдал заказы');
-    const have = JalOrders.load(), add = (j.orders || []).filter(o => !have.some(x => x.no === o.no));
-    try { localStorage.setItem('jal_orders', JSON.stringify(have.concat(add))); } catch (e) { throw new Error('Не хватило места на телефоне'); }
-    return add.length;
-  }
   /* авто-копия: раз в день или раз в неделю, если включено в Настройках и ссылка есть */
   setTimeout(() => { const m = +lsGet('jal_sched') || 0, age = Date.now() - (+lsGet('jal_backup_at') || 0);
-    if (m && lsGet('jal_prices_url') && age > (m === 1 ? 20 * 3600e3 : 7 * 86400e3)) backup().catch(() => {}); }, 6000);
-  window.JalDrive = { inn, mail, catalog, backup, restore, backupAt: () => +lsGet('jal_backup_at') || 0, refresh, text, fill, parse, dump, FILES, DEF, at: () => +lsGet('jal_drive_at') || 0 };
+    if (lsGet('jal_prices_url') && (m ? age > (m === 1 ? 20 * 3600e3 : 7 * 86400e3) : age > 6 * 3600e3)) sync().catch(() => {}); }, 6000);
+  window.JalDrive = { sync, inn, mail, catalog, backup, restore, backupAt: () => +lsGet('jal_backup_at') || 0, refresh, text, fill, parse, dump, FILES, DEF, at: () => +lsGet('jal_drive_at') || 0 };
 })();

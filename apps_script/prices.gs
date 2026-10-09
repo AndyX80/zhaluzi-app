@@ -82,6 +82,7 @@ function doPost(e) {
   try { d = JSON.parse(e.postData.contents); } catch (x) { return out_({ ok: false, error: 'bad body' }); }
   if (d.key !== KEY) return out_({ ok: false, error: 'bad key' });
   if (d.mail) return mail_(d.mail);
+  if (d.sync) return sync_(d.sync);
   const folder = folder_(), old = folder.getFilesByName('заказы.json');
   while (old.hasNext()) old.next().setTrashed(true);
   folder.createFile('заказы.json', JSON.stringify(d.orders), 'application/json');
@@ -97,6 +98,21 @@ function mail_(m) {
     return out_({ ok: true, sent: atts.length });
   } catch (x) { return out_({ ok: false, error: String(x) }); }
 }
+// Общая база заказов (телефон и десктоп): слияние по uid, побеждает более поздняя правка (upd). Блокировка, чтобы два устройства не писали одновременно.
+function sync_(list) {
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const folder = folder_(), it = folder.getFilesByName('заказы.json');
+    let cur = []; if (it.hasNext()) { try { cur = JSON.parse(it.next().getBlob().getDataAsString('UTF-8')); } catch (x) { cur = []; } }
+    const m = {};
+    cur.forEach(function (o) { m[o.uid || ('n' + o.no)] = o; });
+    (list || []).forEach(function (o) { const k = o.uid || ('n' + o.no), c = m[k]; if (!c || String(o.upd || '') > String(c.upd || '')) m[k] = o; });
+    const out = Object.keys(m).map(function (k) { const o = m[k]; if (!o.uid) o.uid = k; return o; });
+    const old = folder.getFilesByName('заказы.json'); while (old.hasNext()) old.next().setTrashed(true);
+    folder.createFile('заказы.json', JSON.stringify(out), 'application/json');
+    return out_({ ok: true, n: out.length, orders: out });
+  } catch (x) { return out_({ ok: false, error: String(x) }); } finally { lock.releaseLock(); }
+}
 function ordersGet_() {
   const it = folder_().getFilesByName('заказы.json');
   return out_({ ok: true, orders: it.hasNext() ? JSON.parse(it.next().getBlob().getDataAsString('UTF-8')) : [] });
@@ -105,6 +121,7 @@ function ordersGet_() {
 // Одноразово (и после каждого обновления кода): выбери эту функцию и нажми «Выполнить», чтобы Google выдал доступ к Диску.
 function razreshenie() {
   DriveApp.getFoldersByName(FOLDER);
+  LockService.getScriptLock();
   DriveApp.createFile('t.txt', 't').setTrashed(true);
   MailApp.getRemainingDailyQuota();
   UrlFetchApp.fetch('https://dadata.ru');

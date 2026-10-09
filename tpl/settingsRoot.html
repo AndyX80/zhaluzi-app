@@ -169,15 +169,15 @@
 <button onClick="{{exportDb}}" style="height: 48px; border: 0; border-radius: 12px; background: var(--dk); color: #FFFFFF; font-size: 15px; font-weight: 600">Экспорт в файл</button>
 <button onClick="{{importDb}}" style="height: 48px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Импорт из файла</button>
 </div>
-<div style="border-top: 1px solid #EADFD1; padding-top: 10px; font-size: 14px; font-weight: 700">Архив в Google Диск</div>
-<div style="font-size: 13px; color: var(--m1)">Папка: Мой диск / Жалюзи-приложение, файл «заказы.json»</div>
+<div style="border-top: 1px solid #EADFD1; padding-top: 10px; font-size: 14px; font-weight: 700">Общая база заказов (Google Диск)</div>
+<div style="font-size: 13px; color: var(--m1)">Папка: Мой диск / Жалюзи-приложение, файл «заказы.json». Заказы сами уходят в общую базу после правки и подтягиваются при запуске; кнопки ниже для ручной синхронизации.</div>
 <div style="background: var(--card); border-radius: 14px; box-shadow: 0 1px 3px rgba(20,40,60,.12); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))">
 <sc-for list="{{sched}}" as="t" hint-placeholder-count="3">
 <button onClick="{{t.pick}}" style="{{t.style}}">{{t.name}}</button>
 </sc-for>
 </div>
-<button onClick="{{driveNow}}" style="height: 48px; border-radius: 12px; border: 1.5px solid var(--dk); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700">Сохранить в Диск сейчас</button>
-<button onClick="{{driveRestore}}" style="height: 48px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Вернуть заказы с Диска</button>
+<button onClick="{{driveNow}}" style="height: 48px; border-radius: 12px; border: 1.5px solid var(--dk); background: var(--card); color: var(--dk); font-size: 15px; font-weight: 700">Синхронизировать сейчас</button>
+<button onClick="{{driveRestore}}" style="height: 48px; border-radius: 12px; border: 1.5px solid #E3D5C3; background: var(--card); color: var(--dk); font-size: 15px; font-weight: 600">Подтянуть заказы с Диска</button>
 <div style="{{archStyle}}">{{archNote}}</div>
 </section>
 </sc-if>
