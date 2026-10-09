@@ -209,7 +209,41 @@
     render() { const C = JC() ? JC().C : {}; return '<div class="head"><h1>' + (C.editNo ? 'Заказ № ' + e(C.editNo) : 'Новый заказ') + '</h1></div><div class="calcwrap">' + form() + cart() + '</div>'; }
   });
 
-  const rr = () => A.render();
+  /* ===== Tab по полям формы: слева направо, сверху вниз; выпадающее поле открывается сразу ===== */
+  let want = null, kbd = false;
+  const keyOf = el => { if (!el || !el.dataset) return null; if (el.id) return '#' + el.id; const d = el.dataset, at = (n, v) => v ? '[data-' + n + '="' + v + '"]' : '';
+    return d.c ? '[data-c="' + d.c + '"]' + at('k', d.k) : d.a ? '[data-a="' + d.a + '"]' + at('k', d.k) + at('v', d.v) + at('d', d.d) : null; };
+  const rr = () => {
+    const key = want || keyOf(document.activeElement), inForm = !!document.activeElement && !!document.activeElement.closest && !!document.activeElement.closest('.cform');
+    want = null; A.render();
+    if (key && (inForm || key !== null)) { const el = document.querySelector('.cform ' + key); if (el && el !== document.activeElement && /^(INPUT|SELECT|BUTTON|TEXTAREA)$/.test(el.tagName) && (inForm || el.closest('.cform'))) { try { el.focus({ preventScroll: true }); } catch (x) {} } }
+  };
+  const formList = () => Array.from(document.querySelectorAll('.cform input:not([type=hidden]), .cform select, .cform button')).filter(el => !el.closest('.colpop,.autopop') && !el.disabled && el.offsetParent !== null && !el.classList.contains('ib'));
+  document.addEventListener('keydown', ev => {
+    const a = document.activeElement; if (!a || !a.closest) return;
+    if (ev.key === 'Escape' && (F.colOpen || F.autoOpen)) { ev.stopPropagation(); kbd = false; want = F.colOpen ? '[data-a="ccol"]' : '[data-a="cauto"]'; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); return; }
+    if (ev.key === 'Enter' && a.id === 'ccolq') { const f = document.querySelector('.colist .coli'); if (f) { ev.preventDefault(); A.act.ccolpick(f); } return; }
+    if (ev.key !== 'Tab' || ev.ctrlKey || ev.altKey || !a.closest('.cform') && !a.closest('.colpop')) return;
+    kbd = true;
+    const inCol = !!a.closest('.colpop'), inAuto = !!a.closest('.autopop');
+    const base = inCol ? document.querySelector('[data-a=ccol]') : inAuto ? document.querySelector('[data-a=cauto]') : a;
+    const list = formList(), i = list.indexOf(base), nx = list[i + (ev.shiftKey ? -1 : 1)];
+    if (i < 0 || !nx) { if (inCol || inAuto) { F.colOpen = false; F.autoOpen = false; } return; }
+    ev.preventDefault(); F.colOpen = false; F.autoOpen = false; want = keyOf(nx);
+    if (document.activeElement) { const el = nx; const wasForm = true; if (wasForm) { /* закрываем всплывающие окна и ставим фокус */ } }
+    if (inCol || inAuto || document.querySelector('.colpop,.autopop')) rr(); else { nx.focus(); want = null; }
+  }, true);
+  document.addEventListener('mousedown', () => { kbd = false; }, true);
+  document.addEventListener('focusin', ev => {
+    const el = ev.target; if (!kbd || !el.closest || !el.closest('.cform')) return;
+    setTimeout(() => {
+      if (document.activeElement !== el && !(el.isConnected === false && keyOf(el) === keyOf(document.activeElement))) return;
+      const cur = document.activeElement;
+      if (cur.matches && cur.matches('select')) { try { cur.showPicker(); } catch (x) {} }
+      else if (cur.matches && cur.matches('[data-a=ccol]') && !F.colOpen) { F.colOpen = true; F.cq = ''; want = '#ccolq'; rr(); }
+      else if (cur.matches && cur.matches('[data-a=cauto]') && !F.autoOpen) { F.autoOpen = true; rr(); }
+    }, 0);
+  });
   A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds') { F.mode = v; rr(); } };
   A.fld.ctype = v => { const p = String(v).split('|'); F.mat = p[0]; F.lam = +p[1]; F.color = ''; F.colOpen = false; rr(); };
   A.fld.csup = v => { F.sup = v; Object.assign(F, { lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {}, colOpen: false }); rr(); };
