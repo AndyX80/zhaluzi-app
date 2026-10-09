@@ -39,7 +39,7 @@
 
   function card(id, full) {
     const o = A.order(id) || D.orders[0], c = A.client(o.client) || { name: '' };
-    return '<div class="card" style="min-height:100%"><div class="row wrap" style="margin-bottom:6px"><h1>Заказ № ' + o.no + '</h1>' + A.stagePill(o) + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '<span class="sp"></span>' +
+    return '<div class="card" style="min-height:100%"><div class="row wrap" style="margin-bottom:6px"><h1>Заказ № ' + o.no + '</h1>' + A.stagePill(o) + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '<span class="sp"></span>' + (D.real ? '<button class="btn sm" data-a="odel" data-id="' + o.id + '">' + (S.odelId === o.id ? 'Точно удалить?' : 'Удалить заказ') + '</button>' : '') +
       (full ? '' : '<button class="btn sm" data-a="opn" data-id="order:' + o.id + '">Открыть во вкладке</button>') + '</div><div class="mut" style="margin-bottom:10px">' + e(c.name) + ' · ' + e(o.title) + (o.created ? ' · ' + e(dmy(o.created)) : '') + '</div>' + stepper(o) +
       '<div class="itabs">' + tabs.map(t => '<button class="' + (S.orderTab === t[0] ? 'on' : '') + '" data-a="otab" data-t="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' + body(o) +
       '<div class="sumbar"><div><small>Сумма заказа</small><b>' + m(o.sum) + '</b></div><div><small>Оплачено</small><b>' + m(o.paid) + '</b></div><div><small>Долг</small><b>' + m(Math.max(0, o.sum - o.paid)) + '</b></div><div><small>Закуп</small><b>' + m(o.cost) + '</b></div><div><small>Прибыль</small><b>' + m(prof(o)) + '</b></div></div></div>';
@@ -71,6 +71,13 @@
   A.act.ofilter = el => { S.ordersFilter = el.dataset.f; S.olimit = LIM; A.save(); A.render(); };
   A.act.oview = el => { S.ordersView = el.dataset.v; A.save(); A.render(); };
   A.act.omore = () => { S.olimit = (S.olimit || LIM) + 200; A.render(); };
+  A.act.odel = el => {
+    const o = A.order(el.dataset.id); if (!o) return;
+    if (S.odelId !== o.id) { S.odelId = o.id; A.render(); setTimeout(() => { if (S.odelId === o.id) { S.odelId = null; A.render(); } }, 4000); return; }
+    S.odelId = null; S.selOrder = null;
+    if (o.ph) DB.delPhone(o.uid); else { D.orders = D.orders.filter(x => x.id !== o.id); DB.save(); }
+    A.toast('Заказ № ' + o.no + ' удалён'); A.render();
+  };
   A.act.oflag = el => {
     const o = A.order(el.dataset.id); if (!o || !o.fl) return; o.fl[el.dataset.k] = !o.fl[el.dataset.k]; o.stage = DB.stageOf(o.fl); DB.save(); A.render();
   };
