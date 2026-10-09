@@ -266,6 +266,14 @@
     Object.assign(CU, { title: '', price: '', sum: '', qty: 1, cost: '', drv: 'price' }); A.toast('Добавлено в корзину'); rr();
   };
   A.act.ccq = el => { const C = JC().C, i = +el.dataset.i, it = C.cart[i]; if (!it) return; const q = it.qty + (+el.dataset.d); if (q < 1) return; C.cart[i] = Object.assign({}, it, { qty: q }); JC().save(); rr(); };
+  /* клик в другом месте закрывает окно автоматики и список цветов */
+  document.addEventListener('click', ev => {
+    const t = ev.target; if (!t.closest || (!F.autoOpen && !F.colOpen)) return;
+    let ch = false;
+    if (F.autoOpen && !t.closest('.autopop') && !t.closest('[data-a=cauto]')) { F.autoOpen = false; ch = true; }
+    if (F.colOpen && !t.closest('.colpop') && !t.closest('[data-a=ccol]')) { F.colOpen = false; F.cq = ''; ch = true; }
+    if (ch) rr();
+  }, true);
   A.act.cauto = () => { F.autoOpen = !F.autoOpen; rr(); };
   A.act.cast = el => { JC().autoStep(el.dataset.sup || F.sup, el.dataset.kind, el.dataset.key, +el.dataset.d); rr(); };
   A.act.cedit = el => load(JC().C.cart[+el.dataset.i], +el.dataset.i);
