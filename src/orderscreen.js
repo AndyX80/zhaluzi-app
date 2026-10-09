@@ -44,7 +44,7 @@
     if (yur) s.repr = o.name || ''; else s.name = o.name || '';
     return s;
   }
-  let S = null;
+  let S = null; const INN = { busy: false, msg: '', ok: true };
   function shrink(file, cb) {
     const rd = new FileReader();
     rd.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, 900 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
@@ -142,9 +142,9 @@
     const preRub = S.pmode === 'pct' ? Math.round(total * Math.min(100, +S.prepay || 0) / 100) : Math.min(total, +S.prepay || 0);
     const yur = S.ctype === 'yur', ip = S.ctype === 'ip', s = S.step;
     const fld = (label, k, mode) => Object.assign({ label, mode: mode || 'text' }, quiet(k));
-    const client = (yur ? [fld('Название', 'company'), fld('ИНН', 'inn', 'numeric'), fld('ОГРН', 'ogrn', 'numeric'), fld('Юридический адрес', 'uaddr'), fld('Телефон', 'phone', 'tel')]
+    const client = (yur ? [fld('ИНН', 'inn', 'numeric'), fld('Название', 'company'), fld('ОГРН', 'ogrn', 'numeric'), fld('Юридический адрес', 'uaddr'), fld('Телефон', 'phone', 'tel')]
       .concat(S.inst ? [fld('Адрес установки', 'addr')] : []).concat([fld('E-mail', 'email', 'email'), fld('ФИО представителя', 'repr'), fld('Банковские реквизиты (необязательно)', 'bank')])
-      : ip ? [fld('ФИО индивидуального предпринимателя', 'name'), fld('ИНН', 'inn', 'numeric'), fld('ОГРНИП', 'ogrn', 'numeric'), fld('Адрес регистрации', 'uaddr'), fld('Телефон', 'phone', 'tel')]
+      : ip ? [fld('ИНН', 'inn', 'numeric'), fld('ФИО индивидуального предпринимателя', 'name'), fld('ОГРНИП', 'ogrn', 'numeric'), fld('Адрес регистрации', 'uaddr'), fld('Телефон', 'phone', 'tel')]
       .concat(S.inst ? [fld('Адрес установки', 'addr')] : []).concat([fld('E-mail', 'email', 'email'), fld('Банковские реквизиты (необязательно)', 'bank')])
       : [fld('ФИО', 'name'), fld('Телефон', 'phone', 'tel'), fld('Адрес' + (S.inst ? ' установки' : ''), 'addr'), fld('E-mail (необязательно)', 'email', 'email')]);
     const dField = (label, k) => ({ label, isDate: true, isInput: false, text: ru(S[k]) || 'Выбрать дату', open: () => { const b = S[k] ? new Date(S[k] + 'T00:00:00') : new Date(); CAL = { k, y: b.getFullYear(), m: b.getMonth() }; render(); } });
@@ -178,6 +178,19 @@
       step0: s === 0, step1: s === 1, step2: s === 2, step3: s === 3, step4: s === 4, notLast: s < 4, isLast: s === 4,
       nextStep: () => { set({ step: Math.min(4, s + 1) }); window.scrollTo(0, 0); },
       stepHint: 'Шаг ' + (s + 1) + ' из 5',
+      innShow: yur || ip, innBtn: INN.busy ? 'Ищу…' : 'Найти реквизиты по ИНН', innMsg: INN.msg, innColor: INN.ok ? 'var(--m1)' : '#B3261E',
+      innGo: async () => {
+        const q = String(S.inn || '').replace(/\D/g, '');
+        if (q.length !== 10 && q.length !== 12) { Object.assign(INN, { msg: 'Сначала впиши ИНН: 10 цифр (организация) или 12 (ИП)', ok: false }); render(); return; }
+        Object.assign(INN, { busy: true, msg: '', ok: true }); render();
+        try {
+          const r = await JalDrive.inn(q), p = { ogrn: r.ogrn || S.ogrn, uaddr: r.address || S.uaddr, inn: r.inn || q };
+          if (r.type === 'ip') { p.name = r.name || S.name; if (!ip) p.ctype = 'ip'; } else { p.company = r.name || S.company; if (r.head) p.repr = r.head; if (!yur) p.ctype = 'yur'; }
+          Object.assign(S, p); persist();
+          Object.assign(INN, { busy: false, ok: true, msg: 'Подтянуто: ' + (r.name || '') + (/LIQUID|BANKRUPT/.test(r.state || '') ? ' (внимание: организация ликвидируется или банкрот)' : '') });
+        } catch (e) { Object.assign(INN, { busy: false, ok: false, msg: e.message || String(e) }); }
+        render();
+      },
       head, client, typeFiz: seg(!yur && !ip), typeYur: seg(yur), typeIp: seg(ip), setFiz: () => set({ ctype: 'fiz' }), setYur: () => set({ ctype: 'yur' }), setIp: () => set({ ctype: 'ip' }),
       sketch: blinds.map(g => { const it = g.it, d = (DRAW[it.lam] || DRAW[50])[it.ctrl] || (DRAW[it.lam] || DRAW[50]).TR;
         return { n: String(g.num), w: String(Math.round(it.W * 10)), h: String(Math.round(it.H * 10)), thin: d[0], thick: d[1], note: 'ГЖ ' + it.lam + (short(it).length ? ' · ' + short(it).join(', ') : '') }; }),

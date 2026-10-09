@@ -32,6 +32,12 @@
 <button onClick="{{setYur}}" style="{{typeYur}}">Юрлицо</button>
 <button onClick="{{setIp}}" style="{{typeIp}}">ИП</button>
 </div>
+<sc-if value="{{innShow}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<button onClick="{{innGo}}" style="height: 44px; border: 1.5px solid var(--ac); border-radius: 12px; background: transparent; color: var(--dk); font-size: 15px; font-weight: 700">{{innBtn}}</button>
+<div style="font-size: 13px; color: {{innColor}}">{{innMsg}}</div>
+</div>
+</sc-if>
 <sc-for list="{{client}}" as="f" hint-placeholder-count="4">
 <div style="display: flex; flex-direction: column; gap: 4px">
 <label style="font-size: 12px; color: var(--m1); font-weight: 600">{{f.label}}</label>

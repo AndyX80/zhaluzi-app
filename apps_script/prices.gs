@@ -1,6 +1,8 @@
 // Отдаёт приложению цены (листы таблицы) и файлы из папки на Google Диске (только чтение).
 // KEY — твой пароль (латиница и цифры), он же стоит в ссылке приложения. Не меняй его.
 const KEY = 'ЗАМЕНИ_НА_СВОЙ_ПАРОЛЬ';
+// Ключ DaData для поиска реквизитов по ИНН (бесплатный, dadata.ru → Профиль → API-ключи). Вставь между кавычками.
+const DADATA = '';
 // Папка на Google Диске с подписью, печатью, QR-кодами и файлом шаблонов.
 const FOLDER = 'Жалюзи-приложение';
 
@@ -13,6 +15,7 @@ function doGet(e) {
   if (e.parameter.files) return files_();
   if (e.parameter.orders) return ordersGet_();
   if (e.parameter.catalog) return catalog_();
+  if (e.parameter.inn) return inn_(e.parameter.inn);
   const sheets = {};
   SpreadsheetApp.getActiveSpreadsheet().getSheets().forEach(function (sh) {
     sheets[sh.getName()] = sh.getDataRange().getValues();
@@ -32,6 +35,27 @@ function files_() {
     else if (/^image\//.test(f.getMimeType())) files[name] = 'da' + 'ta:' + f.getMimeType() + ';base64,' + Utilities.base64Encode(f.getBlob().getBytes());
   }
   return out_({ ok: true, folder: FOLDER, files: files, templates: templates });
+}
+
+// Реквизиты по ИНН (юрлицо или ИП) через DaData.
+function inn_(q) {
+  q = String(q).replace(/\D/g, '');
+  if (!DADATA) return out_({ ok: false, error: 'В скрипте не вставлен ключ DaData' });
+  if (q.length !== 10 && q.length !== 12) return out_({ ok: false, error: 'ИНН: 10 цифр (организация) или 12 (ИП)' });
+  try {
+    const r = UrlFetchApp.fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      headers: { Authorization: 'Token ' + DADATA }, payload: JSON.stringify({ query: q })
+    });
+    if (r.getResponseCode() === 401 || r.getResponseCode() === 403) return out_({ ok: false, error: 'DaData не принял ключ' });
+    const s = (JSON.parse(r.getContentText()).suggestions || [])[0];
+    if (!s) return out_({ ok: false, error: 'Не нашлось организации с таким ИНН' });
+    const d = s.data, ip = d.type === 'INDIVIDUAL', f = d.fio || {};
+    return out_({ ok: true, type: ip ? 'ip' : 'yur', inn: d.inn, ogrn: d.ogrn || '',
+      name: ip ? [f.surname, f.name, f.patronymic].filter(Boolean).join(' ') : ((d.name && d.name.short_with_opf) || s.value),
+      address: (d.address && d.address.value) || '', head: (d.management && d.management.name) || '',
+      state: (d.state && d.state.status) || '' });
+  } catch (x) { return out_({ ok: false, error: String(x) }); }
 }
 
 // Каталог: файл «Каталог» (PDF) из той же папки на Диске, отдаётся одним файлом в base64.
@@ -83,4 +107,5 @@ function razreshenie() {
   DriveApp.getFoldersByName(FOLDER);
   DriveApp.createFile('t.txt', 't').setTrashed(true);
   MailApp.getRemainingDailyQuota();
+  UrlFetchApp.fetch('https://dadata.ru');
 }
