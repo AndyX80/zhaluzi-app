@@ -23,7 +23,7 @@
 :root[data-skin=glass] .card,:root[data-skin=glass] .kpi,:root[data-skin=glass] .pop,:root[data-skin=glass] .cal,
 :root[data-skin=dock] .card,:root[data-skin=dock] .kpi{border-radius:22px;transition:transform .25s,box-shadow .25s}
 :root[data-skin=glass] .card,:root[data-skin=glass] .kpi,:root[data-skin=glass] .pop{backdrop-filter:var(--glass);-webkit-backdrop-filter:var(--glass)}
-:root[data-skin=glass] .card:hover,:root[data-skin=glass] .kpi:hover,:root[data-skin=dock] .kpi:hover{transform:translateY(-2px)}
+
 :root[data-skin=glass] .card,:root[data-skin=dock] .card{padding:18px 20px}
 :root[data-skin=glass] .kpi,:root[data-skin=dock] .kpi{padding:16px 20px}
 :root[data-skin=glass] .kpi b,:root[data-skin=dock] .kpi b{font-size:32px;font-weight:700;letter-spacing:-.035em;display:block;line-height:1.2}
@@ -31,7 +31,7 @@
 :root[data-skin=glass] h1,:root[data-skin=dock] h1{font-size:28px;font-weight:700;letter-spacing:-.035em}
 :root[data-skin=glass] h2,:root[data-skin=dock] h2{font-size:15px;font-weight:600}
 :root[data-skin=glass] .btn,:root[data-skin=dock] .btn{border-radius:99px;height:38px;padding:0 17px;font-weight:600;backdrop-filter:var(--glass);transition:transform .15s}
-:root[data-skin=glass] .btn:hover,:root[data-skin=dock] .btn:hover{transform:translateY(-1px)}
+
 :root[data-skin=glass] .btn.sm,:root[data-skin=dock] .btn.sm{height:30px;padding:0 13px}
 :root[data-skin=glass] .btn.pri,:root[data-skin=dock] .btn.pri{border-color:transparent}
 :root[data-skin=glass] .seg,:root[data-skin=dock] .seg{border-radius:99px}:root[data-skin=glass] .seg button,:root[data-skin=dock] .seg button{border-radius:99px}

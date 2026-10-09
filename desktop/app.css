@@ -151,3 +151,26 @@ button.ul.sel .ph{color:var(--bad)}.sm{font-size:12px}
 .fprev{min-height:96px}
 @media(max-height:820px){.fprev .pic{max-height:150px}.ccart .cartline td{padding:5px 6px}}
 @media(max-height:820px){.fprev{min-height:0;overflow:hidden}}
+/* v21 */
+.fprev{display:none}
+.fgrid{align-items:end}
+.szr{gap:18px;justify-content:flex-start}.szi{flex:none}.szi .ul{width:104px}
+.ctr{flex-direction:row;padding:8px 10px;gap:10px;font-size:11.5px}
+.fixf{max-width:50%}
+.ffoot{display:flex;align-items:flex-end;justify-content:center;gap:26px}.ffoot .fprice{flex:none;min-width:150px}
+.coin{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel2);color:var(--mut);display:grid;place-items:center;cursor:pointer;flex:none;align-self:flex-end;margin-bottom:2px;transition:background .2s,color .2s,border-color .2s}
+.coin:hover{border-color:var(--acc);color:var(--acc)}.coin.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.cuadd{align-items:flex-end!important}.cuf{display:flex;flex-direction:column;gap:2px}.cuf label{font-size:11px;color:var(--mut)}.cuadd .btn{flex:none;height:34px}
+.cuadd .cuf .ul{text-align:left}
+.cacts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.cacts .btn,.cacts .btn.big{height:42px;padding:0 8px;justify-content:center;text-align:center;font-size:14px;white-space:nowrap;flex:none}
+.mtabs{display:flex;gap:6px;padding:0 20px 4px}.mtabs button{border:0;background:transparent;padding:7px 14px;border-radius:99px;cursor:pointer;color:var(--mut);font:inherit;font-size:13.5px}.mtabs button.on{background:var(--acc-s);color:var(--acc);font-weight:700}
+.mdocs{flex-wrap:nowrap;margin-top:6px;padding-top:0;border-top:0}.mdocs .btn{padding:0 12px;font-size:13px;white-space:nowrap}
+.chs{display:flex;gap:8px;margin-top:4px}
+.ul.ta{resize:none;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;line-height:1.4}
+.modal{background:color-mix(in srgb,var(--pop,var(--panel)) 80%,#fff)!important;backdrop-filter:none!important;min-height:360px}
+:root[data-theme=dark] .modal{background:var(--pop,var(--panel))!important}
+.mback{animation:none}.modal{animation:none}
+.card,.btn,.kpi{transform:none!important}
+.app{transition:none}
+.modal .btn:not(.pri){background:var(--gray-s);border:1px solid var(--line)}
+.modal{min-height:0}

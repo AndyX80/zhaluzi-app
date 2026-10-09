@@ -9,7 +9,7 @@
   const STOCK_TXT = { 2: 'есть на складе', 1: 'мало, уточни у технологов', 0: 'нет на складе' };
   const CTRL_TXT = { L: 'подъём и поворот слева', R: 'подъём и поворот справа', TL: 'поворот слева, подъём справа', TR: 'поворот справа, подъём слева' };
   const CHAIN_TXT = { L: 'цепочка слева', R: 'цепочка справа' };
-  const O = { open: false, q: '', name: '', phone: '', addr: '', status: 'Черновик', inst: true, note: '' };
+  const O = { open: false, step: 0, fresh: false, sent: false, dog: false, q: '', name: '', phone: '', email: '', addr: '', inst: true, note: '', pre: '100', preU: '%', term: '12' };
   const F = { sup: 'Amigo', lam: 50, mat: 'Дерево', color: '', colOpen: false, cq: '', w: '', h: '', qty: 1, ctrl: 'TR', fix: '', opts: {}, own: '', note: '', edit: -1 };
   const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const CS = () => window.JalCalcScreen, JC = () => window.JalCart;
@@ -64,11 +64,12 @@
   }
   const kindName = (it, c) => it.kind === 'custom' ? { title: it.title || 'Услуга', sub: 'своя строка' } : { title: COLLN()[it.sup] + ' (' + ru(it.sup) + ')', sub: (c.auto ? c.auto.name : it.key) + (it.kind === 'drive' ? ' · привод' : ' · пульт') };
 
-  const CU = { title: '', price: '', qty: 1, cost: '' };
-  /* добавление своего товара прямо в корзине */
-  const customRow = () => '<div class="cuadd"><span class="mut sm" style="white-space:nowrap">Свой товар:</span><input class="ul" style="flex:1;min-width:120px" value="' + e(CU.title) + '" placeholder="Название (карниз, сетка, монтаж…)" data-c="cuf" data-k="title">' +
-    '<input class="ul num" style="width:84px;text-align:right" value="' + e(CU.price) + '" placeholder="Цена ₽" data-c="cuf" data-k="price"><input class="ul num" type="number" min="1" max="999" style="width:48px;text-align:center" value="' + CU.qty + '" title="Количество" data-c="cuf" data-k="qty">' +
-    '<input class="ul num" style="width:84px;text-align:right" value="' + e(CU.cost) + '" placeholder="Закуп ₽" title="Закуп за штуку (необязательно)" data-c="cuf" data-k="cost"><button class="btn sm" data-a="cuadd">Добавить</button></div>';
+  const CU = { title: '', price: '', sum: '', qty: 1, cost: '', drv: 'price' };
+  const num = v => Math.max(0, Math.round(+String(v).replace(/\s/g, '').replace(',', '.') || 0));
+  /* добавление своего товара прямо в корзине: можно вписать цену за шт или общую стоимость, остальное считается */
+  const customRow = () => { const cf = (l, k, st, v, cls) => '<div class="cuf" style="' + st + '"><label>' + l + '</label><input class="ul num" ' + (cls || '') + ' value="' + e(v) + '" data-c="cuf" data-k="' + k + '"></div>';
+    return '<div class="cuadd">' + cf('Название', 'title', 'flex:1;min-width:120px', CU.title).replace('class="ul num"', 'class="ul"') + cf('Кол-во', 'qty', 'width:56px', CU.qty) + cf('Цена за шт', 'price', 'width:96px', CU.price) + cf('Стоимость', 'sum', 'width:104px', CU.sum) +
+      (S.showCost ? cf('Закуп за шт', 'cost', 'width:96px', CU.cost) : '') + '<button class="btn pri" data-a="cuadd">Добавить</button></div>'; };
   /* ===== левая часть: компактная форма по образцу кабинета Амиго ===== */
   const DRAW = { 50: { L: ['M5 6v23M7.5 6v23M11 6v19', ''], R: ['M29 6v23M26.5 6v23M23 6v19', ''], TL: ['M5 6v23M7.5 6v23M28 6v19', ''], TR: ['M6 6v19M26.5 6v23M29 6v23', ''] },
     25: { L: ['M11 6v19', 'M6 6v23'], R: ['M23 6v19', 'M28 6v23'], TL: ['M28 6v19', 'M6 6v23'], TR: ['M6 6v19', 'M28 6v23'] } };
@@ -98,7 +99,7 @@
   const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (x[0] === 'blinds' ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
   const autoPanelBody = () => { const h = autoPanel(); return h.replace(/^<div class="card">/, '<div>').replace(/<h2>Автоматика<\/h2>/, ''); };
   function form0() {
-    const cs = CS(), n = norm(), r = n.r, s = F, showProfit = !S.hideProfit;
+    const cs = CS(), n = norm(), r = n.r, s = F, showProfit = !!S.showCost;
     const stock = n.selCol ? cs.stockOf(n.prodKey, n.selCol.key, s.sup, +s.w || 0) : null;
     const minRate = n.colList.length && n.colList[0].rate ? Math.min.apply(null, n.colList.map(c => c.rate)) : 0;
     const own = s.own !== '' && !isNaN(+s.own) && +s.own >= 0, unit = own ? Math.round(+s.own) : (r.ok ? r.unit : 0);
@@ -107,29 +108,32 @@
     const waiting = !!r.needColor, good = r.ok && !r.warn.length, qty = Math.max(1, +s.qty || 1);
     const types = []; n.lamOk.forEach(l => matOkFor(s.sup, l).forEach(mt => types.push([mt + '|' + l, mt + ' ' + l + ' мм'])));
     let h = '<div class="card cform"><div class="ftop"><h2>' + (s.edit >= 0 ? 'Изделие, позиция ' + (s.edit + 1) : 'Новое изделие') + '</h2><span class="sp"></span>' + (s.edit >= 0 ? '<button class="btn sm" data-a="cedcancel">Отменить правку</button>' : '') + '</div><div class="fbody">';
-    h += '<div class="fgrid">' + modelRow().replace('class="fld"', 'class="fld"') +
-      '<div class="fld"><label>Тип</label><select class="ul" data-c="ctype">' + types.map(t => '<option value="' + t[0] + '"' + (t[0] === n.mat + '|' + n.lam ? ' selected' : '') + '>' + e(t[1]) + '</option>').join('') + '</select></div>' +
-      '<div class="fld"><label>Коллекция</label><select class="ul" data-c="csup">' + SUPS.map(x => '<option value="' + x + '"' + (s.sup === x ? ' selected' : '') + '>' + e(cs.COLL_ALL[x] + ' (' + ru(x) + ')') + '</option>').join('') + '</select></div>';
-    if (n.colList.length) {
-      h += '<div class="fld colf"><label>Цвет</label><button class="ul sel" data-a="ccol">' + (n.selCol ? (stock !== null ? '<i class="sd" style="background:' + DOT[stock] + '"></i>' : '') + '<b>' + e(n.selCol.name) + '</b><span class="mut sm">' + e([n.selCol.ser, minRate && n.selCol.rate > minRate ? '+' + fmt(n.selCol.rate - minRate) + ' ₽/м²' : ''].filter(Boolean).join(' · ')) + '</span>' : '<span class="ph">Выберите цвет</span>') + (n.selCol ? '<span class="sp"></span>' + lensHtml(n.prodKey, n.selCol.key) : '') + '</button>';
-      if (s.colOpen) h += '<div class="colpop"><input class="in" data-c="ccolq" placeholder="Поиск цвета" value="' + e(s.cq) + '" id="ccolq"><div class="colist sc">' + (shown.length ? shown.map(c => { const st = cs.stockOf(n.prodKey, c.key, s.sup, +s.w || 0), ex = c.rate && c.rate > minRate;
-        return '<button class="coli ' + (c.key === n.color ? 'on' : '') + '" data-a="ccolpick" data-v="' + e(c.key) + '"><i class="sw" style="background:' + tintOf(c.name) + '"></i>' + (st !== null ? '<i class="sd" style="background:' + DOT[st] + '"></i>' : '') + '<span><b>' + e(c.name) + '</b> <span class="mut sm">' + e(c.ser) + '</span></span><span class="sp"></span>' + lensHtml(n.prodKey, c.key) + (ex ? '<span class="pill">+' + fmt(c.rate - minRate) + ' ₽/м²</span>' : '') + '</button>'; }).join('') : '<div class="mut" style="padding:10px">Ничего не найдено</div>') + '</div></div>';
-      h += '</div>';
-    } else h += '<div class="fld"></div>';
-    h += '<div class="fld sz"><label>Размер</label><div class="szr"><span class="szi" title="Ширина"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M6 12h12M9 9l-3 3 3 3M15 9l3 3-3 3"/></svg><input class="ul num" type="number" min="0" placeholder="мм" value="' + e(s.w) + '" data-c="cf" data-k="w"></span><span class="szi" title="Высота"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9l3-3 3 3M9 15l3 3 3-3"/></svg><input class="ul num" type="number" min="0" placeholder="мм" value="' + e(s.h) + '" data-c="cf" data-k="h"></span></div></div>';
-    h += '<div class="fld"><label>Количество</label><div class="qst"><button data-a="cqty" data-d="-1">−</button><input class="num" type="number" min="1" max="99" value="' + qty + '" data-c="cf" data-k="qty"><button data-a="cqty" data-d="1">+</button></div></div></div>';
-    h += '<div class="fld"><label>Управление' + (n.chain ? ' (цепочка)' : '') + '</label><div class="ctrls">' + n.ctrlKeys.map(k => '<button class="ctr ' + (n.ctrl === k ? 'on' : '') + '" data-a="cf" data-k="ctrl" data-v="' + k + '" title="' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[k]) + '">' + ctrlSvg(n.lam, k, n.chain, 30) + '<span>' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[k]) + '</span></button>').join('') + '</div></div>';
-    h += '<div class="fgrid" style="margin-top:2px">' + (n.optNames.length ? '<div class="fld"><label>Опции</label><div class="ochips">' + (JC().hasAuto(s.sup) ? '<button class="oc ' + (JC().counts().drive + JC().counts().remote ? 'on' : '') + '" data-a="cauto">Автоматика' + (JC().counts().drive + JC().counts().remote ? ' · ' + JC().counts().drive + '+' + JC().counts().remote : '') + '</button>' : '') + n.optNames.map(o => '<button class="oc ' + (n.opts[o] ? 'on' : '') + '" data-a="copt" data-v="' + e(o) + '">' + e(o) + (r.ok && n.opts[o] && r.optP[o] ? ' +' + fmt(r.optP[o]) : '') + '</button>').join('') + '</div></div>' : '<div class="fld"><label>Опции</label><div class="ochips">' + (JC().hasAuto(s.sup) ? '<button class="oc" data-a="cauto">Автоматика</button>' : '') + '</div></div>') +
-      (n.fixNames.length ? '<div class="fld"><label>Нижняя фиксация</label><select class="ul" data-c="cfix"><option value="">Без фиксации</option>' + n.fixNames.map(f => '<option value="' + e(f) + '"' + (n.fix === f ? ' selected' : '') + '>' + e((cs.FIXLBL[f] || f) + (r.ok && n.fix === f && r.optP[f] !== undefined ? ' +' + fmt(r.optP[f]) + ' ₽' : '')) + '</option>').join('') + '</select></div>' : '<div class="fld"></div>') + '</div>';
+    const colorFld = n.colList.length ? (() => { let c = '<div class="fld colf"><label>Цвет</label><button class="ul sel" data-a="ccol">' + (n.selCol ? (stock !== null ? '<i class="sd" style="background:' + DOT[stock] + '"></i>' : '') + '<b>' + e(n.selCol.name) + '</b><span class="mut sm">' + e([n.selCol.ser, minRate && n.selCol.rate > minRate ? '+' + fmt(n.selCol.rate - minRate) + ' ₽/м²' : ''].filter(Boolean).join(' · ')) + '</span>' : '<span class="ph">Выберите цвет</span>') + (n.selCol ? '<span class="sp"></span>' + lensHtml(n.prodKey, n.selCol.key) : '') + '</button>';
+      if (s.colOpen) c += '<div class="colpop"><input class="in" data-c="ccolq" placeholder="Поиск цвета" value="' + e(s.cq) + '" id="ccolq"><div class="colist sc">' + (shown.length ? shown.map(c2 => { const st2 = cs.stockOf(n.prodKey, c2.key, s.sup, +s.w || 0), ex = c2.rate && c2.rate > minRate;
+        return '<button class="coli ' + (c2.key === n.color ? 'on' : '') + '" data-a="ccolpick" data-v="' + e(c2.key) + '"><i class="sw" style="background:' + tintOf(c2.name) + '"></i>' + (st2 !== null ? '<i class="sd" style="background:' + DOT[st2] + '"></i>' : '') + '<span><b>' + e(c2.name) + '</b> <span class="mut sm">' + e(c2.ser) + '</span></span><span class="sp"></span>' + lensHtml(n.prodKey, c2.key) + (ex ? '<span class="pill">+' + fmt(c2.rate - minRate) + ' ₽/м²</span>' : '') + '</button>'; }).join('') : '<div class="mut" style="padding:10px">Ничего не найдено</div>') + '</div></div>';
+      return c + '</div>'; })() : '<div class="fld"></div>';
+    const ICW = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M6 12h12M9 9l-3 3 3 3M15 9l3 3-3 3"/></svg>';
+    const ICH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9l3-3 3 3M9 15l3 3 3-3"/></svg>';
+    const ORD = ['Тесьма', 'Цепочка', 'Окраска'], optSorted = n.optNames.slice().sort((x, y) => (ORD.indexOf(x) < 0 ? 9 : ORD.indexOf(x)) - (ORD.indexOf(y) < 0 ? 9 : ORD.indexOf(y)));
+    const cnt = JC().counts(), nAuto = cnt.drive + cnt.remote;
+    /* верх: модель и коллекция, ниже тип и цвет */
+    h += '<div class="fgrid">' + modelRow() + '<div class="fld"><label>Коллекция</label><select class="ul" data-c="csup">' + SUPS.map(x => '<option value="' + x + '"' + (s.sup === x ? ' selected' : '') + '>' + e(cs.COLL_ALL[x] + ' (' + ru(x) + ')') + '</option>').join('') + '</select></div>' +
+      '<div class="fld"><label>Тип</label><select class="ul" data-c="ctype">' + types.map(t => '<option value="' + t[0] + '"' + (t[0] === n.mat + '|' + n.lam ? ' selected' : '') + '>' + e(t[1]) + '</option>').join('') + '</select></div>' + colorFld + '</div>';
+    h += '<div class="fld sz"><label>Размер, мм</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(s.w) + '" data-c="cf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(s.h) + '" data-c="cf" data-k="h"></span></div></div>';
+    h += '<div class="fld"><label>Управление' + (n.chain ? ' (цепочка)' : '') + '</label><div class="ctrls">' + n.ctrlKeys.map(k => '<button class="ctr ' + (n.ctrl === k ? 'on' : '') + '" data-a="cf" data-k="ctrl" data-v="' + k + '" title="' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[k]) + '">' + ctrlSvg(n.lam, k, n.chain, 52) + '<span>' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[k]) + '</span></button>').join('') + '</div></div>';
+    if (optSorted.length) h += '<div class="fld"><label>Опции</label><div class="ochips">' + optSorted.map(o => '<button class="oc ' + (n.opts[o] ? 'on' : '') + '" data-a="copt" data-v="' + e(o) + '">' + e(o) + (r.ok && n.opts[o] && r.optP[o] ? ' +' + fmt(r.optP[o]) : '') + '</button>').join('') + '</div></div>';
+    if (n.fixNames.length) h += '<div class="fld fixf"><label>Нижняя фиксация</label><select class="ul" data-c="cfix"><option value="">Без фиксации</option>' + n.fixNames.map(f => '<option value="' + e(f) + '"' + (n.fix === f ? ' selected' : '') + '>' + e((cs.FIXLBL[f] || f) + (r.ok && n.fix === f && r.optP[f] !== undefined ? ' +' + fmt(r.optP[f]) + ' ₽' : '')) + '</option>').join('') + '</select></div>';
+    if (JC().hasAuto(s.sup)) h += '<div class="fld"><label>Автоматика</label><div class="ochips"><button class="oc ' + (nAuto ? 'on' : '') + '" data-a="cauto">Приводы и пульты' + (nAuto ? ' · ' + cnt.drive + '+' + cnt.remote : '') + '</button></div></div>';
     /* проверка размеров, наличие, вес: одной строкой */
     let st = '';
     if (!waiting && +s.w > 0 && +s.h > 0) st = '<div class="fnote ' + (good ? 'ok' : 'bad') + '">' + (!r.ok ? e(r.msg ? r.msg[0].toUpperCase() + r.msg.slice(1) : 'Не поставляется') : (r.warn.length ? '<b>' + (r.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + '</b>' + e(r.warn.join('; ')) : 'Размеры в гарантии')) + '</div>';
     if (stock !== null && stock < 2) st += '<div class="fnote"><i class="sd" style="background:' + DOT[stock] + '"></i> ' + e(STOCK_TXT[stock][0].toUpperCase() + STOCK_TXT[stock].slice(1)) + '</div>';
     if (own && r.ok && showProfit && unit < r.unit - r.profit) st += '<div class="fnote bad">Ниже закупа: убыток ' + m((r.unit - r.profit - unit) * qty) + ' на позицию.</div>';
     if (s.autoOpen) h += '<div class="autopop sc">' + autoPanel() + '</div>';
-    h += '<div class="fnotes">' + st + '</div><div class="fprev">' + preview(n) + '<span class="fci" title="' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[n.ctrl]) + '">' + ctrlSvg(n.lam, n.ctrl, n.chain, 54) + '<small class="mut">' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[n.ctrl]) + '</small></span></div></div>';
-    /* низ: рисунок, схема управления и цена */
-    h += '<div class="ffoot">' +
+    h += '<div class="fnotes">' + st + '</div></div>';
+    /* низ: монетка закупа, количество, цена и своя цена, в корзину; всё ближе к центру */
+    h += '<div class="ffoot"><button class="coin ' + (showProfit ? 'on' : '') + '" data-a="chide" title="' + (showProfit ? 'Закуп и прибыль показаны' : 'Показать закуп и прибыль') + '">' + A.icon('coin', 22) + '</button>' +
+      '<div class="fld"><label>Количество</label><div class="qst"><button data-a="cqty" data-d="-1">−</button><input class="num" type="number" min="1" max="99" value="' + qty + '" data-c="cf" data-k="qty"><button data-a="cqty" data-d="1">+</button></div></div>' +
       '<div class="fprice"><div class="fown"><label>Своя цена за шт</label><input class="ul num" value="' + e(s.own) + '" data-c="cf" data-k="own" placeholder="' + (r.ok ? Math.round(r.unit) : '') + '"></div>' +
       '<small class="mut">' + (r.ok ? (qty > 1 ? fmt(unit) + ' ₽ × ' + qty + ' шт' : 'изделие ' + fmt(r.base) + ' + доп. ' + fmt(r.addSum)) : '') + (kg ? ' · вес ≈ ' + JalLimits.fmtKg(kg * qty) + ' кг' : '') + (own ? ' · своя цена' : '') + '</small>' +
       '<div class="big num">' + (r.ok ? m(unit * qty) : '—') + '</div>' + (showProfit && r.ok ? '<small class="mut">прибыль ' + m((r.profit + (own ? unit - r.unit : 0)) * qty) + '</small>' : '') + '</div>' +
@@ -147,7 +151,7 @@
   /* ===== правая часть: корзина, итог, действия ===== */
   function cart() {
     const E = window.Eng; if (!E || !E.ready) return '<div class="card ccart"><h2>Корзина</h2>' + noPrices() + '</div>';
-    const C = JC().C, FF = JC().compute(), items = C.cart, hide = S.hideProfit;
+    const C = JC().C, FF = JC().compute(), items = C.cart, hide = !S.showCost;
     let prof = 0; items.forEach((it, i) => { const c = FF.calcs[i]; if (c.ok) prof += c.profit * it.qty; });
     const netProf = prof - FF.discAmt, cost = FF.goodsSum - prof, pct = C.discMode !== 'rub';
     const row = (it, i) => {
@@ -162,34 +166,43 @@
         '<td class="r num b">' + (c.ok ? m(FF.lineSum[i]) : '—') + '</td><td class="r cact">' + (it.kind ? '' : '<button class="ib" data-a="cedit" data-i="' + i + '" title="Изменить">' + A.icon('edit', 15) + '</button><button class="ib" data-a="cdup" data-i="' + i + '" title="Копия">' + A.icon('copy', 15) + '</button>') + '<button class="ib" data-a="cdel" data-i="' + i + '" title="Убрать">' + A.icon('close', 15) + '</button></td></tr>'; };
     return '<div class="card ccart"><div class="ctop"><h2>Корзина</h2><span class="pill">' + items.length + ' поз.</span><span class="sp"></span>' +
       '<div class="seg" title="СПб: розница с доставкой и монтажом. Регионы: опт без доставки и монтажа"><button class="' + (!C.region ? 'on' : '') + '" data-a="creg" data-v="0">СПб</button><button class="' + (C.region ? 'on' : '') + '" data-a="creg" data-v="1">Регионы</button></div>' +
-      '<button class="btn sm ' + (hide ? 'on' : '') + '" data-a="chide" title="Скрыть закуп и прибыль, когда клиент смотрит экран">Скрыть закуп</button></div>' +
+      '</div>' +
       '<div class="clist sc">' + (items.length ? '<table class="tbl cartline"><thead><tr><th>№</th><th>Изделие</th><th class="r">Шт</th><th class="r">Цена за шт</th><th class="r">Сумма</th><th></th></tr></thead><tbody>' + items.map(row).join('') + '</tbody></table>' :
-        '<div class="empty" style="padding:40px 20px">Корзина пуста.<br><small>Соберите изделие слева и нажмите «В корзину».</small></div>') + autoErrors(FF).map(t => '<div class="callout bad" style="margin:8px 0;font-size:13px">' + e(t) + '</div>').join('') + '</div>' +
+        '') + autoErrors(FF).map(t => '<div class="callout bad" style="margin:8px 0;font-size:13px">' + e(t) + '</div>').join('') + '</div>' +
       customRow() +
       '<div class="cfoot"><div class="cline">' +
       (C.region ? '<input class="ul" style="flex:1" value="' + e(C.pvz || '') + '" placeholder="Адрес ПВЗ и транспортная компания" data-c="cpvz">' :
         '<label>Доставка и установка</label><input class="ul num" style="width:84px" value="' + (C.service || '') + '" placeholder="0" data-c="cserv">') +
-      '<span class="sp"></span><label>Скидка (до 50%)</label><div class="seg"><button class="' + (pct ? 'on' : '') + '" data-a="cdm" data-v="pct">%</button><button class="' + (!pct ? 'on' : '') + '" data-a="cdm" data-v="rub">₽</button></div><input class="ul num" type="number" min="0" style="width:72px" value="' + (C.disc || '') + '" data-c="cdisc" placeholder="0"></div>' +
+      '<span class="sp"></span><label>Скидка</label><div class="seg"><button class="' + (pct ? 'on' : '') + '" data-a="cdm" data-v="pct">%</button><button class="' + (!pct ? 'on' : '') + '" data-a="cdm" data-v="rub">₽</button></div><input class="ul num" type="number" min="0" style="width:72px" value="' + (C.disc || '') + '" data-c="cdisc" placeholder="0"></div>' +
       '<div class="sumbar" style="grid-template-columns:repeat(' + (hide ? 2 : 4) + ',1fr)"><div><small>Сумма без скидки</small><b>' + m(FF.total) + '</b></div><div><small>Итого' + (FF.discAmt ? ' (скидка −' + m(FF.discAmt) + ')' : '') + '</small><b style="color:var(--acc)">' + m(FF.netTotal) + '</b></div>' +
       (hide ? '' : '<div><small>Закуп (оценка)</small><b>' + m(Math.max(0, cost)) + '</b></div><div><small>Прибыль</small><b' + (netProf < 0 ? ' style="color:var(--bad)"' : '') + '>' + m(netProf) + '</b></div>') + '</div>' +
-      '<div class="cacts"><button class="btn pri big" data-a="cord">' + (C.editNo ? 'Сохранить в заказ № ' + e(C.editNo) : 'Оформить заказ') + '</button><button class="btn" data-a="cdraft">Сохранить в черновики</button><button class="btn ghost" data-a="cclear" title="Очистить корзину, ничего не сохраняя">Без сохранения</button></div></div></div>' +
+      '<div class="cacts"><button class="btn pri" data-a="cord">' + (C.editNo ? 'Сохранить в заказ № ' + e(C.editNo) : 'Оформить заказ') + '</button><button class="btn" data-a="cdraft">Сохранить в черновики</button><button class="btn" data-a="cclear">Без сохранения</button></div></div></div>' +
       (O.open ? checkout() : '');
   }
-  /* оформление: окно по центру экрана */
+  /* оформление: окно по центру экрана, три шага: клиент, условия, документы и отправка */
+  const STEPS = ['Клиент', 'Условия', 'Документы'];
   function checkout() {
-    const C = JC().C, q = O.q.trim().toLowerCase(), D = A.D;
+    const C = JC().C, q = O.q.trim().toLowerCase(), D = A.D, edit = !!C.editNo && !O.fresh, st = edit ? 1 : O.step, svc = !C.region && (+C.service || 0) > 0;
     const found = q.length >= 2 ? D.clients.filter(c => (c.name + ' ' + c.phone + ' ' + String(c.phone).replace(/\D/g, '')).toLowerCase().indexOf(q) >= 0).slice(0, 6) : [];
-    const fld = (k, l, ph) => '<div class="fld"><label>' + l + '</label><input class="ul" value="' + e(O[k]) + '" placeholder="' + (ph || '') + '" data-c="cof" data-k="' + k + '"></div>';
-    return '<div class="mback" data-a="cocancel"></div><div class="modal"><div class="mhead"><h2>' + (C.editNo ? 'Заказ № ' + e(C.editNo) : 'Оформление заказа') + '</h2><span class="sp"></span><button class="ib" data-a="cocancel" title="Закрыть">' + A.icon('close', 18) + '</button></div><div class="mbody">' +
-      (C.editNo ? '<div class="mut sm" style="margin-bottom:10px">Состав обновится, клиент и статус останутся как были.</div>' :
-        '<div class="fld"><label>Найти клиента в базе (имя или телефон)</label><input class="ul" id="cofq" value="' + e(O.q) + '" placeholder="Начните вводить…"></div>' +
+    const fld = (k, l) => '<div class="fld"><label>' + l + '</label><input class="ul" value="' + e(O[k]) + '" data-c="cof" data-k="' + k + '"></div>';
+    let b = '';
+    if (!edit && st === 0) {
+      b = '<div class="fld"><label>Найти клиента в базе</label><input class="ul" id="cofq" value="' + e(O.q) + '"></div>' +
         (found.length ? '<div class="chips" style="margin:8px 0">' + found.map(c => '<button class="btn sm" data-a="cofpick" data-id="' + c.id + '">' + e(c.name) + (c.phone ? ' · ' + e(c.phone) : '') + '</button>').join('') + '</div>' : '') +
-        '<div class="fgrid" style="margin-top:10px">' + fld('name', 'Имя / компания', 'Иванов Иван') + fld('phone', 'Телефон', '+7 …') + '</div><div style="margin-top:10px">' + fld('addr', 'Адрес', 'Улица, дом, кв.') + '</div>' +
-        '<div class="fgrid" style="margin-top:10px"><div class="fld"><label>Статус</label><select class="ul" data-c="cof" data-k="status">' + ['Черновик', 'КП отправлено', 'Договор'].map(x => '<option' + (O.status === x ? ' selected' : '') + '>' + x + '</option>').join('') + '</select></div>' +
-        (C.region ? '<div></div>' : '<label class="row" style="gap:8px;align-self:end;padding-bottom:6px"><input type="checkbox" data-c="cofi"' + (O.inst ? ' checked' : '') + '> С монтажом</label>') + '</div>') +
-      '<div class="fld" style="margin-top:10px"><label>Комментарий к заказу</label><input class="ul" value="' + e(O.note) + '" data-c="cof" data-k="note"></div>' +
-      '<div class="mdocs"><span class="mut sm">Документы (можно без сохранения заказа):</span><button class="btn sm" data-a="cdoc" data-fn="kpHtml">КП</button><button class="btn sm" data-a="cdoc" data-fn="kpVarHtml">КП: три варианта</button><button class="btn sm" data-a="cdoc" data-fn="zamernikHtml">Замерник</button><button class="btn sm" data-a="cdoc" data-fn="dogovorHtml">Договор</button></div></div>' +
-      '<div class="mfoot"><button class="btn" data-a="cocancel">Отмена</button><span class="sp"></span><button class="btn pri" data-a="cord">Сохранить заказ</button></div></div>';
+        '<div class="fgrid" style="margin-top:14px">' + fld('name', 'Имя / компания') + fld('phone', 'Телефон') + fld('email', 'E-mail') + (C.region || svc ? '<div></div>' : '<label class="row" style="gap:8px;align-self:end;padding-bottom:6px"><input type="checkbox" data-c="cofi"' + (O.inst ? ' checked' : '') + '> С монтажом</label>') + '</div>' +
+        '<div style="margin-top:12px">' + fld('addr', 'Адрес') + '</div>';
+    } else if (st === 1) {
+      b = (edit ? '<div class="mut sm" style="margin-bottom:10px">Состав обновится, клиент и условия останутся как были.</div>' : '<div class="fgrid"><div class="fld"><label>Предоплата</label><div class="row" style="gap:8px"><input class="ul num" value="' + e(O.pre) + '" data-c="cof" data-k="pre"><select class="ul" style="width:64px" data-c="cof" data-k="preU"><option' + (O.preU !== '₽' ? ' selected' : '') + '>%</option><option' + (O.preU === '₽' ? ' selected' : '') + '>₽</option></select></div></div>' + fld('term', 'Срок изготовления, календарных дней') + '</div>') +
+        '<div class="fld" style="margin-top:14px"><label>Примечания</label><textarea class="ul ta" rows="4" data-c="cof" data-k="note">' + e(O.note) + '</textarea></div>';
+    } else {
+      b = '<div class="mdocs"><button class="btn" data-a="cdoc" data-fn="kpHtml">КП</button><button class="btn" data-a="cdoc" data-fn="kpVarHtml">КП три варианта</button><button class="btn" data-a="codoc" data-fn="zamernikHtml">Замерник</button><button class="btn" data-a="codoc" data-fn="dogovorHtml">Договор</button></div>' +
+        '<div class="fld" style="margin-top:18px"><label>Отправить клиенту КП</label><div class="chs"><button class="btn" data-a="csend" data-ch="wa">WhatsApp</button><button class="btn" data-a="csend" data-ch="tg">Telegram</button><button class="btn" data-a="csend" data-ch="mail">Почта</button></div></div>';
+    }
+    return '<div class="mback" data-a="cocancel"></div><div class="modal"><div class="mhead"><h2>' + (C.editNo && !O.fresh ? 'Заказ № ' + e(C.editNo) : 'Оформление заказа') + '</h2><span class="sp"></span><button class="ib" data-a="cocancel" title="Закрыть">' + A.icon('close', 18) + '</button></div>' +
+      (edit ? '' : '<div class="mtabs">' + STEPS.map((t, i) => '<button class="' + (st === i ? 'on' : '') + '" data-a="costep" data-v="' + i + '">' + (i + 1) + '. ' + t + '</button>').join('') + '</div>') +
+      '<div class="mbody">' + b + '</div>' +
+      '<div class="mfoot"><button class="btn" data-a="cocancel">Отмена</button><span class="sp"></span>' + (!edit && st > 0 ? '<button class="btn" data-a="costep" data-v="' + (st - 1) + '">Назад</button>' : '') +
+      (!edit && st < 2 ? '<button class="btn pri" data-a="conext">Далее</button>' : '<button class="btn pri" data-a="cosave">Сохранить заказ</button>') + '</div></div>';
   }
 
   A.module('calc', {
@@ -220,24 +233,37 @@
   A.act.cprices = () => { A.toast('Обновляю цены…'); Eng.refresh().then(() => { A.toast('Цены обновлены'); rr(); }).catch(x => A.toast('Ошибка: ' + x.message)); };
   A.fld.cscript = v => { const u = String(v).trim(); if (!u) return; try { localStorage.setItem('jal_prices_url', u); } catch (x) {} A.toast('Загружаю цены…'); Eng.refresh().then(() => { A.toast('Цены загружены'); rr(); }).catch(x => A.toast('Ошибка: ' + x.message)); };
   A.act.creg = el => { JC().setRegion(el.dataset.v === '1'); rr(); };
-  A.act.chide = () => { S.hideProfit = !S.hideProfit; A.save(); rr(); };
+  A.act.chide = () => { S.showCost = !S.showCost; A.save(); rr(); };
   A.act.cdm = el => { JC().C.discMode = el.dataset.v; JC().save(); rr(); };
   A.fld.cdisc = v => { const C = JC().C; C.disc = Math.max(0, +v || 0) || ''; JC().save(); rr(); };
   A.fld.cserv = v => { JC().C.service = Math.max(0, Math.round(+String(v).replace(/\s/g, '') || 0)); JC().save(); rr(); };
   A.fld.cpvz = v => { JC().C.pvz = v; JC().save(); };
   A.fld.cprice = (v, el) => { const C = JC().C, i = +el.dataset.i, s = String(v).replace(/\s/g, ''); if (!C.cart[i]) return; C.cart[i] = Object.assign({}, C.cart[i], { own: s === '' ? '' : Math.max(0, Math.round(+s || 0)) }); JC().save(); rr(); };
   A.act.cdel = el => { const C = JC().C; C.cart.splice(+el.dataset.i, 1); JC().save(); rr(); };
-  A.act.cclear = () => { JC().clear(); O.open = false; rr(); };
+  A.act.cclear = () => { JC().clear(); Object.assign(O, { open: false, fresh: false }); rr(); };
   A.act.cocancel = () => { O.open = false; rr(); };
   const load = (it, edit) => { Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
-  A.fld.cuf = (v, el) => { const k = el.dataset.k; CU[k] = k === 'qty' ? Math.max(1, Math.min(999, Math.round(+v) || 1)) : v; };
+  const cuSync = () => { document.querySelectorAll('.cuadd [data-k]').forEach(el => { const k = el.dataset.k; if (k !== 'title' && document.activeElement !== el) el.value = CU[k]; }); };
+  A.fld.cuf = (v, el) => {
+    const k = el.dataset.k;
+    if (k === 'title') { CU.title = v; return; }
+    if (k === 'cost') { CU.cost = v === '' ? '' : num(v); return; }
+    if (k === 'qty') CU.qty = Math.max(1, Math.min(999, num(v) || 1));
+    else if (k === 'price') { CU.price = v === '' ? '' : num(v); CU.drv = 'price'; }
+    else { CU.sum = v === '' ? '' : num(v); CU.drv = 'sum'; }
+    if (CU.drv === 'price') CU.sum = CU.price === '' ? '' : CU.price * CU.qty; else CU.price = CU.sum === '' ? '' : Math.round(CU.sum / CU.qty);
+    cuSync(); el.value = k === 'qty' ? CU.qty : (CU[k] === '' ? '' : CU[k]);
+  };
   document.addEventListener('keydown', ev => { const el = ev.target; if (ev.key === 'Enter' && el.dataset && el.dataset.c === 'cuf') { A.fld.cuf(el.value, el); A.act.cuadd(); } });
   A.act.cuadd = () => {
-    const p = Math.round(+String(CU.price).replace(/\s/g, '') || 0);
+    const q = Math.max(1, +CU.qty || 1), total = CU.drv === 'sum' ? num(CU.sum) : num(CU.price) * q;
     if (!CU.title.trim()) { A.toast('Впиши название'); return; }
-    if (!(p > 0)) { A.toast('Впиши цену'); return; }
-    JC().addItem({ kind: 'custom', title: CU.title.trim(), qty: Math.max(1, +CU.qty || 1), price: p, cost: CU.cost === '' ? '' : Math.max(0, Math.round(+String(CU.cost).replace(/\s/g, '') || 0)) });
-    Object.assign(CU, { title: '', price: '', qty: 1, cost: '' }); A.toast('Добавлено в корзину'); rr();
+    if (!(total > 0)) { A.toast('Впиши цену или стоимость'); return; }
+    const cost = CU.cost === '' ? '' : num(CU.cost), base = Math.floor(total / q), rem = total - base * q;
+    /* стоимость делится на целые рубли без копеек: часть штук на рубль дороже, сумма сходится точно */
+    if (rem) JC().addItem({ kind: 'custom', title: CU.title.trim(), qty: rem, price: base + 1, cost });
+    if (q - rem) JC().addItem({ kind: 'custom', title: CU.title.trim(), qty: q - rem, price: base, cost });
+    Object.assign(CU, { title: '', price: '', sum: '', qty: 1, cost: '', drv: 'price' }); A.toast('Добавлено в корзину'); rr();
   };
   A.act.ccq = el => { const C = JC().C, i = +el.dataset.i, it = C.cart[i]; if (!it) return; const q = it.qty + (+el.dataset.d); if (q < 1) return; C.cart[i] = Object.assign({}, it, { qty: q }); JC().save(); rr(); };
   A.act.cauto = () => { F.autoOpen = !F.autoOpen; rr(); };
@@ -257,26 +283,69 @@
   const cofq = v => { O.q = v; rr(); const q = document.getElementById('cofq'); if (q) { q.focus(); q.setSelectionRange(v.length, v.length); } };
   A.fld.cofi = v => { O.inst = !!v; };
   A.act.cofpick = el => { const c = A.D.clients.find(x => x.id === el.dataset.id); if (!c) return; Object.assign(O, { name: c.name, phone: c.phone || '', addr: c.addr || '', q: '' }); rr(); };
-  A.act.cord = () => {
-    const J = JC(), C = J.C;
-    if (!C.cart.length) { A.toast('Корзина пуста'); return; }
-    const co = J.toOrder();
-    if (!co.items.length) { A.toast('В корзине нет изделий с ценой'); return; }
-    const editing = !!C.editNo;
-    if (!O.open) {
-      if (!editing) Object.assign(O, { q: '', name: '', phone: '', addr: '', status: 'Черновик', inst: !C.region, note: '' });
-      O.open = true; rr(); return;
-    }
-    if (!editing && !O.name.trim() && !O.phone.trim()) { A.toast('Укажи имя или телефон клиента'); return; }
+  A.act.costep = el => { if (+el.dataset.v > 0 && !O.name.trim() && !O.phone.trim()) { A.toast('Укажи имя или телефон клиента'); return; } O.step = +el.dataset.v; rr(); };
+  A.act.conext = () => A.act.costep({ dataset: { v: O.step + 1 } });
+  /* статус ставится сам: черновик, после отправки КП, после договора */
+  const autoStatus = () => O.dog ? 'Договор' : O.sent ? 'КП отправлено' : 'Черновик';
+  function persist() {
+    const J = JC(), C = J.C, co = J.toOrder(), editing = !!C.editNo, fill = !editing || O.fresh;
     const total = Math.max(0, co.items.reduce((a, i) => a + (+i.price || 0), 0) - (+co.disc || 0));
     const reg = !!C.region, pvz = (C.pvz || '').trim();
-    const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: C.region ? 0 : co.delivery, cart: J.snapshot(), region: reg, pvz: reg ? pvz : '' };
-    if (!editing) Object.assign(data, { name: O.name.trim(), phone: O.phone.trim(), addr: O.addr.trim(), install: !reg && O.inst, buyer: 'физ', status: O.status, pre: '100', preU: '%', term: '12',
+    const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: reg ? 0 : co.delivery, cart: J.snapshot(), region: reg, pvz: reg ? pvz : '' };
+    if (fill) Object.assign(data, { name: O.name.trim() || 'Без имени', phone: O.phone.trim(), email: O.email.trim(), addr: O.addr.trim(), install: !reg && (O.inst || (+C.service || 0) > 0), buyer: 'физ', status: autoStatus(), pre: O.pre === '' ? '100' : O.pre, preU: O.preU, term: O.term || '12',
       note: [O.note.trim(), reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : ''].filter(Boolean).join('\n') });
     else if (O.note.trim()) data.note = O.note.trim();
     const rec = DB.saveOrder(data, co.items, editing ? C.editNo : null, 'Расчёт (компьютер)', m(total));
-    J.clear(); O.open = false; Object.assign(F, { edit: -1 });
+    if (!editing) { C.editNo = rec.no; O.fresh = true; J.save(); }
+    return rec;
+  }
+  function checkReady() {
+    const J = JC(), C = J.C;
+    if (!C.cart.length) { A.toast('Корзина пуста'); return false; }
+    if (!J.toOrder().items.length) { A.toast('В корзине нет изделий с ценой'); return false; }
+    if (!C.editNo && !O.name.trim() && !O.phone.trim()) { A.toast('Укажи имя или телефон клиента'); O.step = 0; rr(); return false; }
+    return true;
+  }
+  A.act.cord = () => {
+    const C = JC().C; if (!C.cart.length) { A.toast('Корзина пуста'); return; }
+    if (!O.open) {
+      if (!C.editNo) Object.assign(O, { step: 0, fresh: false, sent: false, dog: false, q: '', name: '', phone: '', email: '', addr: '', inst: !C.region, note: '', pre: '100', preU: '%', term: '12' });
+      O.open = true; rr(); return;
+    }
+    A.act.cosave();
+  };
+  A.act.cosave = () => {
+    if (!checkReady()) return;
+    const J = JC(), rec = persist();
+    J.clear(); Object.assign(O, { open: false, fresh: false }); Object.assign(F, { edit: -1 });
     A.S.selOrder = 'ph' + rec.uid; A.S.orderTab = 'items'; A.save();
     A.toast('Заказ № ' + rec.no + ' сохранён'); A.open('orders');
+  };
+  /* замерник и договор строятся по сохранённому заказу: сохраняем и открываем */
+  A.act.codoc = el => {
+    if (!checkReady()) return;
+    const fn = el.dataset.fn, rec = persist();
+    if (fn === 'dogovorHtml') { O.dog = true; DB.patchRec(rec.uid, { status: 'Договор' }); } else DB.patchRec(rec.uid, { zamDone: true });
+    A.docOpen(fn, rec.uid);
+  };
+  /* отправка КП: сохраняем заказ, готовим PDF, открываем выбранный канал */
+  A.act.csend = async el => {
+    if (!checkReady()) return;
+    const ch = el.dataset.ch, rec0 = persist(), uid = rec0.uid;
+    if (ch === 'mail' && !O.email.trim()) { A.toast('Впиши e-mail клиента на первом шаге'); return; }
+    A.toast('Готовлю КП…');
+    try {
+      const file = await A.docFile('kpHtml', uid), sum = m(JC().toOrder().items.reduce((a, i) => a + (+i.price || 0), 0) - (+JC().C.disc || 0));
+      const nm = (O.name.trim().split(/\s+/)[1] || O.name.trim().split(/\s+/)[0] || 'клиент'), text = 'Добрый день, ' + nm + '! Отправляю коммерческое предложение № ' + rec0.no + ' на сумму ' + sum + '. Жалюзи-СПБ';
+      O.sent = true; DB.patchRec(uid, { status: O.dog ? 'Договор' : 'КП отправлено', sent: new Date().toISOString().slice(0, 10) });
+      const shared = ch !== 'mail' && window.JalExport && await JalExport.share([file], text, 'Жалюзи-СПБ, заказ № ' + rec0.no);
+      if (!shared) {
+        JalExport.save(file);
+        const d = String(O.phone || '').replace(/\D/g, '').replace(/^8(?=\d{10}$)/, '7'), enc = encodeURIComponent;
+        const url = ch === 'wa' ? 'https://wa.me/' + d + '?text=' + enc(text) : ch === 'tg' ? 'https://t.me/' + (d ? '+' + d : '') : 'mailto:' + O.email.trim() + '?subject=' + enc('Жалюзи-СПБ, заказ № ' + rec0.no) + '&body=' + enc(text);
+        window.open(url, '_blank'); A.toast('КП скачан: приложи файл к сообщению');
+      }
+      rr();
+    } catch (x) { A.toast('Не получилось: ' + (x && x.message || x)); }
   };
 })();

@@ -76,7 +76,7 @@
     const ships = s.cart.map(() => 0), bySup = {};
     s.cart.forEach((it, i) => { const sp = ov ? ov.sups[i] : it.sup; if (!reg && !it.kind && calcs[i].ok && !calcs[i].ownPrice && !FREE_SHIP[sp]) (bySup[sp] = bySup[sp] || []).push(i); });
     Object.keys(bySup).forEach(k => { const ix = bySup[k], part = spread(ix.map(i => ({ ok: true, qty: s.cart[i].qty })), Number(RATES.ship) || 0); ix.forEach((i, j) => { ships[i] = part[j]; }); });
-    const lineSum = s.cart.map((it, i) => (calcs[i].ok ? (calcs[i].ownPrice ? calcs[i].unit : ceil100(calcs[i].unit + ships[i] + adds[i])) * it.qty : 0));
+    const lineSum = s.cart.map((it, i) => (calcs[i].ok ? (calcs[i].ownPrice || it.kind === 'custom' ? calcs[i].unit : ceil100(calcs[i].unit + ships[i] + adds[i])) * it.qty : 0));
     const total = lineSum.reduce((x, y) => x + y, 0);
     const dv = Math.max(0, Number(s.disc) || 0);
     const discAmt = Math.min(total, s.discMode === 'pct' ? Math.round(total * Math.min(dv, 50) / 100 / 100) * 100 : Math.min(dv, total * 0.5));
@@ -246,7 +246,7 @@
     const sC = st || C, F = compute(sC), items = [];
     sC.cart.forEach((it, i) => {
       const c = F.calcs[i]; if (!c.ok) return;
-      const price = c.ownPrice ? c.unit : ceil100(c.unit + F.ships[i] + F.adds[i]);
+      const price = c.ownPrice || it.kind === 'custom' ? c.unit : ceil100(c.unit + F.ships[i] + F.adds[i]);
       for (let k = 0; k < it.qty; k++) {
         if (it.kind === 'custom') items.push({ kind: 'custom', title: it.title || 'Услуга', price, profit: c.profit, cost: it.cost === '' || it.cost == null ? '' : Number(it.cost), costOk: !!it.costOk, ci: i });
         else if (it.kind) items.push({ kind: it.kind, sup: SUPNAME[it.sup] || it.sup, title: c.auto.name + (it.kind === 'drive' ? ' (привод)' : ''), price, profit: c.profit });

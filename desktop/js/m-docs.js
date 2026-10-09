@@ -2,7 +2,7 @@
 (function () {
   const A = App, e = A.esc;
   const TPL = [['tpl_docKp', 'docKp'], ['tpl_docKpVar', 'docKpVar'], ['tpl_docBlank', 'docBlank'], ['tpl_docDog', 'docDog']];
-  const ROOTS = ['docKpRoot', 'docKpVarRoot', 'docBlankRoot', 'docDogRoot'];
+  const ROOTS = ['docKpRoot', 'docKpVarRoot', 'docDogRoot', 'docBlankRoot'];
   const NAMES = { kpHtml: 'КП', kpVarHtml: 'КП: три варианта', zamernikHtml: 'Замерный лист', dogovorHtml: 'Договор' };
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (x) { return ''; } };
   let ready = null, cur = null;
@@ -78,6 +78,8 @@
   /* docs.js/docscreens.js/export.js подключены в index.html; здесь только проверка */
   const docLibs = () => window.JalDocScreens && window.JalExport && window.JalTpl ? Promise.resolve() : Promise.reject(new Error('модули документов не загружены'));
 
+  A.docOpen = open;
+  A.docFile = async (fn, uid) => { const r = rec(uid); if (!r) throw new Error('заказ не найден'); await Promise.all([load(), docLibs()]); await sigs(); return JalExport.pdf(fn, orderOf(r)); };
   A.act.docopen = el => open(el.dataset.fn, el.dataset.uid);
   A.act.docclose = () => { const ov = document.getElementById('docov'); if (ov) ov.hidden = true; document.body.classList.remove('docopen'); cur = null; };
   A.act.docprint = () => window.print();
