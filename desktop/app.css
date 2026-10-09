@@ -207,3 +207,12 @@ button.ul.sel .ph{color:var(--bad)}.sm{font-size:12px}
 .ttab tbody tr:hover td{background:color-mix(in srgb,var(--acc) 16%,var(--pop,var(--panel)))}
 .ttab tfoot td{background:color-mix(in srgb,var(--ink) 10%,var(--pop,var(--panel)));border-top:1.5px solid color-mix(in srgb,var(--ink) 30%,transparent)}
 .ttab th[draggable=true]{cursor:grab}.ttab .tf{border:1px solid color-mix(in srgb,var(--ink) 30%,transparent);background:var(--pop,var(--panel))}
+.ttab tfoot td{position:static!important}
+/* v22.2 сплошной фон шапки и строк таблицы (без просвечивания при прокрутке) */
+:root{--thd:#dfe4ef;--tfr:#eef1f8;--tev:#f4f6fb;--tbd:#ffffff;--thv:#dbe8ff}
+:root[data-theme=dark]{--thd:#2b2e45;--tfr:#222538;--tev:#1c1e2e;--tbd:#171926;--thv:#2a3a63}
+.tscroll{background:var(--tbd)}
+.ttab th{background:var(--thd)!important}.ttab .tfrow th{background:var(--tfr)!important}
+.ttab tbody tr:nth-child(odd) td{background:var(--tbd)}.ttab tbody tr:nth-child(even) td{background:var(--tev)}
+.ttab tbody tr:hover td{background:var(--thv)}.ttab tfoot td{background:var(--thd)}
+.ttab .tf{background:var(--tbd)}
