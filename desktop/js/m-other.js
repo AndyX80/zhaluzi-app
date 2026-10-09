@@ -42,13 +42,14 @@
   };
   A.module('settings', {
     render() {
-      return '<div class="head"><h1>Настройки</h1></div><div class="g2"><div class="card"><h2>Вид</h2><div class="stack" style="gap:12px;margin-top:10px"><div class="field"><label>Тема</label><div class="seg">' + [['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Как в системе']].map(x => '<button class="' + (S.theme === x[0] ? 'on' : '') + '" data-a="sth" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div></div><div class="field"><label>Меню слева</label><div class="seg"><button class="' + (!S.collapsed ? 'on' : '') + '" data-a="scol" data-v="0">Развёрнуто</button><button class="' + (S.collapsed ? 'on' : '') + '" data-a="scol" data-v="1">Свёрнуто</button></div></div><p class="mut">Режимы работы переключаются сверху или Alt+1…6. Цвета и шрифты уточним после согласования каркаса.</p></div></div>' +
+      return '<div class="head"><h1>Настройки</h1></div><div class="g2"><div class="card"><h2>Вид</h2><div class="stack" style="gap:12px;margin-top:10px"><div class="field"><label>Тема</label><div class="seg">' + [['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Как в системе']].map(x => '<button class="' + (S.theme === x[0] ? 'on' : '') + '" data-a="sth" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div></div><div class="field"><label>Стиль</label><div class="seg">' + [['glass', 'Стекло'], ['dock', 'Док'], ['classic', 'Классика']].map(x => '<button class="' + ((S.skin || 'classic') === x[0] ? 'on' : '') + '" data-a="ssk" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div></div><div class="field"><label>Меню слева (в «Классике» и «Стекле»)</label><div class="seg"><button class="' + (!S.collapsed ? 'on' : '') + '" data-a="scol" data-v="0">Развёрнуто</button><button class="' + (S.collapsed ? 'on' : '') + '" data-a="scol" data-v="1">Свёрнуто</button></div></div><p class="mut">Режимы работы переключаются сверху или Alt+1…6. Цвета и шрифты уточним после согласования каркаса.</p></div></div>' +
         '<div class="card"><h2>Подключения</h2><table class="tbl" style="margin-top:6px"><tbody>' + INTEG.map(i => '<tr><td>' + i[0] + '</td><td class="r"><span class="pill ' + (i[1].indexOf('работает') === 0 ? 'ok' : '') + '">' + i[1] + '</span></td></tr>').join('') + '</tbody></table></div>' +
         '<div class="card"><h2>Данные</h2>' + dataCard() + '</div>' +
         '<div class="card"><h2>Безопасность</h2><p class="mut">Вход: логин и ПИН. Пользователь один (владелец), роли заложены в модель данных. Закуп и прибыль видны только владельцу.</p></div></div>';
     }
   });
   A.act.sth = el => { S.theme = el.dataset.v; A.save(); A.render(); };
+  A.act.ssk = el => { S.skin = el.dataset.v; A.save(); A.render(); };
   A.act.scol = el => { S.collapsed = el.dataset.v === '1'; A.save(); A.render(); };
   A.act.phsync = () => {
     const u = document.getElementById('scr'); if (u && u.value.trim()) { try { localStorage.setItem('jal_prices_url', u.value.trim()); } catch (x) {} }

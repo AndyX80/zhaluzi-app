@@ -45,7 +45,7 @@
   const NAV = [['home', 'Рабочий стол'], ['clients', 'Клиенты'], ['orders', 'Заказы'], ['calc', 'Расчёт'], ['calendar', 'Календарь'], ['money', 'Деньги'], ['analytics', 'Аналитика'], ['docs', 'Документы'], ['refs', 'Справочники'], ['settings', 'Настройки']];
 
   const S = Object.assign({
-    tabs: [{ id: 'home' }], active: 'home', theme: 'auto', collapsed: false,
+    tabs: [{ id: 'home' }], active: 'home', theme: 'auto', skin: 'glass', collapsed: false,
     ordersView: 'list', ordersFilter: 'all', selOrder: 'o3', orderTab: 'main', selClient: 'c1', clientTab: 'main',
     cart: [], region: false, hideProfit: false, disc: 0, refOpen: true, period: 'month', moneyF: 'all', refTab: 'sup', setTab: 'view'
   }, (function () { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } })());
@@ -80,6 +80,7 @@
   function applyTheme() {
     const d = S.theme === 'dark' || (S.theme === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-skin', S.skin || 'classic');
   }
 
   function renderTop() {

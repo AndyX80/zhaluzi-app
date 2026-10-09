@@ -1,0 +1,96 @@
+/* Оформления: Стекло (день/ночь) и Док. «Классика» = app.css без изменений. Включается атрибутом data-skin на <html>. */
+:root[data-skin=glass],:root[data-skin=dock]{--fnt:"Inter","SF Pro Display",system-ui,"Segoe UI",Roboto,sans-serif}
+:root[data-skin=glass] body,:root[data-skin=dock] body{font-family:var(--fnt);background:var(--bg);background-image:var(--bgx);background-attachment:fixed;letter-spacing:-.005em}
+
+/* ---------- СТЕКЛО ---------- */
+:root[data-skin=glass]{--bg:#eef0f7;--bgx:radial-gradient(60% 50% at 12% 8%,#ffd9c2 0,transparent 60%),radial-gradient(50% 50% at 88% 12%,#cfe0ff 0,transparent 60%),radial-gradient(60% 60% at 70% 95%,#e5d4ff 0,transparent 60%);
+--panel:rgba(255,255,255,.62);--panel2:rgba(255,255,255,.5);--ink:#1d1d1f;--mut:#6e6e73;--line:rgba(255,255,255,.9);--acc:#0071e3;--acc-i:#fff;--acc-s:rgba(0,113,227,.12);
+--ok:#1f9d6a;--ok-s:rgba(31,157,106,.14);--warn:#b87a00;--warn-s:rgba(255,159,10,.17);--bad:#d9453a;--bad-s:rgba(217,69,58,.13);--info:#2c68ad;--info-s:rgba(44,104,173,.13);--gray-s:rgba(60,60,67,.09);
+--side:rgba(255,255,255,.5);--side-i:#1d1d1f;--side-m:#5d5d63;--sh:0 1px 1px rgba(255,255,255,.8) inset,0 12px 40px rgba(60,70,120,.12);--glass:blur(26px) saturate(1.4)}
+:root[data-skin=glass][data-theme=dark]{--bg:#0a0b12;--bgx:radial-gradient(55% 50% at 10% 0,#33406e 0,transparent 62%),radial-gradient(45% 45% at 95% 10%,#5a2f6e 0,transparent 60%),radial-gradient(55% 55% at 60% 100%,#12515a 0,transparent 62%);
+--panel:rgba(255,255,255,.07);--panel2:rgba(255,255,255,.06);--ink:#f5f5f7;--mut:#a1a1aa;--line:rgba(255,255,255,.13);--acc:#4da3ff;--acc-i:#04131f;--acc-s:rgba(77,163,255,.18);
+--ok:#4cc08c;--ok-s:rgba(76,192,140,.16);--warn:#ffb340;--warn-s:rgba(255,179,64,.16);--bad:#ff7a6e;--bad-s:rgba(255,122,110,.16);--info:#7db5f0;--info-s:rgba(125,181,240,.16);--gray-s:rgba(255,255,255,.09);
+--side:rgba(255,255,255,.06);--side-i:#f5f5f7;--side-m:#a1a1aa;--sh:0 1px 1px rgba(255,255,255,.1) inset,0 16px 50px rgba(0,0,0,.45)}
+
+/* ---------- ДОК ---------- */
+:root[data-skin=dock]{--bg:#e9edf3;--bgx:linear-gradient(180deg,#f3f6fa,#e4e9f1);--panel:#fff;--panel2:#f4f7fb;--ink:#0b3558;--mut:#5d7a99;--line:#e1e7f0;--acc:#006bff;--acc-i:#fff;--acc-s:rgba(0,107,255,.1);
+--ok:#1f9d6a;--ok-s:#e2f5ec;--warn:#b87a00;--warn-s:#fdf0d4;--bad:#d9453a;--bad-s:#fbe6e3;--info:#2c68ad;--info-s:#e4eefa;--gray-s:#eaeff6;
+--side:rgba(255,255,255,.85);--side-i:#0b3558;--side-m:#5d7a99;--sh:0 2px 4px rgba(11,53,88,.04),0 14px 34px rgba(11,53,88,.07)}
+:root[data-skin=dock][data-theme=dark]{--bg:#0a1220;--bgx:linear-gradient(180deg,#0e1830,#08101d);--panel:#121c30;--panel2:#182440;--ink:#e6eefc;--mut:#8aa0c2;--line:#1e2b46;--acc:#4d97ff;--acc-i:#04101f;--acc-s:rgba(77,151,255,.16);
+--ok:#4cc08c;--ok-s:#143226;--warn:#ffb340;--warn-s:#33280f;--bad:#ff7a6e;--bad-s:#3a1f1d;--info:#7db5f0;--info-s:#172b45;--gray-s:#1b2742;--side:rgba(18,28,48,.88);--side-i:#e6eefc;--side-m:#8aa0c2;--sh:0 14px 34px rgba(0,0,0,.4)}
+
+/* ---------- общее для обоих ---------- */
+:root[data-skin=glass] .card,:root[data-skin=glass] .kpi,:root[data-skin=glass] .pop,:root[data-skin=glass] .cal,
+:root[data-skin=dock] .card,:root[data-skin=dock] .kpi{border-radius:22px;transition:transform .25s,box-shadow .25s}
+:root[data-skin=glass] .card,:root[data-skin=glass] .kpi,:root[data-skin=glass] .pop{backdrop-filter:var(--glass);-webkit-backdrop-filter:var(--glass)}
+:root[data-skin=glass] .card:hover,:root[data-skin=glass] .kpi:hover,:root[data-skin=dock] .kpi:hover{transform:translateY(-2px)}
+:root[data-skin=glass] .card,:root[data-skin=dock] .card{padding:18px 20px}
+:root[data-skin=glass] .kpi,:root[data-skin=dock] .kpi{padding:16px 20px}
+:root[data-skin=glass] .kpi b,:root[data-skin=dock] .kpi b{font-size:32px;font-weight:700;letter-spacing:-.035em;display:block;line-height:1.2}
+:root[data-skin=glass] .kpi i,:root[data-skin=dock] .kpi i{margin-left:0}
+:root[data-skin=glass] h1,:root[data-skin=dock] h1{font-size:28px;font-weight:700;letter-spacing:-.035em}
+:root[data-skin=glass] h2,:root[data-skin=dock] h2{font-size:15px;font-weight:600}
+:root[data-skin=glass] .btn,:root[data-skin=dock] .btn{border-radius:99px;height:38px;padding:0 17px;font-weight:600;backdrop-filter:var(--glass);transition:transform .15s}
+:root[data-skin=glass] .btn:hover,:root[data-skin=dock] .btn:hover{transform:translateY(-1px)}
+:root[data-skin=glass] .btn.sm,:root[data-skin=dock] .btn.sm{height:30px;padding:0 13px}
+:root[data-skin=glass] .btn.pri,:root[data-skin=dock] .btn.pri{border-color:transparent}
+:root[data-skin=glass] .seg,:root[data-skin=dock] .seg{border-radius:99px}:root[data-skin=glass] .seg button,:root[data-skin=dock] .seg button{border-radius:99px}
+:root[data-skin=glass] .pill,:root[data-skin=dock] .pill{padding:3px 11px}
+:root[data-skin=glass] .search input,:root[data-skin=dock] .search input{border-radius:99px;background:var(--panel);border-color:var(--line);backdrop-filter:var(--glass)}
+:root[data-skin=glass] .mode,:root[data-skin=dock] .mode{border-radius:99px;background:var(--panel)}
+:root[data-skin=glass] .tbl th,:root[data-skin=dock] .tbl th{background:transparent}
+:root[data-skin=glass] .hb div,:root[data-skin=dock] .hb div,:root[data-skin=glass] .hb div i,:root[data-skin=dock] .hb div i{border-radius:99px}
+:root[data-skin=glass] .bars span,:root[data-skin=dock] .bars span{border-radius:12px}
+:root[data-skin=glass] input,:root[data-skin=glass] select,:root[data-skin=glass] textarea,
+:root[data-skin=dock] input,:root[data-skin=dock] select,:root[data-skin=dock] textarea{font-family:inherit}
+:root[data-skin=glass] .callout,:root[data-skin=dock] .callout{border-radius:16px}
+:root[data-skin=glass] .toast,:root[data-skin=dock] .toast{border-radius:99px}
+
+/* ---------- Стекло: каркас ---------- */
+:root[data-skin=glass] .app{grid-template-columns:232px minmax(0,1fr);grid-template-rows:auto 40px minmax(0,1fr) 38px;gap:0}
+:root[data-skin=glass] .app.collapsed{grid-template-columns:96px minmax(0,1fr)}
+:root[data-skin=glass] .top{grid-column:2;grid-row:1;background:transparent;border:0;padding:16px 22px 6px;backdrop-filter:none}
+:root[data-skin=glass] .top .brand{display:none}
+:root[data-skin=glass] .top .burger{display:none}
+:root[data-skin=glass] .side{grid-row:1/5;margin:14px 0 14px 14px;border-radius:30px;border:1px solid var(--line);background:var(--side);backdrop-filter:var(--glass);-webkit-backdrop-filter:var(--glass);box-shadow:var(--sh);padding:18px 12px;gap:3px}
+:root[data-skin=glass] .side::before{content:"Жалюзи-СПб";display:block;font:700 17px var(--fnt);letter-spacing:-.02em;padding:4px 12px 16px;color:var(--ink);white-space:nowrap}
+:root[data-skin=glass] .app.collapsed .side::before{content:"ЖС";text-align:center;padding:4px 0 16px}
+:root[data-skin=glass] .ni{border-radius:14px;height:42px;color:var(--side-m);transition:background .2s,color .2s}
+:root[data-skin=glass] .ni:hover{background:var(--gray-s);color:var(--side-i)}
+:root[data-skin=glass] .ni.on{background:var(--ink);color:var(--bg);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+:root[data-skin=glass][data-theme=dark] .ni.on{background:#f5f5f7;color:#0a0b12}
+:root[data-skin=glass] .tabs{grid-column:2;background:transparent;border:0;padding:0 22px}
+:root[data-skin=glass] .tab{border-radius:99px;height:32px;border:1px solid transparent;margin:0 2px 4px}
+:root[data-skin=glass] .tab.on{background:var(--panel);border-color:var(--line);margin-bottom:4px;height:32px;backdrop-filter:var(--glass)}
+:root[data-skin=glass] .view{padding:8px 22px 16px}
+:root[data-skin=glass] .bar{background:transparent;border:0;padding:0 22px}
+:root[data-skin=glass] .chip{border-radius:99px;background:var(--panel);border-color:var(--line)}
+:root[data-skin=glass] .ver{display:none}
+
+/* ---------- Док: каркас ---------- */
+:root[data-skin=dock] .app,:root[data-skin=dock] .app.collapsed{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 40px minmax(0,1fr) 38px}
+:root[data-skin=dock] .top,:root[data-skin=dock] .tabs,:root[data-skin=dock] .view,:root[data-skin=dock] .bar{grid-column:1}
+:root[data-skin=dock] .top{background:transparent;border:0;padding:16px 28px 6px}
+:root[data-skin=dock] .top .burger{display:none}
+:root[data-skin=dock] .tabs{background:transparent;border:0;padding:0 28px}
+:root[data-skin=dock] .tab{border-radius:99px;height:32px;margin:0 2px 4px}
+:root[data-skin=dock] .tab.on{background:var(--panel);border-color:var(--line);height:32px;margin-bottom:4px;box-shadow:var(--sh)}
+:root[data-skin=dock] .view{padding:8px 28px 96px}
+:root[data-skin=dock] .bar{background:transparent;border:0;padding:0 28px}
+:root[data-skin=dock] .chip{border-radius:99px;background:var(--panel);border-color:var(--line)}
+:root[data-skin=dock] .side{position:fixed;grid-row:auto;left:50%;bottom:42px;transform:translateX(-50%);z-index:40;flex-direction:row;align-items:center;padding:8px 10px;gap:6px;border:1px solid var(--line);border-radius:28px;background:var(--side);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);box-shadow:var(--sh);overflow:visible;max-width:calc(100vw - 24px)}
+:root[data-skin=dock] .ni{width:48px;height:48px;padding:0;justify-content:center;border-radius:17px;color:var(--side-m);transition:transform .18s cubic-bezier(.2,.8,.3,1.4),background .2s;position:relative}
+:root[data-skin=dock] .ni span{display:none}
+:root[data-skin=dock] .ni:hover{transform:translateY(-8px) scale(1.2);background:var(--gray-s);color:var(--side-i)}
+:root[data-skin=dock] .ni.on{background:var(--acc);color:var(--acc-i)}
+:root[data-skin=dock] .ni.on::after{content:"";position:absolute;bottom:-6px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--ink)}
+:root[data-skin=dock] .ni:hover::before{content:attr(title);position:absolute;bottom:62px;left:50%;transform:translateX(-50%) scale(.84);white-space:nowrap;background:var(--ink);color:var(--bg);font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;pointer-events:none}
+:root[data-skin=dock] .side .sp,:root[data-skin=dock] .ver{display:none}
+:root[data-skin=dock] .pop{border-radius:18px}
+
+@media(max-width:1250px){:root[data-skin=glass] .app{grid-template-columns:200px minmax(0,1fr)}:root[data-skin=glass] .kpi b,:root[data-skin=dock] .kpi b{font-size:26px}}
+@media(max-height:800px){:root[data-skin=glass] .kpi b,:root[data-skin=dock] .kpi b{font-size:24px}:root[data-skin=glass] .card,:root[data-skin=dock] .card{padding:14px 16px}}
+@media(prefers-reduced-motion:reduce){:root[data-skin] *{transition:none!important}}
+:root[data-skin=glass] .callout,:root[data-skin=dock] .callout{border-color:transparent;border-left:4px solid var(--acc)}
+:root[data-skin=glass] .callout.bad,:root[data-skin=dock] .callout.bad{border-left-color:var(--bad)}
+:root[data-skin=glass] .callout.info,:root[data-skin=dock] .callout.info{border-left-color:var(--info)}
