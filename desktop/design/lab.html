@@ -1,0 +1,373 @@
+<title>Дизайн Жалюзи-СПб</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Onest:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Golos+Text:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&family=Nunito:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{--fb:"Inter",system-ui,sans-serif;--fd:var(--fb);--fm:var(--fb);
+--bg:#f4f4f6;--bgx:none;--card:#fff;--cb:#e6e6ea;--ink:#16161a;--mut:#77777f;--acc:#0a6cff;--acc2:#ff8a1f;--ai:#fff;--soft:#eef0f5;
+--ok:#1f9d6a;--warn:#d89200;--bad:#d9453a;--k1:#0a6cff;--k2:#1f9d6a;--k3:#d9453a;--k4:#ff8a1f;
+--r:18px;--rs:12px;--blur:0px;--sh:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.05);--sidebg:transparent;--sideink:var(--ink);--pad:18px;--gap:16px;color-scheme:light}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--fb);background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ============ ПАЛИТРЫ: 7 стилей x день/ночь ============ */
+[data-s=glass]{--fb:"Inter";--bg:#eef0f7;--bgx:radial-gradient(60% 50% at 12% 8%,#ffd9c2 0,transparent 60%),radial-gradient(50% 50% at 88% 12%,#cfe0ff 0,transparent 60%),radial-gradient(60% 60% at 70% 95%,#e5d4ff 0,transparent 60%);--card:rgba(255,255,255,.58);--cb:rgba(255,255,255,.85);--ink:#1d1d1f;--mut:#6e6e73;--acc:#0071e3;--acc2:#ff9f0a;--soft:rgba(255,255,255,.55);--r:26px;--rs:16px;--blur:26px;--sh:0 1px 1px rgba(255,255,255,.8) inset,0 12px 40px rgba(60,70,120,.12);--sidebg:rgba(255,255,255,.5)}
+[data-s=glass][data-m=dark]{--bg:#0a0b12;--bgx:radial-gradient(55% 50% at 10% 0,#33406e 0,transparent 62%),radial-gradient(45% 45% at 95% 10%,#5a2f6e 0,transparent 60%),radial-gradient(55% 55% at 60% 100%,#12515a 0,transparent 62%);--card:rgba(255,255,255,.07);--cb:rgba(255,255,255,.13);--ink:#f5f5f7;--mut:#a1a1aa;--acc:#4da3ff;--acc2:#ffb340;--soft:rgba(255,255,255,.08);--sh:0 1px 1px rgba(255,255,255,.12) inset,0 16px 50px rgba(0,0,0,.45);--sidebg:rgba(255,255,255,.06);color-scheme:dark}
+
+[data-s=paper]{--fb:"Golos Text";--fd:"Literata",Georgia,serif;--bg:#faf9f7;--card:#fffefd;--cb:#e9e5de;--ink:#1c1a17;--mut:#7b756c;--acc:#2f4bff;--acc2:#e0a100;--soft:#f3f0ea;--r:14px;--rs:10px;--sh:none;--sidebg:#f5f2ec}
+[data-s=paper][data-m=dark]{--bg:#17150f;--card:#1f1c16;--cb:#322e25;--ink:#f1ece2;--mut:#a39b8c;--acc:#93a4ff;--acc2:#e9bd4a;--soft:#27231b;--sidebg:#1c1913;color-scheme:dark}
+
+[data-s=ember]{--fb:"Onest";--bg:#f3f1f8;--card:#fff;--cb:#e8e5f1;--ink:#1b1a2b;--mut:#7d7b92;--acc:#ff5a2a;--acc2:#7a5cff;--soft:#f0edf8;--r:22px;--rs:14px;--sh:0 10px 30px rgba(40,30,90,.07);--sidebg:#fff}
+[data-s=ember][data-m=dark]{--bg:#181824;--card:#26253b;--cb:#26253b;--ink:#fff;--mut:#8e8da0;--acc:#ff6a3d;--acc2:#8f7bff;--soft:#1f1e30;--sh:none;--sidebg:#1f1e30;color-scheme:dark}
+
+[data-s=blue]{--fb:"Inter";--fm:"JetBrains Mono",monospace;--bg:#f4f6f9;--bgx:linear-gradient(#dfe5ee 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,#dfe5ee 1px,transparent 1px) 0 0/48px 48px;--card:#fff;--cb:#dde2ea;--ink:#0d1117;--mut:#6b7585;--acc:#3d6fe0;--acc2:#e2851f;--soft:#eef1f6;--r:10px;--rs:7px;--sh:none;--sidebg:#fff}
+[data-s=blue][data-m=dark]{--bg:#0a0a0a;--bgx:linear-gradient(#171717 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,#171717 1px,transparent 1px) 0 0/48px 48px;--card:#141414;--cb:#262626;--ink:#ededed;--mut:#8b8b93;--acc:#6798ff;--acc2:#f0a64a;--soft:#1b1b1b;--sidebg:#0f0f0f;color-scheme:dark}
+
+[data-s=aiz]{--fb:"Manrope";--bg:#e9eeec;--card:#fff;--cb:transparent;--ink:#1a1f1d;--mut:#7b8582;--acc:#12a373;--acc2:#ff5a45;--k2:#2b6cff;--soft:#f0f4f2;--r:28px;--rs:16px;--sh:0 6px 24px rgba(20,60,45,.07);--sidebg:#fff}
+[data-s=aiz][data-m=dark]{--bg:#1b1c21;--card:#272930;--cb:transparent;--ink:#f3f5f4;--mut:#8d929a;--acc:#1bb383;--acc2:#ff5a45;--soft:#30323a;--sh:none;--sidebg:#1f2026;color-scheme:dark}
+
+[data-s=pastel]{--fb:"Nunito";--bg:#f5f5fb;--card:#fff;--cb:#ececf6;--ink:#2b2d42;--mut:#8587a3;--acc:#6161ff;--acc2:#ff9a6c;--soft:#f0f0fb;--r:22px;--rs:14px;--sh:0 4px 16px rgba(97,97,255,.07);--sidebg:#fff}
+[data-s=pastel][data-m=dark]{--bg:#13132a;--card:#1e1e3b;--cb:#2a2a4f;--ink:#f0f0ff;--mut:#9d9dc4;--acc:#8484ff;--acc2:#ffa57e;--soft:#26264a;--sh:none;--sidebg:#191934;color-scheme:dark}
+
+[data-s=dock]{--fb:"Golos Text";--bg:#e9edf3;--bgx:linear-gradient(180deg,#f3f6fa,#e4e9f1);--card:#fff;--cb:#e1e7f0;--ink:#0b3558;--mut:#5d7a99;--acc:#006bff;--acc2:#ff8a3d;--soft:#eff3f9;--r:20px;--rs:12px;--sh:0 2px 4px rgba(11,53,88,.04),0 14px 34px rgba(11,53,88,.07);--sidebg:#fff}
+[data-s=dock][data-m=dark]{--bg:#0a1220;--bgx:linear-gradient(180deg,#0e1830,#08101d);--card:#121c30;--cb:#1e2b46;--ink:#e6eefc;--mut:#8aa0c2;--acc:#4d97ff;--acc2:#ffa15c;--soft:#182440;--sh:0 14px 34px rgba(0,0,0,.4);--sidebg:#121c30;color-scheme:dark}
+
+/* ============ КАРКАС: ровно в экран, без прокрутки страницы ============ */
+#app{height:100vh;height:100dvh;width:100vw;display:grid;grid-template-columns:248px minmax(0,1fr);background:var(--bg);background-image:var(--bgx);position:relative;overflow:hidden}
+.side{display:flex;flex-direction:column;gap:18px;padding:22px 14px 16px;background:var(--sidebg);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));border-right:1px solid var(--cb);min-height:0}
+.brand{display:flex;align-items:center;gap:11px;padding:0 10px;font-weight:700;font-size:16px;letter-spacing:-.01em;white-space:nowrap}
+.logo{width:32px;height:32px;border-radius:10px;background:var(--acc);color:var(--ai);display:grid;place-items:center;flex:none}
+nav{display:flex;flex-direction:column;gap:3px;min-height:0;overflow:auto}
+nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:var(--mut);font-weight:500;cursor:pointer;transition:background .2s,color .2s,transform .2s;white-space:nowrap}
+nav a:hover{background:var(--soft);color:var(--ink)}
+nav a.on{background:var(--acc);color:var(--ai)}
+nav a em{margin-left:auto;font-style:normal;font-size:11px;font-weight:700;background:var(--acc2);color:#fff;border-radius:99px;padding:1px 7px}
+.me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:var(--soft)}
+.me b{display:block;font-size:13px}.me small{color:var(--mut);font-size:12px}
+.ava{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+main{display:grid;grid-template-rows:auto minmax(0,1fr);gap:var(--gap);padding:22px 26px 74px;min-width:0;min-height:0}
+.top{display:flex;align-items:center;gap:14px}
+.top h1{font-family:var(--fd);font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.top small{display:block;color:var(--mut);font-size:13px;margin-top:3px}
+.sp{flex:1}
+.search{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:99px;background:var(--card);border:1px solid var(--cb);color:var(--mut);width:240px;backdrop-filter:blur(var(--blur))}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--cb);background:var(--card);padding:10px 16px;border-radius:99px;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .2s;backdrop-filter:blur(var(--blur))}
+.btn:hover{transform:translateY(-1px)}.btn:active{transform:scale(.98)}
+.btn.pri{background:var(--acc);color:var(--ai);border-color:transparent}
+.view{min-height:0;display:none;animation:in .45s cubic-bezier(.2,.7,.2,1)}
+.view.on{display:grid}
+@keyframes in{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);box-shadow:var(--sh);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));padding:var(--pad);display:flex;flex-direction:column;min-height:0;min-width:0;transition:transform .25s,box-shadow .25s}
+.card:hover{transform:translateY(-2px)}
+.card h2{font-size:15px;font-weight:600;letter-spacing:-.005em;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.card h2 span{margin-left:auto;font-weight:500;color:var(--mut);font-size:12px}
+.sc{overflow:auto;min-height:0;scrollbar-width:thin}
+
+/* ============ ГЛАВНАЯ ============ */
+#v-home{grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr) minmax(0,1fr);gap:var(--gap)}
+.kpi{grid-column:span 3;gap:2px}
+.kpi small{color:var(--mut);font-size:12.5px}
+.kpi b{font-family:var(--fd);font-size:34px;font-weight:600;letter-spacing:-.03em;line-height:1.15;font-variant-numeric:tabular-nums}
+.kpi b u{text-decoration:none;font-size:18px;color:var(--mut);font-weight:500;margin-left:3px}
+.kpi i{font-style:normal;font-size:12px;font-weight:700;color:var(--ok)}
+.kpi i.d{color:var(--bad)}
+.kpi .spk{height:26px;width:100%;margin-top:4px}
+.c-rev{grid-column:span 6}
+.c-ring{grid-column:span 3}
+.c-ev{grid-column:span 5}
+.c-att{grid-column:span 7}
+.c-gauge{grid-column:span 3}
+.bars{flex:1;display:flex;align-items:flex-end;gap:10px;min-height:0;padding-top:6px;border-bottom:1px solid var(--cb)}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;font-size:11px;color:var(--mut);position:relative}
+.bars i{display:block;width:100%;max-width:46px;border-radius:calc(var(--rs) - 2px);background:color-mix(in srgb,var(--ink) 9%,transparent);height:var(--h);transform-origin:bottom;animation:grow .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--n)*70ms);position:relative}
+.bars .hi i{background:linear-gradient(180deg,var(--acc),color-mix(in srgb,var(--acc) 60%,var(--acc2)))}
+.bars .hi::before{content:attr(data-v);position:absolute;top:calc(100% - var(--h) - 30px);background:var(--ink);color:var(--bg);font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap}
+.bars+.lbl{display:flex;gap:10px;font-size:11px;color:var(--mut);margin-top:6px}
+.bars+.lbl span{flex:1;text-align:center}
+@keyframes grow{from{transform:scaleY(0)}to{transform:none}}
+.ringw{display:flex;align-items:center;gap:16px;flex:1;min-height:0}
+.ring{width:100%;aspect-ratio:1;border-radius:50%;flex:none;background:conic-gradient(var(--k1) 0 38%,var(--k2) 0 62%,var(--k4) 0 82%,var(--soft) 0);display:grid;place-items:center;-webkit-mask:radial-gradient(circle,transparent 55%,#000 56%);mask:radial-gradient(circle,transparent 55%,#000 56%);animation:spin 1s cubic-bezier(.2,.7,.2,1) both}
+@keyframes spin{from{transform:rotate(-120deg);opacity:0}to{transform:none;opacity:1}}
+.ringc{position:absolute;inset:0;display:grid;place-content:center;text-align:center;font-family:var(--fd);font-size:26px;font-weight:600;line-height:1}
+.ringc small{display:block;font-size:11px;color:var(--mut);font-family:var(--fb);font-weight:500;margin-top:2px}
+.rwrap{position:relative;width:min(46%,160px);aspect-ratio:1;flex:none}
+.leg{display:flex;flex-direction:column;gap:7px;font-size:12.5px;min-width:0}
+.leg span{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.leg i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.leg b{margin-left:auto;padding-left:10px;font-variant-numeric:tabular-nums}
+.gauge{flex:1;display:grid;place-items:center;position:relative;min-height:0}
+.gauge div{width:min(100%,190px);aspect-ratio:2/1;border-radius:190px 190px 0 0;background:conic-gradient(from 270deg at 50% 100%,var(--acc) 0 calc(var(--p)*1.8deg),var(--soft) 0 180deg,transparent 0);-webkit-mask:radial-gradient(circle at 50% 100%,transparent 58%,#000 59%);mask:radial-gradient(circle at 50% 100%,transparent 58%,#000 59%);animation:in .8s both}
+.gauge b{position:absolute;bottom:2px;font-family:var(--fd);font-size:34px;font-weight:600;letter-spacing:-.03em}
+.gauge b small{font-size:15px;color:var(--mut)}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--rs);background:var(--soft);font-size:13px;line-height:1.3;transition:transform .2s,background .2s;cursor:pointer}
+.row:hover{transform:translateX(3px)}
+.row .dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--c)}
+.row b{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap;font-size:12.5px}
+.ev{display:flex;gap:11px;align-items:center;padding:10px 12px;border-radius:var(--rs);font-size:13px;border-left:4px solid var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.ev b{font-variant-numeric:tabular-nums;min-width:42px}
+.ev.m{--c:#e6b800}.ev.w{--c:#2f7bf0}.ev.p{--c:#22a96a}
+
+/* ============ РАСЧЁТ ============ */
+#v-calc{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:var(--gap)}
+.form{gap:14px;overflow:auto;scrollbar-width:thin}
+.fr{display:flex;flex-direction:column;gap:7px}
+.fr>label{font-size:12px;color:var(--mut);font-weight:500}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{border:1px solid var(--cb);background:var(--soft);padding:8px 14px;border-radius:99px;cursor:pointer;font-weight:500;font-size:13px;transition:all .2s}
+.seg button:hover{transform:translateY(-1px)}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:transparent}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inp{display:flex;align-items:baseline;gap:6px;padding:9px 14px;border-radius:var(--rs);background:var(--soft);border:1px solid var(--cb)}
+.inp input{border:0;background:none;outline:0;font-size:22px;font-weight:600;font-family:var(--fd);width:100%;font-variant-numeric:tabular-nums}
+.inp:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+.inp span{color:var(--mut);font-size:12px}
+.sw{display:flex;gap:9px;flex-wrap:wrap}
+.sw i{width:30px;height:30px;border-radius:50%;background:var(--c);border:2px solid var(--card);box-shadow:0 0 0 1px var(--cb);cursor:pointer;transition:transform .2s}
+.sw i:hover{transform:scale(1.12)}.sw i.on{box-shadow:0 0 0 2px var(--acc)}
+.pv{display:flex;gap:16px;align-items:stretch;flex:none}
+.win{width:140px;height:150px;border-radius:12px;background:var(--soft);border:1px solid var(--cb);padding:8px 8px 10px;display:flex;flex-direction:column;gap:3px;flex:none}
+.win i{flex:1;border-radius:3px;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 100%,#fff 12%),var(--c));box-shadow:0 1px 0 rgba(0,0,0,.18);transition:background .3s}
+.win i:nth-child(odd){filter:brightness(.94)}
+.est{flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.est b{font-family:var(--fd);font-size:38px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.est small{color:var(--mut);font-size:12.5px}
+.cart{display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:0}
+.it{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:var(--rs);background:var(--soft);font-size:13px}
+.it .sq{width:32px;height:32px;border-radius:9px;background:var(--c);flex:none}
+.it div{min-width:0;flex:1}.it div b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.it div small{color:var(--mut)}
+.it>b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tot{border-top:1px solid var(--cb);margin-top:12px;padding-top:12px;display:flex;flex-direction:column;gap:7px;font-size:13px}
+.tot p{display:flex;justify-content:space-between;color:var(--mut)}
+.tot p b{color:var(--ink);font-variant-numeric:tabular-nums}
+.tot .big{color:var(--ink);font-size:15px;font-weight:600;align-items:baseline}
+.tot .big b{font-family:var(--fd);font-size:28px;letter-spacing:-.03em}
+.tot .acts{display:flex;gap:8px;margin-top:4px}.tot .acts .btn{flex:1;justify-content:center}
+
+/* ============ ЛАБОРАТОРИЯ: переключатель стилей ============ */
+#lab{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:50;display:flex;gap:6px;align-items:center;padding:7px;border-radius:99px;background:rgba(20,20,24,.82);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:#fff;box-shadow:0 10px 40px rgba(0,0,0,.35);max-width:calc(100vw - 20px);overflow:auto;scrollbar-width:none}
+#lab button{border:0;background:none;color:#cfcfd6;padding:8px 13px;border-radius:99px;cursor:pointer;font-weight:600;font-size:12.5px;white-space:nowrap;transition:background .2s,color .2s}
+#lab button.on{background:#fff;color:#111}
+#lab hr{width:1px;height:20px;border:0;background:rgba(255,255,255,.2);flex:none}
+
+/* ============ СТРУКТУРА СТИЛЕЙ (не только цвета) ============ */
+/* 1. Стекло: плавающая панель, огромные радиусы */
+[data-s=glass] #app{grid-template-columns:260px minmax(0,1fr)}
+[data-s=glass] .side{margin:14px 0 14px 14px;border-radius:30px;border:1px solid var(--cb);box-shadow:var(--sh)}
+[data-s=glass] nav a.on{background:var(--ink);color:var(--bg);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+[data-s=glass] .top h1{font-weight:700;letter-spacing:-.035em;font-size:32px}
+[data-s=glass] .kpi b{font-weight:700}
+[data-s=glass] .bars .hi i{box-shadow:0 8px 24px color-mix(in srgb,var(--acc) 45%,transparent)}
+/* 2. Бумага: линии вместо теней, серифный заголовок */
+[data-s=paper] .card{box-shadow:none}
+[data-s=paper] .card:hover{transform:none}
+[data-s=paper] nav a.on{background:var(--soft);color:var(--ink);box-shadow:inset 3px 0 0 var(--acc);border-radius:6px}
+[data-s=paper] .top h1{font-weight:500;font-size:34px;letter-spacing:-.02em}
+[data-s=paper] .kpi b{font-weight:500;font-size:38px}
+[data-s=paper] .btn,[data-s=paper] .search,[data-s=paper] .seg button{border-radius:10px}
+[data-s=paper] .logo{border-radius:50%}
+[data-s=paper] .bars i,[data-s=paper] .row{border-radius:4px}
+/* 3. Эмбер: узкая рейка иконок, гигантские цифры */
+[data-s=ember] #app{grid-template-columns:84px minmax(0,1fr)}
+[data-s=ember] .side{align-items:center;padding:20px 10px}
+[data-s=ember] .brand span,[data-s=ember] nav a span,[data-s=ember] nav a em,[data-s=ember] .me div{display:none}
+[data-s=ember] nav a{padding:13px;border-radius:16px}
+[data-s=ember] .me{background:none;padding:0}
+[data-s=ember] .top h1{font-weight:800;font-size:40px;letter-spacing:-.045em}
+[data-s=ember] .kpi b{font-weight:800;font-size:46px;letter-spacing:-.05em}
+[data-s=ember] .btn,[data-s=ember] .search{border-radius:16px}
+[data-s=ember] .seg button{border-radius:12px}
+/* 4. Чертёж: верхняя панель, моно-цифры, сетка */
+[data-s=blue] #app{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+[data-s=blue] .side{flex-direction:row;align-items:center;padding:10px 22px;border-right:0;border-bottom:1px solid var(--cb);gap:22px}
+[data-s=blue] nav{flex-direction:row;gap:2px;overflow:visible}
+[data-s=blue] nav a{padding:8px 12px;border-radius:7px;font-size:13px}
+[data-s=blue] nav a.on{background:var(--soft);color:var(--ink);box-shadow:inset 0 -2px 0 var(--acc)}
+[data-s=blue] nav a svg,[data-s=blue] nav a em{display:none}
+[data-s=blue] .me{margin:0 0 0 auto}
+[data-s=blue] .me div{display:none}
+[data-s=blue] .kpi b,[data-s=blue] .est b,[data-s=blue] .inp input,[data-s=blue] .tot .big b,[data-s=blue] .ringc,[data-s=blue] .gauge b{font-family:var(--fm);font-weight:500;letter-spacing:-.04em}
+[data-s=blue] .top h1{font-size:24px;font-weight:600}
+[data-s=blue] .btn,[data-s=blue] .search,[data-s=blue] .seg button{border-radius:8px}
+[data-s=blue] .logo{border-radius:7px}
+[data-s=blue] .card h2{font-size:12.5px;color:var(--mut);font-weight:500}
+[data-s=blue][data-m=light] .card:hover,[data-s=blue] .card:hover{transform:none;border-color:var(--acc)}
+[data-s=blue] main{padding-top:18px}
+/* 5. AIZ: тёмная панель слева, крупные скругления, штриховка */
+[data-s=aiz] nav a.on{border-radius:18px;box-shadow:0 8px 20px color-mix(in srgb,var(--acc) 40%,transparent)}
+[data-s=aiz] .side{border-right:0}
+[data-s=aiz] .top h1{font-weight:700;font-size:30px}
+[data-s=aiz] .kpi b{font-weight:600;font-size:40px}
+[data-s=aiz] .bars i{background:repeating-linear-gradient(135deg,var(--soft) 0 3px,transparent 3px 6px),var(--soft)}
+[data-s=aiz] .bars .hi i{background:var(--acc)}
+[data-s=aiz] .bars i{border-radius:99px}
+[data-s=aiz] .row,[data-s=aiz] .ev,[data-s=aiz] .it{border-radius:99px;padding-left:16px;padding-right:16px}
+[data-s=aiz] .logo{border-radius:9px 22px 9px 22px}
+/* 6. Пастель: цветные плитки, круглое и дружелюбное */
+[data-s=pastel] .kpi:nth-of-type(1){background:color-mix(in srgb,#6161ff 11%,var(--card))}
+[data-s=pastel] .kpi:nth-of-type(2){background:color-mix(in srgb,#2bc48a 12%,var(--card))}
+[data-s=pastel] .kpi:nth-of-type(3){background:color-mix(in srgb,#ff9a6c 15%,var(--card))}
+[data-s=pastel] .kpi:nth-of-type(4){background:color-mix(in srgb,#b36cff 12%,var(--card))}
+[data-s=pastel] nav a{border-radius:99px}
+[data-s=pastel] .top h1{font-weight:800;letter-spacing:-.02em}
+[data-s=pastel] .kpi b{font-weight:800}
+[data-s=pastel] .bars i{border-radius:99px}
+/* 7. Док: навигация внизу как в macOS, чистые карточки */
+[data-s=dock] #app{grid-template-columns:1fr}
+[data-s=dock] .side{position:fixed;left:50%;bottom:74px;transform:translateX(-50%);z-index:40;flex-direction:row;padding:8px 10px;border:1px solid var(--cb);border-radius:26px;box-shadow:var(--sh);gap:6px;background:color-mix(in srgb,var(--card) 82%,transparent);backdrop-filter:blur(22px);max-width:calc(100vw - 24px)}
+[data-s=dock] .brand span,[data-s=dock] .me,[data-s=dock] nav a span{display:none}
+[data-s=dock] .brand{padding:0 4px 0 6px}
+[data-s=dock] nav{flex-direction:row}
+[data-s=dock] nav a{padding:12px;border-radius:16px}
+[data-s=dock] nav a:hover{transform:translateY(-6px) scale(1.18)}
+[data-s=dock] nav a.on{background:var(--acc)}
+[data-s=dock] nav a em{display:none}
+[data-s=dock] main{padding:22px 30px 150px}
+[data-s=dock] .top h1{font-weight:600}
+[data-s=dock] .kpi b{font-weight:600}
+
+@media (max-width:1500px){#v-home{--gap:12px}.kpi b{font-size:28px!important}.top h1{font-size:24px!important}.card{--pad:14px}}
+@media (max-height:800px){main{padding-top:14px}.kpi b{font-size:26px!important}.top small{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-calc" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="i-rub" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 17V7h3.5a2.5 2.5 0 010 5H9M9 14.5h5"/></symbol>
+<symbol id="i-doc" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+<symbol id="i-blind" viewBox="0 0 24 24"><path d="M4 4h16M4 8h16M4 12h16M4 16h16M12 16v5"/></symbol>
+</defs></svg>
+
+<div id="app" data-s="glass" data-m="light">
+  <aside class="side">
+    <div class="brand"><div class="logo"><svg class="i"><use href="#i-blind"/></svg></div><span>Жалюзи-СПб</span></div>
+    <nav id="nav">
+      <a class="on" data-v="home"><svg class="i"><use href="#i-home"/></svg><span>Главная</span></a>
+      <a data-v="orders"><svg class="i"><use href="#i-list"/></svg><span>Заказы</span><em>3</em></a>
+      <a data-v="calc"><svg class="i"><use href="#i-calc"/></svg><span>Расчёт</span></a>
+      <a data-v="x"><svg class="i"><use href="#i-user"/></svg><span>Клиенты</span></a>
+      <a data-v="x"><svg class="i"><use href="#i-cal"/></svg><span>Календарь</span></a>
+      <a data-v="x"><svg class="i"><use href="#i-rub"/></svg><span>Деньги</span></a>
+      <a data-v="x"><svg class="i"><use href="#i-doc"/></svg><span>Документы</span></a>
+      <a data-v="x"><svg class="i"><use href="#i-chart"/></svg><span>Аналитика</span></a>
+      <a data-v="x"><svg class="i"><use href="#i-gear"/></svg><span>Настройки</span></a>
+    </nav>
+    <div class="me"><div class="ava">А</div><div><b>Андрей</b><small>Владелец</small></div></div>
+  </aside>
+
+  <main>
+    <header class="top">
+      <div><h1 id="ttl">Добрый день, Андрей</h1><small id="sub">Пятница, 9 октября 2026</small></div>
+      <div class="sp"></div>
+      <div class="search"><svg class="i"><use href="#i-search"/></svg>Поиск заказа или клиента</div>
+      <button class="btn pri"><svg class="i"><use href="#i-plus"/></svg>Новый заказ</button>
+    </header>
+
+    <section class="view on" id="v-home">
+      <div class="card kpi"><small>Заказов в октябре</small><b data-n="18">0</b><i>+4 к сентябрю</i></div>
+      <div class="card kpi"><small>Выручка за месяц</small><b data-n="612400" data-f="1">0<u>₽</u></b><i>+12,4%</i></div>
+      <div class="card kpi"><small>Долги клиентов</small><b data-n="184200" data-f="1">0<u>₽</u></b><i class="d">5 заказов</i></div>
+      <div class="card kpi"><small>Прибыль за месяц</small><b data-n="241700" data-f="1">0<u>₽</u></b><i>39% от выручки</i>
+        <svg class="spk" viewBox="0 0 200 26" preserveAspectRatio="none"><polyline fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="0,20 20,17 40,19 60,12 80,14 100,8 120,11 140,6 160,9 180,4 200,5"/></svg></div>
+
+      <div class="card c-rev"><h2>Выручка по месяцам<span>тыс. ₽</span></h2>
+        <div class="bars" style="--n:0">
+          <div style="--h:34%;--n:0"><i style="--n:0"></i></div><div style="--h:48%"><i style="--n:1"></i></div><div style="--h:41%"><i style="--n:2"></i></div><div style="--h:62%"><i style="--n:3"></i></div><div style="--h:55%"><i style="--n:4"></i></div><div style="--h:70%"><i style="--n:5"></i></div><div class="hi" data-v="612 тыс" style="--h:88%"><i style="--n:6"></i></div>
+        </div><div class="lbl"><span>апр</span><span>май</span><span>июн</span><span>июл</span><span>авг</span><span>сен</span><span>окт</span></div></div>
+
+      <div class="card c-ring"><h2>Заказы по этапам</h2>
+        <div class="ringw"><div class="rwrap"><div class="ring"></div><div class="ringc">18<small>заказов</small></div></div>
+          <div class="leg"><span style="--c:var(--k1)"><i></i>Замер<b>7</b></span><span style="--c:var(--k2)"><i></i>Производство<b>4</b></span><span style="--c:var(--k4)"><i></i>Монтаж<b>3</b></span><span style="--c:var(--mut)"><i></i>Закрыто<b>4</b></span></div></div></div>
+
+      <div class="card c-gauge"><h2>Оплачено клиентами</h2><div class="gauge"><div style="--p:72"></div><b>72<small>%</small></b></div></div>
+
+      <div class="card c-att"><h2>Требует внимания<span>6 из 9</span></h2><div class="sc list">
+        <div class="row" style="--c:var(--bad)"><i class="dot"></i>№ 1342 Петрова: долг клиента<b>48 500 ₽</b></div>
+        <div class="row" style="--c:var(--warn)"><i class="dot"></i>№ 1346 Сидоров: отправлен поставщику, укажи закуп<b>Закуп</b></div>
+        <div class="row" style="--c:var(--warn)"><i class="dot"></i>№ 1349 Громова: не оплачен поставщику<b>112 300 ₽</b></div>
+        <div class="row" style="--c:var(--acc)"><i class="dot"></i>№ 1351 Ким: ещё не отправлен поставщику<b>—</b></div>
+        <div class="row" style="--c:var(--acc)"><i class="dot"></i>№ 1338 Орлов: получен, монтаж и зарплата монтажнику<b>Монтаж</b></div>
+        <div class="row" style="--c:var(--ok)"><i class="dot"></i>№ 1335 Белова: остаётся закрыть заказ<b>Закрыть</b></div></div></div>
+
+      <div class="card c-ev"><h2>Сегодня<span>9 октября</span></h2><div class="sc list">
+        <div class="ev m"><b>10:30</b>Замер: Приморский, Ким</div>
+        <div class="ev w"><b>13:00</b>Монтаж: Парнас, 3 окна</div>
+        <div class="ev w"><b>15:30</b>Доставка от Уюта</div>
+        <div class="ev p"><b>18:00</b>Забрать дочь с тренировки</div></div></div>
+    </section>
+
+    <section class="view" id="v-calc">
+      <div class="card form"><h2>Деревянные жалюзи<span>Позиция 8</span></h2>
+        <div class="fr"><label>Коллекция</label><div class="seg" data-g><button>Стандарт</button><button>Классик</button><button>Урбан</button><button class="on">Тренд</button><button>Премиум</button></div></div>
+        <div class="fr"><label>Материал и ламель</label><div class="seg" data-g><button>Дерево 25 мм</button><button class="on">Дерево 50 мм</button><button>Бамбук 25 мм</button><button>Бамбук 50 мм</button></div></div>
+        <div class="two"><div class="fr"><label>Ширина</label><div class="inp"><input id="w" value="120" inputmode="numeric"><span>см</span></div></div><div class="fr"><label>Высота</label><div class="inp"><input id="h" value="160" inputmode="numeric"><span>см</span></div></div></div>
+        <div class="fr"><label>Цвет</label><div class="sw" id="sw"><i class="on" style="--c:#c9a37a"></i><i style="--c:#f2efe8"></i><i style="--c:#8a5a3b"></i><i style="--c:#4a3426"></i><i style="--c:#b9b3a6"></i><i style="--c:#2c2c2e"></i><i style="--c:#d9c7a3"></i><i style="--c:#7d8a78"></i></div></div>
+        <div class="fr"><label>Управление</label><div class="seg" data-g><button>Шнур</button><button class="on">Цепочка</button><button>Пульт</button><button>Выключатель</button></div></div>
+        <div class="pv"><div class="win" id="win" style="--c:#c9a37a"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="est"><small>Площадь <span id="ar">1,92</span> м²</small><b id="pr">12 480 ₽</b><small>Тренд, дерево 50 мм, цепочка</small></div></div>
+        <button class="btn pri" style="justify-content:center">Добавить в корзину</button></div>
+
+      <div class="card cart"><h2>Корзина<span>10 позиций</span></h2>
+        <div class="sc list">
+          <div class="it"><i class="sq" style="--c:#c9a37a"></i><div><b>Дерево 50 · Тренд</b><small>120×160 · цепочка</small></div><b>12 480 ₽</b></div>
+          <div class="it"><i class="sq" style="--c:#f2efe8"></i><div><b>Дерево 25 · Стандарт</b><small>90×140 · шнур</small></div><b>6 930 ₽</b></div>
+          <div class="it"><i class="sq" style="--c:#2c2c2e"></i><div><b>Бамбук 50 · Классик</b><small>150×170 · цепочка</small></div><b>14 800 ₽</b></div>
+          <div class="it"><i class="sq" style="--c:#8a5a3b"></i><div><b>Дерево 50 · Премиум</b><small>110×150 · пульт</small></div><b>17 900 ₽</b></div>
+          <div class="it"><i class="sq" style="--c:#b9b3a6"></i><div><b>Привод + пульт</b><small>Wi-Fi 6/18</small></div><b>9 400 ₽</b></div>
+          <div class="it"><i class="sq" style="--c:#7d8a78"></i><div><b>Дерево 25 · Урбан</b><small>80×120 · шнур</small></div><b>5 760 ₽</b></div>
+          <div class="it"><i class="sq" style="--c:var(--acc2)"></i><div><b>Монтаж, выезд</b><small>свой товар</small></div><b>3 500 ₽</b></div><div class="it"><i class="sq" style="--c:#d9c7a3"></i><div><b>Дерево 25 · Тренд</b><small>100×130 · шнур</small></div><b>7 120 ₽</b></div>
+          <div class="it"><i class="sq" style="--c:#4a3426"></i><div><b>Дерево 50 · Классик</b><small>140×160 · цепочка</small></div><b>13 900 ₽</b></div>
+          <div class="it"><i class="sq" style="--c:#f2efe8"></i><div><b>Дерево 25 · Урбан</b><small>70×110 · шнур</small></div><b>4 980 ₽</b></div></div>
+        <div class="tot"><p>Сумма<b>70 770 ₽</b></p><p>Скидка 5%<b>−3 539 ₽</b></p><p>Доставка<b>0 ₽</b></p><p>Прибыль<b style="color:var(--ok)">24 810 ₽</b></p>
+          <p class="big">Итого<b>67 231 ₽</b></p>
+          <div class="acts"><button class="btn">КП</button><button class="btn pri">Оформить заказ</button></div></div></div>
+    </section>
+  </main>
+
+  <div id="lab">
+    <button data-s="glass" class="on">1 Стекло</button><button data-s="paper">2 Бумага</button><button data-s="ember">3 Эмбер</button><button data-s="blue">4 Чертёж</button><button data-s="aiz">5 Зелёный</button><button data-s="pastel">6 Пастель</button><button data-s="dock">7 Док</button>
+    <hr><button data-m="light" class="on">День</button><button data-m="dark">Ночь</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var app=document.getElementById('app'),root=document.documentElement;
+  function setAttr(k,v){app.setAttribute('data-'+k,v);root.setAttribute('data-'+k,v);try{localStorage.setItem('lab-'+k,v)}catch(e){}}
+  document.querySelectorAll('#lab button').forEach(function(b){b.onclick=function(){
+    var k=b.dataset.s?'s':'m',v=b.dataset.s||b.dataset.m;setAttr(k,v);
+    document.querySelectorAll('#lab button').forEach(function(x){if((x.dataset.s&&k==='s')||(x.dataset.m&&k==='m'))x.classList.toggle('on',x===b)});
+    if(k==='s')count();
+  }});
+  var T={home:['Добрый день, Андрей','Пятница, 9 октября 2026'],orders:['Заказы','18 в работе'],calc:['Расчёт жалюзи','Новый заказ № 1352']};
+  document.querySelectorAll('#nav a').forEach(function(a){a.onclick=function(){
+    var v=a.dataset.v;if(v==='x'||v==='orders')v='home';
+    document.querySelectorAll('#nav a').forEach(function(x){x.classList.toggle('on',x===a)});
+    document.querySelectorAll('.view').forEach(function(s){s.classList.toggle('on',s.id==='v-'+v)});
+    document.getElementById('ttl').textContent=T[v][0];document.getElementById('sub').textContent=T[v][1];if(v==='home')count();
+  }});
+  document.querySelectorAll('[data-g]').forEach(function(g){g.onclick=function(e){var b=e.target.closest('button');if(!b)return;g.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b)})}});
+  document.getElementById('sw').onclick=function(e){var i=e.target.closest('i');if(!i)return;this.querySelectorAll('i').forEach(function(x){x.classList.toggle('on',x===i)});document.getElementById('win').style.setProperty('--c',i.style.getPropertyValue('--c'))};
+  function est(){var w=+document.getElementById('w').value||0,h=+document.getElementById('h').value||0,a=Math.max(.8,w*h/1e4);
+    document.getElementById('ar').textContent=a.toFixed(2).replace('.',',');document.getElementById('pr').textContent=Math.round(a*6500/10)*10 .toLocaleString('ru-RU')+' ₽'}
+  document.getElementById('w').oninput=document.getElementById('h').oninput=est;
+  function count(){document.querySelectorAll('.kpi b[data-n]').forEach(function(el){var n=+el.dataset.n,f=el.dataset.f,u=el.querySelector('u'),t0=performance.now(),d=900;
+    (function s(t){var p=Math.min(1,(t-t0)/d),e=1-Math.pow(1-p,3),v=Math.round(n*e);el.firstChild.nodeValue=f?v.toLocaleString('ru-RU'):v;if(p<1)requestAnimationFrame(s)})(t0)})}
+  var q=location.hash.slice(1).split('-');
+  try{var s=localStorage.getItem('lab-s'),m=localStorage.getItem('lab-m');if(s)q[0]=s;if(m)q[1]=m}catch(e){}
+  if(q[0]&&document.querySelector('#lab [data-s="'+q[0]+'"]'))document.querySelector('#lab [data-s="'+q[0]+'"]').click();
+  if(q[1]&&document.querySelector('#lab [data-m="'+q[1]+'"]'))document.querySelector('#lab [data-m="'+q[1]+'"]').click();
+  if(q[2]==='calc')document.querySelector('#nav [data-v=calc]').click();
+  est();count();
+})();
+</script>
