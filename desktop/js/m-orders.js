@@ -28,15 +28,15 @@
   /* состав заказа, собранного в расчёте: одинаковые позиции склеены */
   function itemsPh(o) {
     const g = [], idx = {};
-    (o.items || []).forEach(i => {
+    (o.items || []).forEach((i, ix) => {
       const nm = i.kind ? (i.title || 'Услуга') : [i.sup, i.mat, i.lam ? i.lam + ' мм' : '', i.o && i.o.color].filter(Boolean).join(', ');
-      const sz = i.W ? Math.round(i.W * 10) + '×' + Math.round(i.H * 10) : '', k = nm + '|' + sz + '|' + i.price;
-      if (idx[k] == null) { idx[k] = g.length; g.push({ nm, sz, price: +i.price || 0, n: 0, sub: i.o ? [(i.o.opts || []).join(', '), i.o.fix || ''].filter(Boolean).join(' · ') : '' }); }
-      g[idx[k]].n++;
+      const sz = i.W ? Math.round(i.W * 10) + '×' + Math.round(i.H * 10) : '', cu = i.kind === 'custom', k = nm + '|' + sz + '|' + i.price + (cu ? '|' + i.cost + '|' + !!i.costOk : '');
+      if (idx[k] == null) { idx[k] = g.length; g.push({ nm, sz, price: +i.price || 0, n: 0, ix: [], cu, cost: i.cost, ok: !!i.costOk, sub: i.o ? [(i.o.opts || []).join(', '), i.o.fix || ''].filter(Boolean).join(' · ') : '' }); }
+      g[idx[k]].n++; g[idx[k]].ix.push(ix);
     });
     const sum = (o.items || []).reduce((a, i) => a + (+i.price || 0), 0);
-    return '<table class="tbl"><thead><tr><th>№</th><th>Изделие</th><th>Размер, мм</th><th class="r">Шт</th><th class="r">Цена за шт</th><th class="r">Сумма</th></tr></thead><tbody>' +
-      g.map((x, n) => '<tr><td>' + (n + 1) + '</td><td><b>' + e(x.nm) + '</b>' + (x.sub ? '<div class="mut" style="font-size:12px">' + e(x.sub) + '</div>' : '') + '</td><td class="num">' + e(x.sz) + '</td><td class="r">' + x.n + '</td><td class="r num">' + m(x.price) + '</td><td class="r num">' + m(x.price * x.n) + '</td></tr>').join('') +
+    return '<table class="tbl"><thead><tr><th>№</th><th>Изделие</th><th>Размер, мм</th><th class="r">Шт</th><th class="r">Цена за шт</th><th class="r">Сумма</th><th class="r">Закуп за шт</th></tr></thead><tbody>' +
+      g.map((x, n) => '<tr><td>' + (n + 1) + '</td><td><b>' + e(x.nm) + '</b>' + (x.sub ? '<div class="mut" style="font-size:12px">' + e(x.sub) + '</div>' : '') + '</td><td class="num">' + e(x.sz) + '</td><td class="r">' + x.n + '</td><td class="r num">' + m(x.price) + '</td><td class="r num">' + m(x.price * x.n) + '</td><td class="r">' + (x.cu ? '<input class="in num" style="width:90px;text-align:right' + (x.ok || +x.cost > 0 ? '' : ';border-color:var(--bad,#b3261e)') + '" value="' + (x.cost === '' || x.cost == null ? '' : x.cost) + '" placeholder="не указан" data-c="icost" data-uid="' + o.uid + '" data-ix="' + x.ix.join(',') + '">' + (x.ok || +x.cost > 0 ? (x.ok && !(+x.cost > 0) ? '<div class="mut" style="font-size:11px">0 подтверждён</div>' : '') : '<div><button class="btn sm" style="margin-top:4px" data-a="icost0" data-uid="' + o.uid + '" data-ix="' + x.ix.join(',') + '">Закуп 0, подтверждаю</button></div>') : '<span class="mut">по прайсу</span>') + '</td></tr>').join('') +
       '</tbody></table><div class="mut" style="margin-top:8px">Цены с доставкой и монтажом' + (o.disc ? '. Скидка: −' + m(o.disc) : '') + '. Итого: <b>' + m(Math.max(0, sum - (o.disc || 0))) + '</b></div>' +
       (o.hasCart ? '<div class="row" style="margin-top:12px"><button class="btn pri" data-a="oreopen" data-id="' + o.id + '">Открыть в расчёте</button></div>' : '');
   }
@@ -47,6 +47,7 @@
         '<div class="field"><label>Источник</label><div>' + e(o.src || c.src || 'не указан') + '</div></div><div class="field"><label>Заметка</label><div>' + e(o.note || '—') + '</div></div>' +
         (o.yur ? '<div class="field"><label>Юридическое лицо</label><div>' + e(o.yur.name) + '</div><div class="mut">ЭДО: ' + (o.yur.edo ? 'есть' : 'нет') + ' · УПД отдали: ' + (o.yur.upd ? 'да' : 'нет') + ' · УПД подписан: ' + (o.yur.sign ? 'да' : 'нет') + (o.yur.note ? ' · ' + e(o.yur.note) : '') + '</div></div>' : '') + '</div>' +
         '<div class="card flat"><h2>Признаки заказа' + (real ? ' <span class="soon">нажми, чтобы отметить</span>' : '') + '</h2><div class="chips" style="margin-top:8px">' + flags(o).map(f => '<span class="pill ' + (f[1] ? 'ok' : '') + '"' + (real ? ' style="cursor:pointer" data-a="oflag" data-k="' + f[2] + '" data-id="' + o.id + '"' : '') + '>' + (f[1] ? '✓ ' : '') + f[0] + '</span>').join('') + '</div>' +
+        (o.ph ? '<div class="row" style="margin-top:10px"><button class="btn ' + (o.supSent ? '' : 'pri') + '" data-a="osup" data-id="' + o.id + '">' + (o.supSent ? '✓ Отправлен поставщику (снять)' : 'Отметить: заказ отправлен поставщику') + '</button></div>' + (o.supSent && o.needCost.length ? '<div class="callout bad" style="margin-top:8px;font-size:13px">Укажи закуп на вкладке «Изделия»: ' + e(o.needCost.join(', ')) + '. Без него прибыль считается неверно.</div>' : '') : '') +
         '<div class="row wrap" style="margin-top:10px"><span class="pill info">' + e(o.zone) + '</span><span class="pill">Категория: ' + e(o.cat) + '</span><span class="pill">' + (o.inst ? 'С монтажом' : 'Без монтажа') + '</span>' + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '</div></div></div>';
     if (t === 'meas') return '<div class="callout info">Замер может не понадобиться: КП часто даётся по размерам клиента до выезда. Этап «Замер» в воронке пропускаемый.</div><p class="mut" style="margin-top:12px">Здесь будет замерный лист из телефонной версии: таблица изделий, часы тишины, примечания, монтаж, печать бланка.</p>';
     if (t === 'items' && o.ph) return itemsPh(o);
@@ -96,6 +97,9 @@
     const o = A.order(el.dataset.id), r = o && DB.raw().find(x => x.uid === o.uid); if (!r || !r.cart) return;
     JalCart.restore(r.cart, String(r.no)); A.toast('Заказ № ' + r.no + ' открыт в расчёте'); A.open('calc');
   };
+  A.fld.icost = (v, el) => { DB.setCost(el.dataset.uid, el.dataset.ix.split(',').map(Number), v, String(v).trim() !== '' && +String(v).replace(/\s/g, '') === 0); A.render(); };
+  A.act.icost0 = el => { DB.setCost(el.dataset.uid, el.dataset.ix.split(',').map(Number), 0, true); A.render(); };
+  A.act.osup = el => { const o = A.order(el.dataset.id); if (!o) return; DB.patchRec(o.uid, { supSent: !o.supSent, supAt: o.supSent ? '' : new Date().toISOString().slice(0, 10) }); A.render(); };
   A.act.otab = el => { S.orderTab = el.dataset.t; A.save(); A.render(); };
   A.act.ofilter = el => { S.ordersFilter = el.dataset.f; S.olimit = LIM; A.save(); A.render(); };
   A.act.oview = el => { S.ordersView = el.dataset.v; A.save(); A.render(); };

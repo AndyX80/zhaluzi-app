@@ -108,7 +108,8 @@
     return { id: 'ph' + r.uid, no: String(r.no), uid: r.uid, ph: true, sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: '', factory: '',
       inst: !!r.install, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: 0,
       created: (r.created || '').slice(0, 10), due: '', tk: r.note || '', review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: false, legacy: false, archived: !!r.archived,
-      _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '', items, disc: +r.disc || 0, delivery: +r.delivery || 0, priced: !!r.priced, hasCart: !!(r.cart && r.cart.cart) };
+      _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '', items, disc: +r.disc || 0, delivery: +r.delivery || 0, priced: !!r.priced, hasCart: !!(r.cart && r.cart.cart), supSent: !!r.supSent,
+      needCost: Object.keys(items.filter(i => i.kind === 'custom' && !i.costOk && !(+i.cost > 0)).reduce((a, i) => { a[i.title || 'Услуга'] = 1; return a; }, {})) };
   }
   DB.dups = [];
   DB.dupPick = () => { try { return JSON.parse(lsGet('jald_dup_v1') || '{}') || {}; } catch (e) { return {}; } };
@@ -157,6 +158,19 @@
     }
     put(rec); try { lsSet('jal_no_max', String(Math.max(+lsGet('jal_no_max') || 0, +rec.no || 0))); } catch (e) {}
     DB.derive(); return rec;
+  };
+  /* закуп своей позиции: v = число или '' (не указан); ok = «закуп действительно нулевой» подтверждён. Правится и состав заказа, и снимок корзины */
+  DB.setCost = function (uid, idxs, v, ok) {
+    const r = DB.raw().find(x => x.uid === uid); if (!r) return;
+    const cost = v === '' || v == null ? '' : Math.max(0, Math.round(+String(v).replace(/\s/g, '') || 0)), conf = ok || cost > 0;
+    const items = (r.items || []).map((it, i) => idxs.indexOf(i) < 0 ? it : Object.assign({}, it, { cost, costOk: !!conf, profit: cost === '' ? 0 : (+it.price || 0) - cost }));
+    const patch = { items };
+    if (r.cart && r.cart.cart) {
+      const cart = r.cart.cart.map(x => x), seen = {};
+      idxs.forEach(i => { const ci = (r.items[i] || {}).ci; if (ci != null && cart[ci] && !seen[ci]) { seen[ci] = 1; cart[ci] = Object.assign({}, cart[ci], { cost, costOk: !!conf }); } });
+      patch.cart = Object.assign({}, r.cart, { cart });
+    }
+    DB.patchRec(uid, patch);
   };
   DB.patchRec = function (uid, patch) { const r = DB.raw().find(x => x.uid === uid); if (!r) return; put(Object.assign({}, r, patch)); DB.derive(); };
   /* после правки заказа на экране */

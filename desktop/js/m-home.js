@@ -12,7 +12,13 @@
     D.orders.forEach(o => {
       if (o.archived) return;
       const f = o.fl || {}, base = '№ ' + o.no + ' ' + cname(o) + ': ', debt = o.sum - o.paid;
+      if (o.ph && debt <= 0 && false) return;
       if (debt > 0) out.push([debt, 'order:' + o.id, o.created < today.slice(0, 8) + '01' ? 'bad' : 'warn', base + 'долг клиента ' + m(debt)]);
+      if (o.ph) {
+        if (o.supSent && o.needCost.length) out.push([6e4, 'order:' + o.id, 'warn', base + 'отправлен поставщику, укажи закуп: ' + o.needCost.join(', ') + ' (или подтверди, что он нулевой)']);
+        else if (!o.supSent) out.push([5e4, 'order:' + o.id, 'info', base + 'ещё не отправлен поставщику']);
+        return;
+      }
       if (f.closed) return;
       if (!f.sup) out.push([5e4, 'order:' + o.id, 'warn', base + 'не оплачен поставщику']);
       else if (!f.sent) out.push([4e4, 'order:' + o.id, 'info', base + 'оплачен поставщику, ждёт отправки']);

@@ -248,7 +248,7 @@
       const c = F.calcs[i]; if (!c.ok) return;
       const price = c.ownPrice ? c.unit : ceil100(c.unit + F.ships[i] + F.adds[i]);
       for (let k = 0; k < it.qty; k++) {
-        if (it.kind === 'custom') items.push({ kind: 'custom', title: it.title || 'Услуга', price, profit: c.profit });
+        if (it.kind === 'custom') items.push({ kind: 'custom', title: it.title || 'Услуга', price, profit: c.profit, cost: it.cost === '' || it.cost == null ? '' : Number(it.cost), costOk: !!it.costOk, ci: i });
         else if (it.kind) items.push({ kind: it.kind, sup: SUPNAME[it.sup] || it.sup, title: c.auto.name + (it.kind === 'drive' ? ' (привод)' : ''), price, profit: c.profit });
         else items.push({ sup: SUPNAME[it.sup] || it.sup, mat: it.mat, lam: it.lam, W: (+it.w) / 10, H: (+it.h) / 10, ctrl: it.ctrl,
           o: { color: c.col ? c.col.name : null, opts: Object.keys(it.opts || {}).filter(n => it.opts[n]), fix: it.fix || null }, price, profit: c.profit });
