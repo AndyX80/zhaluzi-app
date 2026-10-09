@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const V = '?v=56', loaded = {};
-  const load = src => loaded[src] || (loaded[src] = new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src + V; s.onload = ok; s.onerror = () => { delete loaded[src]; bad(new Error('Не загрузилась библиотека ' + src + '. Нужен интернет при первом разе.')); }; document.head.appendChild(s); }));
+  const load = src => loaded[src] || (loaded[src] = new Promise((ok, bad) => { const s = document.createElement('script'); s.src = (window.JAL_ROOT || '') + src + V; s.onload = ok; s.onerror = () => { delete loaded[src]; bad(new Error('Не загрузилась библиотека ' + src + '. Нужен интернет при первом разе.')); }; document.head.appendChild(s); }));
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
   const sigs = () => ({ sign: lsGet('jal_sign'), stamp: lsGet('jal_stamp') });
   const NAMES = { kpHtml: 'КП № {no}', kpVarHtml: 'КП № {no} (3 варианта)', zamernikHtml: 'Замерник № {no}', dogovorHtml: 'Договор № {no}' };
@@ -37,7 +37,7 @@
     const cell = (t, w, o) => new X.TableCell({ width: { size: w, type: X.WidthType.PERCENTAGE }, margins: { top: 50, bottom: 50, left: 80, right: 80 }, shading: o && o.fill ? { type: X.ShadingType.CLEAR, fill: o.fill, color: 'auto' } : undefined,
       children: String(t == null ? '' : t).split('\n').map(x => new X.Paragraph({ alignment: o && o.right ? X.AlignmentType.RIGHT : (o && o.center ? X.AlignmentType.CENTER : X.AlignmentType.LEFT), children: [T(x, { bold: !!(o && o.bold), size: (o && o.size) || 18, color: o && o.color })] })) });
     const table = (rows, widths, head) => new X.Table({ width: { size: 100, type: X.WidthType.PERCENTAGE }, rows: rows.map((r, i) => new X.TableRow({ tableHeader: !!head && i === 0, children: r.map((c, k) => cell(c, widths[k], (head && i === 0) ? { bold: true, fill: 'EEEEEE' } : { right: k >= r.length - 2 && widths.length > 3 && i > 0 })) })) });
-    const logo = await pic('assets/logo.png', 130), sign = await pic(sg.sign, 110), stamp = await pic(sg.stamp, 100);
+    const logo = await pic((window.JAL_ROOT || '') + 'assets/logo.png', 130), sign = await pic(sg.sign, 110), stamp = await pic(sg.stamp, 100);
     const ch = [];
     const sigRow = () => { const a = [T('С уважением, Хорошавин Андрей   ')]; if (sign) a.push(sign); if (stamp) a.push(stamp); return P(a, { spacing: { before: 200 } }); };
     const rows = (pgs) => pgs.reduce((a, p) => a.concat(p.rows || []), []);
