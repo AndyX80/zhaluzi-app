@@ -1,6 +1,6 @@
 /* Документы, Справочники, Настройки */
 (function () {
-  const A = App, S = A.S, e = A.esc;
+  const D = window.DEMO, A = App, S = A.S, e = A.esc;
   const DOCS = [['Коммерческое предложение (КП)', 'phone', 'Перенос из телефона'], ['КП: три варианта', 'phone', 'Перенос из телефона'], ['Замерный лист', 'phone', 'Перенос из телефона'], ['Договор и приложение', 'phone', 'Перенос из телефона'],
     ['Счёт на оплату', 'later', 'Позже, с передачей в Эльбу'], ['УПД', 'later', 'Позже, с передачей в Эльбу и Диадок'], ['Акт', 'later', 'Редко нужен'], ['Гарантийный талон', 'later', 'Редко нужен'], ['Отчёт за месяц', 'later', 'Как ваш дашборд в разрезе месяца'], ['Заказ поставщику (шпаргалка)', 'later', 'Позиции для ввода в кабинете поставщика']];
   A.module('docs', {
@@ -24,15 +24,31 @@
   A.act.rtab = el => { S.refTab = el.dataset.t; A.save(); A.render(); };
 
   const INTEG = [['Google Таблицы (цены)', 'работает в телефоне'], ['Google Calendar', 'этап 2'], ['Эльба (Контур)', 'этап 3'], ['Диадок', 'этап 3'], ['Почта (письма клиентам)', 'работает в телефоне'], ['Telegram, MAX', 'отправка документов, этап 1']];
+  const dataCard = () => {
+    const real = window.DB && DB.real, n = real ? D.orders.length : 0;
+    return (real ? '<p class="mut">В базе: заказов ' + n + ', клиентов ' + D.clients.length + ', операций ' + D.ops.length + (DB.at ? '. Сохранено ' + new Date(DB.at).toLocaleString('ru-RU') : '') + '. Данные хранятся только в этом браузере.</p>' : '<p class="mut">Сейчас на экране демонстрационные данные. Загрузи «Учёт заказов.xlsm» — подтянутся заказы, клиенты и доходы-расходы с 2024 года.</p>') +
+      '<div class="stack" style="gap:8px;margin-top:10px"><label class="btn">Загрузить Excel (.xlsm)<input type="file" accept=".xlsm,.xlsx" data-file="xls" hidden></label>' +
+      (real ? '<button class="btn" data-a="dbexp">Скачать копию базы (файл)</button>' : '') +
+      '<label class="btn">Загрузить копию базы<input type="file" accept=".json" data-file="json" hidden></label>' +
+      (real ? '<button class="btn" data-a="dbclr">Удалить базу и вернуть демо</button>' : '') +
+      '<button class="btn" data-a="sreset">Сбросить состояние вкладок</button></div>';
+  };
   A.module('settings', {
     render() {
       return '<div class="head"><h1>Настройки</h1></div><div class="g2"><div class="card"><h2>Вид</h2><div class="stack" style="gap:12px;margin-top:10px"><div class="field"><label>Тема</label><div class="seg">' + [['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Как в системе']].map(x => '<button class="' + (S.theme === x[0] ? 'on' : '') + '" data-a="sth" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div></div><div class="field"><label>Меню слева</label><div class="seg"><button class="' + (!S.collapsed ? 'on' : '') + '" data-a="scol" data-v="0">Развёрнуто</button><button class="' + (S.collapsed ? 'on' : '') + '" data-a="scol" data-v="1">Свёрнуто</button></div></div><p class="mut">Режимы работы переключаются сверху или Alt+1…6. Цвета и шрифты уточним после согласования каркаса.</p></div></div>' +
         '<div class="card"><h2>Подключения</h2><table class="tbl" style="margin-top:6px"><tbody>' + INTEG.map(i => '<tr><td>' + i[0] + '</td><td class="r"><span class="pill ' + (i[1].indexOf('работает') === 0 ? 'ok' : '') + '">' + i[1] + '</span></td></tr>').join('') + '</tbody></table></div>' +
-        '<div class="card"><h2>Данные</h2><p class="mut">Сейчас на экране демонстрационные данные. На этапе 1 включается общая база с телефоном, на этапе 2 импорт «Учёт заказов» с начала 2026 года.</p><button class="btn" data-a="sreset">Сбросить состояние вкладок</button></div>' +
+        '<div class="card"><h2>Данные</h2>' + dataCard() + '</div>' +
         '<div class="card"><h2>Безопасность</h2><p class="mut">Вход: логин и ПИН. Пользователь один (владелец), роли заложены в модель данных. Закуп и прибыль видны только владельцу.</p></div></div>';
     }
   });
   A.act.sth = el => { S.theme = el.dataset.v; A.save(); A.render(); };
   A.act.scol = el => { S.collapsed = el.dataset.v === '1'; A.save(); A.render(); };
+  A.act.dbexp = () => { const u = URL.createObjectURL(new Blob([DB.exportJson()], { type: 'application/json' })), a = document.createElement('a'); a.href = u; a.download = 'jalousie-base-' + new Date().toISOString().slice(0, 10) + '.json'; a.click(); setTimeout(() => URL.revokeObjectURL(u), 1000); };
+  A.act.dbclr = () => { if (!A.S.dbclr) { A.S.dbclr = 1; A.toast('Нажми ещё раз, чтобы удалить базу'); setTimeout(() => { A.S.dbclr = 0; }, 4000); return; } DB.clear(); location.reload(); };
+  document.addEventListener('change', ev => {
+    const f = ev.target && ev.target.dataset && ev.target.dataset.file, file = ev.target && ev.target.files && ev.target.files[0]; if (!f || !file) return;
+    if (f === 'xls') DB.readFile(file).then(d => { DB.apply(d); DB.save(); A.toast('Загружено: заказов ' + d.orders.length); location.reload(); }).catch(x => A.toast('Ошибка: ' + x.message));
+    else { const r = new FileReader(); r.onload = () => { try { DB.importJson(r.result); location.reload(); } catch (x) { A.toast('Ошибка: ' + x.message); } }; r.readAsText(file); }
+  });
   A.act.sreset = () => { try { localStorage.removeItem('jald_state_v1'); } catch (x) {} location.reload(); };
 })();

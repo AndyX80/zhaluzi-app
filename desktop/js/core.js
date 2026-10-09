@@ -53,8 +53,11 @@
 
   const App = { S, D, icon, esc, money, ICONS, WS, NAV, save, mods: {}, act: {}, fld: {} };
   App.module = (id, def) => { App.mods[id] = def; };
-  App.client = id => D.clients.find(c => c.id === id);
-  App.order = id => D.orders.find(o => o.id === id);
+  /* быстрый поиск по id (в реальных данных ~1000 заказов и ~800 клиентов) */
+  const idx = {};
+  const finder = k => id => { const arr = D[k], x = idx[k]; if (!x || x.arr !== arr || x.n !== arr.length) { const m = {}; arr.forEach(r => { m[r.id] = r; }); idx[k] = { arr, n: arr.length, m }; } return idx[k].m[id]; };
+  App.client = finder('clients');
+  App.order = finder('orders');
   const baseOf = id => id.indexOf(':') > 0 ? (id.indexOf('order:') === 0 ? 'orders' : 'clients') : id;
 
   const tabTitle = id => {
@@ -99,7 +102,7 @@
     const cur = baseOf(S.active);
     document.getElementById('side').innerHTML = NAV.map(n =>
       '<button class="ni' + (cur === n[0] ? ' on' : '') + '" data-a="nav" data-id="' + n[0] + '" title="' + n[1] + '">' + icon(n[0], 21) + '<span>' + n[1] + '</span></button>').join('') +
-      '<div class="sp"></div><div class="ver">каркас v1<br>данные демо</div>';
+      '<div class="sp"></div><div class="ver">' + (D.real ? 'версия 2<br>ваши данные' : 'каркас v1<br>данные демо') + '</div>';
     document.getElementById('app').classList.toggle('collapsed', !!S.collapsed);
   }
 
@@ -110,9 +113,15 @@
   }
 
   function renderBar() {
-    const debts = D.orders.filter(x => x.sum - x.paid > 0 && x.stage >= 3 && x.stage < 9);
-    const items = ['<b>Сегодня:</b>', '10:00 замер Иванова', '14:00 монтаж Альфа-Офис'].concat(debts.slice(0, 2).map(x => 'долг ' + esc(App.client(x.client).name) + ' ' + money(x.sum - x.paid)));
-    document.getElementById('bar').innerHTML = items.map(t => '<span class="chip">' + t + '</span>').join('') + '<span class="sp"></span><span class="hint">Alt+1…6 режимы · / поиск · данные демонстрационные</span>';
+    let items;
+    if (D.real) {
+      const debts = D.orders.filter(x => x.sum - x.paid > 0), tot = debts.reduce((a, x) => a + x.sum - x.paid, 0), top = debts.slice().sort((x, y) => (y.sum - y.paid) - (x.sum - x.paid)).slice(0, 2);
+      items = ['<b>Долги клиентов:</b> ' + debts.length + ' зак. на ' + money(tot)].concat(top.map(x => '№ ' + x.no + ' ' + esc((App.client(x.client) || {}).name) + ' ' + money(x.sum - x.paid)));
+    } else {
+      const debts = D.orders.filter(x => x.sum - x.paid > 0 && x.stage >= 3 && x.stage < 9);
+      items = ['<b>Сегодня:</b>', '10:00 замер Иванова', '14:00 монтаж Альфа-Офис'].concat(debts.slice(0, 2).map(x => 'долг ' + esc(App.client(x.client).name) + ' ' + money(x.sum - x.paid)));
+    }
+    document.getElementById('bar').innerHTML = items.map(t => '<span class="chip">' + t + '</span>').join('') + '<span class="sp"></span><span class="hint">Alt+1…6 режимы · / поиск · ' + (D.real ? 'данные из вашего Excel' : 'данные демо') + '</span>';
   }
 
   App.render = () => {
@@ -155,7 +164,7 @@
   };
   App.act.collapse = () => { S.collapsed = !S.collapsed; save(); renderSide(); };
   App.act.theme = () => { S.theme = S.theme === 'light' ? 'dark' : S.theme === 'dark' ? 'auto' : 'light'; save(); App.render(); App.toast('Тема: ' + ({ light: 'светлая', dark: 'тёмная', auto: 'как в системе' })[S.theme]); };
-  App.act.bell = (el, e) => { e.stopPropagation(); popAt(el, '<div class="ph">Напоминания</div><div class="pi">Позвонить Петрову по КП 1325</div><div class="pi">Альфа-Офис: остаток 59 200 ₽ после монтажа</div><div class="pi">Рекламация 1321: ответить поставщику</div>', 'right'); };
+  App.act.bell = (el, e) => { e.stopPropagation(); const at = App.attention ? App.attention().slice(0, 5) : []; popAt(el, '<div class="ph">Напоминания</div>' + (at.length ? at.map(x => '<button class="pm" data-a="opn" data-id="' + x[0] + '"><b>' + esc(x[2]) + '</b></button>').join('') : '<div class="pi">Пока всё спокойно</div>'), 'right'); };
   App.act.modes = (el, e) => { e.stopPropagation(); popAt(el, '<div class="ph">Режим работы</div>' + WS.map((w, i) => '<button class="pm" data-a="nav" data-id="' + w.id + '"><b>' + w.name + '</b><small>' + w.hint + '</small><kbd>Alt+' + (i + 1) + '</kbd></button>').join('') + '<div class="pf">Режим меняет раскладку под задачу. Данные, выбранный клиент и заказ остаются.</div>'); };
   App.act['new-order'] = () => App.open('calc');
   App.act['new-client'] = () => App.stub('карточка нового клиента');
@@ -175,8 +184,8 @@
   document.addEventListener('input', e => {
     if (e.target.id !== 'q') return;
     const v = e.target.value.trim().toLowerCase(); if (!v) { closePop(); return; }
-    const cs = D.clients.filter(c => (c.name + ' ' + c.phone + ' ' + c.phone.replace(/\D/g, '') + ' ' + c.addr).toLowerCase().indexOf(v) >= 0);
-    const os = D.orders.filter(o => (o.no + ' ' + o.title + ' ' + App.client(o.client).name).toLowerCase().indexOf(v) >= 0);
+    const cs = D.clients.filter(c => (c.name + ' ' + c.phone + ' ' + c.phone.replace(/\D/g, '') + ' ' + c.addr).toLowerCase().indexOf(v) >= 0).slice(0, 12);
+    const os = D.orders.filter(o => (o.no + ' ' + o.title + ' ' + o.sup + ' ' + (o.factory || '') + ' ' + App.client(o.client).name).toLowerCase().indexOf(v) >= 0).slice(0, 15);
     let h = '<div class="ph">Найдено: ' + (cs.length + os.length) + '</div>';
     h += cs.map(c => '<button class="pm" data-a="opn" data-id="client:' + c.id + '"><b>' + esc(c.name) + '</b><small>' + esc(c.phone) + ' · клиент</small></button>').join('');
     h += os.map(o => '<button class="pm" data-a="opn" data-id="order:' + o.id + '"><b>№ ' + o.no + ' · ' + esc(App.client(o.client).name) + '</b><small>' + esc(o.title) + '</small></button>').join('');
@@ -186,6 +195,8 @@
   });
 
   App.start = () => {
+    if (!App.order(S.selOrder) && D.orders[0]) S.selOrder = D.orders[0].id;
+    if (!App.client(S.selClient) && D.clients[0]) S.selClient = D.clients[0].id;
     S.tabs = S.tabs.filter(t => App.mods[baseOf(t.id)] && (t.id.indexOf(':') > 0 ? (t.id.indexOf('order:') === 0 ? App.order(t.id.slice(6)) : App.client(t.id.slice(7))) : true));
     const mod = S.tabs.filter(t => t.id.indexOf(':') < 0)[0] || { id: 'home' };
     S.tabs = [mod].concat(S.tabs.filter(t => t.id.indexOf(':') > 0));
