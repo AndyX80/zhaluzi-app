@@ -142,7 +142,7 @@
       '<div class="sumbar" style="grid-template-columns:repeat(' + (hide ? 2 : 4) + ',1fr)"><div><small>Сумма без скидки</small><b>' + m(FF.total) + '</b></div><div><small>Итого' + (FF.discAmt ? ' (скидка −' + m(FF.discAmt) + ')' : '') + '</small><b style="color:var(--acc)">' + m(FF.netTotal) + '</b></div>' +
       (hide ? '' : '<div><small>Закуп (оценка)</small><b>' + m(Math.max(0, cost)) + '</b></div><div><small>Прибыль</small><b' + (netProf < 0 ? ' style="color:var(--bad,#d33)"' : '') + '>' + m(netProf) + '</b></div>') + '</div>' +
       (O.open ? checkout() : '') +
-      '<div class="row wrap" style="margin-top:14px"><button class="btn" data-a="stub" data-t="КП">КП</button><button class="btn" data-a="stub" data-t="три варианта КП">КП: три варианта</button><button class="btn" data-a="stub" data-t="замерный лист">Замерник</button><button class="btn" data-a="stub" data-t="договор">Договор</button><span class="sp"></span>' +
+      '<div class="row wrap" style="margin-top:14px"><button class="btn" data-a="cdoc" data-fn="kpHtml">КП</button><button class="btn" data-a="cdoc" data-fn="kpVarHtml">КП: три варианта</button><button class="btn" data-a="cdoc" data-fn="zamernikHtml">Замерник</button><button class="btn" data-a="cdoc" data-fn="dogovorHtml">Договор</button><span class="sp"></span>' +
       '<button class="btn" data-a="cclear">Очистить</button><button class="btn pri" data-a="cord">' + (O.open ? 'Сохранить заказ' : C.editNo ? 'Сохранить в заказ № ' + e(C.editNo) : 'Оформить заказ') + '</button></div></div>';
   }
   function checkout() {

@@ -1,11 +1,11 @@
 /* Документы, Справочники, Настройки */
 (function () {
   const D = window.DEMO, A = App, S = A.S, e = A.esc;
-  const DOCS = [['Коммерческое предложение (КП)', 'phone', 'Перенос из телефона'], ['КП: три варианта', 'phone', 'Перенос из телефона'], ['Замерный лист', 'phone', 'Перенос из телефона'], ['Договор и приложение', 'phone', 'Перенос из телефона'],
+  const DOCS = [['Коммерческое предложение (КП)', 'phone', 'Открывается по последнему заказу, а нужный заказ выбирай во вкладке «Документы» заказа', 'kpHtml'], ['КП: три варианта', 'phone', 'Открывается по последнему заказу, а нужный заказ выбирай во вкладке «Документы» заказа', 'kpVarHtml'], ['Замерный лист', 'phone', 'Открывается по последнему заказу, а нужный заказ выбирай во вкладке «Документы» заказа', 'zamernikHtml'], ['Договор и приложение', 'phone', 'Открывается по последнему заказу, а нужный заказ выбирай во вкладке «Документы» заказа', 'dogovorHtml'],
     ['Счёт на оплату', 'later', 'Позже, с передачей в Эльбу'], ['УПД', 'later', 'Позже, с передачей в Эльбу и Диадок'], ['Акт', 'later', 'Редко нужен'], ['Гарантийный талон', 'later', 'Редко нужен'], ['Отчёт за месяц', 'later', 'Как ваш дашборд в разрезе месяца'], ['Заказ поставщику (шпаргалка)', 'later', 'Позиции для ввода в кабинете поставщика']];
   A.module('docs', {
     render() {
-      return '<div class="head"><h1>Документы</h1><div class="sp"></div><span class="pill">шаблоны</span></div><div class="card p0"><table class="tbl"><thead><tr><th>Документ</th><th>Статус</th><th>Примечание</th><th></th></tr></thead><tbody>' + DOCS.map(d => '<tr><td class="b">' + d[0] + '</td><td><span class="pill ' + (d[1] === 'phone' ? 'ok' : '') + '">' + (d[1] === 'phone' ? 'есть в телефоне' : 'в планах') + '</span></td><td class="mut">' + d[2] + '</td><td class="r"><button class="btn sm" data-a="stub" data-t="шаблон документа">Открыть</button></td></tr>').join('') + '</tbody></table></div>';
+      return '<div class="head"><h1>Документы</h1><div class="sp"></div><span class="pill">шаблоны</span></div><div class="card p0"><table class="tbl"><thead><tr><th>Документ</th><th>Статус</th><th>Примечание</th><th></th></tr></thead><tbody>' + DOCS.map(d => '<tr><td class="b">' + d[0] + '</td><td><span class="pill ' + (d[1] === 'phone' ? 'ok' : '') + '">' + (d[1] === 'phone' ? 'готово' : 'в планах') + '</span></td><td class="mut">' + d[2] + '</td><td class="r"><button class="btn sm" data-a="' + (d[3] ? 'dtop' : 'stub') + '" data-fn="' + (d[3] || '') + '" data-t="шаблон документа">Открыть</button></td></tr>').join('') + '</tbody></table></div>';
     }
   });
   const SUP = [['Амиго', 'Стандарт', 'Основной поставщик', 'тайваньская'], ['Интерьер', 'Классик', '', 'голландская'], ['РДО', 'Урбан', '', 'тайваньская'], ['Форум', 'Тренд', 'доставка бесплатно', 'голландская'], ['Уют', 'Премиум', 'доставка бесплатно', 'голландская'], ['ТСК', '—', 'другие товары', ''], ['Павел м/с', '—', 'москитные сетки', '']];
@@ -21,6 +21,11 @@
       return '<div class="head"><h1>Справочники</h1></div><div class="card"><div class="itabs">' + tabs.map(x => '<button class="' + (t === x[0] ? 'on' : '') + '" data-a="rtab" data-t="' + x[0] + '">' + x[1] + '</button>').join('') + '</div>' + b + '</div>';
     }
   });
+  A.act.dtop = el => {
+    const r = DB.raw().filter(x => !x.legacy && !x.del && (x.items || []).length).sort((a, b) => String(b.created || '').localeCompare(String(a.created || '')))[0];
+    if (!r) { A.toast('Пока нет заказов с изделиями: оформи заказ в «Расчёте»'); return; }
+    A.S.selOrder = 'ph' + r.uid; A.S.orderTab = 'docs'; A.save(); A.open('orders');
+  };
   A.act.rtab = el => { S.refTab = el.dataset.t; A.save(); A.render(); };
 
   const INTEG = [['Google Таблицы (цены)', 'работает в телефоне'], ['Google Calendar', 'этап 2'], ['Эльба (Контур)', 'этап 3'], ['Диадок', 'этап 3'], ['Почта (письма клиентам)', 'работает в телефоне'], ['Telegram, MAX', 'отправка документов, этап 1']];

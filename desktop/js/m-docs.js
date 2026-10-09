@@ -43,18 +43,38 @@
     }
     return ov;
   }
-  async function open(fn, uid) {
-    const r = rec(uid); if (!r) return;
-    if (!(r.items || []).length) { A.toast('В заказе нет изделий'); return; }
+  async function show(fn, o, title) {
     A.toast('Готовлю документ…');
-    try { await Promise.all([load(), docLibs()]); } catch (x) { A.toast('Не удалось загрузить: ' + x.message); return; }
-    const sig = await sigs(), o = orderOf(r);
-    cur = { fn, uid, o, sig };
-    const ov = overlay(); ov.hidden = false; document.getElementById('docttl').textContent = NAMES[fn] + ' № ' + r.no;
-    document.body.classList.add('docopen');
-    JalDocScreens.show(fn, o, sig);
-    if (!sig.sign || !sig.stamp) A.toast('Подписи или печати на Диске не нашёл: документ без них');
+    try {
+      await Promise.all([load(), docLibs()]);
+      const sig = await sigs();
+      cur = { fn, o, sig };
+      const ov = overlay(); ov.hidden = false; document.getElementById('docttl').textContent = NAMES[fn] + ' № ' + (title || o.no);
+      document.body.classList.add('docopen');
+      JalDocScreens.show(fn, o, sig);
+      if (!sig.sign || !sig.stamp) A.toast('Подписи или печати на Диске не нашёл: документ без них');
+    } catch (x) { cur = null; A.toast('Документ не открылся: ' + (x && x.message || x)); try { console.error(x); } catch (y) {} }
   }
+  function open(fn, uid) {
+    const r = rec(uid); if (!r) { A.toast('Заказ не найден'); return; }
+    if (!(r.items || []).length) { A.toast('В заказе нет изделий'); return; }
+    return show(fn, orderOf(r));
+  }
+  /* КП из корзины без оформления (как на телефоне); замерник и договор требуют сохранённого заказа */
+  A.cartDoc = fn => {
+    const J = JC(), C = J.C;
+    if (!C.cart.length) { A.toast('Корзина пуста'); return; }
+    if (fn === 'kpHtml' || fn === 'kpVarHtml') {
+      const co = J.toOrder(); if (!co.items.length) { A.toast('В корзине нет изделий с ценой'); return; }
+      return show(fn, Object.assign({ no: '—', created: new Date().toISOString(), name: '', pre: '100', preU: '%', term: '12', cart: J.snapshot() }, co), 'черновик');
+    }
+    const r = C.editNo && DB.raw().find(x => String(x.no) === String(C.editNo) && !x.del && !x.legacy);
+    if (r) { A.toast('Документ по сохранённому заказу № ' + r.no + '. Если менял состав, сначала нажми «Сохранить в заказ»'); return open(fn, r.uid); }
+    A.toast('Для замерника и договора сначала оформи заказ: впиши клиента и нажми «Сохранить заказ»'); A.act.cord();
+  };
+  const JC = () => window.JalCart;
+  A.act.cdoc = el => A.cartDoc(el.dataset.fn);
+
   /* docs.js/docscreens.js/export.js подключены в index.html; здесь только проверка */
   const docLibs = () => window.JalDocScreens && window.JalExport && window.JalTpl ? Promise.resolve() : Promise.reject(new Error('модули документов не загружены'));
 
@@ -71,6 +91,7 @@
 
   /* вкладка «Документы» в карточке заказа телефонного формата */
   const BUY = [['физ', 'Физ. лицо'], ['юр', 'Юр. лицо'], ['ип', 'ИП']];
+  A.docsLegacy = o => '<div class="callout info"><b>Документы по этому заказу собрать нельзя.</b><br>Он из Excel-учёта, состава изделий там нет. Новые заказы оформляй в «Расчёте»: из них КП, замерник и договор собираются сами.</div><div class="row" style="margin-top:12px"><button class="btn pri" data-a="nav" data-id="calc">Открыть расчёт</button></div>';
   A.docsTab = function (o) {
     const r = rec(o.uid); if (!r) return '<div class="mut">Запись не найдена.</div>';
     const f = (k, label, ph) => '<div class="field"><label>' + label + '</label><input class="in" value="' + e(r[k] == null ? '' : r[k]) + '" placeholder="' + (ph || '') + '" data-c="odoc" data-k="' + k + '" data-uid="' + r.uid + '"></div>';
