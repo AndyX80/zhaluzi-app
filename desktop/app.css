@@ -181,3 +181,7 @@ button.ul.sel .ph{color:var(--bad)}.sm{font-size:12px}
 .colpop .in::placeholder{color:var(--mut);font-weight:500}
 .coli{font-weight:500;font-size:13.5px}.coli b{font-weight:700}
 .ln{font-weight:700}
+/* v21.2 шрифт списка цветов тоньше */
+.colpop .in{font-weight:400;font-size:14px}.colpop .in::placeholder{font-weight:300}
+.coli{font-weight:300;font-size:13.5px}.coli b{font-weight:500}.coli .mut{font-weight:300}
+.ln{font-weight:500}
