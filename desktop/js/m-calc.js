@@ -66,19 +66,16 @@
   const kindName = (it, c) => it.kind === 'custom' ? { title: it.title || 'Услуга', sub: 'своя строка' } : { title: COLLN()[it.sup] + ' (' + ru(it.sup) + ')', sub: (c.auto ? c.auto.name : it.key) + (it.kind === 'drive' ? ' · привод' : ' · пульт') };
 
   const CU = { title: '', price: '', qty: 1, cost: '' };
-  function customPanel() {
-    const p = Math.max(0, +CU.price || 0), q = Math.max(1, +CU.qty || 1), c = CU.cost === '' ? null : Math.max(0, +CU.cost || 0);
-    return '<div class="card"><h2>Своя позиция</h2><div class="mut" style="font-size:13px;margin:4px 0 10px">Любой товар или услуга: название, цена, количество. Доставка и скидка на неё не накручиваются.</div>' +
-      '<div class="field"><label>Название</label><input class="in" value="' + e(CU.title) + '" placeholder="Например: карниз, москитная сетка, монтаж" data-c="cuf" data-k="title"></div>' +
-      '<div class="row wrap" style="margin-top:10px"><div class="field" style="width:150px"><label>Цена за шт, ₽</label><input class="in num" style="text-align:right" value="' + e(CU.price) + '" data-c="cuf" data-k="price"></div>' +
-      '<div class="field" style="width:100px"><label>Кол-во</label><input class="in" type="number" min="1" max="999" value="' + CU.qty + '" data-c="cuf" data-k="qty"></div>' +
-      '<div class="field" style="width:170px"><label>Закуп за шт (необязательно)</label><input class="in num" style="text-align:right" value="' + e(CU.cost) + '" data-c="cuf" data-k="cost"></div></div>' +
-      '<div class="row" style="margin-top:14px"><div><small class="mut">' + (p ? fmt(p) + ' ₽ × ' + q + ' шт' : '') + (c != null && p ? ' · прибыль ' + fmt((p - c) * q) + ' ₽' : '') + '</small><div style="font-size:24px;font-weight:700" class="num">' + m(p * q) + '</div></div><span class="sp"></span>' +
-      '<button class="btn pri" data-a="cuadd" style="height:42px;padding:0 22px;opacity:' + (p > 0 && CU.title.trim() ? 1 : .45) + '">В корзину</button></div></div>';
-  }
+  /* добавление своего товара прямо в корзине */
+  const customRow = () => '<div class="cuadd" style="margin-top:10px;padding:10px;border:1.5px dashed var(--line,#ccc);border-radius:10px"><div class="mut" style="font-size:12px;margin-bottom:6px">Свой товар или услуга: любое название, цена и количество</div>' +
+    '<div class="row wrap" style="gap:8px;align-items:flex-end"><div class="field" style="flex:1;min-width:180px"><label>Название</label><input class="in" value="' + e(CU.title) + '" placeholder="Карниз, москитная сетка, монтаж…" data-c="cuf" data-k="title"></div>' +
+    '<div class="field" style="width:120px"><label>Цена за шт, ₽</label><input class="in num" style="text-align:right" value="' + e(CU.price) + '" data-c="cuf" data-k="price"></div>' +
+    '<div class="field" style="width:70px"><label>Кол-во</label><input class="in" type="number" min="1" max="999" value="' + CU.qty + '" data-c="cuf" data-k="qty"></div>' +
+    '<div class="field" style="width:120px"><label>Закуп за шт</label><input class="in num" style="text-align:right" value="' + e(CU.cost) + '" placeholder="необяз." data-c="cuf" data-k="cost"></div>' +
+    '<button class="btn" data-a="cuadd" style="height:38px">Добавить</button></div></div>';
   function form() {
     const E = window.Eng; if (!E || !E.ready) return form0();
-    return '<div class="seg" style="margin-bottom:10px"><button class="' + (F.mode !== 'auto' ? 'on' : '') + '" data-a="cmode" data-v="blinds">Жалюзи</button><button class="' + (F.mode === 'auto' ? 'on' : '') + '" data-a="cmode" data-v="auto">Автоматика</button><button class="' + (F.mode === 'custom' ? 'on' : '') + '" data-a="cmode" data-v="custom">Своя позиция</button></div>' + (F.mode === 'auto' ? autoPanel() : F.mode === 'custom' ? customPanel() : form0());
+    return '<div class="seg" style="margin-bottom:10px"><button class="' + (F.mode !== 'auto' ? 'on' : '') + '" data-a="cmode" data-v="blinds">Жалюзи</button><button class="' + (F.mode === 'auto' ? 'on' : '') + '" data-a="cmode" data-v="auto">Автоматика</button></div>' + (F.mode === 'auto' ? autoPanel() : form0());
   }
   function form0() {
     const E = window.Eng; if (!E || !E.ready) return '<div class="card"><h2>Текущее изделие</h2>' + pricesBar() + '<div class="empty">Загрузи цены, и расчёт заработает.</div></div>';
@@ -145,6 +142,7 @@
           '<td class="r">' + (it.kind ? (c.ok ? m(lineUnit) : '<span class="mut">нет цены</span>') : c.ok ? '<input class="in num" style="width:96px;text-align:right' + (c.ownPrice ? ';border-color:var(--acc)' : '') + '" value="' + (c.ownPrice ? Math.round(c.unit) : '') + '" placeholder="' + Math.round(lineUnit) + '" data-c="cprice" data-i="' + i + '" title="' + (c.ownPrice ? 'своя цена, по прайсу было ' + fmt(c.listUnit) : 'впиши свою цену за шт') + '">' : '<span class="mut">нет цены</span>') + '</td>' +
           '<td class="r num b">' + (c.ok ? m(FF.lineSum[i]) : '—') + '</td><td class="r" style="white-space:nowrap">' + (it.kind ? '' : '<button class="btn sm" data-a="cedit" data-i="' + i + '">Изм.</button> <button class="btn sm" data-a="cdup" data-i="' + i + '">Копия</button> ') + '<button class="btn sm" data-a="cdel" data-i="' + i + '">✕</button></td></tr>'; }).join('') + '</tbody></table>' :
         '<div class="empty" style="padding:30px">Корзина пуста. Соберите изделие слева и нажмите «В корзину».</div>') +
+      customRow() +
       autoErrors(FF).map(t => '<div class="callout bad" style="margin-top:8px;font-size:13px">' + e(t) + '</div>').join('') +
       '<div class="stack" style="gap:10px;margin-top:14px">' +
       (C.region ? '<div class="field"><label>Адрес ПВЗ и транспортная компания</label><textarea class="in" rows="2" data-c="cpvz" placeholder="Например: СДЭК, Казань, ул. Баумана 1, ПВЗ KZN12">' + e(C.pvz || '') + '</textarea></div><div class="mut" style="font-size:12px">В опте доставка и монтаж в стоимость заказа не входят.</div>' :
@@ -194,7 +192,8 @@
   A.act.cclear = () => { JC().clear(); O.open = false; rr(); };
   A.act.cocancel = () => { O.open = false; rr(); };
   const load = (it, edit) => { Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
-  A.fld.cuf = (v, el) => { const k = el.dataset.k; CU[k] = k === 'qty' ? Math.max(1, Math.min(999, Math.round(+v) || 1)) : v; rr(); };
+  A.fld.cuf = (v, el) => { const k = el.dataset.k; CU[k] = k === 'qty' ? Math.max(1, Math.min(999, Math.round(+v) || 1)) : v; };
+  document.addEventListener('keydown', ev => { const el = ev.target; if (ev.key === 'Enter' && el.dataset && el.dataset.c === 'cuf') { A.fld.cuf(el.value, el); A.act.cuadd(); } });
   A.act.cuadd = () => {
     const p = Math.round(+String(CU.price).replace(/\s/g, '') || 0);
     if (!CU.title.trim()) { A.toast('Впиши название'); return; }
