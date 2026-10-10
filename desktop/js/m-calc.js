@@ -148,7 +148,7 @@
   /* ===== рулонные шторы Амиго: система, ткань, размер, управление, опции по группам ===== */
   const RJ = () => window.JalRolo;
   const RM = () => R.v ? 'vert' : R.z ? 'zebra' : 'rolo';
-  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.v ? 'Вертикальные' : R.z ? 'Зебра' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, w: +R.w || 0, h: +R.h || 0, ctrl: R.v ? (R.vf && R.vf.side === 'R' ? 'R' : 'L') : R.ctrl, vf: R.v ? Object.assign(VF0(), R.vf) : undefined, sel: R.sel, flags: R.flags, tubeLock: !!R.tubeLock });
+  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.v ? 'Вертикальные' : R.z ? 'Зебра' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, w: +R.w || 0, h: +R.h || 0, ctrl: R.v ? (R.vf && R.vf.side === 'R' ? 'R' : 'L') : R.ctrl, vf: R.v ? Object.assign(VF0(), R.vf) : undefined, sel: R.sel, flags: R.v ? Object.assign({}, R.flags, { 'Металлическая фурнитура': !!R.vf && R.vf.chain === 'Металл', 'Прозрачная комплектация': !!R.vf && R.vf.chain === 'Прозрачная' }) : R.flags, tubeLock: !!R.tubeLock });
   function normRolo() {
     const J = RJ(), sy = J.systems(RM()); if (!sy.some(x => x.code === R.sys)) R.sys = sy.length ? sy[0].code : '';
     { const fb = R.fab && J.fabOf(R.fab), sv = J.sysOf(R.sys); if (R.fab && (!fb || (fb.m || (fb.z ? 'zebra' : 'rolo')) !== RM() || (R.v && sv && fb.vt !== sv.vt))) R.fab = ''; }
@@ -182,12 +182,12 @@
       const vf = R.vf = Object.assign(VF0(), R.vf || {}), sel = (k, lab, opts) => '<div class="fld"><label>' + lab + '</label><select class="ul" data-c="vf" data-k="' + k + '">' + opts.map(o => '<option value="' + e(o[0]) + '"' + (vf[k] === o[0] ? ' selected' : '') + '>' + e(o[1]) + '</option>').join('') + '</select></div>';
       h += '<div class="fgrid">' + sel('side', 'Управление', [['', 'не выбрано'], ['L', 'левое'], ['R', 'правое']]) +
         '<div class="fld"><label>Длина управления, мм</label><input class="ul num" type="number" min="0" data-c="vf" data-k="len" value="' + e(vf.len) + '" placeholder="' + (+R.h ? Math.max(0, +R.h - 500) : 'высота − 500') + '"></div>' +
-        sel('chain', 'Тип цепочки управления', [['Пластиковая', 'пластиковая'], ['Металл', 'металл'], ['Прозрачная', 'прозрачная']]) +
+        sel('chain', 'Тип цепочки управления', [['Пластиковая', 'пластиковая'], ['Металл', 'металл (+10,17 $/кв.м)'], ['Прозрачная', 'прозрачная (+1,98 $)']]) +
         sel('ceil', 'Тип потолочного кронштейна', [['Обычный', 'обычный'], ['Армстронг', 'армстронг'], ['Не класть', 'не класть']]) +
         sel('ctype', 'Тип управления', [['К управлению', 'к управлению'], ['От управления', 'от управления'], ['От центра', 'от центра'], ['К центру', 'к центру']]) +
         sel('wall', 'Тип стенового кронштейна', [['7,5 см', '7,5 см'], ['10 см', '10 см'], ['Не класть', 'не класть']]) + '</div>';
     } else     h += '<div class="fld"><label>Управление</label><div class="ctrls">' + [['L', 'цепочка слева'], ['R', 'цепочка справа']].map(k => '<button class="ctr ' + (R.ctrl === k[0] ? 'on' : '') + '" data-a="rf" data-k="ctrl" data-v="' + k[0] + '">' + ctrlSvg(50, k[0], true, 52) + '<span>' + k[1] + '</span></button>').join('') + '</div></div>';
-    const choice = n.groups.filter(g => g.type === 'choice' && g.items.length > 1), flags = n.groups.filter(g => g.type === 'flag');
+    const choice = n.groups.filter(g => g.type === 'choice' && g.items.length > 1), flags = n.groups.filter(g => g.type === 'flag' && !(R.v && /^(Металлическая фурнитура|Прозрачная комплектация)$/.test(g.name)));
     if (choice.length) h += '<div class="fgrid ropts">' + choice.map(g => '<div class="fld"><label>' + e(g.name) + '</label><select class="ul" data-c="ropt" data-k="' + e(g.name) + '">' + g.items.map(x => '<option value="' + e(x.value) + '"' + (R.sel[g.name] === x.value ? ' selected' : '') + '>' + e(x.value + (R.sel[g.name] === x.value ? '' : delta(g, x.value))) + '</option>').join('') + '</select></div>').join('') + '</div>';
     if (flags.length) h += '<div class="fld"><label>Дополнительно</label><div class="ochips">' + flags.map(g => '<button class="oc ' + (R.flags[g.name] ? 'on' : '') + '" data-a="rflag" data-v="' + e(g.name) + '">' + e(g.name) + (r.ok && R.flags[g.name] && r.optP[g.name] ? ' +' + fmt(r.optP[g.name]) : (R.flags[g.name] ? '' : delta(g))) + '</button>').join('') + '</div></div>';
     let st = '';

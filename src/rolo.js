@@ -322,7 +322,7 @@
   function describe(it, c) {
     const s = sysOf(it.sys), f = fabOf(it.fab), o = opts(it), parts = [];
     groupsOf(it.sys).forEach(g => {
-      if (g.type === 'flag') { if (o.flags[g.name]) parts.push(g.name.toLowerCase()); return; }
+      if (g.type === 'flag') { if (o.flags[g.name] && !(it.vf && /^(металлическая фурнитура|прозрачная комплектация)$/.test(g.name.toLowerCase()))) parts.push(g.name.toLowerCase()); return; }
       const d = g.items.find(x => x.def) || g.items[0]; if (o.sel[g.name] !== d.value) parts.push(g.name.toLowerCase() + ': ' + o.sel[g.name].toLowerCase());
     });
     const fc = o.sel['Цвет фурнитуры'];
