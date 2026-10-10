@@ -178,7 +178,7 @@
     if (flags.length) h += '<div class="fld"><label>Дополнительно</label><div class="ochips">' + flags.map(g => '<button class="oc ' + (R.flags[g.name] ? 'on' : '') + '" data-a="rflag" data-v="' + e(g.name) + '">' + e(g.name) + (r.ok && R.flags[g.name] && r.optP[g.name] ? ' +' + fmt(r.optP[g.name]) : (R.flags[g.name] ? '' : delta(g))) + '</button>').join('') + '</div></div>';
     let st = '';
     if (+R.w > 0 && +R.h > 0 && f) st = '<div class="fnote ' + (r.ok && !r.warn.length ? 'ok' : 'bad') + '">' + (!r.ok ? e(r.msg) : r.warn.length ? '<b>НЕ ГАРАНТ.: </b>' + e(r.warn.join('; ')) : 'Размеры в пределах прайса (считаем по сетке ' + Math.round(r.gridW * 1000) + '×' + Math.round(r.gridH * 1000) + ' мм)') + '</div>';
-    if (r.ok) st += '<div class="fnote"><b>Срок:</b> ' + r.termDays + ' дн (завод ' + r.term + ' + ' + (r.termDays - r.term) + ' на выходные и доставку)</div>';
+    if (r.ok) st += '<div class="fnote"><b>Срок:</b> ' + r.termDays + ' дней</div>';
     if (own && r.ok && showProfit && unit < r.cost) st += '<div class="fnote bad">Ниже закупа: убыток ' + m((r.cost - unit) * qty) + ' на позицию.</div>';
     h += '<div class="fnotes">' + st + '</div></div>';
     h += '<div class="ffoot"><button class="coin ' + (showProfit ? 'on' : '') + '" data-a="chide" title="' + (showProfit ? 'Закуп и прибыль показаны' : 'Показать закуп и прибыль') + '">' + A.icon('coin', 22) + '</button>' +
