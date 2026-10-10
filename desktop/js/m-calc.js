@@ -304,7 +304,7 @@
       else if (cur.matches && cur.matches('[data-a=cauto]') && !F.autoOpen) { F.autoOpen = true; rr(); }
     }, 0);
   });
-  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo' || v === 'zebra') { const z = v === 'zebra'; if (v === 'zebra' || v === 'rolo') { if (R.z !== z) { R.sys = ''; R.fab = ''; } R.z = z; } F.mode = z ? 'rolo' : v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); } };
+  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo' || v === 'zebra') { const z = v === 'zebra'; if (v === 'zebra' || v === 'rolo') { if (R.z !== z) { R.sys = ''; R.fab = ''; } R.z = z; } F.mode = z ? 'rolo' : v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); if (z && !J.systems(true).length) A.act.cprices(); } };
   A.fld.ctype = v => { const p = String(v).split('|'); F.mat = p[0]; F.lam = +p[1]; F.color = ''; F.colOpen = false; rr(); };
   A.fld.csup = v => { F.sup = v; Object.assign(F, { lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {}, colOpen: false }); rr(); };
   A.fld.cfix = v => { F.fix = v; rr(); };
