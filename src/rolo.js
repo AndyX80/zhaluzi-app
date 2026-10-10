@@ -5,12 +5,12 @@
   'use strict';
   const ceilTo = (x, s) => Math.ceil(x / s - 1e-9) * s;
   const SUP = 'Amigo';
-  let P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {};
+  let P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {};
 
   const unitOf = u => (u === 'м_шир' || u === 'м_выс' || u === 'м_шов' || u === 'м_цепь') ? u : 'изд';
 
   function setSheets(sh) {
-    ready = false; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {};
+    ready = false; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {};
     if (!sh || !sh['Рулонки_системы'] || !sh['Рулонки_параметры']) return;
     sh['Рулонки_параметры'].slice(1).forEach(r => { if (r[0]) P[r[0]] = r[1]; });
     const par = sh['Параметры'] || []; par.forEach(r => { if (r[0] === 'курс_usd') FX = Number(r[1]) || FX; });
@@ -54,6 +54,11 @@
         const st = L[r[ix('Статус')]]; if (st !== undefined) f.stock = st; const q = r[ix('Остаток_м')]; if (q !== '' && q != null) f.qty = Number(q); });
     }
     FAB.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    /* максимальные высоты намотки ткани по системе (таблицы Амиго «максимальных намоток»), м */
+    [['Рул_намотка', WIND], ['Зебра_намотка', WINDZ]].forEach(([nm, dst]) => {
+      const t = sh[nm]; if (!t || !t.length) return; const hd = t[0].map(String);
+      t.slice(1).forEach(r => { if (!r[0]) return; const o = {}; hd.forEach((k, i) => { if (i > 0 && r[i] !== '' && r[i] != null && !isNaN(Number(r[i]))) o[k] = Number(r[i]); }); dst[String(r[0])] = o; });
+    });
     ready = SYS.length > 0 && FAB.length > 0;
   }
 
@@ -85,6 +90,23 @@
     return { usd, w: g.widths[ci], h: row.h };
   }
 
+  /* максимальная высота (м), на которую смотается ткань в этой системе с выбранной трубой и кронштейном; null = нет данных в таблице */
+  function wind(it) {
+    const s = sysOf(it.sys), f = fabOf(it.fab); if (!s || !f) return null;
+    const z = s.model === 'zebra', T = (z ? WINDZ : WIND)[f.ser]; if (!T) return null;
+    const o = opts(it), num = n => { const m = String(o.sel[n] || '').match(/\d+/); return m ? m[0] : ''; };
+    const c = s.code, base = { 'ROLLA1': 'UNI-1', 'ROLLA2': 'UNI-2', 'Z-ROLLA1': 'Z-UNI1', 'Z-ROLLA2': 'Z-UNI2' }[c] || c;
+    let key = base;
+    if (/^(Z-)?(BNT-M|BNT-L|K-M|K-M\+|K-L)$/.test(c)) {
+      const dbr = { 'K-M': '36', 'K-M+': '45', 'K-L': '51', 'Z-K-M': '36' }[c];
+      key = c + '|' + num('Труба') + '|' + (dbr || num('Кронштейн'));
+    }
+    const max = T[key]; if (max == null) return null;
+    let wl = null;
+    if (z) { const g = /MGS/.test(c) ? T['Шир_MGS_м'] : /BNT|K-M/.test(c) ? T['Шир_BNT_м'] : T['Шир_UNI_MINI_м']; if (g) wl = g; }
+    return { max, key, wlim: wl, th: T['Толщина_мм'] };
+  }
+
   /* длина металлической цепи: высота изделия минус 15 см */
   const chainLen = hMm => Math.max(0, hMm - 150) / 1000;
 
@@ -113,6 +135,9 @@
     const costOpt = Math.round(optUsd * k), profit0 = s.profit;
     const baseRetail = ceilTo(base * s.mk, step), addSum = Object.keys(optP).reduce((a, n) => a + optP[n], 0);
     const unit = baseRetail + addSum, cost = base + costOpt;
+    const wd = wind(it); out.wind = wd;
+    if (wd && wd.max < 6 && H / 1000 > wd.max + 1e-9) out.warn.push('ткань не смотается: для этой системы и ткани максимум ' + Math.floor(wd.max * 100) + ' см, при ' + Math.round(H / 10) + ' см останется висеть около ' + Math.round(H / 10 - wd.max * 100) + ' см');
+    if (wd && wd.wlim && W / 1000 > wd.wlim + 1e-9) out.warn.push('ширина больше гарантированной для этой зебры (' + Math.round(wd.wlim * 100) + ' см)');
     const pw = f.prodW || (f.roll ? f.roll - 10 : 0);
     if (pw && W / 10 > pw && !(o.flags['Сварка ткани'])) out.warn.push('ширина больше рабочей ширины ткани (' + pw + ' см): нужна сварка ткани');
     Object.assign(out, { ok: true, unit, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: profit0, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, gridW: L.w, gridH: L.h, usd: L.usd });
@@ -130,7 +155,7 @@
   }
 
   window.JalRolo = {
-    SUP, setSheets, ready: () => ready, systems: z => z == null ? SYS : SYS.filter(x => x.model === (z ? 'zebra' : 'rolo')), sysOf, fabrics: z => z == null ? FAB : FAB.filter(x => !!x.z === !!z), fabOf, groups: groupsOf, opts, calc, describe,
+    SUP, setSheets, ready: () => ready, systems: z => z == null ? SYS : SYS.filter(x => x.model === (z ? 'zebra' : 'rolo')), sysOf, fabrics: z => z == null ? FAB : FAB.filter(x => !!x.z === !!z), fabOf, groups: groupsOf, opts, calc, describe, wind,
     termFor: it => { const s = sysOf(it.sys); return s ? s.term + (Number(P['срок_добавка_дн']) || 5) : 0; },
     photoUrl: f => (f && f.img ? String(P['фото_адрес'] || 'https://customizer.amigo.ru').replace(/\/$/, '') + f.img : ''),
     param: k => P[k]
