@@ -1,14 +1,112 @@
 /* Документы файлами: PDF (картинка страниц по макету) и Word (редактируемый .docx). Библиотеки лежат в vendor/ и грузятся при первом использовании. */
 (function () {
   'use strict';
-  const V = '?v=56', loaded = {};
+  const V = '?v=58', loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((ok, bad) => { const s = document.createElement('script'); s.src = (window.JAL_ROOT || '') + src + V; s.onload = ok; s.onerror = () => { delete loaded[src]; bad(new Error('Не загрузилась библиотека ' + src + '. Нужен интернет при первом разе.')); }; document.head.appendChild(s); }));
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
   const sigs = () => ({ sign: lsGet('jal_sign'), stamp: lsGet('jal_stamp') });
   const NAMES = { kpHtml: 'КП № {no}', kpVarHtml: 'КП № {no} (3 варианта)', zamernikHtml: 'Замерник № {no}', dogovorHtml: 'Договор № {no}' };
   const baseName = (fn, o) => (NAMES[fn] || 'Документ').replace('{no}', String(o.no || '').replace(/[\\/:*?"<>|]/g, '-'));
 
+  /* PDF с настоящим текстом (его можно править в редакторах PDF): КП, КП на три варианта и договор. Замерник остаётся картинкой: в нём эскизы. */
+  let FONTS = null;
+  async function fonts() {
+    if (FONTS) return FONTS;
+    const get = async n => { const b = new Uint8Array(await (await fetch((window.JAL_ROOT || '') + 'vendor/fonts/' + n + V)).arrayBuffer()); let t = ''; for (let i = 0; i < b.length; i += 0x8000) t += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(t); };
+    FONTS = { r: await get('LS-Regular.ttf'), b: await get('LS-Bold.ttf') }; return FONTS;
+  }
+  const toData = async src => { if (!src) return null; if (/^data:/.test(src)) return src; try { const bl = await (await fetch(src)).blob(); return await new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => ok(null); r.readAsDataURL(bl); }); } catch (e) { return null; } };
+  const imgBox = async src => { const d = await toData(src); if (!d) return null; const inf = await new Promise(ok => { const im = new Image(); im.onload = () => ok({ w: im.naturalWidth, h: im.naturalHeight }); im.onerror = () => ok(null); im.src = d; }); return inf ? { d, w: inf.w, h: inf.h, t: /^data:image\/jpe?g/.test(d) ? 'JPEG' : 'PNG' } : null; };
+
+  async function pdfText(fn, order) {
+    await load('vendor/jspdf.umd.min.js'); const F = await fonts();
+    const sg = sigs(), vm = JalDocScreens.vms[fn](order, sg);
+    const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4', compress: true });
+    doc.addFileToVFS('LS-Regular.ttf', F.r); doc.addFont('LS-Regular.ttf', 'LS', 'normal'); doc.addFileToVFS('LS-Bold.ttf', F.b); doc.addFont('LS-Bold.ttf', 'LS', 'bold');
+    const PW = 595.28, PH = 841.89, M = 42, W = PW - 2 * M, BOT = PH - 50, OR = [241, 120, 15], GR = [110, 110, 110];
+    let y = M;
+    const clean = t => String(t == null ? '' : t).replace(/₽/g, 'руб.').replace(/☑/g, '[x]').replace(/☐/g, '[ ]');
+    const setF = (o) => { doc.setFont('LS', o && o.bold ? 'bold' : 'normal'); doc.setFontSize((o && o.size) || 9.5); doc.setTextColor.apply(doc, (o && o.color) || [26, 26, 26]); };
+    const need = h => { if (y + h > BOT) { doc.addPage(); y = M; } };
+    const para = (t, o) => {
+      o = o || {}; const size = o.size || 9.5, lh = size * 1.32, x = o.x == null ? M : o.x, w = o.w || W; setF(o);
+      const lines = doc.splitTextToSize(clean(t), w); y += o.before || 0;
+      lines.forEach(l => { need(lh); doc.text(l, o.align === 'right' ? x + w : o.align === 'center' ? x + w / 2 : x, y + size, { align: o.align || 'left' }); y += lh; });
+      y += o.gap == null ? 3 : o.gap;
+    };
+    const cellLines = (c, w) => { const o = typeof c === 'object' && c ? c : { t: c }; setF({ bold: o.bold, size: o.size || 8.5 }); const a = doc.splitTextToSize(clean(o.t), w).map(l => ({ l, o })); if (o.sub) { setF({ size: 7.5 }); doc.splitTextToSize(clean(o.sub), w).forEach(l => a.push({ l, o: { size: 7.5, color: GR } })); } return a; };
+    const table = (head, rows, fr, al) => {
+      const ws = fr.map(f => f / fr.reduce((a, b) => a + b, 0) * W), P = 4;
+      const draw = (r, isHead) => {
+        const cl = r.map((c, i) => cellLines(c, ws[i] - 2 * P)), h = Math.max.apply(null, cl.map(a => a.reduce((m, z) => m + (z.o.size || 8.5) * 1.3, 0))) + 2 * P;
+        if (y + h > BOT) { doc.addPage(); y = M; if (!isHead && head) draw(head, true); }
+        let x = M; doc.setDrawColor(190, 190, 190); doc.setLineWidth(0.5);
+        r.forEach((c, i) => { if (isHead) { doc.setFillColor(238, 238, 238); doc.rect(x, y, ws[i], h, 'FD'); } else doc.rect(x, y, ws[i], h);
+          let yy = y + P; cl[i].forEach(z => { const sz = z.o.size || 8.5; setF({ bold: isHead || z.o.bold, size: sz, color: z.o.color }); const right = al && al[i] === 'r'; doc.text(z.l, right ? x + ws[i] - P : x + P, yy + sz, { align: right ? 'right' : 'left' }); yy += sz * 1.3; });
+          x += ws[i]; });
+        y += h;
+      };
+      if (head) draw(head, true); rows.forEach(r => draw(r, false)); y += 4;
+    };
+    const putImg = (b, x, yy, w) => { if (!b) return 0; const h = w * b.h / b.w; doc.addImage(b.d, b.t, x, yy, w, h); return h; };
+    const logo = await imgBox((window.JAL_ROOT || '') + 'assets/logo.png'), sign = await imgBox(sg.sign), stamp = await imgBox(sg.stamp);
+    const sigLine = () => { need(90); para('С уважением, Хорошавин Андрей', { bold: true, before: 8, gap: 2 }); const h1 = putImg(sign, M, y, 100), h2 = putImg(stamp, M + 110, y - 8, 90); y += Math.max(h1, h2, 0) + 6; };
+    const rowsOf = pgs => pgs.reduce((a, p) => a.concat(p.rows || []), []);
+    if (fn === 'kpHtml' || fn === 'kpVarHtml') {
+      const c = vm.c, top = y; const lh = putImg(logo, M, y, 120);
+      setF({ size: 8, color: GR }); [c.phone, c.address, c.site, c.email].forEach((t, i) => doc.text(clean(t), PW - M, top + 9 + i * 11, { align: 'right' })); y = top + Math.max(lh, 48) + 8;
+      para(fn === 'kpVarHtml' ? 'Коммерческое предложение: три варианта' : 'Коммерческое предложение', { size: 18, bold: true, color: OR, align: 'center', gap: 4 });
+      para(vm.date, { size: 8.5, align: 'right', color: GR }); para(vm.intro, { gap: 8 });
+      if (fn === 'kpVarHtml') {
+        table(['№', 'Изделие', 'Шт'].concat(vm.vars.map(v => v.name)), rowsOf(vm.pages).map(r => [r.n, { t: r.name, sub: r.spec }, r.qty].concat(r.sums.map(z => z.v))), [4, 36, 5].concat(vm.vars.map(() => 14)), ['l', 'l', 'l'].concat(vm.vars.map(() => 'r')));
+        need(70); const ws = W / vm.vars.length; let x = M, h = 0;
+        vm.vars.forEach(v => { const a = doc.splitTextToSize(clean(v.about || ''), ws - 14).length; h = Math.max(h, 16 + 14 + a * 11 + 20 + (v.tag.trim() ? 14 : 0)); });
+        vm.vars.forEach(v => { const best = /F1780F/i.test(v.boxStyle); doc.setFillColor.apply(doc, best ? OR : [244, 244, 244]); doc.rect(x + 2, y, ws - 4, h, 'F'); let yy = y + 8; const col = best ? [255, 255, 255] : [26, 26, 26];
+          setF({ bold: true, size: 10, color: col }); doc.text(clean(v.name), x + ws / 2, yy + 9, { align: 'center' }); yy += 16; setF({ size: 8, color: col });
+          doc.splitTextToSize(clean(v.about || ''), ws - 14).forEach(l => { doc.text(l, x + ws / 2, yy + 8, { align: 'center' }); yy += 11; }); yy += 4;
+          setF({ bold: true, size: 12, color: col }); doc.text('ИТОГО ' + clean(v.total), x + ws / 2, yy + 11, { align: 'center' }); yy += 18; if (v.tag.trim()) { setF({ bold: true, size: 8, color: best ? OR : col }); if (best) { doc.setFillColor(255, 255, 255); doc.rect(x + 12, yy, ws - 24, 12, 'F'); } doc.text(clean(v.tag), x + ws / 2, yy + 9, { align: 'center' }); }
+          x += ws; }); y += h + 8;
+      } else {
+        table(['№', 'Наименование', 'Кол-во', 'Цена за шт', 'Сумма'], rowsOf(vm.pages).map(r => [r.n, { t: r.name, sub: r.spec }, r.qty, r.price, r.sum]), [5, 50, 9, 18, 18], ['l', 'l', 'r', 'r', 'r']);
+        para('ИТОГО: ' + vm.total, { size: 14, bold: true, align: 'right', before: 4, gap: 6 });
+      }
+      para('Предложение действует до ' + vm.valid, { bold: true, color: OR, gap: 6 });
+      vm.conds.forEach(b => { para(b.title, { bold: true, color: OR, before: 4, gap: 1 }); b.text.split('\n').forEach(x => para(x, { gap: 1 })); });
+      para('Почему выбирают Жалюзи-СПБ', { bold: true, color: OR, before: 8, gap: 2 }); vm.utp.forEach(u => para('• ' + u, { gap: 1 }));
+      para('Готовы обсудить детали или ответить на вопросы: ' + vm.c.phone + ' или ' + vm.c.site, { bold: true, before: 8 }); para('Надеемся на взаимовыгодное сотрудничество!', { bold: true });
+      sigLine(); para(vm.c.req, { size: 6.5, color: GR });
+    } else if (fn === 'dogovorHtml') {
+      para(vm.title + ' № ' + vm.num, { size: 13, bold: true, align: 'center', gap: 2 });
+      need(16); setF({ size: 9 }); doc.text('г. Санкт-Петербург', M, y + 9); doc.text(clean(vm.dateText), PW - M, y + 9, { align: 'right' }); y += 18;
+      para('Индивидуальный предприниматель Хорошавин Андрей Владимирович, именуемый в дальнейшем «' + vm.role + '», с одной стороны, и ' + vm.buyer + ', именуемый в дальнейшем «Покупатель», с другой стороны, вместе именуемые «Стороны», заключили настоящий Договор о нижеследующем:', { gap: 6 });
+      const sec = a => a.forEach(b => { need(40); para(b.h, { bold: true, before: 6, gap: 2 }); b.t.forEach(t => para(t, { gap: 2 })); });
+      sec(vm.p1);
+      table(['№', 'Наименование', 'Кол-во', 'Цена', 'Сумма'], vm.rows.map(r => [r.n, r.name, r.qty ? r.qty + ' шт.' : '', r.price, r.sum]), [5, 50, 10, 17, 18], ['l', 'l', 'r', 'r', 'r']);
+      para('Итого: ' + vm.totalRub.replace(/ /g, ' ') , { bold: true, align: 'right', gap: 4 });
+      sec(vm.p2); sec(vm.p3);
+      need(200); para('9. РЕКВИЗИТЫ И ПОДПИСИ СТОРОН', { bold: true, before: 10, gap: 4 });
+      const half = (W - 20) / 2, top = y; let yL = y, yR = y;
+      const col = (x, title, lines, who) => { let yy = top; setF({ bold: true, size: 9 }); doc.text(clean(title), x, yy + 9); yy += 16; lines.forEach(l => { setF({ size: 8.5 }); doc.splitTextToSize(clean(l), half).forEach(z => { doc.text(z, x, yy + 8.5); yy += 11; }); }); yy += 18; setF({ size: 8.5 }); doc.text('_______________ / ' + clean(who) + ' /', x, yy + 8.5); return yy + 14; };
+      yL = col(M, vm.role, vm.seller, 'Хорошавин А.В.'); yR = col(M + half + 20, 'Покупатель', vm.buyerReq, vm.buyerShort);
+      y = Math.max(yL, yR); if (sign || stamp) { const h1 = putImg(sign, M + 6, yL - 56, 80), h2 = putImg(stamp, M + 70, yL - 74, 80); }
+      y += 4; para('Приложение № 1: замерный лист (бланк заказа) № ' + vm.num + ' (следующие страницы).', { size: 8, color: GR });
+    }
+    const n = doc.getNumberOfPages(); for (let i = 1; i <= n; i++) { doc.setPage(i); setF({ size: 7.5, color: GR }); doc.text('Стр. ' + i + ' из ' + n, PW / 2, PH - 24, { align: 'center' }); }
+    if (fn === 'dogovorHtml') await addImagePages(doc, 'zamernikHtml', order);
+    doc.setProperties({ title: baseName(fn, order), author: 'Жалюзи-СПБ' });
+    return new File([doc.output('blob')], baseName(fn, order) + '.pdf', { type: 'application/pdf' });
+  }
+  async function addImagePages(doc, fn, order) {
+    await load('vendor/html2canvas.min.js');
+    const pg = await JalDocScreens.pagesOff(fn, order, sigs());
+    try { for (let i = 0; i < pg.els.length; i++) { const c = await window.html2canvas(pg.els[i], { scale: 3, backgroundColor: '#ffffff', useCORS: true, logging: false }); doc.addPage(); doc.addImage(c.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 595.28, 841.89); } } finally { pg.done(); }
+  }
+
   async function pdf(fn, order) {
+    if (fn !== 'zamernikHtml') { try { return await pdfText(fn, order); } catch (e) { console.error('PDF с текстом не вышел, делаю картинкой', e); } }
+    return pdfImage(fn, order);
+  }
+  async function pdfImage(fn, order) {
     await Promise.all([load('vendor/html2canvas.min.js'), load('vendor/jspdf.umd.min.js')]);
     const pg = await JalDocScreens.pagesOff(fn, order, sigs());
     try {

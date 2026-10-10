@@ -69,7 +69,7 @@
       const r0 = C.editNo && DB.byKey(C.editNo), O = A.calcO ? A.calcO() : null, live = O && (O.open || O.fresh || !r0), src = live ? O : (r0 || O || {});
       const yur = live && O.ct === 'yur', cl = live ? ((yur ? O.repr.trim() || O.company.trim() : O.name.trim()) || '') : (r0 && (r0.name || r0.company) || '');
       const ph = [src.phone, src.phone2].filter(Boolean).join(', ');
-      return show(fn, Object.assign({ no: r0 && r0.no || '—', created: new Date().toISOString(), name: cl, phone: ph, email: src.email || '', addr: src.addr || '', pre: src.pre === '' || src.pre == null ? '100' : src.pre, preU: src.preU || '%', term: src.term || '12', cart: J.snapshot() }, co), r0 && r0.no ? undefined : 'просчёт');
+      return show(fn, Object.assign({ no: r0 && r0.no || '—', created: new Date().toISOString(), name: cl, phone: ph, email: src.email || '', addr: src.addr || '', pre: src.pre === '' || src.pre == null ? '100' : src.pre, preU: src.preU || '%', term: src.term || '12', selfMeas: src.selfMeas, cart: J.snapshot() }, co), r0 && r0.no ? undefined : 'просчёт');
     }
     const r = C.editNo && DB.byKey(C.editNo);
     if (r) { A.toast('Документ по сохранённому заказу' + (r.no ? ' № ' + r.no : '') + '. Если менял состав, сначала нажми «Сохранить в заказ»'); return open(fn, r.uid); }
@@ -100,12 +100,12 @@
   A.docsTab = function (o) {
     const r = rec(o.uid); if (!r) return '<div class="mut">Запись не найдена.</div>';
     const f = (k, label, ph) => '<div class="field"><label>' + label + '</label><input class="in" value="' + e(r[k] == null ? '' : r[k]) + '" placeholder="' + (ph || '') + '" data-c="odoc" data-k="' + k + '" data-uid="' + r.uid + '"></div>';
-    const yur = r.buyer === 'юр' || r.buyer === 'ип', pay = (r.zam && r.zam.pay) || 'QR';
+    const yur = r.buyer === 'юр' || r.buyer === 'ип', pay = (r.zam && r.zam.pay) || 'QR', inst = r.install !== false && +r.delivery > 0, sm = r.selfMeas != null ? !!r.selfMeas : (inst ? !r.measurer : true);
     return '<div class="row wrap" style="margin-bottom:12px"><button class="btn pri" data-a="docopen" data-fn="kpHtml" data-uid="' + r.uid + '">КП</button><button class="btn" data-a="docopen" data-fn="kpVarHtml" data-uid="' + r.uid + '">КП: три варианта</button>' +
       '<button class="btn" data-a="docopen" data-fn="zamernikHtml" data-uid="' + r.uid + '">Замерник</button><button class="btn" data-a="docopen" data-fn="dogovorHtml" data-uid="' + r.uid + '">Договор</button></div>' +
       '<div class="callout info" style="margin-bottom:12px">Поля ниже подставляются в документы. Изменения сразу уходят в общую базу, телефон их тоже увидит.</div>' +
       '<div class="g2"><div class="stack" style="gap:10px"><div class="field"><label>Покупатель</label><select class="in" data-c="odoc" data-k="buyer" data-uid="' + r.uid + '">' + BUY.map(b => '<option value="' + b[0] + '"' + ((r.buyer || 'физ') === b[0] ? ' selected' : '') + '>' + b[1] + '</option>').join('') + '</select></div>' +
-      f('email', 'E-mail') + f('measurer', 'Замерщик', 'Хорошавин') + f('term', 'Срок изготовления, календарных дней', '12') +
+      f('email', 'E-mail') + f('measurer', 'Замерщик', 'Хорошавин') + '<div class="field"><label>Замер</label><button class="oc ' + (sm ? 'on' : '') + '" data-a="odocsm" data-uid="' + r.uid + '">Замер делает заказчик</button></div>' + f('term', 'Срок изготовления, календарных дней', '12') +
       '<div class="row"><div class="field" style="flex:1"><label>Предоплата</label><input class="in" value="' + e(r.pre == null ? '100' : r.pre) + '" data-c="odoc" data-k="pre" data-uid="' + r.uid + '"></div>' +
       '<div class="field"><label>Единица</label><select class="in" data-c="odoc" data-k="preU" data-uid="' + r.uid + '"><option' + (r.preU !== '₽' ? ' selected' : '') + '>%</option><option' + (r.preU === '₽' ? ' selected' : '') + '>₽</option></select></div></div>' +
       '<div class="field"><label>Способ оплаты (для замерника)</label><select class="in" data-c="odocpay" data-uid="' + r.uid + '">' + ['QR', 'Наличные', 'СБП', 'Безнал'].map(p => '<option' + (pay === p ? ' selected' : '') + '>' + p + '</option>').join('') + '</select></div></div>' +
@@ -113,5 +113,6 @@
       f('meas', 'Дата и время замера', '2026-10-12 15:00') + f('inst', 'Дата монтажа', '2026-10-20') + '<div class="field"><label>Примечания (идут в замерник)</label><textarea class="in" rows="3" data-c="odoc" data-k="note" data-uid="' + r.uid + '">' + e(r.note || '') + '</textarea></div></div></div>';
   };
   A.fld.odoc = (v, el) => { const k = el.dataset.k, uid = el.dataset.uid; DB.patchRec(uid, { [k]: v }); if (k === 'buyer') A.render(); };
+  A.act.odocsm = el => { const r = rec(el.dataset.uid); if (!r) return; const inst = r.install !== false && +r.delivery > 0, cur = r.selfMeas != null ? !!r.selfMeas : (inst ? !r.measurer : true); DB.patchRec(r.uid, { selfMeas: !cur }); A.render(); };
   A.fld.odocpay = (v, el) => { const r = rec(el.dataset.uid); if (r) DB.patchRec(r.uid, { zam: Object.assign({}, r.zam || {}, { pay: v }) }); };
 })();
