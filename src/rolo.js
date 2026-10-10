@@ -114,16 +114,79 @@
   };
   const DIAG_OF = { 'MINI': 'uni', 'UNI-1': 'uni', 'UNI-2': 'uni', 'UNI-2П': 'uni', 'ROLLA1': 'uni', 'ROLLA2': 'uni', 'Z-MINI': 'uni', 'Z-UNI1': 'uni', 'Z-UNI2': 'uni', 'Z-ROLLA1': 'uni', 'Z-ROLLA2': 'uni', 'MG': 'mg', 'Z-MGS': 'mg' };
 
-  /* проверка габаритов по диаграмме: возвращает предупреждение или '' (системы без диаграммы пока не проверяются) */
-  function sizeWarn(code, f, W, H) {
-    const D = DIAG[DIAG_OF[code]]; if (!D) return '';
-    const g = ({ 'А': 'A', 'В': 'B', 'С': 'C' }[String(f.wgrp || '').trim().toUpperCase()] || String(f.wgrp || '').trim().toUpperCase());
-    const grp = D[g] ? g : 'C';
-    const wc = Math.ceil(W / 100 - 1e-9) / 10, hc = Math.max(0.4, Math.ceil(H / 200 - 1e-9) * 0.2);
-    if (wc > D.w + 1e-9 || hc > D.h + 1e-9) return 'размеры вне диаграммы гарантии (до ' + D.w + '×' + D.h + ' м)';
-    if (D[grp].some(x => wc >= x[0] - 1e-9 && hc >= x[1] - 1e-9)) return 'негарантийные размеры для ткани группы ' + grp + ' (по диаграмме Амиго)';
-    if (hc > 3 * wc + 1e-9) return 'высота больше трёх ширин: превышено гарантийное соотношение 1:3, ткань может сматываться неравномерно';
-    return '';
+  const BNTD = {
+    'M29A': '.................|.................|.................|.................|.................|g................|gg...............|gg...............|ggg..............|gggg.............|gggg.............|ggggg............|gggggg...........|gggggg...........',
+    'M29B': '.................|.................|.................|.................|.................|g................|gg...............|gg...............|ggg..............|gggg.............|gggg.............|ggggg...........D|gggggg..........D|gggggg..........D',
+    'M29C': '.................|.................|.................|.................|.................|g................|gg..............D|gg..............D|ggg.............D|gggg...........DD|gggg...........DD|ggggg..........DD|gggggg........DDD|gggggg........DDD',
+    'M43A': '...........................|...........................|...........................|...........................|...........................|g..........................|gg.........................|gg.........................|ggg........................|gggg.......................|gggg.......................|ggggg......................|gggggg.....................|gggggg.....................|ggggggg....................|gggggggg...................|gggggggg...................|ggggggggg..................|gggggggggg.................|gggggggggg.................|ggggggggggg................|ggggggggggg................',
+    'M43B': '...........................|...........................|...........................|...........................|...........................|g..........................|gg.........................|gg.........................|ggg........................|gggg.......................|gggg.......................|ggggg......................|gggggg....................D|gggggg....................D|ggggggg...................D|gggggggg..................D|gggggggg.................DD|ggggggggg................DD|gggggggggg...............DD|gggggggggg...............DD|ggggggggggg.............DDD|ggggggggggg.............DDD',
+    'M43C': '...........................|...........................|...........................|...........................|...........................|g..........................|gg........................D|gg........................D|ggg......................DD|gggg.....................DD|gggg....................DDD|ggggg..................DDDD|gggggg................DDDDD|gggggg...............DDDDDD|ggggggg............DDDDDDDD|gggggggg..........DDDDDDDDD|gggggggg.........DDDDDDDDDD|ggggggggg.......DDDDDDDDDDD|gggggggggg.....DDDDDDDDDDDD|gggggggggg....DDDDDDDDDDDDD|ggggggggggg..DDDDDDDDDDDDDD|ggggggggggg.DDDDDDDDDDDDDDD',
+    'ZM43C': '...........................|...........................|...........................|...........................|...........................|g..........................|gg.........................|gg.......................DD|ggg......................DD|gggg.....................DD|gggg.....................DD|ggggg...................DDD|gggggg..................DDD|gggggg................DDDDD|ggggggg..............DDDDDD|gggggggg............DDDDDDD|gggggggg...........DDDDDDDD|ggggggggg.........DDDDDDDDD|gggggggggg.......DDDDDDDDDD|gggggggggg......DDDDDDDDDDD|ggggggggggg.....DDDDDDDDDDD|ggggggggggg....DDDDDDDDDDDD',
+    'L43A': '...........................|...........................|...........................|...........................|...........................|g..........................|gg.........................|gg.........................|ggg........................|gggg.......................|gggg.......................|ggggg......................|gggggg.....................|gggggg.....................|ggggggg....................|gggggggg...................|gggggggg...................|ggggggggg..................|gggggggggg................D|gggggggggg................D|ggggggggggg...............D|ggggggggggg...............D',
+    'L43B': '...........................|...........................|...........................|...........................|...........................|g..........................|gg.........................|gg.........................|ggg........................|gggg.......................|gggg......................D|ggggg.....................D|gggggg....................D|gggggg....................D|ggggggg..................DD|gggggggg.................DD|gggggggg.................DD|ggggggggg................DD|gggggggggg..............DDD|gggggggggg..............DDD|ggggggggggg.............DDD|ggggggggggg.............DDD',
+    'L43C': '...........................|...........................|...........................|...........................|...........................|g..........................|gg.........................|gg........................D|ggg.......................D|gggg.....................DD|gggg.....................DD|ggggg...................DDD|gggggg..................DDD|gggggg.................DDDD|ggggggg................DDDD|gggggggg...............DDDD|gggggggg..............DDDDD|ggggggggg.............DDDDD|gggggggggg............DDDDD|gggggggggg............DDDDD|ggggggggggg..........DDDDDD|ggggggggggg..........DDDDDD',
+    'L52A': '.....................................|.....................................|.....................................|.....................................|.....................................|g...................................p|gg..................................p|gg..................................g|ggg.................................g|gggg................................g|gggg................................g|ggggg..............................gg|gggggg.............................gg|gggggg.............................gg|ggggggg....................DDDDDDDDDD|gggggggg...................DDDDDDDDDD|gggggggg...................DDDDDDDDDD|ggggggggg..................DDDDDDDDDD|gggggggggg.................DDDDDDDDDD|gggggggggg.................DDDDDDDDDD|ggggggggggg................DDDDDDDDDD|ggggggggggg................DDDDDDDDDD',
+    'L52B': '.....................................|.....................................|...................................pp|................................ppppg|.............................pppppppg|g..........................pppppppppg|gg.......................ppppppppppgg|gg......................pppppppppppgg|ggg...................pppppppppppppgg|gggg.................pppppppppppppggg|gggg................ppppppppppppppggg|ggggg..............ppppppppppppppqggg|gggggg............ppppppppppppppqgggg|gggggg...........pppppppppppppqqqgggg|ggggggg.........pppppppppppDDDDDDDDDD|gggggggg.......ppppppppppppDDDDDDDDDD|gggggggg.......pppppppppppqDDDDDDDDDD|ggggggggg.....pppppppppppqqDDDDDDDDDD|gggggggggg...pppppppppppqqqDDDDDDDDDD|gggggggggg...ppppppppppqqqqDDDDDDDDDD|ggggggggggg.pppppppppppqqqqDDDDDDDDDD|ggggggggggg.ppppppppppqqqqqDDDDDDDDDD',
+    'L52C': '.................................pppp|.............................pppppppg|..........................pppppppppgg|.......................ppppppppppppgg|.....................pppppppppppppggg|g..................ppppppppppppppqggg|gg...............pppppppppppppqqqgggg|gg..............ppppppppppppqqqqqgggg|ggg...........ppppppppppppqqqqqqggggg|gggg.........pppppppppppqqqqqqqqggggg|gggg........pppppppppppqqqqqqqqgggggg|ggggg.......pppppppppqqqqqqqqqqgggggg|gggggg.....pppppppppqqqqqqqqqqggggggg|gggggg....pppppppppqqqqqqqqqqqggggggg|ggggggg...ppppppppqqqqqqqqqDDDDDDDDDD|gggggggg.ppppppppqqqqqqqqqqDDDDDDDDDD|ggggggggppppppppqqqqqqqqqqqDDDDDDDDDD|gggggggggppppppqqqqqqqqqqqqDDDDDDDDDD|ggggggggggpppppqqqqqqqqqqqqDDDDDDDDDD|ggggggggggppppqqqqqqqqqqqqqDDDDDDDDDD|gggggggggggppqqqqqqqqqqqqqqDDDDDDDDDD|gggggggggggppqqqqqqqqqqqqqqDDDDDDDDDD',
+    'L65A': '.....................................|.....................................|.....................................|.....................................|.....................................|g..................................p.|gg...............................ppp.|gg..............................pppp.|ggg...........................pppppp.|gggg.........................ppppppp.|gggg.......................ppppppppp.|ggggg.....................pppppppppp.|gggggg...................ppppppppppp.|gggggg..................pppppppppppp.|ggggggg................ppppDDDDDDDDDD|gggggggg..............pppppDDDDDDDDDD|gggggggg.............ppppppDDDDDDDDDD|ggggggggg............ppppppDDDDDDDDDD|gggggggggg...........ppppppDDDDDDDDDD|gggggggggg...........ppppppDDDDDDDDDD|ggggggggggg..........ppppppDDDDDDDDDD|ggggggggggg..........ppppppDDDDDDDDDD',
+    'L65B': '.....................................|.....................................|...................................pp|................................ppppp|.............................pppppppp|g..........................pppppppppp|gg.......................pppppppppppp|gg......................ppppppppppppp|ggg...................ppppppppppppppp|gggg.................pppppppppppppppp|gggg................pppppppppppppppqq|ggggg..............ppppppppppppppqqqq|gggggg............ppppppppppppppqqqqq|gggggg...........pppppppppppppqqqqqqq|ggggggg.........pppppppppppDDDDDDDDDD|gggggggg.......ppppppppppppDDDDDDDDDD|gggggggg.......pppppppppppqDDDDDDDDDD|ggggggggg.....pppppppppppqqDDDDDDDDDD|gggggggggg...pppppppppppqqqDDDDDDDDDD|gggggggggg...ppppppppppqqqqDDDDDDDDDD|ggggggggggg.pppppppppppqqqqDDDDDDDDDD|ggggggggggg.ppppppppppqqqqqDDDDDDDDDD',
+    'L65C': '.................................pppp|.............................pppppppp|..........................ppppppppppp|.......................pppppppppppppp|.....................pppppppppppppppq|g..................ppppppppppppppqqqq|gg...............pppppppppppppqqqqqqq|gg..............ppppppppppppqqqqqqqqq|ggg...........ppppppppppppqqqqqqqqqqq|gggg.........pppppppppppqqqqqqqqqqqqq|gggg........pppppppppppqqqqqqqqqqqqqq|ggggg.......pppppppppqqqqqqqqqqqqqqqq|gggggg.....pppppppppqqqqqqqqqqqqqqqqq|gggggg....pppppppppqqqqqqqqqqqqqqqqqq|ggggggg...ppppppppqqqqqqqqqDDDDDDDDDD|gggggggg.ppppppppqqqqqqqqqqDDDDDDDDDD|ggggggggppppppppqqqqqqqqqqqDDDDDDDDDD|gggggggggppppppqqqqqqqqqqqqDDDDDDDDDD|ggggggggggpppppqqqqqqqqqqqqDDDDDDDDDD|ggggggggggppppqqqqqqqqqqqqqDDDDDDDDDD|gggggggggggppqqqqqqqqqqqqqqDDDDDDDDDD|gggggggggggppqqqqqqqqqqqqqqDDDDDDDDDD'
+  };
+  const ROWS_CACHE = {};
+  const bntGrid = k => ROWS_CACHE[k] || (BNTD[k] ? (ROWS_CACHE[k] = BNTD[k].split('|')) : null);
+  const tubeNum = v => { const m = String(v || '').match(/\d+/); return m ? +m[0] : 0; };
+  /* имя диаграммы BNT по системе, трубе и группе ткани; null, если диаграммы нет */
+  function bntKey(code, tube, grp) {
+    const m = /^(Z-)?(BNT-M|K-M)$/.test(code) ? 'M' : /^(Z-)?(BNT-L|K-L)$/.test(code) || code === 'K-M+' ? 'L' : '';
+    if (!m || !tube) return null;
+    let k = m + tube + grp;
+    if (code === 'Z-BNT-M' && k === 'M43C') k = 'ZM43C';
+    return BNTD[k] ? k : null;
+  }
+  const grpOf = f => ({ 'А': 'A', 'В': 'B', 'С': 'C' }[String(f.wgrp || '').trim().toUpperCase()] || String(f.wgrp || '').trim().toUpperCase());
+
+  /* проверка габаритов по диаграмме Амиго: { s: 'ok'|'ratio'|'bad'|'out'|'', text, rec } (s пусто, если диаграммы для системы нет) */
+  function zoneOf(code, f, W, H, tube) {
+    const g0 = grpOf(f), wm = W / 1000, hm = H / 1000;
+    const D = DIAG[DIAG_OF[code]];
+    if (D) {
+      const grp = D[g0] ? g0 : 'C';
+      const wc = Math.ceil(W / 100 - 1e-9) / 10, hc = Math.max(0.4, Math.ceil(H / 200 - 1e-9) * 0.2);
+      if (wc > D.w + 1e-9 || hc > D.h + 1e-9) return { s: 'out', text: 'размеры вне диаграммы гарантии (до ' + D.w + '×' + D.h + ' м)' };
+      if (D[grp].some(x => wc >= x[0] - 1e-9 && hc >= x[1] - 1e-9)) return { s: 'bad', text: 'негарантийные размеры для ткани группы ' + grp + ' (по диаграмме Амиго)' };
+      if (hc > 3 * wc + 1e-9) return { s: 'ratio', text: 'высота больше трёх ширин: превышено гарантийное соотношение 1:3, ткань может сматываться неравномерно' };
+      return { s: 'ok', text: '' };
+    }
+    const key = bntKey(code, tube, ['A', 'B', 'C'].includes(g0) ? g0 : 'C'); if (!key) return { s: '', text: '' };
+    const g = bntGrid(key), nr = g.length, nc = g[0].length;
+    const ci = Math.max(0, Math.ceil((wm - 0.4) / 0.1 - 1e-9));
+    const hMax = nr === 22 ? 4.5 : 3.0, wMax = Math.round((0.4 + 0.1 * (nc - 1)) * 10) / 10;
+    if (hm > hMax + 1e-9 || ci >= nc) return { s: 'out', text: 'размеры вне диаграммы гарантии для трубы ' + tube + ' (до ' + wMax + '×' + hMax + ' м)' };
+    const ri = nr === 22 && hm > 4.4 + 1e-9 ? 21 : Math.max(0, Math.ceil((hm - 0.4) / 0.2 - 1e-9));
+    const c = g[ri][ci];
+    if (c === 'D') return { s: 'bad', text: 'негарантийные размеры для трубы ' + tube + ' и ткани группы ' + (g0 || 'C') + ' (по диаграмме Амиго)' };
+    if (c === 'g') return { s: 'ratio', text: 'превышено гарантийное соотношение размеров для трубы ' + tube + ', ткань может сматываться неравномерно' };
+    return { s: 'ok', text: '', rec: c === 'p' ? 'p' : c === 'q' ? 'q' : '' };
+  }
+
+  /* подбор трубы (вала): когда не зафиксирована вручную, берём самую малую, на которой размеры в гарантии и ткань смотается */
+  function tubeFit(it) {
+    const s = sysOf(it.sys), f = fabOf(it.fab), W = Number(it.w) || 0, H = Number(it.h) || 0;
+    if (!s || !f || !(W > 0 && H > 0)) return null;
+    const g = groupsOf(s.code).find(x => x.name === 'Труба' && x.type !== 'flag'); if (!g) return null;
+    const tubes = g.items.map(x => ({ v: x.value, n: tubeNum(x.value) })).filter(x => x.n).sort((a, b) => a.n - b.n);
+    if (tubes.length < 2 || !bntKey(s.code, tubes[0].n, 'C')) return null;
+    const cur = (it.sel && it.sel['Труба']) || (g.items.find(x => x.def) || g.items[0]).value;
+    const test = t => { const z = zoneOf(s.code, f, W, H, t.n); const wd = wind(Object.assign({}, it, { sel: Object.assign({}, it.sel, { 'Труба': t.v }) })); return { z, okWind: !(wd && wd.max < 6 && H / 1000 > wd.max + 1e-9) }; };
+    const good = t => { const r = test(t); return r.z.s === 'ok' && r.okWind; };
+    if (it.tubeLock) {
+      const c = tubes.find(x => x.v === cur) || tubes[0];
+      if (good(c)) return null;
+      const alt = tubes.find(x => x.n > c.n && good(x));
+      return alt ? { lock: true, from: c.v, to: alt.v } : null;
+    }
+    const pick = tubes.find(good);
+    return pick ? { from: tubes[0].v, to: pick.v, auto: true } : null;
   }
 
   /* длина металлической цепи: высота изделия минус 15 см */
@@ -136,6 +199,8 @@
     if (!s) { out.msg = 'Выберите систему'; return out; }
     if (!f) { out.needFab = true; out.msg = 'Выберите ткань'; return out; }
     if (!(W > 0 && H > 0)) { out.msg = 'Введите размеры'; return out; }
+    const fit = tubeFit(it);
+    if (fit && fit.auto) { it = Object.assign({}, it, { sel: Object.assign({}, it.sel, { 'Труба': fit.to }) }); out.tubeAuto = fit.to !== fit.from ? { from: fit.from, to: fit.to } : null; out.tubeSel = fit.to; }
     const L = lookup(s.code, f.cat, W, H);
     if (L.err) { out.msg = L.err; if (L.hard) out.warn.hard = true; return out; }
     const disc = P['скидка_рулонки'] != null ? Number(P['скидка_рулонки']) : 0.4, k = (1 - disc) * FX;
@@ -156,7 +221,11 @@
     const unit = baseRetail + addSum, cost = base + costOpt;
     const wd = wind(it); out.wind = wd;
     if (wd && wd.max < 6 && H / 1000 > wd.max + 1e-9) out.warn.push('ткань не смотается: для этой системы и ткани максимум ' + Math.floor(wd.max * 100) + ' см, при ' + Math.round(H / 10) + ' см останется висеть около ' + Math.round(H / 10 - wd.max * 100) + ' см');
-    { const sw = sizeWarn(s.code, f, W, H); if (sw) out.warn.push(sw); }
+    {
+      const tube = tubeNum(opts(it).sel['Труба']), zn = zoneOf(s.code, f, W, H, tube);
+      if (zn.text) out.warn.push(zn.text + (fit && fit.lock ? '; на трубе ' + fit.to + ' размеры в гарантии, выберите её' : ''));
+      if (zn.rec) out.rec = zn.rec;
+    }
     const pw = f.prodW || (f.roll ? f.roll - 10 : 0);
     if (pw && W / 10 > pw && !(o.flags['Сварка ткани'])) out.warn.push('ширина больше рабочей ширины ткани (' + pw + ' см): нужна сварка ткани');
     Object.assign(out, { ok: true, unit, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: profit0, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, gridW: L.w, gridH: L.h, usd: L.usd });

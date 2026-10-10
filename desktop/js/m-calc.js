@@ -145,12 +145,13 @@
 
   /* ===== рулонные шторы Амиго: система, ткань, размер, управление, опции по группам ===== */
   const RJ = () => window.JalRolo;
-  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.z ? 'Зебра' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, w: +R.w || 0, h: +R.h || 0, ctrl: R.ctrl, sel: R.sel, flags: R.flags });
+  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.z ? 'Зебра' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, w: +R.w || 0, h: +R.h || 0, ctrl: R.ctrl, sel: R.sel, flags: R.flags, tubeLock: !!R.tubeLock });
   function normRolo() {
     const J = RJ(), sy = J.systems(R.z); if (!sy.some(x => x.code === R.sys)) R.sys = sy.length ? sy[0].code : '';
     if (R.fab && (!J.fabOf(R.fab) || !!J.fabOf(R.fab).z !== !!R.z)) R.fab = '';
     const o = J.opts(roloItem()); R.sel = o.sel; R.flags = o.flags;
-    return { it: roloItem(), r: J.calc(roloItem()), groups: J.groups(R.sys) };
+    const r = J.calc(roloItem()); if (r.tubeSel) R.sel['Труба'] = r.tubeSel;
+    return { it: roloItem(), r, groups: J.groups(R.sys) };
   }
   const roloName = (it, c) => { const d = RJ() ? RJ().describe(it, c) : { title: 'Рулонная штора', sub: '' }; return { title: d.title + ' (Амиго)', sub: it.w + '×' + it.h + ' мм · ' + d.sub + (c.ok && c.termDays ? ' · срок ' + c.termDays + ' дн' : '') }; };
   function formRolo() {
@@ -183,6 +184,8 @@
     if (wd) { const over = (+R.h > 0 && wd.max < 6 && +R.h / 10 > wd.max * 100 + 0.01); st += '<div class="fnote ' + (over ? 'bad' : 'ok') + '"><b>Макс. высота намотки:</b> ' + (wd.max >= 6 ? 'без ограничений (до 600 см)' : Math.floor(wd.max * 100) + ' см') + '</div>'; }
     else if (f && R.sys) st += '<div class="fnote mut">Макс. высота намотки: ' + (J.windReady() ? 'нет данных для этой ткани и системы' : 'таблицы намоток ещё не загружены, обновляю цены…') + '</div>';
     if (+R.w > 0 && +R.h > 0 && f) st += '<div class="fnote ' + (r.ok && !r.warn.length ? 'ok' : 'bad') + '">' + (!r.ok ? e(r.msg) : r.warn.length ? '<b>НЕ ГАРАНТ.: </b>' + e(r.warn.join('; ')) : 'Размеры в пределах прайса (считаем по сетке ' + Math.round(r.gridW * 1000) + '×' + Math.round(r.gridH * 1000) + ' мм)') + '</div>';
+    if (r.tubeAuto) st += '<div class="fnote ok"><b>Труба ' + e(r.tubeAuto.to) + ':</b> на трубе ' + e(r.tubeAuto.from) + ' размеры вне гарантии, подобрали большую (цена пересчитана)</div>';
+    if (r.rec) st += '<div class="fnote"><b>Рекомендуется редуктор' + (r.rec === 'q' ? ' с большой цепью 6×12' : '') + '</b> (по диаграмме Амиго)</div>';
     if (f && f.stock !== null && f.stock < 2) st += '<div class="fnote"><i class="sd" style="background:' + DOT[f.stock] + '"></i> ' + e(STOCK_TXT[f.stock][0].toUpperCase() + STOCK_TXT[f.stock].slice(1)) + '</div>';
     if (r.ok) st += '<div class="fnote"><b>Срок:</b> ' + r.termDays + ' дней</div>';
     if (own && r.ok && showProfit && unit < r.cost) st += '<div class="fnote bad">Ниже закупа: убыток ' + m((r.cost - unit) * qty) + ' на позицию.</div>';
@@ -312,10 +315,10 @@
   A.fld.ctype = v => { const p = String(v).split('|'); F.mat = p[0]; F.lam = +p[1]; F.color = ''; F.colOpen = false; rr(); };
   A.fld.csup = v => { F.sup = v; Object.assign(F, { lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {}, colOpen: false }); rr(); };
   A.fld.cfix = v => { F.fix = v; rr(); };
-  A.fld.rsys = v => { R.sys = v; R.sel = {}; R.flags = {}; rr(); };
+  A.fld.rsys = v => { R.sys = v; R.sel = {}; R.flags = {}; R.tubeLock = false; rr(); };
   A.fld.rf = (v, el) => { const k = el.dataset.k; R[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
   A.act.rf = el => { R[el.dataset.k] = el.dataset.v; rr(); };
-  A.fld.ropt = (v, el) => { R.sel[el.dataset.k] = v; rr(); };
+  A.fld.ropt = (v, el) => { R.sel[el.dataset.k] = v; if (el.dataset.k === 'Труба') R.tubeLock = true; rr(); };
   A.act.rphoto = () => { R.photo = !R.photo; rr(); };
   A.act.rflag = el => { R.flags[el.dataset.v] = !R.flags[el.dataset.v]; rr(); };
   A.act.rqty = el => { R.qty = Math.max(1, Math.min(99, (+R.qty || 1) + (+el.dataset.d))); rr(); };
