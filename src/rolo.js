@@ -312,7 +312,7 @@
     const a = [];
     if (v.side) a.push('управление ' + (v.side === 'R' ? 'правое' : 'левое'));
     if (v.len) a.push('длина упр. ' + v.len + ' мм');
-    if (v.chain && v.chain !== 'Пластиковая') a.push('цепочка ' + v.chain.toLowerCase());
+    if (v.chain && v.chain !== 'Пластиковая') a.push(v.chain === 'Металл' ? 'фурнитура металлическая' : 'прозрачная комплектация');
     if (v.ceil && v.ceil !== 'Обычный') a.push('потолочный кронштейн: ' + v.ceil.toLowerCase());
     if (v.ctype && v.ctype !== 'К управлению') a.push(v.ctype.toLowerCase());
     if (v.wall && v.wall !== '7,5 см') a.push('стеновой кронштейн: ' + v.wall.toLowerCase());
