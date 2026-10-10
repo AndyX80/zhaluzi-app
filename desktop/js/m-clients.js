@@ -4,7 +4,10 @@
   const tabs = [['main', 'Клиент'], ['orders', 'Заказы'], ['events', 'События'], ['pay', 'Оплаты'], ['docs', 'Документы'], ['hist', 'История']];
   function body(c) {
     const os = D.orders.filter(o => o.client === c.id), t = S.clientTab;
-    if (t === 'main') return '<div class="g2"><div class="stack" style="gap:10px"><div class="field"><label>Телефон</label><div>' + e(c.phone) + '</div></div><div class="field"><label>Адрес</label><div>' + e(c.addr) + '</div></div><div class="field"><label>Источник обращения</label><div>' + e(c.src) + '</div></div></div><div class="field"><label>Заметка</label><div>' + e(c.note || '—') + '</div><label style="margin-top:10px">Ссылка на чат</label><div class="mut">Telegram / MAX: появится позже</div></div></div>';
+    if (t === 'main') { const f = (k, l, wide) => '<div class="field"' + (wide ? ' style="grid-column:1/-1"' : '') + '><label>' + l + '</label><input class="in" value="' + e(c[k] || '') + '" data-c="clfld" data-k="' + k + '" data-id="' + c.id + '"></div>';
+      return '<div class="g2" style="gap:10px">' + f('name', 'Имя / название') + f('phone', 'Телефон') + f('phone2', 'Доп. телефон') + f('email', 'E-mail') + f('addr', 'Адрес', 1) + f('src', 'Источник обращения') +
+        '<div class="field" style="grid-column:1/-1"><label>Заметка</label><textarea class="in" rows="3" style="width:100%" data-c="clfld" data-k="note" data-id="' + c.id + '">' + e(c.note || '') + '</textarea></div>' +
+        '<div class="field"><label>Ссылка на чат</label><div class="mut">Telegram / MAX: появится позже</div></div></div>'; }
     if (t === 'orders') return '<table class="tbl"><thead><tr><th>№</th><th>Заказ</th><th>Этап</th><th class="r">Сумма</th></tr></thead><tbody>' + os.map(o => '<tr data-a="opn" data-id="order:' + o.id + '"><td class="b">' + o.no + '</td><td>' + e(o.title) + '</td><td>' + A.stagePill(o) + '</td><td class="r num">' + m(o.sum) + '</td></tr>').join('') + '</tbody></table>' + (os.length ? '' : '<p class="mut">Заказов пока нет</p>');
     if (t === 'events') return D.real ? '<p class="mut">События клиента (замеры, монтажи) появятся вместе с календарём.</p>' : '<div class="stack" style="gap:8px"><div class="ev measure"><b>09.10 12:00</b> · Замер</div><div class="ev work"><b>10.10 15:00</b> · Позвонить по КП</div></div>';
     if (t === 'pay') return '<p class="mut">Все платежи клиента по его заказам. Сумма оплачено: <b>' + m(os.reduce((a, o) => a + o.paid, 0)) + '</b>, долг: <b>' + m(os.reduce((a, o) => a + Math.max(0, o.sum - o.paid), 0)) + '</b></p>';
@@ -25,6 +28,12 @@
         '<div class="split"><div class="card p0"><table class="tbl"><thead><tr><th>Клиент</th><th>Источник</th><th class="r">Заказов</th></tr></thead><tbody>' + all.slice(0, lim).map(c => '<tr class="' + (c.id === S.selClient ? 'sel' : '') + '" data-a="selc" data-id="' + c.id + '"><td class="b">' + e(c.name) + '<div class="mut" style="font-size:12px;font-weight:400">' + e(c.phone) + '</div></td><td>' + e(c.src) + '</td><td class="r">' + (cnt[c.id] || 0) + '</td></tr>').join('') + '</tbody></table>' + (all.length > lim ? '<div style="padding:10px;text-align:center"><button class="btn sm" data-a="cmore">Показать ещё (' + (all.length - lim) + ')</button></div>' : '') + '</div>' + card(S.selClient, false) + '</div>';
     }
   });
+  A.fld.clfld = (v, el) => {
+    if (!(window.DB && DB.editClient)) { A.toast('Правка доступна, когда подключена база заказов'); return; }
+    const k = el.dataset.k, nid = DB.editClient(el.dataset.id, { [k]: v });
+    if (nid == null) { A.toast('У клиента нет заказов: править нечего'); return; }
+    S.selClient = nid; A.save(); A.render();
+  };
   A.act.cmore = () => { S.climit = (S.climit || 80) + 200; A.render(); };
   A.fld.cq = v => { S.cq = v; S.climit = 80; A.render(); const q = document.querySelector('[data-c="cq"]'); if (q) { q.focus(); q.setSelectionRange(v.length, v.length); } };
   A.act.ctab = el => { S.clientTab = el.dataset.t; A.save(); A.render(); };

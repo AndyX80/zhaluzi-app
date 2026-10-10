@@ -250,6 +250,19 @@
   }
 
   /* Заказ для документов: цены уже с доставкой и установкой, скидка отдельной суммой. */
+  /* примерная стоимость установки по ставкам (для десктопа): { sum, text } */
+  function instSugg(F) {
+    F = F || compute(); const cart = C.cart; let n50 = 0, n25 = 0, a50 = 0, a25 = 0;
+    cart.forEach((it, i) => { const c = F.calcs[i]; if (!c) return;
+      if (!it.kind && it.prod !== 'rolo') { if (it.lam === 50) n50 += it.qty; else if (it.lam === 25) n25 += it.qty; }
+      else if (it.kind === 'drive' && c.auto) { if (c.auto.lam === 50) a50 += it.qty; else if (c.auto.lam === 25) a25 += it.qty; } });
+    a50 = Math.min(a50, n50); a25 = Math.min(a25, n25); const p50 = n50 - a50, p25 = n25 - a25, sp = [];
+    const sum = (n50 + n25) ? p50 * RATES.w50 + a50 * RATES.w50auto + p25 * RATES.w25 + a25 * RATES.w25auto + RATES.delivery : 0;
+    if (p50) sp.push('50 мм ' + p50 + '×' + fmt(RATES.w50)); if (a50) sp.push('50 мм с автоматикой ' + a50 + '×' + fmt(RATES.w50auto));
+    if (p25) sp.push('25 мм ' + p25 + '×' + fmt(RATES.w25)); if (a25) sp.push('25 мм с автоматикой ' + a25 + '×' + fmt(RATES.w25auto));
+    if (sum) sp.push('доставка ' + fmt(RATES.delivery) + ' (один раз)');
+    return { sum, text: sp.join(' + ') };
+  }
   function toOrder(st) {
     const sC = st || C, F = compute(sC), items = [];
     sC.cart.forEach((it, i) => {
@@ -257,11 +270,11 @@
       const price = c.ownPrice || it.kind === 'custom' ? c.unit : ceil100(c.unit + F.ships[i] + F.adds[i]);
       for (let k = 0; k < it.qty; k++) {
         if (it.kind === 'custom') items.push({ kind: 'custom', title: it.title || 'Услуга', price, profit: c.profit, cost: it.cost === '' || it.cost == null ? '' : Number(it.cost), costOk: !!it.costOk, ci: i });
-        else if (it.kind) items.push({ kind: it.kind, sup: SUPNAME[it.sup] || it.sup, title: c.auto.name + (it.kind === 'drive' ? ' (привод)' : ''), price, profit: c.profit });
+        else if (it.kind) items.push({ kind: it.kind, sup: SUPNAME[it.sup] || it.sup, title: c.auto.name + (it.kind === 'drive' ? ' (привод)' : ''), price, profit: c.profit, ci: i });
         else if (it.prod === 'rolo') { const d = window.JalRolo ? JalRolo.describe(it, c) : { title: 'Рулонная штора', sub: '' };
-          items.push({ sup: SUPNAME[it.sup] || it.sup, prod: 'rolo', mat: it.mat || 'Рулонные шторы', lam: 0, title: d.title + ' (' + it.w + '×' + it.h + ' мм), ' + d.sub, W: (+it.w) / 10, H: (+it.h) / 10, ctrl: it.ctrl, term: c.termDays || 0, o: { color: null, opts: [], fix: null }, price, profit: c.profit }); }
+          items.push({ sup: SUPNAME[it.sup] || it.sup, prod: 'rolo', mat: it.mat || 'Рулонные шторы', lam: 0, title: d.title + ' (' + it.w + '×' + it.h + ' мм), ' + d.sub, W: (+it.w) / 10, H: (+it.h) / 10, ctrl: it.ctrl, term: c.termDays || 0, o: { color: null, opts: [], fix: null }, price, profit: c.profit, ci: i }); }
         else items.push({ sup: SUPNAME[it.sup] || it.sup, mat: it.mat, lam: it.lam, W: (+it.w) / 10, H: (+it.h) / 10, ctrl: it.ctrl,
-          o: { color: c.col ? c.col.name : null, opts: Object.keys(it.opts || {}).filter(n => it.opts[n]), fix: it.fix || null }, price, profit: c.profit });
+          o: { color: c.col ? c.col.name : null, opts: Object.keys(it.opts || {}).filter(n => it.opts[n]), fix: it.fix || null }, price, profit: c.profit, ci: i });
       }
     });
     let vars = null;
@@ -295,7 +308,7 @@
   function clear() { C.editNo = null; C.cart = []; C.service = 0; C.pvz = ''; C.disc = ''; save(); }
 
   const setRegion = on => { C.region = !!on; save(); rerender(); };
-  window.JalCart = { save, rerender, setRegion, RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
+  window.JalCart = { instSugg, save, rerender, setRegion, RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
     autoList: (sup, kind) => (AUTO && AUTO[sup] ? AUTO[sup][kind] : null), autoQty, autoStep, hasAuto: sup => !!(AUTO && AUTO[sup]),
     counts: () => ({ drive: C.cart.filter(x => x.kind === 'drive').reduce((a, x) => a + x.qty, 0), remote: C.cart.filter(x => x.kind === 'remote').reduce((a, x) => a + x.qty, 0) }) };
 })();

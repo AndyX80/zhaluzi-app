@@ -28,7 +28,7 @@
   const rec = uid => DB.raw().find(r => r.uid === uid && !r.del && !r.legacy);
   /* заказ для документов: запись + пересчитанные варианты КП из снимка корзины */
   function orderOf(r) {
-    const o = Object.assign({}, r);
+    const o = Object.assign({}, r); if (r.phone2) o.phone = [r.phone, r.phone2].filter(Boolean).join(', ');
     if (r.cart && r.cart.cart) { try { const n = JalCart.toOrder(r.cart); o.vars = n.vars; if (n.items.length === (r.items || []).length) o.items = r.items.map((it, i) => Object.assign({}, it, { pv: n.items[i].pv })); } catch (x) {} }
     return o;
   }
@@ -66,10 +66,13 @@
     if (!C.cart.length) { A.toast('Корзина пуста'); return; }
     if (fn === 'kpHtml' || fn === 'kpVarHtml') {
       const co = J.toOrder(); if (!co.items.length) { A.toast('В корзине нет изделий с ценой'); return; }
-      return show(fn, Object.assign({ no: '—', created: new Date().toISOString(), name: '', pre: '100', preU: '%', term: '12', cart: J.snapshot() }, co), 'черновик');
+      const r0 = C.editNo && DB.byKey(C.editNo), O = A.calcO ? A.calcO() : null, live = O && (O.open || O.fresh || !r0), src = live ? O : (r0 || O || {});
+      const yur = live && O.ct === 'yur', cl = live ? ((yur ? O.repr.trim() || O.company.trim() : O.name.trim()) || '') : (r0 && (r0.name || r0.company) || '');
+      const ph = [src.phone, src.phone2].filter(Boolean).join(', ');
+      return show(fn, Object.assign({ no: r0 && r0.no || '—', created: new Date().toISOString(), name: cl, phone: ph, email: src.email || '', addr: src.addr || '', pre: src.pre === '' || src.pre == null ? '100' : src.pre, preU: src.preU || '%', term: src.term || '12', cart: J.snapshot() }, co), r0 && r0.no ? undefined : 'черновик');
     }
-    const r = C.editNo && DB.raw().find(x => String(x.no) === String(C.editNo) && !x.del && !x.legacy);
-    if (r) { A.toast('Документ по сохранённому заказу № ' + r.no + '. Если менял состав, сначала нажми «Сохранить в заказ»'); return open(fn, r.uid); }
+    const r = C.editNo && DB.byKey(C.editNo);
+    if (r) { A.toast('Документ по сохранённому заказу' + (r.no ? ' № ' + r.no : '') + '. Если менял состав, сначала нажми «Сохранить в заказ»'); return open(fn, r.uid); }
     A.toast('Для замерника и договора сначала оформи заказ: впиши клиента и нажми «Сохранить заказ»'); A.act.cord();
   };
   const JC = () => window.JalCart;

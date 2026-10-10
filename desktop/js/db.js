@@ -68,6 +68,7 @@
       if (!c) { c = byKey[key] = { id: 'c' + (clients.length + 1), name: '', phone: '', addr: '', src: '', note: '' }; clients.push(c); }
       c.name = (o.yur && o.yur.name) || o.name || c.name || 'Без имени'; if (o.phone) c.phone = o.phone; if (o.src) c.src = o.src;
       if (o.yur) c.note = 'Юр. лицо / ИП' + (o.yur.edo ? ', ЭДО есть' : '');
+      if (o.email || o._e) c.email = o.email || o._e; if (o._p2 || o.phone2) c.phone2 = o._p2 || o.phone2; if (o.cnote) c.note = o.cnote;
       o.client = c.id; delete o.name; delete o.phone;
     });
     orders.reverse();
@@ -105,7 +106,7 @@
     const items = r.items || [], goods = items.reduce((a, i) => a + (+i.price || 0), 0), prof = items.reduce((a, i) => a + (+i.profit || 0), 0);
     const sum = Math.max(0, goods + (r.priced ? 0 : (+r.delivery || 0)) - (+r.disc || 0)), cat = items.some(i => /дерев|бамбук/i.test(i.mat || i.title || '')) ? 'Дерево' : items.some(i => i.prod === 'rolo') ? 'Рулонные' : 'Разное';
     const sups = {}; items.forEach(i => { if (i.sup) sups[i.sup] = 1; });
-    return { id: 'ph' + r.uid, no: String(r.no), uid: r.uid, ph: true, sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: '', factory: '',
+    return { id: 'ph' + r.uid, no: r.no ? String(r.no) : 'Черновик', cnote: r.cnote || '', draft: !r.no, rawNo: r.no ? String(r.no) : '', uid: r.uid, ph: true, pre: r.pre, preU: r.preU, term: r.term, _p2: r.phone2 || '', _e: r.email || '', sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: r.src || '', factory: '',
       inst: !!r.install, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: 0,
       created: (r.created || '').slice(0, 10), due: '', tk: r.note || '', review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: !!r.claim, legacy: false, archived: !!r.archived,
       _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '', items, disc: +r.disc || 0, delivery: +r.delivery || 0, priced: !!r.priced, hasCart: !!(r.cart && r.cart.cart), supSent: !!r.supSent,
@@ -147,15 +148,33 @@
     return String(mx + 1);
   };
   /* заказ из корзины: новый или (editNo) обновление уже оформленного; запись такая же, как делает телефон */
+  /* ключ заказа в корзине: номер, а у черновика без номера — uid */
+  DB.byKey = k => k ? DB.raw().find(r => !r.del && !r.legacy && (String(r.no) === String(k) || r.uid === k)) : null;
+  DB.keyOf = r => r.no ? String(r.no) : r.uid;
+  const isDraft = st => !st || st === 'Черновик';
+  /* номер присваивается, когда заказ перестал быть черновиком (КП отправлено, договор, замерник, оплата) */
+  DB.ensureNo = function (uid) {
+    const r = DB.raw().find(x => x.uid === uid); if (!r) return '';
+    if (!r.no) { const no = DB.nextNo(); DB.patchRec(uid, { no }); try { lsSet('jal_no_max', String(Math.max(+lsGet('jal_no_max') || 0, +no))); } catch (e) {} return no; }
+    return String(r.no);
+  };
+  /* ручная смена номера: пусто = вернуть в черновик без номера; занятый номер не принимается */
+  DB.setNo = function (uid, v) {
+    v = String(v == null ? '' : v).trim();
+    if (v && DB.raw().some(r => !r.del && r.uid !== uid && String(r.no) === v)) return { ok: false, msg: 'Номер ' + v + ' уже занят' };
+    DB.patchRec(uid, { no: v }); if (/^\d+$/.test(v)) try { lsSet('jal_no_max', String(Math.max(+lsGet('jal_no_max') || 0, +v))); } catch (e) {}
+    return { ok: true };
+  };
   DB.saveOrder = function (data, items, editNo, title, sum) {
-    const t = nowIso(), old = editNo ? DB.raw().find(r => String(r.no) === String(editNo) && !r.del && !r.legacy) : null;
+    const t = nowIso(), old = editNo ? DB.byKey(editNo) : null;
     let rec;
     if (old) {
       rec = Object.assign({}, old, data, { items });
       rec.history = [{ v: (old.history || []).length + 1, title, sum, at: t, sub: '' }].concat(old.history || []);
     } else {
-      rec = Object.assign({ uid: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), no: DB.nextNo(), status: 'Черновик', created: t, history: [], rev: true, rem: 0 }, data, { items });
+      rec = Object.assign({ uid: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), no: '', status: 'Черновик', created: t, history: [], rev: true, rem: 0 }, data, { items });
     }
+    if (!rec.no && !isDraft(rec.status)) rec.no = DB.nextNo();
     put(rec); try { lsSet('jal_no_max', String(Math.max(+lsGet('jal_no_max') || 0, +rec.no || 0))); } catch (e) {}
     DB.derive(); return rec;
   };
@@ -172,13 +191,22 @@
     }
     DB.patchRec(uid, patch);
   };
-  DB.patchRec = function (uid, patch) { const r = DB.raw().find(x => x.uid === uid); if (!r) return; put(Object.assign({}, r, patch)); DB.derive(); };
+  DB.patchRec = function (uid, patch) { const r = DB.raw().find(x => x.uid === uid); if (!r) return; const n = Object.assign({}, r, patch); if (!n.no && !n.legacy && !isDraft(n.status) && patch.status !== undefined) { n.no = DB.nextNo(); } put(n); DB.derive(); };
   /* после правки заказа на экране */
   DB.commit = function (o) {
     if (!o) return;
     if (o.legacy) put(toRec(o, D.clients.find(c => c.id === o.client)));
     else if (o.ph) { const r = DB.raw().find(x => x.uid === o.uid); if (r) put(Object.assign({}, r, { archived: !!o.archived })); }
     DB.later();
+  };
+  /* правка карточки клиента: пишется во все его заказы (клиент собирается из заказов) */
+  DB.editClient = function (cid, patch) {
+    const os = (D.orders || []).filter(o => o.client === cid && o.uid); if (!os.length) return null;
+    const map = { name: 'name', phone: 'phone', phone2: 'phone2', email: 'email', addr: 'addr', src: 'src', note: 'cnote' }, p = {};
+    Object.keys(patch).forEach(k => { if (map[k]) p[map[k]] = patch[k]; });
+    const list = DB.raw(), t = nowIso(), uids = {}; os.forEach(o => { uids[o.uid] = 1; });
+    DB.setRaw(list.map(r => { if (!uids[r.uid]) return r; const q = Object.assign({}, p); if (q.name !== undefined && r.company && !r.legacy) { q.company = q.name; delete q.name; } return Object.assign({}, r, q, { upd: t }); })); DB.later(); DB.derive();
+    const o2 = (D.orders || []).find(o => o.uid === os[0].uid); return o2 ? o2.client : null;
   };
   DB.delOrder = function (o) { DB.patchRec(o.uid, { del: true }); };
   DB.archive = function (o, on) { DB.patchRec(o.uid, { archived: !!on }); };

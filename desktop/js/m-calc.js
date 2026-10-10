@@ -9,7 +9,8 @@
   const STOCK_TXT = { 2: 'есть на складе', 1: 'мало, уточни у технологов', 0: 'нет на складе' };
   const CTRL_TXT = { L: 'подъём и поворот слева', R: 'подъём и поворот справа', TL: 'поворот слева, подъём справа', TR: 'поворот справа, подъём слева' };
   const CHAIN_TXT = { L: 'цепочка слева', R: 'цепочка справа' };
-  const O = { open: false, step: 0, fresh: false, sent: false, dog: false, q: '', ct: 'fiz', name: '', phone: '', email: '', addr: '', company: '', inn: '', ogrn: '', uaddr: '', repr: '', bank: '', innMsg: '', innOk: true, innBusy: false, inst: true, note: '', pre: '100', preU: '%', term: '12' };
+  const O0 = () => ({ open: false, step: 0, fresh: false, sent: false, dog: false, q: '', ct: 'fiz', name: '', phone: '', phone2: '', comment: '', email: '', addr: '', company: '', inn: '', ogrn: '', uaddr: '', repr: '', bank: '', innMsg: '', innOk: true, innBusy: false, inst: true, note: '', pre: '100', preU: '%', term: '12' });
+  const O = { open: false, step: 0, fresh: false, sent: false, dog: false, q: '', ct: 'fiz', name: '', phone: '', phone2: '', comment: '', email: '', addr: '', company: '', inn: '', ogrn: '', uaddr: '', repr: '', bank: '', innMsg: '', innOk: true, innBusy: false, inst: true, note: '', pre: '100', preU: '%', term: '12' };
   const F = { mode: '', sup: 'Amigo', lam: 50, mat: 'Дерево', color: '', colOpen: false, cq: '', w: '', h: '', qty: 1, ctrl: 'TR', fix: '', opts: {}, own: '', note: '', edit: -1 };
   const R = { z: false, sys: 'UNI-2', fab: '', fq: '', w: '', h: '', qty: 1, ctrl: 'L', sel: {}, flags: {}, own: '', note: '', edit: -1 };
   const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -234,14 +235,17 @@
       customRow() +
       '<div class="cfoot"><div class="cline">' +
       (C.region ? '<input class="ul" style="flex:1" value="' + e(C.pvz || '') + '" placeholder="Адрес ПВЗ и транспортная компания" data-c="cpvz">' :
-        '<label>Доставка и установка</label><input class="ul num" style="width:84px" value="' + (C.service || '') + '" placeholder="0" data-c="cserv">') +
+        '<label style="font-size:15px;font-weight:700;color:var(--fg)">Доставка и установка, ₽</label><input class="ul num" style="width:140px;font-size:18px;font-weight:700;padding:8px 10px;border:2px solid var(--acc,#F1780F);border-radius:8px" value="' + (C.service || '') + '" placeholder="0" data-c="cserv">' + (function () { const g = JC().instSugg(FF); return g.sum ? '<div style="display:flex;flex-direction:column;gap:4px;margin-left:10px"><small class="mut" style="max-width:360px">По ставкам монтажа (ориентировочно): ' + e(g.text) + ' = <b>' + m(g.sum) + '</b></small><button class="btn sm" style="align-self:flex-start;' + (+C.service === g.sum ? 'opacity:.6' : '') + '" data-a="cservsug" data-v="' + g.sum + '">Подставить ' + m(g.sum) + '</button></div>' : '<small class="mut" style="margin-left:10px">Ставки монтажа для рулонок и других видов добавим позже</small>'; })()) +
       '<span class="sp"></span><label>Скидка</label><div class="seg"><button class="' + (pct ? 'on' : '') + '" data-a="cdm" data-v="pct">%</button><button class="' + (!pct ? 'on' : '') + '" data-a="cdm" data-v="rub">₽</button></div><input class="ul num" type="number" min="0" style="width:72px" value="' + (C.disc || '') + '" data-c="cdisc" placeholder="0"></div>' +
       '<div class="sumbar" style="grid-template-columns:repeat(' + (hide ? 2 : 4) + ',1fr)"><div><small>Сумма без скидки</small><b>' + m(FF.total) + '</b></div><div><small>Итого' + (FF.discAmt ? ' (скидка −' + m(FF.discAmt) + ')' : '') + '</small><b style="color:var(--acc)">' + m(FF.netTotal) + '</b></div>' +
       (hide ? '' : '<div><small>Закуп (оценка)</small><b>' + m(Math.max(0, cost)) + '</b></div><div><small>Прибыль</small><b' + (netProf < 0 ? ' style="color:var(--bad)"' : '') + '>' + m(netProf) + '</b></div>') + '</div>' +
-      '<div class="cacts"><button class="btn pri" data-a="cord">' + (C.editNo ? 'Сохранить в заказ № ' + e(C.editNo) : 'Оформить заказ') + '</button><button class="btn" data-a="cdraft">Сохранить в черновики</button><button class="btn" data-a="cclear">Без сохранения</button></div></div></div>' +
+      '<div class="cacts"><button class="btn pri" data-a="cord">' + (C.editNo ? 'Сохранить в ' + eno() : 'Оформить заказ') + '</button><button class="btn" data-a="cdraft">Сохранить в черновики</button><button class="btn" data-a="cclear">Без сохранения</button></div></div></div>' +
       (O.open ? checkout() : '');
   }
   /* оформление: окно по центру экрана, три шага: клиент, условия, документы и отправка */
+  A.calcO = () => O;
+  const eno = () => { const r = DB.byKey(JC().C.editNo); return r && r.no ? 'заказ № ' + r.no : 'черновик'; }, cap = t => e(t.charAt(0).toUpperCase() + t.slice(1));
+  const resetO = () => { Object.assign(O, O0(), { inst: !JC().C.region, term: termDefault() }); };
   const STEPS = ['Клиент', 'Условия', 'Документы'];
   function checkout() {
     const C = JC().C, q = O.q.trim().toLowerCase(), D = A.D, edit = !!C.editNo && !O.fresh, st = edit ? 1 : O.step, svc = !C.region && (+C.service || 0) > 0;
@@ -252,9 +256,9 @@
       const yur = O.ct === 'yur', ip = O.ct === 'ip', reg = !!C.region, instOn = !reg && (svc || O.inst);
       const typ = '<div class="seg" style="align-self:flex-start">' + [['fiz', 'Физ. лицо'], ['yur', 'Юр. лицо'], ['ip', 'ИП']].map(t => '<button class="' + (O.ct === t[0] ? 'on' : '') + '" data-a="coct" data-v="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
       const innRow = (yur || ip) ? '<div class="fld"><label>ИНН</label><div class="row" style="gap:8px"><input class="ul num" inputmode="numeric" value="' + e(O.inn) + '" data-c="cof" data-k="inn"><button class="btn" data-a="cinn" style="flex:none">' + (O.innBusy ? 'Ищу…' : 'Найти по ИНН') + '</button></div>' + (O.innMsg ? '<small style="color:' + (O.innOk ? 'var(--ok)' : 'var(--bad)') + '">' + e(O.innMsg) + '</small>' : '') + '</div>' : '';
-      const fields = yur ? [innRow, fld('company', 'Название'), fld('ogrn', 'ОГРН'), fld('uaddr', 'Юридический адрес'), fld('phone', 'Телефон'), fld('repr', 'ФИО представителя'), fld('email', 'E-mail'), instOn ? fld('addr', 'Адрес установки') : '', fld('bank', 'Банковские реквизиты')]
-        : ip ? [innRow, fld('name', 'ФИО индивидуального предпринимателя'), fld('ogrn', 'ОГРНИП'), fld('uaddr', 'Адрес регистрации'), fld('phone', 'Телефон'), fld('email', 'E-mail'), instOn ? fld('addr', 'Адрес установки') : '', fld('bank', 'Банковские реквизиты')]
-        : [fld('name', 'ФИО'), fld('phone', 'Телефон'), fld('email', 'E-mail'), fld('addr', reg ? 'Адрес получателя' : instOn ? 'Адрес установки' : 'Адрес')];
+      const fields = yur ? [innRow, fld('company', 'Название'), fld('ogrn', 'ОГРН'), fld('uaddr', 'Юридический адрес'), fld('phone', 'Телефон'), fld('phone2', 'Доп. телефон'), fld('repr', 'ФИО представителя'), fld('email', 'E-mail'), instOn ? fld('addr', 'Адрес установки') : '', fld('bank', 'Банковские реквизиты')]
+        : ip ? [innRow, fld('name', 'ФИО индивидуального предпринимателя'), fld('ogrn', 'ОГРНИП'), fld('uaddr', 'Адрес регистрации'), fld('phone', 'Телефон'), fld('phone2', 'Доп. телефон'), fld('email', 'E-mail'), instOn ? fld('addr', 'Адрес установки') : '', fld('bank', 'Банковские реквизиты')]
+        : [fld('name', 'ФИО'), fld('phone', 'Телефон'), fld('phone2', 'Доп. телефон'), fld('email', 'E-mail'), fld('addr', reg ? 'Адрес получателя' : instOn ? 'Адрес установки' : 'Адрес')];
       b = '<div class="fld"><label>Найти клиента в базе</label><input class="ul" id="cofq" value="' + e(O.q) + '"></div>' +
         (found.length ? '<div class="chips" style="margin:8px 0">' + found.map(c => '<button class="btn sm" data-a="cofpick" data-id="' + c.id + '">' + e(c.name) + (c.phone ? ' · ' + e(c.phone) : '') + '</button>').join('') + '</div>' : '') +
         '<div style="margin-top:14px">' + typ + '</div><div class="fgrid cgrid" style="margin-top:12px">' + fields.join('') + '</div>' +
@@ -266,7 +270,7 @@
       b = '<div class="mdocs"><button class="btn" data-a="cdoc" data-fn="kpHtml">КП</button><button class="btn" data-a="cdoc" data-fn="kpVarHtml">КП три варианта</button><button class="btn" data-a="codoc" data-fn="zamernikHtml">Замерник</button><button class="btn" data-a="codoc" data-fn="dogovorHtml">Договор</button></div>' +
         '<div class="fld" style="margin-top:18px"><label>Отправить клиенту КП</label><div class="chs"><button class="btn" data-a="csend" data-ch="wa">WhatsApp</button><button class="btn" data-a="csend" data-ch="tg">Telegram</button><button class="btn" data-a="csend" data-ch="mail">Почта</button></div></div>';
     }
-    return '<div class="mback" data-a="cocancel"></div><div class="modal"><div class="mhead"><h2>' + (C.editNo && !O.fresh ? 'Заказ № ' + e(C.editNo) : 'Оформление заказа') + '</h2><span class="sp"></span><button class="ib" data-a="cocancel" title="Закрыть">' + A.icon('close', 18) + '</button></div>' +
+    return '<div class="mback" data-a="cocancel"></div><div class="modal"><div class="mhead"><h2>' + (C.editNo && !O.fresh ? cap(eno()) : 'Оформление заказа') + '</h2><span class="sp"></span><button class="ib" data-a="cocancel" title="Закрыть">' + A.icon('close', 18) + '</button></div>' +
       (edit ? '' : '<div class="mtabs">' + STEPS.map((t, i) => '<button class="' + (st === i ? 'on' : '') + '" data-a="costep" data-v="' + i + '">' + (i + 1) + '. ' + t + '</button>').join('') + '</div>') +
       '<div class="mbody">' + b + '</div>' +
       '<div class="mfoot"><button class="btn" data-a="cocancel">Отмена</button><span class="sp"></span>' + (!edit && st > 0 ? '<button class="btn" data-a="costep" data-v="' + (st - 1) + '">Назад</button>' : '') +
@@ -275,7 +279,7 @@
 
   A.module('calc', {
     render() { const C = JC() ? JC().C : {}, E = window.Eng, when = E && E.at ? new Date(E.at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-      return '<div class="head" style="display:flex;align-items:center;gap:12px"><h1>' + (C.editNo ? 'Заказ № ' + e(C.editNo) : 'Новый заказ') + '</h1><span class="sp"></span>' + (when ? '<span class="mut sm">Цены из таблицы: ' + e(when) + '</span>' : '') + '<button class="btn sm" data-a="cprices" title="Загрузить свежие цены, наличие и ткани из Google Таблицы">Обновить цены</button></div><div class="calcwrap">' + form() + cart() + '</div>'; }
+      return '<div class="head" style="display:flex;align-items:center;gap:12px"><h1>' + (C.editNo ? cap(eno()) : 'Новый заказ') + '</h1><span class="sp"></span>' + (when ? '<span class="mut sm">Цены из таблицы: ' + e(when) + '</span>' : '') + '<button class="btn sm" data-a="cprices" title="Загрузить свежие цены, наличие и ткани из Google Таблицы">Обновить цены</button></div><div class="calcwrap">' + form() + cart() + '</div>'; }
   });
 
   /* ===== Tab по полям формы: слева направо, сверху вниз; выпадающее поле открывается сразу ===== */
@@ -330,9 +334,9 @@
     const co = J.toOrder(); if (!co.items.length) { A.toast('В корзине нет изделий с ценой'); return; }
     const total = Math.max(0, co.items.reduce((a, i) => a + (+i.price || 0), 0) - (+co.disc || 0)), reg = !!C.region, pvz = (C.pvz || '').trim(), editing = !!C.editNo;
     const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: reg ? 0 : co.delivery, cart: J.snapshot(), region: reg, pvz: reg ? pvz : '' };
-    if (!editing) Object.assign(data, { name: 'Без имени', phone: '', addr: '', install: !reg, buyer: 'физ', status: 'Черновик', pre: '100', preU: '%', term: termDefault(), note: reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '' });
+    if (!editing) Object.assign(data, { name: '', phone: '', addr: '', install: !reg, buyer: 'физ', status: 'Черновик', pre: '100', preU: '%', term: termDefault(), note: reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '' });
     const rec = DB.saveOrder(data, co.items, editing ? C.editNo : null, 'Черновик (компьютер)', m(total));
-    J.clear(); O.open = false; Object.assign(F, { edit: -1 }); A.toast('Черновик сохранён: заказ № ' + rec.no); A.S.selOrder = 'ph' + rec.uid; A.save(); rr();
+    J.clear(); resetO(); Object.assign(F, { edit: -1 }); A.toast('Черновик сохранён'); A.S.selOrder = 'ph' + rec.uid; A.save(); rr();
   };
   A.act.cf = el => { const k = el.dataset.k, v = el.dataset.v; F[k] = k === 'lam' ? +v : v; if (k === 'sup') { Object.assign(F, { lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {} }); } rr(); };
   A.fld.cf = (v, el) => { const k = el.dataset.k; F[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
@@ -347,10 +351,11 @@
   A.act.chide = () => { S.showCost = !S.showCost; A.save(); rr(); };
   A.act.cdm = el => { JC().C.discMode = el.dataset.v; JC().save(); rr(); };
   A.fld.cdisc = v => { const C = JC().C; C.disc = Math.max(0, +v || 0) || ''; JC().save(); rr(); };
+  A.act.cservsug = el => { JC().C.service = +el.dataset.v || 0; JC().save(); rr(); };
   A.fld.cserv = v => { JC().C.service = Math.max(0, Math.round(+String(v).replace(/\s/g, '') || 0)); JC().save(); rr(); };
   A.fld.cprice = (v, el) => { const C = JC().C, i = +el.dataset.i, s = String(v).replace(/\s/g, ''); if (!C.cart[i]) return; C.cart[i] = Object.assign({}, C.cart[i], { own: s === '' ? '' : Math.max(0, Math.round(+s || 0)) }); JC().save(); rr(); };
   A.act.cdel = el => { const C = JC().C; C.cart.splice(+el.dataset.i, 1); JC().save(); rr(); };
-  A.act.cclear = () => { JC().clear(); Object.assign(O, { open: false, fresh: false }); rr(); };
+  A.act.cclear = () => { JC().clear(); resetO(); rr(); };
   A.act.cocancel = () => { O.open = false; rr(); };
   const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
     F.mode = 'blinds'; Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
@@ -426,7 +431,7 @@
     } catch (x) { Object.assign(O, { innBusy: false, innOk: false, innMsg: x.message || String(x) }); }
     rr();
   };
-  A.act.costep = el => { if (+el.dataset.v > 0 && !O.name.trim() && !O.company.trim() && !O.repr.trim() && !O.phone.trim()) { A.toast('Укажи имя или телефон клиента'); return; } O.step = +el.dataset.v; rr(); };
+  A.act.costep = el => { O.step = +el.dataset.v; rr(); };
   A.act.conext = () => A.act.costep({ dataset: { v: O.step + 1 } });
   /* статус ставится сам: черновик, после отправки КП, после договора */
   const autoStatus = () => O.dog ? 'Договор' : O.sent ? 'КП отправлено' : 'Черновик';
@@ -435,19 +440,19 @@
     const total = Math.max(0, co.items.reduce((a, i) => a + (+i.price || 0), 0) - (+co.disc || 0));
     const reg = !!C.region, pvz = (C.pvz || '').trim();
     const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: reg ? 0 : co.delivery, cart: J.snapshot(), region: reg, pvz: reg ? pvz : '' };
-    const yur = O.ct === 'yur', ip = O.ct === 'ip', cl = (yur ? O.repr.trim() || O.company.trim() : O.name.trim()) || 'Без имени';
-    if (fill) Object.assign(data, { name: cl, phone: O.phone.trim(), email: O.email.trim(), addr: O.addr.trim(), install: !reg && (O.inst || (+C.service || 0) > 0), buyer: yur ? 'юр' : ip ? 'ип' : 'физ', company: yur ? O.company.trim() : '', inn: yur || ip ? O.inn.replace(/\D/g, '') : '', uaddr: yur || ip ? O.uaddr.trim() : '', ogrn: yur || ip ? O.ogrn.trim() : '', bank: yur || ip ? O.bank.trim() : '', status: autoStatus(), pre: O.pre === '' ? '100' : O.pre, preU: O.preU, term: O.term || '12',
+    const yur = O.ct === 'yur', ip = O.ct === 'ip', cl = (yur ? O.repr.trim() || O.company.trim() : O.name.trim()) || '';
+    if (fill) Object.assign(data, { name: cl, phone: O.phone.trim(), phone2: O.phone2.trim(), comment: O.comment.trim(), email: O.email.trim(), addr: O.addr.trim(), install: !reg && (O.inst || (+C.service || 0) > 0), buyer: yur ? 'юр' : ip ? 'ип' : 'физ', company: yur ? O.company.trim() : '', inn: yur || ip ? O.inn.replace(/\D/g, '') : '', uaddr: yur || ip ? O.uaddr.trim() : '', ogrn: yur || ip ? O.ogrn.trim() : '', bank: yur || ip ? O.bank.trim() : '', status: autoStatus(), pre: O.pre === '' ? '100' : O.pre, preU: O.preU, term: O.term || '12',
       note: [O.note.trim(), reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : ''].filter(Boolean).join('\n') });
-    else if (O.note.trim()) data.note = O.note.trim();
+    else { if (O.note.trim()) data.note = O.note.trim(); if (O.comment.trim()) data.comment = O.comment.trim(); }
     const rec = DB.saveOrder(data, co.items, editing ? C.editNo : null, 'Расчёт (компьютер)', m(total));
-    if (!editing) { C.editNo = rec.no; O.fresh = true; J.save(); }
+    if (!editing) { C.editNo = DB.keyOf(rec); O.fresh = true; J.save(); }
     return rec;
   }
+  A.persistCart = () => persist();
   function checkReady() {
     const J = JC(), C = J.C;
     if (!C.cart.length) { A.toast('Корзина пуста'); return false; }
     if (!J.toOrder().items.length) { A.toast('В корзине нет изделий с ценой'); return false; }
-    if (!C.editNo && !O.name.trim() && !O.company.trim() && !O.repr.trim() && !O.phone.trim()) { A.toast('Укажи имя или телефон клиента'); O.step = 0; rr(); return false; }
     return true;
   }
   /* срок по умолчанию: 12 дней для дерева и прочего, у рулонок срок завода + 5 дней (берём самый долгий) */
@@ -456,7 +461,7 @@
   A.act.cord = () => {
     const C = JC().C; if (!C.cart.length) { A.toast('Корзина пуста'); return; }
     if (!O.open) {
-      if (!C.editNo) Object.assign(O, { step: 0, fresh: false, sent: false, dog: false, q: '', ct: 'fiz', name: '', phone: '', email: '', addr: '', company: '', inn: '', ogrn: '', uaddr: '', repr: '', bank: '', innMsg: '', innOk: true, inst: !C.region, note: '', pre: '100', preU: '%', term: termDefault() });
+      if (!C.editNo) resetO();
       O.open = true; rr(); return;
     }
     A.act.cosave();
@@ -464,21 +469,21 @@
   A.act.cosave = () => {
     if (!checkReady()) return;
     const J = JC(), rec = persist();
-    J.clear(); Object.assign(O, { open: false, fresh: false }); Object.assign(F, { edit: -1 });
+    J.clear(); resetO(); Object.assign(F, { edit: -1 });
     A.S.selOrder = 'ph' + rec.uid; A.S.orderTab = 'items'; A.save();
-    A.toast('Заказ № ' + rec.no + ' сохранён'); A.open('orders');
+    A.toast(rec.no ? 'Заказ № ' + rec.no + ' сохранён' : 'Черновик сохранён'); A.open('orders');
   };
   /* замерник и договор строятся по сохранённому заказу: сохраняем и открываем */
   A.act.codoc = el => {
     if (!checkReady()) return;
-    const fn = el.dataset.fn, rec = persist();
+    const fn = el.dataset.fn, rec = persist(); DB.ensureNo(rec.uid);
     if (fn === 'dogovorHtml') { O.dog = true; DB.patchRec(rec.uid, { status: 'Договор' }); } else DB.patchRec(rec.uid, { zamDone: true });
     A.docOpen(fn, rec.uid);
   };
   /* отправка КП: сохраняем заказ, готовим PDF, открываем выбранный канал */
   A.act.csend = async el => {
     if (!checkReady()) return;
-    const ch = el.dataset.ch, rec0 = persist(), uid = rec0.uid;
+    const ch = el.dataset.ch, rec00 = persist(), uid = rec00.uid; DB.ensureNo(uid); const rec0 = DB.raw().find(x => x.uid === uid) || rec00;
     if (ch === 'mail' && !O.email.trim()) { A.toast('Впиши e-mail клиента на первом шаге'); return; }
     A.toast('Готовлю КП…');
     try {
