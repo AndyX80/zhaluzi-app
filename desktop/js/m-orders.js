@@ -1,11 +1,14 @@
 /* Заказы: центральный объект. Список, канбан, карточка с воронкой, вкладки. */
 (function () {
   const A = App, D = A.D, S = A.S, e = A.esc, m = A.money;
-  const FILTERS = [['all', 'Все'], ['work', 'В работе'], ['pay', 'Ждут оплаты'], ['claim', 'Рекламации'], ['done', 'Закрытые'], ['arch', 'Архив']];
+  const FILTERS = [['all', 'Все'], ['work', 'В работе'], ['pay', 'Ждут оплаты'], ['claim', 'Рекламации'], ['done', 'Закрытые'], ['calc', 'Просчёты'], ['arch', 'Архив']];
   const closed = o => o.fl ? !!o.fl.closed : o.stage === 9;
+  const base = () => S.ordersFilter === 'calc' ? (D.calcs || []) : D.orders;
+  { const ord0 = A.order; A.order = id => ord0(id) || (D.calcs || []).find(x => x.id === id); }
   const pass = o => {
     const f = S.ordersFilter;
     if (f === 'arch') return !!o.archived; if (o.archived) return false;
+    if (f === 'calc') return !!o.draft;
     if (S.oyear && S.oyear !== 'all' && String(o.created || '').slice(0, 4) !== S.oyear && /^\d{4}/.test(o.created || '')) return false;
     const q = (S.oq || '').trim().toLowerCase();
     if (q && ((o.no + ' ' + o.title + ' ' + (o.sup || '') + ' ' + (o.factory || '') + ' ' + ((A.client(o.client) || {}).name || '') + ' ' + ((A.client(o.client) || {}).phone || '')).toLowerCase().indexOf(q) < 0)) return false;
@@ -46,7 +49,7 @@
     const r = DB.raw().find(x => x.uid === o.uid) || {}, v = k => e(r[k] == null ? '' : r[k]), f = (k, l, ph, wide) => '<div class="field"' + (wide ? ' style="grid-column:1/-1"' : '') + '><label>' + l + '</label><input class="in" value="' + v(k) + '" placeholder="' + (ph || '') + '" data-c="phfld" data-k="' + k + '" data-uid="' + o.uid + '"></div>';
     const bt = r.buyer || 'физ';
     return '<div class="g2"><div class="stack" style="gap:10px"><div class="g2" style="gap:10px">' +
-      '<div class="field"><label>Номер заказа</label><input class="in" value="' + v('no') + '" placeholder="Черновик, номера нет" data-c="phfld" data-k="no" data-uid="' + o.uid + '"><small class="mut">Пусто = черновик. Номер появится сам, когда отправишь КП или оформишь договор; можно вписать свой.</small></div>' +
+      '<div class="field"><label>Номер заказа</label><input class="in" value="' + v('no') + '" placeholder="Просчёт, номера нет" data-c="phfld" data-k="no" data-uid="' + o.uid + '"><small class="mut">Пусто = просчёт (КП без номера). Номер появится сам, когда оформишь договор или придёт предоплата; можно вписать свой.</small></div>' +
       '<div class="field"><label>Заказчик</label><select class="in" data-c="phfld" data-k="buyer" data-uid="' + o.uid + '">' + [['физ', 'Физ. лицо'], ['юр', 'Юр. лицо'], ['ип', 'ИП']].map(x => '<option value="' + x[0] + '"' + (bt === x[0] ? ' selected' : '') + '>' + x[1] + '</option>').join('') + '</select></div>' +
       f('name', bt === 'ип' ? 'ФИО предпринимателя' : bt === 'юр' ? 'ФИО представителя' : 'ФИО') + (bt === 'юр' ? f('company', 'Название организации') : '') +
       f('phone', 'Телефон') + f('phone2', 'Доп. телефон') + f('email', 'E-mail') + f('addr', 'Адрес', '', bt === 'физ') +
@@ -62,7 +65,7 @@
   }
   A.fld.phfld = (v, el) => {
     const uid = el.dataset.uid, k = el.dataset.k, r = DB.raw().find(x => x.uid === uid); if (!r) return;
-    if (k === 'no') { const res = DB.setNo(uid, v); if (!res.ok) { A.toast(res.msg); A.render(); return; } A.S.selOrder = 'ph' + uid; A.toast(String(v).trim() ? 'Номер изменён' : 'Заказ вернулся в черновик'); A.render(); return; }
+    if (k === 'no') { const res = DB.setNo(uid, v); if (!res.ok) { A.toast(res.msg); A.render(); return; } A.S.selOrder = 'ph' + uid; A.toast(String(v).trim() ? 'Номер изменён' : 'Заказ вернулся в просчёты'); A.render(); return; }
     const P = {}; P[k] = k === 'pre' ? String(v).replace(/[^\d.]/g, '') : v;
     if (k === 'buyer' || k === 'preU') { DB.patchRec(uid, P); A.render(); return; }
     DB.patchRec(uid, P);
@@ -106,7 +109,7 @@
 
   function card(id, full) {
     const o = A.order(id) || D.orders[0], c = A.client(o.client) || { name: '' };
-    return '<div class="card" style="min-height:100%"><div class="row wrap" style="margin-bottom:6px">' + (full ? '<button class="btn" data-a="oback" data-id="order:' + o.id + '">← Назад</button>' : '') + '<h1>' + (o.draft ? 'Черновик' : 'Заказ № ' + o.no) + '</h1>' + A.stagePill(o) + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '<span class="sp"></span>' + ((D.real || o.ph) ? (S.odelId === o.id ? '<span class="mut">Удалить заказ?</span><button class="btn sm" style="width:120px;background:#c0392b;border-color:#c0392b;color:#fff" data-a="odel" data-id="' + o.id + '" data-y="1">Да, удалить</button><button class="btn sm" id="odelno" style="width:120px;background:#2e8b57;border-color:#2e8b57;color:#fff" data-a="odelno">Нет</button>' : '<button class="btn sm" data-a="oarch" data-id="' + o.id + '">' + (o.archived ? 'Вернуть из архива' : 'В архив') + '</button><button class="btn sm" data-a="odel" data-id="' + o.id + '">Удалить заказ</button>') : '') +
+    return '<div class="card" style="min-height:100%"><div class="row wrap" style="margin-bottom:6px">' + (full ? '<button class="btn" data-a="oback" data-id="order:' + o.id + '">← Назад</button>' : '') + '<h1>' + (o.draft ? 'Просчёт (без номера)' : 'Заказ № ' + o.no) + '</h1>' + A.stagePill(o) + (o.claim ? '<span class="pill bad">Рекламация</span>' : '') + '<span class="sp"></span>' + ((D.real || o.ph) ? (S.odelId === o.id ? '<span class="mut">Удалить заказ?</span><button class="btn sm" style="width:120px;background:#c0392b;border-color:#c0392b;color:#fff" data-a="odel" data-id="' + o.id + '" data-y="1">Да, удалить</button><button class="btn sm" id="odelno" style="width:120px;background:#2e8b57;border-color:#2e8b57;color:#fff" data-a="odelno">Нет</button>' : '<button class="btn sm" data-a="oarch" data-id="' + o.id + '">' + (o.archived ? 'Вернуть из архива' : 'В архив') + '</button><button class="btn sm" data-a="odel" data-id="' + o.id + '">Удалить заказ</button>') : '') +
       (full ? '' : '<button class="btn sm" data-a="opn" data-id="order:' + o.id + '">Открыть во вкладке</button>') + '</div>' + dupBox(o) + '<div class="mut" style="margin-bottom:10px">' + e(c.name) + ' · ' + e(o.title) + (o.created ? ' · ' + e(dmy(o.created)) : '') + '</div>' + stepper(o) +
       '<div class="itabs">' + tabs.map(t => '<button class="' + (S.orderTab === t[0] ? 'on' : '') + '" data-a="otab" data-t="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>' + body(o) +
       '<div class="sumbar"><div><small>Сумма заказа</small><b>' + m(o.sum) + '</b></div><div><small>Оплачено</small><b>' + m(o.paid) + '</b></div><div><small>Долг</small><b>' + m(Math.max(0, o.sum - o.paid)) + '</b></div><div><small>Закуп</small><b>' + m(o.cost) + '</b></div><div><small>Прибыль</small><b>' + m(prof(o)) + '</b></div></div></div>';
@@ -114,7 +117,7 @@
 
   const LIM = 80;
   function list() {
-    const all = D.orders.filter(pass), lim = S.olimit || LIM, rows = all.slice(0, lim);
+    const all = base().filter(pass), lim = S.olimit || LIM, rows = all.slice(0, lim);
     return '<div class="card p0"><table class="tbl"><thead><tr><th>№</th><th>Клиент</th><th>Этап</th><th class="r">Сумма</th></tr></thead><tbody>' + rows.map(o =>
       '<tr class="' + (o.id === S.selOrder ? 'sel' : '') + '" data-a="selo" data-id="' + o.id + '"><td class="b">' + o.no + '</td><td>' + e((A.client(o.client) || {}).name) + '<div class="mut" style="font-size:12px">' + e(o.title) + (o.created ? ' · ' + e(dmy(o.created)) : '') + '</div></td><td>' + A.stagePill(o) + '</td><td class="r num">' + m(o.sum) + '</td></tr>').join('') + '</tbody></table>' +
       (all.length > lim ? '<div style="padding:10px;text-align:center"><button class="btn sm" data-a="omore">Показать ещё (осталось ' + (all.length - lim) + ')</button></div>' : '') + (all.length ? '' : '<div class="empty" style="padding:24px">Ничего не найдено</div>') + '</div>';
@@ -190,7 +193,7 @@
   const tfilt = () => S.tf || (S.tf = {});
   function trows() {
     const F = tfilt(), pr = perRange(S.tper), act = COLS.filter(c => { const f = F[c.k]; return f && (typeof f === 'object' ? (f.a !== '' && f.a != null) || (f.b !== '' && f.b != null) : f !== ''); });
-    let rows = D.orders.filter(pass).filter(o => {
+    let rows = base().filter(pass).filter(o => {
       if (pr && !(o.created && o.created >= pr[0] && o.created <= pr[1])) return false;
       return act.every(c => { const f = F[c.k], v = c.v(o);
         if (c.t === 't') return String(v).toLowerCase().indexOf(String(f).trim().toLowerCase()) >= 0;

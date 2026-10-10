@@ -69,7 +69,7 @@
       const r0 = C.editNo && DB.byKey(C.editNo), O = A.calcO ? A.calcO() : null, live = O && (O.open || O.fresh || !r0), src = live ? O : (r0 || O || {});
       const yur = live && O.ct === 'yur', cl = live ? ((yur ? O.repr.trim() || O.company.trim() : O.name.trim()) || '') : (r0 && (r0.name || r0.company) || '');
       const ph = [src.phone, src.phone2].filter(Boolean).join(', ');
-      return show(fn, Object.assign({ no: r0 && r0.no || '—', created: new Date().toISOString(), name: cl, phone: ph, email: src.email || '', addr: src.addr || '', pre: src.pre === '' || src.pre == null ? '100' : src.pre, preU: src.preU || '%', term: src.term || '12', cart: J.snapshot() }, co), r0 && r0.no ? undefined : 'черновик');
+      return show(fn, Object.assign({ no: r0 && r0.no || '—', created: new Date().toISOString(), name: cl, phone: ph, email: src.email || '', addr: src.addr || '', pre: src.pre === '' || src.pre == null ? '100' : src.pre, preU: src.preU || '%', term: src.term || '12', cart: J.snapshot() }, co), r0 && r0.no ? undefined : 'просчёт');
     }
     const r = C.editNo && DB.byKey(C.editNo);
     if (r) { A.toast('Документ по сохранённому заказу' + (r.no ? ' № ' + r.no : '') + '. Если менял состав, сначала нажми «Сохранить в заказ»'); return open(fn, r.uid); }

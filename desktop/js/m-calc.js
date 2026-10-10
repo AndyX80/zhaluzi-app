@@ -239,12 +239,12 @@
       '<span class="sp"></span><label>Скидка</label><div class="seg"><button class="' + (pct ? 'on' : '') + '" data-a="cdm" data-v="pct">%</button><button class="' + (!pct ? 'on' : '') + '" data-a="cdm" data-v="rub">₽</button></div><input class="ul num" type="number" min="0" style="width:72px" value="' + (C.disc || '') + '" data-c="cdisc" placeholder="0"></div>' +
       '<div class="sumbar" style="grid-template-columns:repeat(' + (hide ? 2 : 4) + ',1fr)"><div><small>Сумма без скидки</small><b>' + m(FF.total) + '</b></div><div><small>Итого' + (FF.discAmt ? ' (скидка −' + m(FF.discAmt) + ')' : '') + '</small><b style="color:var(--acc)">' + m(FF.netTotal) + '</b></div>' +
       (hide ? '' : '<div><small>Закуп (оценка)</small><b>' + m(Math.max(0, cost)) + '</b></div><div><small>Прибыль</small><b' + (netProf < 0 ? ' style="color:var(--bad)"' : '') + '>' + m(netProf) + '</b></div>') + '</div>' +
-      '<div class="cacts"><button class="btn pri" data-a="cord">' + (C.editNo ? 'Сохранить в ' + eno() : 'Оформить заказ') + '</button><button class="btn" data-a="cdraft">Сохранить в черновики</button><button class="btn" data-a="cclear">Без сохранения</button></div></div></div>' +
+      '<div class="cacts"><button class="btn pri" data-a="cord">' + (C.editNo ? 'Сохранить в ' + eno() : 'Оформить заказ') + '</button><button class="btn" data-a="cdraft">Сохранить как просчёт</button><button class="btn" data-a="cclear">Без сохранения</button></div></div></div>' +
       (O.open ? checkout() : '');
   }
   /* оформление: окно по центру экрана, три шага: клиент, условия, документы и отправка */
   A.calcO = () => O;
-  const eno = () => { const r = DB.byKey(JC().C.editNo); return r && r.no ? 'заказ № ' + r.no : 'черновик'; }, cap = t => e(t.charAt(0).toUpperCase() + t.slice(1));
+  const eno = () => { const r = DB.byKey(JC().C.editNo); return r && r.no ? 'заказ № ' + r.no : 'просчёт'; }, cap = t => e(t.charAt(0).toUpperCase() + t.slice(1));
   const resetO = () => { Object.assign(O, O0(), { inst: !JC().C.region, term: termDefault() }); };
   const STEPS = ['Клиент', 'Условия', 'Документы'];
   function checkout() {
@@ -336,7 +336,7 @@
     const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: reg ? 0 : co.delivery, cart: J.snapshot(), region: reg, pvz: reg ? pvz : '' };
     if (!editing) Object.assign(data, { name: '', phone: '', addr: '', install: !reg, buyer: 'физ', status: 'Черновик', pre: '100', preU: '%', term: termDefault(), note: reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '' });
     const rec = DB.saveOrder(data, co.items, editing ? C.editNo : null, 'Черновик (компьютер)', m(total));
-    J.clear(); resetO(); Object.assign(F, { edit: -1 }); A.toast('Черновик сохранён'); A.S.selOrder = 'ph' + rec.uid; A.save(); rr();
+    J.clear(); resetO(); Object.assign(F, { edit: -1 }); A.toast('Просчёт сохранён'); A.S.selOrder = 'ph' + rec.uid; A.save(); rr();
   };
   A.act.cf = el => { const k = el.dataset.k, v = el.dataset.v; F[k] = k === 'lam' ? +v : v; if (k === 'sup') { Object.assign(F, { lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {} }); } rr(); };
   A.fld.cf = (v, el) => { const k = el.dataset.k; F[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
@@ -471,30 +471,30 @@
     const J = JC(), rec = persist();
     J.clear(); resetO(); Object.assign(F, { edit: -1 });
     A.S.selOrder = 'ph' + rec.uid; A.S.orderTab = 'items'; A.save();
-    A.toast(rec.no ? 'Заказ № ' + rec.no + ' сохранён' : 'Черновик сохранён'); A.open('orders');
+    A.toast(rec.no ? 'Заказ № ' + rec.no + ' сохранён' : 'Просчёт сохранён'); A.open('orders');
   };
   /* замерник и договор строятся по сохранённому заказу: сохраняем и открываем */
   A.act.codoc = el => {
     if (!checkReady()) return;
-    const fn = el.dataset.fn, rec = persist(); DB.ensureNo(rec.uid);
+    const fn = el.dataset.fn, rec = persist(); if (fn === 'dogovorHtml') DB.ensureNo(rec.uid);
     if (fn === 'dogovorHtml') { O.dog = true; DB.patchRec(rec.uid, { status: 'Договор' }); } else DB.patchRec(rec.uid, { zamDone: true });
     A.docOpen(fn, rec.uid);
   };
   /* отправка КП: сохраняем заказ, готовим PDF, открываем выбранный канал */
   A.act.csend = async el => {
     if (!checkReady()) return;
-    const ch = el.dataset.ch, rec00 = persist(), uid = rec00.uid; DB.ensureNo(uid); const rec0 = DB.raw().find(x => x.uid === uid) || rec00;
+    const ch = el.dataset.ch, rec0 = persist(), uid = rec0.uid;
     if (ch === 'mail' && !O.email.trim()) { A.toast('Впиши e-mail клиента на первом шаге'); return; }
     A.toast('Готовлю КП…');
     try {
       const file = await A.docFile('kpHtml', uid), sum = m(JC().toOrder().items.reduce((a, i) => a + (+i.price || 0), 0) - (+JC().C.disc || 0));
-      const nm = (O.name.trim().split(/\s+/)[1] || O.name.trim().split(/\s+/)[0] || 'клиент'), text = 'Добрый день, ' + nm + '! Отправляю коммерческое предложение № ' + rec0.no + ' на сумму ' + sum + '. Жалюзи-СПБ';
+      const nm = (O.name.trim().split(/\s+/)[1] || O.name.trim().split(/\s+/)[0] || 'клиент'), text = 'Добрый день, ' + nm + '! Отправляю коммерческое предложение на сумму ' + sum + '. Жалюзи-СПБ';
       O.sent = true; DB.patchRec(uid, { status: O.dog ? 'Договор' : 'КП отправлено', sent: new Date().toISOString().slice(0, 10) });
-      const shared = ch !== 'mail' && window.JalExport && await JalExport.share([file], text, 'Жалюзи-СПБ, заказ № ' + rec0.no);
+      const shared = ch !== 'mail' && window.JalExport && await JalExport.share([file], text, 'Жалюзи-СПБ, коммерческое предложение');
       if (!shared) {
         JalExport.save(file);
         const d = String(O.phone || '').replace(/\D/g, '').replace(/^8(?=\d{10}$)/, '7'), enc = encodeURIComponent;
-        const url = ch === 'wa' ? 'https://wa.me/' + d + '?text=' + enc(text) : ch === 'tg' ? 'https://t.me/' + (d ? '+' + d : '') : 'mailto:' + O.email.trim() + '?subject=' + enc('Жалюзи-СПБ, заказ № ' + rec0.no) + '&body=' + enc(text);
+        const url = ch === 'wa' ? 'https://wa.me/' + d + '?text=' + enc(text) : ch === 'tg' ? 'https://t.me/' + (d ? '+' + d : '') : 'mailto:' + O.email.trim() + '?subject=' + enc('Жалюзи-СПБ, коммерческое предложение') + '&body=' + enc(text);
         window.open(url, '_blank'); A.toast('КП скачан: приложи файл к сообщению');
       }
       rr();

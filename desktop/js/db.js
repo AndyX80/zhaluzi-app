@@ -106,7 +106,7 @@
     const items = r.items || [], goods = items.reduce((a, i) => a + (+i.price || 0), 0), prof = items.reduce((a, i) => a + (+i.profit || 0), 0);
     const sum = Math.max(0, goods + (r.priced ? 0 : (+r.delivery || 0)) - (+r.disc || 0)), cat = items.some(i => /дерев|бамбук/i.test(i.mat || i.title || '')) ? 'Дерево' : items.some(i => i.prod === 'rolo') ? 'Рулонные' : 'Разное';
     const sups = {}; items.forEach(i => { if (i.sup) sups[i.sup] = 1; });
-    return { id: 'ph' + r.uid, no: r.no ? String(r.no) : 'Черновик', cnote: r.cnote || '', draft: !r.no, rawNo: r.no ? String(r.no) : '', uid: r.uid, ph: true, pre: r.pre, preU: r.preU, term: r.term, _p2: r.phone2 || '', _e: r.email || '', sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: r.src || '', factory: '',
+    return { id: 'ph' + r.uid, no: r.no ? String(r.no) : 'Просчёт', cnote: r.cnote || '', draft: !r.no, rawNo: r.no ? String(r.no) : '', uid: r.uid, ph: true, pre: r.pre, preU: r.preU, term: r.term, _p2: r.phone2 || '', _e: r.email || '', sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: r.src || '', factory: '',
       inst: !!r.install, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: 0,
       created: (r.created || '').slice(0, 10), due: '', tk: r.note || '', review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: !!r.claim, legacy: false, archived: !!r.archived,
       _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '', items, disc: +r.disc || 0, delivery: +r.delivery || 0, priced: !!r.priced, hasCart: !!(r.cart && r.cart.cart), supSent: !!r.supSent,
@@ -130,7 +130,7 @@
     orders.forEach(o => { o.name = o._n; o.phone = o._p; delete o._n; delete o._p; });
     const data = DB.build(orders, DB.loadOps());
     data.orders.forEach(o => { const c = data.clients.find(x => x.id === o.client); if (c && !c.addr && o._a) c.addr = o._a; delete o._a; });
-    D.clients = data.clients; D.orders = data.orders; D.ops = data.ops; D.events = []; D.real = DB.real = true;
+    D.clients = data.clients; D.calcs = data.orders.filter(o => o.draft); D.orders = data.orders.filter(o => !o.draft); D.ops = data.ops; D.events = []; D.real = DB.real = true;
     return orders.length;
   };
   DB.loadOps = () => { try { return JSON.parse(lsGet(OPS) || '[]') || []; } catch (e) { return []; } };
@@ -151,8 +151,8 @@
   /* ключ заказа в корзине: номер, а у черновика без номера — uid */
   DB.byKey = k => k ? DB.raw().find(r => !r.del && !r.legacy && (String(r.no) === String(k) || r.uid === k)) : null;
   DB.keyOf = r => r.no ? String(r.no) : r.uid;
-  const isDraft = st => !st || st === 'Черновик';
-  /* номер присваивается, когда заказ перестал быть черновиком (КП отправлено, договор, замерник, оплата) */
+  const needNo = st => st === 'Договор' || st === 'Оплачен'; /* КП — это просчёт без номера; номер у заказа с договора/предоплаты */
+  /* номер присваивается, когда просчёт стал заказом: договор или предоплата */
   DB.ensureNo = function (uid) {
     const r = DB.raw().find(x => x.uid === uid); if (!r) return '';
     if (!r.no) { const no = DB.nextNo(); DB.patchRec(uid, { no }); try { lsSet('jal_no_max', String(Math.max(+lsGet('jal_no_max') || 0, +no))); } catch (e) {} return no; }
@@ -174,7 +174,7 @@
     } else {
       rec = Object.assign({ uid: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), no: '', status: 'Черновик', created: t, history: [], rev: true, rem: 0 }, data, { items });
     }
-    if (!rec.no && !isDraft(rec.status)) rec.no = DB.nextNo();
+    if (!rec.no && needNo(rec.status)) rec.no = DB.nextNo();
     put(rec); try { lsSet('jal_no_max', String(Math.max(+lsGet('jal_no_max') || 0, +rec.no || 0))); } catch (e) {}
     DB.derive(); return rec;
   };
@@ -191,7 +191,7 @@
     }
     DB.patchRec(uid, patch);
   };
-  DB.patchRec = function (uid, patch) { const r = DB.raw().find(x => x.uid === uid); if (!r) return; const n = Object.assign({}, r, patch); if (!n.no && !n.legacy && !isDraft(n.status) && patch.status !== undefined) { n.no = DB.nextNo(); } put(n); DB.derive(); };
+  DB.patchRec = function (uid, patch) { const r = DB.raw().find(x => x.uid === uid); if (!r) return; const n = Object.assign({}, r, patch); if (!n.no && !n.legacy && needNo(n.status) && patch.status !== undefined) { n.no = DB.nextNo(); } put(n); DB.derive(); };
   /* после правки заказа на экране */
   DB.commit = function (o) {
     if (!o) return;
