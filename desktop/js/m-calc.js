@@ -178,9 +178,10 @@
     if (choice.length) h += '<div class="fgrid ropts">' + choice.map(g => '<div class="fld"><label>' + e(g.name) + '</label><select class="ul" data-c="ropt" data-k="' + e(g.name) + '">' + g.items.map(x => '<option value="' + e(x.value) + '"' + (R.sel[g.name] === x.value ? ' selected' : '') + '>' + e(x.value + (R.sel[g.name] === x.value ? '' : delta(g, x.value))) + '</option>').join('') + '</select></div>').join('') + '</div>';
     if (flags.length) h += '<div class="fld"><label>Дополнительно</label><div class="ochips">' + flags.map(g => '<button class="oc ' + (R.flags[g.name] ? 'on' : '') + '" data-a="rflag" data-v="' + e(g.name) + '">' + e(g.name) + (r.ok && R.flags[g.name] && r.optP[g.name] ? ' +' + fmt(r.optP[g.name]) : (R.flags[g.name] ? '' : delta(g))) + '</button>').join('') + '</div></div>';
     let st = '';
+    if (!J.windReady() && !F.windTried) { F.windTried = true; setTimeout(() => A.act.cprices(), 0); }
     const wd = f ? J.wind(it) : null;
     if (wd) { const over = (+R.h > 0 && wd.max < 6 && +R.h / 10 > wd.max * 100 + 0.01) || (+R.w > 0 && wd.wlim && +R.w / 10 > wd.wlim * 100 + 0.01); st += '<div class="fnote ' + (over ? 'bad' : 'ok') + '"><b>Макс. высота намотки:</b> ' + (wd.max >= 6 ? 'без ограничений (до 600 см)' : Math.floor(wd.max * 100) + ' см') + (wd.wlim ? ' · макс. ширина ' + Math.round(wd.wlim * 100) + ' см' : '') + '</div>'; }
-    else if (f && R.sys) st += '<div class="fnote mut">Макс. высота намотки: нет данных для этой ткани и системы</div>';
+    else if (f && R.sys) st += '<div class="fnote mut">Макс. высота намотки: ' + (J.windReady() ? 'нет данных для этой ткани и системы' : 'таблицы намоток ещё не загружены, обновляю цены…') + '</div>';
     if (+R.w > 0 && +R.h > 0 && f) st += '<div class="fnote ' + (r.ok && !r.warn.length ? 'ok' : 'bad') + '">' + (!r.ok ? e(r.msg) : r.warn.length ? '<b>НЕ ГАРАНТ.: </b>' + e(r.warn.join('; ')) : 'Размеры в пределах прайса (считаем по сетке ' + Math.round(r.gridW * 1000) + '×' + Math.round(r.gridH * 1000) + ' мм)') + '</div>';
     if (f && f.stock !== null && f.stock < 2) st += '<div class="fnote"><i class="sd" style="background:' + DOT[f.stock] + '"></i> ' + e(STOCK_TXT[f.stock][0].toUpperCase() + STOCK_TXT[f.stock].slice(1)) + '</div>';
     if (r.ok) st += '<div class="fnote"><b>Срок:</b> ' + r.termDays + ' дней</div>';

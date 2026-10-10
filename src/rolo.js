@@ -155,7 +155,7 @@
   }
 
   window.JalRolo = {
-    SUP, setSheets, ready: () => ready, systems: z => z == null ? SYS : SYS.filter(x => x.model === (z ? 'zebra' : 'rolo')), sysOf, fabrics: z => z == null ? FAB : FAB.filter(x => !!x.z === !!z), fabOf, groups: groupsOf, opts, calc, describe, wind,
+    SUP, setSheets, ready: () => ready, systems: z => z == null ? SYS : SYS.filter(x => x.model === (z ? 'zebra' : 'rolo')), sysOf, fabrics: z => z == null ? FAB : FAB.filter(x => !!x.z === !!z), fabOf, groups: groupsOf, opts, calc, describe, wind, windReady: () => Object.keys(WIND).length > 0 && Object.keys(WINDZ).length > 0,
     termFor: it => { const s = sysOf(it.sys); return s ? s.term + (Number(P['срок_добавка_дн']) || 5) : 0; },
     photoUrl: f => (f && f.img ? String(P['фото_адрес'] || 'https://customizer.amigo.ru').replace(/\/$/, '') + f.img : ''),
     param: k => P[k]
