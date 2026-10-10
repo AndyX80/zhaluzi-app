@@ -45,6 +45,13 @@
       const f = { key: String(r[1]) + '|' + String(r[0]), name: String(r[0]), ser: String(r[1] || ''), cat: String(r[2]), roll: Number(r[3]) || 0, maxs: String(r[4] || ''), dens: Number(r[5]) || 0, wgrp: String(r[6] || ''), wet: String(r[7] || ''), coll: String(r[8] || '') };
       FAB.push(f); FAB_BY[f.key] = f;
     });
+    /* свежее наличие из листа «Наличие» (его обновляет скрипт сбора) перекрывает снимок из листа тканей */
+    const nal = sh['Наличие'];
+    if (nal && nal.length > 1) {
+      const h = nal[0], ix = n => h.indexOf(n), L = { 'есть': 2, 'мало': 1, 'нет': 0 };
+      nal.slice(1).forEach(r => { if (r[ix('Продукт')] !== 'Рулонные шторы') return; const f = FAB_BY[String(r[ix('Артикул')])]; if (!f) return;
+        const st = L[r[ix('Статус')]]; if (st !== undefined) f.stock = st; const q = r[ix('Остаток_м')]; if (q !== '' && q != null) f.qty = Number(q); });
+    }
     FAB.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
     ready = SYS.length > 0 && FAB.length > 0;
   }
