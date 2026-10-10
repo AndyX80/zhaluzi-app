@@ -264,7 +264,8 @@
   }
 
   A.module('calc', {
-    render() { const C = JC() ? JC().C : {}; return '<div class="head"><h1>' + (C.editNo ? 'Заказ № ' + e(C.editNo) : 'Новый заказ') + '</h1></div><div class="calcwrap">' + form() + cart() + '</div>'; }
+    render() { const C = JC() ? JC().C : {}, E = window.Eng, when = E && E.at ? new Date(E.at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+      return '<div class="head" style="display:flex;align-items:center;gap:12px"><h1>' + (C.editNo ? 'Заказ № ' + e(C.editNo) : 'Новый заказ') + '</h1><span class="sp"></span>' + (when ? '<span class="mut sm">Цены из таблицы: ' + e(when) + '</span>' : '') + '<button class="btn sm" data-a="cprices" title="Загрузить свежие цены, наличие и ткани из Google Таблицы">Обновить цены</button></div><div class="calcwrap">' + form() + cart() + '</div>'; }
   });
 
   /* ===== Tab по полям формы: слева направо, сверху вниз; выпадающее поле открывается сразу ===== */
