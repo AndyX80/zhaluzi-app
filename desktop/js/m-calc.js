@@ -481,7 +481,7 @@
   A.act.codoc = el => {
     if (!checkReady()) return;
     const fn = el.dataset.fn, rec = persist(); if (fn === 'dogovorHtml') DB.ensureNo(rec.uid);
-    if (fn === 'dogovorHtml') { O.dog = true; DB.patchRec(rec.uid, { status: 'Договор' }); } else DB.patchRec(rec.uid, { zamDone: true });
+    if (fn === 'dogovorHtml') { O.dog = true; DB.patchRec(rec.uid, { status: 'Договор' }); DB.addEvent(rec.uid, 'Договор', 'договор сформирован'); } else { DB.patchRec(rec.uid, { zamDone: true }); DB.addEvent(rec.uid, 'Замер', 'замерник сформирован'); }
     A.docOpen(fn, rec.uid);
   };
   /* отправка КП: сохраняем заказ, готовим PDF, открываем выбранный канал */
@@ -493,7 +493,7 @@
     try {
       const file = await A.docFile('kpHtml', uid), sum = m(JC().toOrder().items.reduce((a, i) => a + (+i.price || 0), 0) - (+JC().C.disc || 0));
       const nm = (O.name.trim().split(/\s+/)[1] || O.name.trim().split(/\s+/)[0] || 'клиент'), text = 'Добрый день, ' + nm + '! Отправляю коммерческое предложение на сумму ' + sum + '. Жалюзи-СПБ';
-      O.sent = true; DB.patchRec(uid, { status: O.dog ? 'Договор' : 'КП отправлено', sent: new Date().toISOString().slice(0, 10) });
+      O.sent = true; DB.patchRec(uid, { status: O.dog ? 'Договор' : 'КП отправлено', sent: new Date().toISOString().slice(0, 10) }); DB.addEvent(uid, 'КП отправлено', ch === 'wa' ? 'WhatsApp' : ch === 'tg' ? 'Telegram' : 'почта');
       const shared = ch !== 'mail' && window.JalExport && await JalExport.share([file], text, 'Жалюзи-СПБ, коммерческое предложение');
       if (!shared) {
         JalExport.save(file);

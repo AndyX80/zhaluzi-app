@@ -86,7 +86,7 @@
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
   const nowIso = () => new Date().toISOString();
-  const STAGE_PH = { 'Черновик': 2, 'КП отправлено': 2, 'Договор': 3, 'Оплачен': 4 };
+  const STAGE_PH = { 'Черновик': 0, 'КП отправлено': 2, 'Договор': 3, 'Оплачен': 4 };
   DB.raw = () => { try { return JSON.parse(lsGet(RAW) || '[]') || []; } catch (e) { return []; } };
   DB.phRaw = DB.raw;
   DB.setRaw = list => lsSet(RAW, JSON.stringify(list));
@@ -108,7 +108,7 @@
     const items = r.items || [], goods = items.reduce((a, i) => a + (+i.price || 0), 0), prof = items.reduce((a, i) => a + (+i.profit || 0), 0);
     const sum = Math.max(0, goods + (r.priced ? 0 : (+r.delivery || 0)) - (+r.disc || 0)), cat = items.some(i => /дерев|бамбук/i.test(i.mat || i.title || '')) ? 'Дерево' : items.some(i => i.prod === 'rolo') ? 'Рулонные' : 'Разное';
     const sups = {}; items.forEach(i => { if (i.sup) sups[i.sup] = 1; });
-    return { id: 'ph' + r.uid, no: r.no ? String(r.no) : 'Просчёт', cnote: r.cnote || '', draft: isDraftSt(r.status), rawNo: r.no ? String(r.no) : '', uid: r.uid, ph: true, pre: r.pre, preU: r.preU, term: r.term, _p2: r.phone2 || '', _e: r.email || '', sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: r.src || '', factory: r.factory || '',
+    return { id: 'ph' + r.uid, no: r.no ? String(r.no) : 'Просчёт', cnote: r.cnote || '', draft: isDraftSt(r.status), rawNo: r.no ? String(r.no) : '', uid: r.uid, ph: true, pre: r.pre, preU: r.preU, term: r.term, meas: !!r.meas, _p2: r.phone2 || '', _e: r.email || '', sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: r.src || '', factory: r.factory || '',
       inst: !!r.install, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: 0,
       created: (r.created || '').slice(0, 10), due: r.due || '', tk: r.tk != null ? r.tk : (r.note || ''), review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: !!r.claim, legacy: false, archived: !!r.archived,
       _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '', items, disc: +r.disc || 0, delivery: +r.delivery || 0, priced: !!r.priced, hasCart: !!(r.cart && r.cart.cart), supSent: !!r.supSent,
@@ -210,6 +210,11 @@
     DB.setRaw(list.map(r => { if (!uids[r.uid]) return r; const q = Object.assign({}, p); if (q.name !== undefined && r.company && !r.legacy) { q.company = q.name; delete q.name; } return Object.assign({}, r, q, { upd: t }); })); DB.later(); DB.derive();
     const o2 = (D.orders || []).find(o => o.uid === os[0].uid); return o2 ? o2.client : null;
   };
+  /* история по заказу: события правятся вручную (отмена, звонок и т.п.) */
+  const evId = () => 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  DB.addEvent = function (uid, t, x, d) { const r = DB.raw().find(y => y.uid === uid); if (!r) return; DB.patchRec(uid, { events: (r.events || []).concat([{ id: evId(), d: d || nowIso().slice(0, 10), t, x: x || '' }]) }); };
+  DB.editEvent = function (uid, id, patch) { const r = DB.raw().find(y => y.uid === uid); if (!r) return; DB.patchRec(uid, { events: (r.events || []).map(e => e.id === id ? Object.assign({}, e, patch) : e) }); };
+  DB.delEvent = function (uid, id) { const r = DB.raw().find(y => y.uid === uid); if (!r) return; DB.patchRec(uid, { events: (r.events || []).filter(e => e.id !== id) }); };
   DB.delOrder = function (o) { DB.patchRec(o.uid, { del: true }); };
   DB.archive = function (o, on) { DB.patchRec(o.uid, { archived: !!on }); };
   DB.delPhone = uid => DB.patchRec(uid, { del: true });

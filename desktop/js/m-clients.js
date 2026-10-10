@@ -12,6 +12,9 @@
     if (t === 'events') return D.real ? '<p class="mut">События клиента (замеры, монтажи) появятся вместе с календарём.</p>' : '<div class="stack" style="gap:8px"><div class="ev measure"><b>09.10 12:00</b> · Замер</div><div class="ev work"><b>10.10 15:00</b> · Позвонить по КП</div></div>';
     if (t === 'pay') return '<p class="mut">Все платежи клиента по его заказам. Сумма оплачено: <b>' + m(os.reduce((a, o) => a + o.paid, 0)) + '</b>, долг: <b>' + m(os.reduce((a, o) => a + Math.max(0, o.sum - o.paid), 0)) + '</b></p>';
     if (t === 'docs') return '<p class="mut">Документы всех заказов клиента (КП, договоры, замерные листы) собираются здесь.</p>';
+    { const all = (D.orders || []).concat(D.calcs || []).filter(o => o.client === c.id && o.uid), raw = DB.raw();
+      const recs = all.map(o => raw.find(r => r.uid === o.uid)).filter(Boolean);
+      if (recs.length && A.histBox) return A.histBox(recs, r => r.no ? '№ ' + r.no : 'Просчёт ' + (r.created || '').slice(0, 10)); }
     return '<p class="mut">Журнал действий по клиенту: звонки, отправленные КП, смена этапов.</p>';
   }
   function card(id, full) {

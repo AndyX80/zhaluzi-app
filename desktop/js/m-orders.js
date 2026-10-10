@@ -21,7 +21,37 @@
     const it = r.items || [], sum = it.reduce((a, i) => a + (+i.price || 0), 0) - (+r.disc || 0);
     return '<div class="callout warn" style="margin-bottom:10px"><b>Заказ № ' + e(o.no) + ' есть и в Excel, и на телефоне.</b><br>Excel: ' + e(o.title) + ', ' + m(o.sum) + (o.created ? ', ' + e(dmy(o.created)) : '') + '.<br>Телефон: ' + e(r.name || r.company || 'без имени') + ', ' + it.length + ' поз., ' + m(Math.max(0, sum)) + (r.created ? ', ' + e(dmy(r.created.slice(0, 10))) : '') + '.<div class="row" style="margin-top:8px;gap:8px"><button class="btn sm" data-a="dupres" data-uid="' + e(r.uid) + '" data-v="excel">Оставить из Excel</button><button class="btn sm" data-a="dupres" data-uid="' + e(r.uid) + '" data-v="phone">Оставить с телефона</button></div></div>';
   };
-  const stepper = o => '<div class="stepper">' + D.STAGES.map((s, i) => '<div class="step ' + (i < o.stage ? 'done' : i === o.stage ? 'cur' : '') + '"><i>' + (i < o.stage ? '✓' : i + 1) + '</i>' + e(s) + '</div>').join('') + '</div>';
+  const stepperDef = o => '<div class="stepper">' + D.STAGES.map((s, i) => '<div class="step ' + (i < o.stage ? 'done' : i === o.stage ? 'cur' : '') + '"><i>' + (i < o.stage ? '✓' : i + 1) + '</i>' + e(s) + '</div>').join('') + '</div>';
+  /* у заказов с компьютера/телефона этапы нажимаются: замер необязателен, КП, договор, предоплата */
+  const PHSTEPS = [['meas', 'Замер (если нужен)'], ['КП отправлено', 'КП отправлено'], ['Договор', 'Договор'], ['Оплачен', 'Предоплата получена']];
+  const PHORD = ['Черновик', 'КП отправлено', 'Договор', 'Оплачен'];
+  const stepper = o => !o.ph ? stepperDef(o) : '<div class="stepper">' + PHSTEPS.map(st => {
+    const on = st[0] === 'meas' ? !!o.meas : PHORD.indexOf(o.status) >= PHORD.indexOf(st[0]);
+    return '<div class="step ' + (on ? 'done' : '') + '" style="cursor:pointer" data-a="phstep" data-k="' + e(st[0]) + '" data-uid="' + o.uid + '" title="Нажми, чтобы отметить или снять"><i style="' + (on ? '' : 'border:1.5px dashed var(--fb)') + '">' + (on ? '✓' : '') + '</i>' + e(st[1]) + '</div>'; }).join('') + '</div>';
+  A.act.phstep = el => {
+    const uid = el.dataset.uid, k = el.dataset.k, r = DB.raw().find(x => x.uid === uid); if (!r) return;
+    if (k === 'meas') { DB.patchRec(uid, { meas: !r.meas }); DB.addEvent(uid, 'Замер', r.meas ? 'отметка снята' : 'замер отмечен'); A.render(); return; }
+    const i = PHORD.indexOf(r.status || 'Черновик'), j = PHORD.indexOf(k);
+    const st = i >= j ? PHORD[j - 1] : k;
+    DB.patchRec(uid, { status: st }); DB.addEvent(uid, st === 'Черновик' ? 'Просчёт' : st, i >= j ? 'отметка снята' : '');
+    A.S.selOrder = 'ph' + uid; A.render();
+  };
+  /* история событий: общий блок для карточки заказа и клиента */
+  const EVT = ['КП отправлено', 'Договор', 'Замер', 'Предоплата', 'Оплачен', 'Отмена', 'Звонок', 'Другое'];
+  const dmy2 = d => (d || '').slice(0, 10);
+  A.histBox = (recs, labelOf) => {
+    const rows = []; recs.forEach(r => (r.events || []).forEach(ev => rows.push(Object.assign({ uid: r.uid, lab: labelOf(r) }, ev))));
+    rows.sort((a, b) => (a.d < b.d ? 1 : a.d > b.d ? -1 : 0));
+    const sel = (cur, opts, attr) => '<select class="in" style="height:34px" ' + attr + '>' + opts.map(x => '<option' + (x === cur ? ' selected' : '') + '>' + e(x) + '</option>').join('') + (opts.indexOf(cur) < 0 ? '<option selected>' + e(cur) + '</option>' : '') + '</select>';
+    return '<div class="row wrap" style="gap:8px;margin-bottom:10px">' + (recs.length > 1 ? '<select class="in" id="evo" style="height:34px;width:260px">' + recs.map(r => '<option value="' + r.uid + '">' + e(labelOf(r)) + '</option>').join('') + '</select>' : '<input type="hidden" id="evo" value="' + recs[0].uid + '">') +
+      '<select class="in" id="evt" style="height:34px;width:220px">' + EVT.map(x => '<option>' + e(x) + '</option>').join('') + '</select><button class="btn sm" data-a="evadd">Добавить событие</button></div>' +
+      (rows.length ? '<table class="tbl"><thead><tr><th>Дата</th><th>Событие</th>' + (recs.length > 1 ? '<th>Заказ</th>' : '') + '<th>Комментарий</th><th></th></tr></thead><tbody>' + rows.map(x => { const at = ' data-c="evf" data-uid="' + x.uid + '" data-id="' + x.id + '"';
+        return '<tr><td><input class="in" type="date" style="height:34px" value="' + e(dmy2(x.d)) + '"' + at + ' data-k="d"></td><td>' + sel(x.t, EVT, at + ' data-k="t"') + '</td>' + (recs.length > 1 ? '<td class="mut">' + e(x.lab) + '</td>' : '') + '<td><input class="in" style="height:34px;width:100%" value="' + e(x.x || '') + '"' + at + ' data-k="x"></td><td class="r"><button class="btn sm" data-a="evdel" data-uid="' + x.uid + '" data-id="' + x.id + '">Удалить</button></td></tr>'; }).join('') + '</tbody></table>'
+        : '<p class="mut">Событий пока нет. КП, договор и отметки этапов записываются сами; здесь можно поправить дату, дописать причину отмены или добавить своё.</p>');
+  };
+  A.fld.evf = (v, el) => { DB.editEvent(el.dataset.uid, el.dataset.id, { [el.dataset.k]: v }); };
+  A.act.evdel = el => { DB.delEvent(el.dataset.uid, el.dataset.id); A.render(); };
+  A.act.evadd = () => { const u = document.getElementById('evo'), t = document.getElementById('evt'); if (!u || !u.value) return; DB.addEvent(u.value, t ? t.value : 'Другое', ''); A.render(); };
 
   const FL = [['work', 'В работе'], ['sup', 'Оплачен поставщику'], ['sent', 'Отправлен'], ['got', 'Получен'], ['zp', 'ЗП монтажнику отдана'], ['closed', 'Закрыто']];
   const flags = o => o.fl ? FL.map(x => [x[1], !!o.fl[x[0]], x[0]]) : [['В работе', o.stage >= 4], ['Оплачен поставщику', o.stage >= 5], ['Отправлен', o.stage >= 6], ['Получен', o.stage >= 7], ['ЗП монтажнику отдана', o.stage >= 9], ['Закрыто', o.stage >= 9]];
@@ -105,6 +135,7 @@
     if (t === 'docs' && D.real && A.docsLegacy) return A.docsLegacy(o);
     if (t === 'docs') return '<table class="tbl"><thead><tr><th>Документ</th><th>Статус</th><th></th></tr></thead><tbody>' + [['Замерный лист', real ? 'был на бумаге' : 'готов'], ['КП', real ? 'не сохранялось' : 'отправлено'], ['Договор с приложением', real ? 'не сохранялся' : 'не создан'], ['Счёт на оплату', 'позже'], ['УПД', o.yur ? (o.yur.sign ? 'подписан' : o.yur.upd ? 'отдан' : 'не отдан') : 'позже'], ['Акт', 'позже'], ['Гарантийный талон', 'позже']].map(d => '<tr><td>' + d[0] + '</td><td><span class="pill ' + (/готов|отправлено|подписан|отдан/.test(d[1]) ? 'ok' : '') + '">' + d[1] + '</span></td><td class="r"><button class="btn sm" data-a="stub" data-t="формирование документа">Сформировать</button></td></tr>').join('') + '</tbody></table>';
     if (t === 'sup') return '<div class="g2"><div class="field"><label>Поставщик</label><div class="b">' + e(o.sup || '—') + '</div></div>' + inp('factory', o, 'Заводской номер заказа у поставщика', 'например, МК26022376') + inp('tk', o, 'ТК, трек, примечания') + '<div class="field"><label>Зона</label><div>' + e(o.zone) + '</div></div>' + inp('due', o, 'Дата изготовления (ГГГГ-ММ-ДД)', '2026-10-15') + '</div>';
+    if (o.ph) { const r = DB.raw().find(x => x.uid === o.uid); if (r) return A.histBox([r], () => ''); }
     return '<div class="stack" style="gap:8px"><div class="row"><span class="mut num">' + e(dmy(o.created)) + '</span><span>Создан заказ</span></div>' + (real ? '<div class="mut">Журнал действий ведётся с момента перехода на новую систему.</div>' : '') + '</div>';
   }
 
