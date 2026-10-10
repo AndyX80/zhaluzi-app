@@ -89,7 +89,7 @@
     let sl = ''; for (let i = 0; i < rows; i++) sl += '<rect x="5" y="' + (6 + i * (bh - 8) / rows) + '" width="' + (bw - 10) + '" height="' + ((bh - 8) / rows - 1.2) + '" rx="1" fill="' + c + '"/>';
     return '<svg class="pic" viewBox="0 0 ' + bw + ' ' + bh + '"><rect x=".5" y=".5" width="' + (bw - 1) + '" height="' + (bh - 1) + '" rx="3" fill="var(--panel2)" stroke="var(--line)"/><rect x="3" y="3" width="' + (bw - 6) + '" height="3" rx="1.5" fill="#6f6a63"/>' + sl + '</svg>';
   }
-  const MODELS = [['rolo', 'Рулонные шторы'], ['zebra', 'Зебра'], ['', 'Горизонтальные алюминиевые (скоро)', 1], ['blinds', 'Горизонтальные деревянные'], ['', 'Вертикальные (скоро)', 1], ['', 'Плиссе (скоро)', 1], ['', 'Римские шторы (скоро)', 1]];
+  const MODELS = [['rolo', 'Рулонные шторы'], ['zebra', 'Зебра'], ['', 'Горизонтальные алюминиевые (скоро)', 1], ['blinds', 'Горизонтальные деревянные'], ['vert', 'Вертикальные жалюзи'], ['', 'Плиссе (скоро)', 1], ['', 'Римские шторы (скоро)', 1]];
   const noPrices = () => '<div class="empty" style="padding:28px">Цены не загружены.<br><small>Укажите ссылку на скрипт цен и нажмите «Синхронизировать» в Настройках, раздел «Данные».</small></div>';
   function form() {
     const E = window.Eng;
@@ -98,7 +98,7 @@
     return F.mode === 'rolo' ? formRolo() : F.mode === 'blinds' ? form0() : formEmpty();
   }
   const formEmpty = () => '<div class="card cform"><h2>Новое изделие</h2><div class="fgrid">' + modelRow() + '</div></div>';
-  const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + (F.mode ? '' : '<option value="" selected disabled>Выберите модель</option>') + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (F.mode && x[0] === (F.mode === 'rolo' && R.z ? 'zebra' : F.mode) ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
+  const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + (F.mode ? '' : '<option value="" selected disabled>Выберите модель</option>') + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (F.mode && x[0] === (F.mode === 'rolo' ? RM() : F.mode) ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
   const autoPanelBody = () => { const h = autoPanel(); return h.replace(/^<div class="card">/, '<div>').replace(/<h2>Автоматика<\/h2>/, ''); };
   function form0() {
     const cs = CS(), n = norm(), r = n.r, s = F, showProfit = !!S.showCost;
@@ -145,10 +145,11 @@
 
   /* ===== рулонные шторы Амиго: система, ткань, размер, управление, опции по группам ===== */
   const RJ = () => window.JalRolo;
-  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.z ? 'Зебра' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, w: +R.w || 0, h: +R.h || 0, ctrl: R.ctrl, sel: R.sel, flags: R.flags, tubeLock: !!R.tubeLock });
+  const RM = () => R.v ? 'vert' : R.z ? 'zebra' : 'rolo';
+  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.v ? 'Вертикальные' : R.z ? 'Зебра' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, w: +R.w || 0, h: +R.h || 0, ctrl: R.ctrl, sel: R.sel, flags: R.flags, tubeLock: !!R.tubeLock });
   function normRolo() {
-    const J = RJ(), sy = J.systems(R.z); if (!sy.some(x => x.code === R.sys)) R.sys = sy.length ? sy[0].code : '';
-    if (R.fab && (!J.fabOf(R.fab) || !!J.fabOf(R.fab).z !== !!R.z)) R.fab = '';
+    const J = RJ(), sy = J.systems(RM()); if (!sy.some(x => x.code === R.sys)) R.sys = sy.length ? sy[0].code : '';
+    { const fb = R.fab && J.fabOf(R.fab), sv = J.sysOf(R.sys); if (R.fab && (!fb || (fb.m || (fb.z ? 'zebra' : 'rolo')) !== RM() || (R.v && sv && fb.vt !== sv.vt))) R.fab = ''; }
     const o = J.opts(roloItem()); R.sel = o.sel; R.flags = o.flags;
     const r = J.calc(roloItem()); if (r.tubeSel) R.sel['Труба'] = r.tubeSel;
     return { it: roloItem(), r, groups: J.groups(R.sys) };
@@ -160,30 +161,31 @@
     const n = normRolo(), r = n.r, it = n.it, qty = Math.max(1, +R.qty || 1);
     const own = R.own !== '' && !isNaN(+R.own) && +R.own >= 0, unit = own ? Math.round(+R.own) : (r.ok ? r.unit : 0);
     const f = J.fabOf(R.fab), q = (F.cq || '').trim().toLowerCase();
-    const shown = J.fabrics(R.z).filter(x => !q || (x.name + ' ' + x.ser + ' ' + x.cat).toLowerCase().indexOf(q) >= 0);
-    const sy = J.systems(R.z), grpNames = sy.map(x => x.group).filter((g, i, a) => a.indexOf(g) === i);
+    const sObj = J.sysOf(R.sys), isCorn = !!(sObj && sObj.vt === 'карниз');
+    const shown = J.fabrics(RM()).filter(x => (!R.v || !sObj || x.vt === sObj.vt) && (!q || (x.name + ' ' + x.ser + ' ' + x.cat).toLowerCase().indexOf(q) >= 0));
+    const sy = J.systems(RM()), grpNames = sy.map(x => x.group).filter((g, i, a) => a.indexOf(g) === i);
     const ICW = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M6 12h12M9 9l-3 3 3 3M15 9l3 3-3 3"/></svg>';
     const ICH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9l3-3 3 3M9 15l3 3 3-3"/></svg>';
     /* прибавка в рознице за вариант опции: считаем тем же расчётом с подставленным значением */
     const delta = (g, val) => { if (!r.ok) return ''; const t = roloItem(); t.sel = Object.assign({}, R.sel); t.flags = Object.assign({}, R.flags);
       if (g.type === 'flag') t.flags[g.name] = !R.flags[g.name]; else t.sel[g.name] = val;
       const r2 = J.calc(t); if (!r2.ok) return ''; const d = r2.unit - r.unit; return d ? (d > 0 ? ' +' : ' −') + fmt(Math.abs(d)) + ' ₽' : ''; };
-    let h = '<div class="card cform"><div class="ftop"><h2>' + (R.edit >= 0 ? (R.z ? 'Штора зебра' : 'Рулонная штора') + ', позиция ' + (R.edit + 1) : R.z ? 'Новая штора зебра' : 'Новая рулонная штора') + '</h2><span class="sp"></span>' + (R.edit >= 0 ? '<button class="btn sm" data-a="cedcancel">Отменить правку</button>' : '') + '</div><div class="fbody rbody">';
-    let fabFld = '<div class="fld colf"><label>Ткань</label><button class="ul sel fabsel" data-a="ccol">' + (f ? (f.stock !== null ? '<i class="sd" style="background:' + DOT[f.stock] + '"></i>' : '') + '<span class="fabtx"><b>' + e(f.name) + '</b><span class="mut sm">категория ' + e(f.cat) + ' · серия ' + e(f.ser) + '</span></span>' : '<span class="ph">Выберите ткань</span>') + '</button>';
+    let h = '<div class="card cform"><div class="ftop"><h2>' + (R.edit >= 0 ? (R.v ? 'Вертикальные жалюзи' : R.z ? 'Штора зебра' : 'Рулонная штора') + ', позиция ' + (R.edit + 1) : R.v ? 'Новые вертикальные жалюзи' : R.z ? 'Новая штора зебра' : 'Новая рулонная штора') + '</h2><span class="sp"></span>' + (R.edit >= 0 ? '<button class="btn sm" data-a="cedcancel">Отменить правку</button>' : '') + '</div><div class="fbody rbody">';
+    let fabFld = '<div class="fld colf"><label>' + (R.v ? 'Материал' : 'Ткань') + '</label><button class="ul sel fabsel" data-a="ccol">' + (f ? (f.stock !== null ? '<i class="sd" style="background:' + DOT[f.stock] + '"></i>' : '') + '<span class="fabtx"><b>' + e(f.name) + '</b><span class="mut sm">категория ' + e(f.cat) + ' · серия ' + e(f.ser) + '</span></span>' : '<span class="ph">' + (R.v ? 'Выберите материал' : 'Выберите ткань') + '</span>') + '</button>';
     if (F.colOpen) fabFld += '<div class="colpop"><input class="in" data-c="ccolq" placeholder="Поиск ткани (название, серия, категория)" value="' + e(F.cq) + '" id="ccolq"><div class="colist sc">' + (shown.length ? shown.map(x => '<button class="coli ' + (x.key === R.fab ? 'on' : '') + '" data-a="ccolpick" data-v="' + e(x.key) + '">' + (x.stock !== null ? '<i class="sd" style="background:' + DOT[x.stock] + '"></i>' : '') + '<span><b>' + e(x.name) + '</b> <span class="mut sm">серия ' + e(x.ser) + '</span></span><span class="sp"></span><span class="pill">кат. ' + e(x.cat) + '</span></button>').join('') : '<div class="mut" style="padding:10px">Ничего не найдено</div>') + '</div></div>';
     fabFld += '</div>';
-    h += '<div class="fgrid">' + modelRow() + '<div class="fld"><label>Система</label><select class="ul" data-c="rsys">' + grpNames.map(g => '<optgroup label="' + e(g) + '">' + sy.filter(x => x.group === g).map(x => '<option value="' + e(x.code) + '"' + (x.code === R.sys ? ' selected' : '') + '>' + e(x.name) + '</option>').join('') + '</optgroup>').join('') + '</select></div>' + fabFld + '</div>';
+    h += '<div class="fgrid">' + modelRow() + '<div class="fld"><label>Система</label><select class="ul" data-c="rsys">' + grpNames.map(g => '<optgroup label="' + e(g) + '">' + sy.filter(x => x.group === g).map(x => '<option value="' + e(x.code) + '"' + (x.code === R.sys ? ' selected' : '') + '>' + e(x.name) + '</option>').join('') + '</optgroup>').join('') + '</select></div>' + (isCorn ? '' : fabFld) + '</div>';
     h += '<div class="fld sz"><label>Размер, мм</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(R.w) + '" data-c="rf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(R.h) + '" data-c="rf" data-k="h"></span></div></div>';
     h += '<div class="fld"><label>Управление</label><div class="ctrls">' + [['L', 'цепочка слева'], ['R', 'цепочка справа']].map(k => '<button class="ctr ' + (R.ctrl === k[0] ? 'on' : '') + '" data-a="rf" data-k="ctrl" data-v="' + k[0] + '">' + ctrlSvg(50, k[0], true, 52) + '<span>' + k[1] + '</span></button>').join('') + '</div></div>';
     const choice = n.groups.filter(g => g.type === 'choice' && g.items.length > 1), flags = n.groups.filter(g => g.type === 'flag');
     if (choice.length) h += '<div class="fgrid ropts">' + choice.map(g => '<div class="fld"><label>' + e(g.name) + '</label><select class="ul" data-c="ropt" data-k="' + e(g.name) + '">' + g.items.map(x => '<option value="' + e(x.value) + '"' + (R.sel[g.name] === x.value ? ' selected' : '') + '>' + e(x.value + (R.sel[g.name] === x.value ? '' : delta(g, x.value))) + '</option>').join('') + '</select></div>').join('') + '</div>';
     if (flags.length) h += '<div class="fld"><label>Дополнительно</label><div class="ochips">' + flags.map(g => '<button class="oc ' + (R.flags[g.name] ? 'on' : '') + '" data-a="rflag" data-v="' + e(g.name) + '">' + e(g.name) + (r.ok && R.flags[g.name] && r.optP[g.name] ? ' +' + fmt(r.optP[g.name]) : (R.flags[g.name] ? '' : delta(g))) + '</button>').join('') + '</div></div>';
     let st = '';
-    if (!J.windReady() && !F.windTried) { F.windTried = true; setTimeout(() => A.act.cprices(), 0); }
-    const wd = f ? J.wind(it) : null;
+    if (!R.v && !J.windReady() && !F.windTried) { F.windTried = true; setTimeout(() => A.act.cprices(), 0); }
+    const wd = f && !R.v ? J.wind(it) : null;
     if (wd) { const over = (+R.h > 0 && wd.max < 6 && +R.h / 10 > wd.max * 100 + 0.01); st += '<div class="fnote ' + (over ? 'bad' : 'ok') + '"><b>Макс. высота намотки:</b> ' + (wd.max >= 6 ? 'без ограничений (до 600 см)' : Math.floor(wd.max * 100) + ' см') + '</div>'; }
-    else if (f && R.sys) st += '<div class="fnote mut">Макс. высота намотки: ' + (J.windReady() ? 'нет данных для этой ткани и системы' : 'таблицы намоток ещё не загружены, обновляю цены…') + '</div>';
-    if (+R.w > 0 && +R.h > 0 && f) st += '<div class="fnote ' + (r.ok && !r.warn.length ? 'ok' : 'bad') + '">' + (!r.ok ? e(r.msg) : r.warn.length ? '<b>НЕ ГАРАНТ.: </b>' + e(r.warn.join('; ')) : 'Размеры в пределах прайса (считаем по сетке ' + Math.round(r.gridW * 1000) + '×' + Math.round(r.gridH * 1000) + ' мм)') + '</div>';
+    else if (f && R.sys && !R.v) st += '<div class="fnote mut">Макс. высота намотки: ' + (J.windReady() ? 'нет данных для этой ткани и системы' : 'таблицы намоток ещё не загружены, обновляю цены…') + '</div>';
+    if (+R.w > 0 && +R.h > 0 && f) st += '<div class="fnote ' + (r.ok && !r.warn.length ? 'ok' : 'bad') + '">' + (!r.ok ? e(r.msg) : r.warn.length ? '<b>НЕ ГАРАНТ.: </b>' + e(r.warn.join('; ')) : (r.areaNote || 'Размеры в пределах прайса (считаем по сетке ' + Math.round(r.gridW * 1000) + '×' + Math.round(r.gridH * 1000) + ' мм)')) + '</div>';
     if (r.tubeAuto) st += '<div class="fnote ok"><b>Труба ' + e(r.tubeAuto.to) + ':</b> на трубе ' + e(r.tubeAuto.from) + ' размеры вне гарантии, подобрали большую (цена пересчитана)</div>';
     if (r.rec) st += '<div class="fnote"><b>Рекомендуется редуктор' + (r.rec === 'q' ? ' с большой цепью 6×12' : '') + '</b> (по диаграмме Амиго)</div>';
     if (f && f.stock !== null && f.stock < 2) st += '<div class="fnote"><i class="sd" style="background:' + DOT[f.stock] + '"></i> ' + e(STOCK_TXT[f.stock][0].toUpperCase() + STOCK_TXT[f.stock].slice(1)) + '</div>';
@@ -311,7 +313,7 @@
       else if (cur.matches && cur.matches('[data-a=cauto]') && !F.autoOpen) { F.autoOpen = true; rr(); }
     }, 0);
   });
-  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo' || v === 'zebra') { const z = v === 'zebra'; if (v === 'zebra' || v === 'rolo') { if (R.z !== z) { R.sys = ''; R.fab = ''; } R.z = z; } F.mode = z ? 'rolo' : v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); if (z && !RJ().systems(true).length) A.act.cprices(); } };
+  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo' || v === 'zebra' || v === 'vert') { const m = v === 'zebra' || v === 'vert' || v === 'rolo' ? v : ''; if (m) { if (RM() !== m) { R.sys = ''; R.fab = ''; R.sel = {}; R.flags = {}; } R.z = m === 'zebra'; R.v = m === 'vert'; } F.mode = m ? 'rolo' : v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); if ((m === 'zebra' && !RJ().systems(true).length) || (m === 'vert' && !RJ().systems('vert').length)) A.act.cprices(); } };
   A.fld.ctype = v => { const p = String(v).split('|'); F.mat = p[0]; F.lam = +p[1]; F.color = ''; F.colOpen = false; rr(); };
   A.fld.csup = v => { F.sup = v; Object.assign(F, { lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {}, colOpen: false }); rr(); };
   A.fld.cfix = v => { F.fix = v; rr(); };
@@ -350,7 +352,7 @@
   A.act.cdel = el => { const C = JC().C; C.cart.splice(+el.dataset.i, 1); JC().save(); rr(); };
   A.act.cclear = () => { JC().clear(); Object.assign(O, { open: false, fresh: false }); rr(); };
   A.act.cocancel = () => { O.open = false; rr(); };
-  const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
+  const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
     F.mode = 'blinds'; Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
   const cuSync = () => { document.querySelectorAll('.cuadd [data-k]').forEach(el => { const k = el.dataset.k; if (k !== 'title' && document.activeElement !== el) el.value = CU[k]; }); };
   A.fld.cuf = (v, el) => {

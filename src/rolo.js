@@ -5,12 +5,12 @@
   'use strict';
   const ceilTo = (x, s) => Math.ceil(x / s - 1e-9) * s;
   const SUP = 'Amigo';
-  let P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {};
+  let P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {}, VP = {}, VT = {};
 
   const unitOf = u => (u === 'м_шир' || u === 'м_выс' || u === 'м_шов' || u === 'м_цепь') ? u : 'изд';
 
   function setSheets(sh) {
-    ready = false; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {};
+    ready = false; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {}; VP = {}; VT = {};
     if (!sh || !sh['Рулонки_системы'] || !sh['Рулонки_параметры']) return;
     sh['Рулонки_параметры'].slice(1).forEach(r => { if (r[0]) P[r[0]] = r[1]; });
     const par = sh['Параметры'] || []; par.forEach(r => { if (r[0] === 'курс_usd') FX = Number(r[1]) || FX; });
@@ -52,6 +52,38 @@
       const h = nal[0], ix = n => h.indexOf(n), L = { 'есть': 2, 'мало': 1, 'нет': 0 };
       nal.slice(1).forEach(r => { if (r[ix('Продукт')] !== 'Рулонные шторы' && r[ix('Продукт')] !== 'Зебра') return; const f = FAB_BY[String(r[ix('Артикул')])]; if (!f) return;
         const st = L[r[ix('Статус')]]; if (st !== undefined) f.stock = st; const q = r[ix('Остаток_м')]; if (q !== '' && q != null) f.qty = Number(q); });
+    }
+    /* вертикальные жалюзи: листы «Верт_типы», «Верт_серии», «Верт_опции», «Верт_параметры», «Верт_ткани_цвета» */
+    if (sh['Верт_типы'] && sh['Верт_серии']) {
+      (sh['Верт_параметры'] || []).slice(1).forEach(r => { if (r[0]) VP[r[0]] = String(r[1]).replace(',', '.'); });
+      const num = (v, d) => v === '' || v == null || isNaN(Number(String(v).replace(',', '.'))) ? d : Number(String(v).replace(',', '.'));
+      sh['Верт_типы'].slice(1).forEach(r => {
+        if (!r[0]) return;
+        const t = String(r[0]); VT[t] = { wmin: num(r[2], 0), wmax: num(r[3], 0), hmin: num(r[4], 0), hmax: num(r[5], 0), amax: num(r[6], 0), corn: num(r[10], 0) };
+        SYS.push({ code: 'V-' + t, name: String(r[1] || t), group: 'Вертикальные', grid: '', term: num(r[9], 1), mk: num(r[7], 2), profit: num(r[8], 1000), note: '', model: 'vert', vt: t });
+        const og = OPT['V-' + t] = { order: [], groups: {} };
+        (sh['Верт_опции'] || []).slice(1).forEach(o => {
+          if (!o[0] || (o[5] && String(o[5]).split(',').map(x => x.trim()).indexOf(t) < 0)) return;
+          if (o[1] === 'флаг' && !num(o[4], 0) && !String(o[3] || '')) return;
+          const nm = String(o[0]); og.order.push(nm);
+          og.groups[nm] = { name: nm, type: 'flag', ord: og.order.length, items: [{ value: nm, usd: num(o[4], 0), unit: String(o[3] || ''), def: false }], i: og.order.length };
+        });
+      });
+      const ser = {};
+      sh['Верт_серии'].slice(1).forEach(r => {
+        if (!r[1]) return;
+        const o = { vt: String(r[0]), name: String(r[1]), cat: String(r[2] || ''), usd: num(r[3], 0), dens: num(r[4], 0), line: String(r[5]) === 'лайн' };
+        ser[o.vt + '|' + o.name.toUpperCase()] = o;
+        if (VT[o.vt]) { const f = { z: false, m: 'vert', vt: o.vt, key: 'V|' + o.vt + '|' + o.name, name: o.name, ser: o.name, cat: o.cat, usd: o.usd, line: o.line, dens: o.dens, roll: 0, prodW: 0, stock: null, qty: null, img: '', maxs: '', wgrp: '', wet: '', coll: '' }; FAB.push(f); FAB_BY[f.key] = f; }
+      });
+      /* цвета/артикулы из кабинета Амиго (если выгружены): серия ищется по началу названия */
+      (sh['Верт_ткани_цвета'] || []).slice(1).forEach(r => {
+        if (!r[0]) return; const t = String(r[3] || 'ткань'), nm = String(r[2] || '').toUpperCase();
+        let b = null; Object.keys(ser).forEach(k => { const o = ser[k]; if (o.vt === t && (nm === o.name.toUpperCase() || nm.indexOf(o.name.toUpperCase() + ' ') === 0) && (!b || o.name.length > b.name.length)) b = o; });
+        if (!b) return;
+        const v = String(r[8] || 'png'), f = { z: false, m: 'vert', vt: t, key: String(r[0]), name: String(r[2]), ser: b.name, cat: b.cat, usd: b.usd, line: b.line, dens: b.dens, roll: 0, prodW: 0, stock: r[6] === '' || r[6] == null ? null : Number(r[6]), qty: r[7] === '' || r[7] == null ? null : Number(r[7]), img: v.charAt(0) === '/' ? v : '/storage-new/materials/' + (VP['фото_папка'] || 'vertical') + '/' + String(r[0]) + '.' + v.replace(/^\./, ''), maxs: '', wgrp: '', wet: '', coll: '' };
+        FAB.push(f); FAB_BY[f.key] = f;
+      });
     }
     FAB.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
     /* максимальные высоты намотки ткани по системе (таблицы Амиго «максимальных намоток»), м */
@@ -192,11 +224,54 @@
   /* длина металлической цепи: высота изделия минус 15 см */
   const chainLen = hMm => Math.max(0, hMm - 150) / 1000;
 
+  /* вертикальные жалюзи: цена за кв. м (минимум 1 м²) или за погонный метр карниза, опции из «Верт_опции», скидка Амиго 50%, на Лайн 55% */
+  function calcVert(it, s, f, W, H, out) {
+    const T = VT[s.vt], corn = s.vt === 'карниз';
+    if (!corn && !f) { out.needFab = true; out.msg = 'Выберите материал'; return out; }
+    if (!(W > 0 && (corn || H > 0))) { out.msg = corn ? 'Введите ширину' : 'Введите размеры'; return out; }
+    const w = W / 10, h = H / 10, num = k => { const v = Number(String(VP[k] == null ? '' : VP[k]).replace(',', '.')); return isNaN(v) ? NaN : v; };
+    const bad = m => { out.msg = m; out.warn.hard = true; return out; };
+    if (T.wmin && w < T.wmin) return bad('ширина меньше минимальной (' + T.wmin + ' см)');
+    if (T.wmax && w > T.wmax) return bad('ширина больше максимальной для этого материала (' + T.wmax + ' см)');
+    let area = W * H / 1e6;
+    if (!corn) {
+      if (T.hmin && h < T.hmin) return bad('высота меньше минимальной (' + T.hmin + ' см)');
+      if (T.hmax && h > T.hmax) return bad('высота больше максимальной для этого материала (' + T.hmax + ' см)');
+      if (T.amax && area > T.amax + 1e-9) return bad('площадь больше максимальной (' + T.amax + ' м²)');
+    }
+    const minA = num('мин_площадь_м2') || 1, calcA = Math.max(area, minA);
+    const o = opts(it), step = Number(P['округление']) || Number(VP['округление']) || 100;
+    const disc = f && f.line ? (num('скидка_лайн') || 0.55) : (num('скидка_вж') || 0.5), k = (1 - disc) * FX;
+    const flag = n => !!o.flags[n], gi = n => { const g = groupsOf(s.code).find(x => x.name === n); return g ? g.items[0] : null; };
+    const only = flag('Только ламели') ? (gi('Только ламели') || {}).usd || 0 : 0;
+    const perM2 = corn ? 0 : (f.usd + only);
+    let baseUsd = corn ? T.corn * (W / 1000) : calcA * perM2;
+    const extra = [];
+    if (!corn) {
+      /* арка и наклонные считаются процентом от стоимости изделия */
+      const arch = flag('Арка') ? (gi('Арка') || {}).usd || 0.5 : 0, tilt = flag('Наклонные') ? (gi('Наклонные') || {}).usd || 1 : 0;
+      baseUsd *= 1 + arch + tilt;
+    }
+    const optUsd = {};
+    groupsOf(s.code).forEach(g => {
+      if (!flag(g.name)) return; const it0 = g.items[0], u = it0.unit;
+      if (!it0.usd || /^%/.test(u) || g.name === 'Только ламели') return;
+      optUsd[g.name] = /кв/.test(u) ? it0.usd * calcA : /м шир/.test(u) ? it0.usd * W / 1000 : it0.usd;
+    });
+    const base = Math.round(baseUsd * k), optCost = {}, optP = {};
+    let cost = base;
+    Object.keys(optUsd).forEach(n => { optCost[n] = Math.round(optUsd[n] * k); optP[n] = Math.ceil(optUsd[n] * k * s.mk / step - 1e-9) * step; cost += optCost[n]; });
+    const baseRetail = ceilTo(base * s.mk, step), addSum = Object.keys(optP).reduce((a, n) => a + optP[n], 0), unit = baseRetail + addSum;
+    Object.assign(out, { ok: true, unit, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, areaNote: corn ? 'Карниз в сборе: ' + (W / 1000).toFixed(2) + ' м' : 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : '') + (flag('Наклонные') ? ' · наклонные: введите большие ширину и высоту' : '') + (disc >= 0.55 ? ' · скидка Амиго 55% (Лайн)' : ''), usd: baseUsd });
+    return out;
+  }
+
   function calc(it) {
     const out = { ok: false, warn: [], msg: '' };
     if (!ready) { out.msg = 'Цены на рулонки не загружены (листы «Рулонки_…» в таблице)'; return out; }
     const s = sysOf(it.sys), f = fabOf(it.fab), W = Number(it.w) || 0, H = Number(it.h) || 0;
     if (!s) { out.msg = 'Выберите систему'; return out; }
+    if (s.model === 'vert') return calcVert(it, s, f, W, H, out);
     if (!f) { out.needFab = true; out.msg = 'Выберите ткань'; return out; }
     if (!(W > 0 && H > 0)) { out.msg = 'Введите размеры'; return out; }
     const fit = tubeFit(it);
@@ -239,11 +314,11 @@
       const d = g.items.find(x => x.def) || g.items[0]; if (o.sel[g.name] !== d.value) parts.push(g.name.toLowerCase() + ': ' + o.sel[g.name].toLowerCase());
     });
     const fc = o.sel['Цвет фурнитуры'];
-    return { title: (s && s.model === 'zebra' ? 'Штора зебра' : 'Рулонная штора') + (s ? ' ' + s.name : ''), sub: (f ? 'ткань ' + f.name : 'ткань не выбрана') + (fc ? ' · фурнитура ' + fc.toLowerCase() : '') + ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева') + (parts.length ? ' · ' + parts.join(', ') : '') };
+    return { title: s && s.model === 'vert' ? 'Вертикальные жалюзи ' + s.name.toLowerCase() : (s && s.model === 'zebra' ? 'Штора зебра' : 'Рулонная штора') + (s ? ' ' + s.name : ''), sub: s && s.model === 'vert' ? (f ? f.name + ' · ' : '') + 'ламель 89 мм' + ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева') + (parts.length ? ' · ' + parts.join(', ') : '') : (f ? 'ткань ' + f.name : 'ткань не выбрана') + (fc ? ' · фурнитура ' + fc.toLowerCase() : '') + ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева') + (parts.length ? ' · ' + parts.join(', ') : '') };
   }
 
   window.JalRolo = {
-    SUP, setSheets, ready: () => ready, systems: z => z == null ? SYS : SYS.filter(x => x.model === (z ? 'zebra' : 'rolo')), sysOf, fabrics: z => z == null ? FAB : FAB.filter(x => !!x.z === !!z), fabOf, groups: groupsOf, opts, calc, describe, wind, windReady: () => Object.keys(WIND).length > 0 && Object.keys(WINDZ).length > 0,
+    SUP, setSheets, ready: () => ready, systems: z => z == null ? SYS : SYS.filter(x => x.model === (typeof z === 'string' ? z : z ? 'zebra' : 'rolo')), sysOf, fabrics: z => z == null ? FAB : FAB.filter(x => (x.m || (x.z ? 'zebra' : 'rolo')) === (typeof z === 'string' ? z : z ? 'zebra' : 'rolo')), fabOf, groups: groupsOf, opts, calc, describe, wind, windReady: () => Object.keys(WIND).length > 0 && Object.keys(WINDZ).length > 0,
     termFor: it => { const s = sysOf(it.sys); return s ? s.term + (Number(P['срок_добавка_дн']) || 5) : 0; },
     photoUrl: f => (f && f.img ? String(P['фото_адрес'] || 'https://customizer.amigo.ru').replace(/\/$/, '') + f.img : ''),
     param: k => P[k]
