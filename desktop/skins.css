@@ -102,3 +102,4 @@
 :root[data-skin=glass] .sumbar,:root[data-skin=dock] .sumbar{border-radius:18px}
 :root[data-skin=glass] .view.v-calc,:root[data-skin=dock] .view.v-calc{padding-bottom:10px}
 :root[data-skin=dock] .view.v-calc{padding-bottom:96px}
+:root[data-skin=glass]{--fb:#8f93a8}:root[data-skin=glass][data-theme=dark]{--fb:#6c7194}:root[data-skin=dock]{--fb:#8199b8}:root[data-skin=dock][data-theme=dark]{--fb:#4d6a96}

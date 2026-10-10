@@ -247,3 +247,8 @@ button.ul.sel.fabsel{white-space:normal;overflow:visible;height:auto;min-height:
 
 .fgrid.fcol{grid-template-columns:1fr;gap:10px}@media(max-height:820px){.fgrid.fcol{gap:6px}}
 .cform .fbody{overflow-y:auto;padding-right:4px}@media(max-height:900px){.fgrid.fcol{gap:2px}}
+/* контрастные границы полей */
+:root{--fb:#9a9188}:root[data-theme=dark]{--fb:#6b645c}
+input.in,select.in,textarea.in{border:1.5px solid var(--fb)!important;background:var(--panel)!important}
+input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--acc)!important;box-shadow:0 0 0 3px var(--acc-s)}
+.ul{border-bottom-color:var(--fb)!important}.ul:focus{border-bottom-color:var(--acc)!important}
