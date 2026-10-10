@@ -307,6 +307,18 @@
     return out;
   }
 
+  function vfTxt(it) {
+    const v = it.vf; if (!v) return ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева');
+    const a = [];
+    if (v.side) a.push('управление ' + (v.side === 'R' ? 'правое' : 'левое'));
+    if (v.len) a.push('длина упр. ' + v.len + ' мм');
+    if (v.chain && v.chain !== 'Пластиковая') a.push('цепочка ' + v.chain.toLowerCase());
+    if (v.ceil && v.ceil !== 'Обычный') a.push('потолочный кронштейн: ' + v.ceil.toLowerCase());
+    if (v.ctype && v.ctype !== 'К управлению') a.push(v.ctype.toLowerCase());
+    if (v.wall && v.wall !== '7,5 см') a.push('стеновой кронштейн: ' + v.wall.toLowerCase());
+    return a.length ? ' · ' + a.join(', ') : '';
+  }
+
   function describe(it, c) {
     const s = sysOf(it.sys), f = fabOf(it.fab), o = opts(it), parts = [];
     groupsOf(it.sys).forEach(g => {
@@ -314,7 +326,7 @@
       const d = g.items.find(x => x.def) || g.items[0]; if (o.sel[g.name] !== d.value) parts.push(g.name.toLowerCase() + ': ' + o.sel[g.name].toLowerCase());
     });
     const fc = o.sel['Цвет фурнитуры'];
-    return { title: s && s.model === 'vert' ? 'Вертикальные жалюзи ' + s.name.toLowerCase() : (s && s.model === 'zebra' ? 'Штора зебра' : 'Рулонная штора') + (s ? ' ' + s.name : ''), sub: s && s.model === 'vert' ? (f ? f.name + ' · ' : '') + 'ламель 89 мм' + ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева') + (parts.length ? ' · ' + parts.join(', ') : '') : (f ? 'ткань ' + f.name : 'ткань не выбрана') + (fc ? ' · фурнитура ' + fc.toLowerCase() : '') + ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева') + (parts.length ? ' · ' + parts.join(', ') : '') };
+    return { title: s && s.model === 'vert' ? 'Вертикальные жалюзи ' + s.name.toLowerCase() : (s && s.model === 'zebra' ? 'Штора зебра' : 'Рулонная штора') + (s ? ' ' + s.name : ''), sub: s && s.model === 'vert' ? (f ? f.name + ' · ' : '') + 'ламель 89 мм' + vfTxt(it) + (parts.length ? ' · ' + parts.join(', ') : '') : (f ? 'ткань ' + f.name : 'ткань не выбрана') + (fc ? ' · фурнитура ' + fc.toLowerCase() : '') + ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева') + (parts.length ? ' · ' + parts.join(', ') : '') };
   }
 
   window.JalRolo = {
