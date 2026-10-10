@@ -102,13 +102,15 @@
     const o = Object.assign({}, r); o.id = 'o' + String(r.uid).slice(1); o._n = r.name; o._p = r.phone; delete o.name; delete o.phone; delete o.sat; delete o.upd; delete o.status; delete o.legacy;
     o.uid = r.uid; o.legacy = true; o.archived = !!r.archived; return o;
   }
+  /* просчёт = пока нет договора и предоплаты (черновик, КП отправлено) */
+  const isDraftSt = st => !st || st === 'Черновик' || st === 'КП отправлено';
   function fromPhone(r) {
     const items = r.items || [], goods = items.reduce((a, i) => a + (+i.price || 0), 0), prof = items.reduce((a, i) => a + (+i.profit || 0), 0);
     const sum = Math.max(0, goods + (r.priced ? 0 : (+r.delivery || 0)) - (+r.disc || 0)), cat = items.some(i => /дерев|бамбук/i.test(i.mat || i.title || '')) ? 'Дерево' : items.some(i => i.prod === 'rolo') ? 'Рулонные' : 'Разное';
     const sups = {}; items.forEach(i => { if (i.sup) sups[i.sup] = 1; });
-    return { id: 'ph' + r.uid, no: r.no ? String(r.no) : 'Просчёт', cnote: r.cnote || '', draft: !r.no, rawNo: r.no ? String(r.no) : '', uid: r.uid, ph: true, pre: r.pre, preU: r.preU, term: r.term, _p2: r.phone2 || '', _e: r.email || '', sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: r.src || '', factory: '',
+    return { id: 'ph' + r.uid, no: r.no ? String(r.no) : 'Просчёт', cnote: r.cnote || '', draft: isDraftSt(r.status), rawNo: r.no ? String(r.no) : '', uid: r.uid, ph: true, pre: r.pre, preU: r.preU, term: r.term, _p2: r.phone2 || '', _e: r.email || '', sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: r.src || '', factory: r.factory || '',
       inst: !!r.install, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: 0,
-      created: (r.created || '').slice(0, 10), due: '', tk: r.note || '', review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: !!r.claim, legacy: false, archived: !!r.archived,
+      created: (r.created || '').slice(0, 10), due: r.due || '', tk: r.tk != null ? r.tk : (r.note || ''), review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: !!r.claim, legacy: false, archived: !!r.archived,
       _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '', items, disc: +r.disc || 0, delivery: +r.delivery || 0, priced: !!r.priced, hasCart: !!(r.cart && r.cart.cart), supSent: !!r.supSent,
       needCost: Object.keys(items.filter(i => i.kind === 'custom' && !i.costOk && !(+i.cost > 0)).reduce((a, i) => { a[i.title || 'Услуга'] = 1; return a; }, {})) };
   }

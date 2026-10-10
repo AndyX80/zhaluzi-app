@@ -334,10 +334,13 @@
     const J = JC(), C = J.C; if (!C.cart.length) { A.toast('Корзина пуста'); return; }
     const co = J.toOrder(); if (!co.items.length) { A.toast('В корзине нет изделий с ценой'); return; }
     const total = Math.max(0, co.items.reduce((a, i) => a + (+i.price || 0), 0) - (+co.disc || 0)), reg = !!C.region, pvz = (C.pvz || '').trim(), editing = !!C.editNo;
-    const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: reg ? 0 : co.delivery, cart: J.snapshot(), region: reg, pvz: reg ? pvz : '' };
-    if (!editing) Object.assign(data, { name: '', phone: '', addr: '', install: !reg, buyer: 'физ', status: 'Черновик', pre: '100', preU: '%', term: termDefault(), note: reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '' });
-    const rec = DB.saveOrder(data, co.items, editing ? C.editNo : null, 'Черновик (компьютер)', m(total));
-    J.clear(); resetO(); Object.assign(F, { edit: -1 }); A.toast('Просчёт сохранён'); A.S.selOrder = 'ph' + rec.uid; A.save(); rr();
+    const old = editing ? DB.byKey(C.editNo) : null;
+    if (old && old.status === 'Оплачен') { A.toast('Заказ оплачен: это уже не просчёт. Используй «Сохранить в заказ»'); return; }
+    const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: reg ? 0 : co.delivery, cart: J.snapshot(), region: reg, pvz: reg ? pvz : '', status: 'Черновик' };
+    if (!editing) Object.assign(data, { name: '', phone: '', addr: '', install: !reg, buyer: 'физ', pre: '100', preU: '%', term: termDefault(), note: reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '' });
+    const rec = DB.saveOrder(data, co.items, editing ? C.editNo : null, 'Просчёт (компьютер)', m(total));
+    J.clear(); resetO(); Object.assign(F, { edit: -1 }); A.toast('Сохранено как просчёт: вкладка «Просчёты» в «Заказах»');
+    A.S.selOrder = 'ph' + rec.uid; A.S.ordersFilter = 'calc'; A.S.orderTab = 'main'; A.save(); A.open('orders');
   };
   A.act.cf = el => { const k = el.dataset.k, v = el.dataset.v; F[k] = k === 'lam' ? +v : v; if (k === 'sup') F.colOpen = false; rr(); };
   A.fld.cf = (v, el) => { const k = el.dataset.k; F[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
@@ -471,8 +474,8 @@
     if (!checkReady()) return;
     const J = JC(), rec = persist();
     J.clear(); resetO(); Object.assign(F, { edit: -1 });
-    A.S.selOrder = 'ph' + rec.uid; A.S.orderTab = 'items'; A.save();
-    A.toast(rec.no ? 'Заказ № ' + rec.no + ' сохранён' : 'Просчёт сохранён'); A.open('orders');
+    A.S.selOrder = 'ph' + rec.uid; A.S.orderTab = 'items'; A.S.ordersFilter = (rec.status === 'Черновик' || rec.status === 'КП отправлено') ? 'calc' : 'all'; A.save();
+    A.toast(rec.no && A.S.ordersFilter === 'all' ? 'Заказ № ' + rec.no + ' сохранён' : 'Просчёт сохранён'); A.open('orders');
   };
   /* замерник и договор строятся по сохранённому заказу: сохраняем и открываем */
   A.act.codoc = el => {
