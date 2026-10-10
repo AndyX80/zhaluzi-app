@@ -107,6 +107,25 @@
     return { max, key, wlim: wl, th: T['Толщина_мм'] };
   }
 
+  /* диаграммы гарантийных размеров Амиго по группе ткани: [ширина м, минимальная высота м], с которой размеры негарантийные */
+  const DIAG = {
+    uni: { w: 1.4, h: 2.4, A: [[1.4, 2.2]], B: [[1.4, 1.4], [1.3, 2.2]], C: [[1.4, 0.8], [1.3, 1.4], [1.2, 2.2]] },
+    mg: { w: 2.0, h: 3.0, A: [[2.0, 2.0]], B: [[2.0, 1.2], [1.9, 1.8], [1.8, 2.2], [1.7, 3.0]], C: [[2.0, 0.8], [1.9, 1.0], [1.8, 1.4], [1.7, 1.8], [1.6, 2.2], [1.5, 3.0]] }
+  };
+  const DIAG_OF = { 'MINI': 'uni', 'UNI-1': 'uni', 'UNI-2': 'uni', 'UNI-2П': 'uni', 'ROLLA1': 'uni', 'ROLLA2': 'uni', 'Z-MINI': 'uni', 'Z-UNI1': 'uni', 'Z-UNI2': 'uni', 'Z-ROLLA1': 'uni', 'Z-ROLLA2': 'uni', 'MG': 'mg', 'Z-MGS': 'mg' };
+
+  /* проверка габаритов по диаграмме: возвращает предупреждение или '' (системы без диаграммы пока не проверяются) */
+  function sizeWarn(code, f, W, H) {
+    const D = DIAG[DIAG_OF[code]]; if (!D) return '';
+    const g = ({ 'А': 'A', 'В': 'B', 'С': 'C' }[String(f.wgrp || '').trim().toUpperCase()] || String(f.wgrp || '').trim().toUpperCase());
+    const grp = D[g] ? g : 'C';
+    const wc = Math.ceil(W / 100 - 1e-9) / 10, hc = Math.max(0.4, Math.ceil(H / 200 - 1e-9) * 0.2);
+    if (wc > D.w + 1e-9 || hc > D.h + 1e-9) return 'размеры вне диаграммы гарантии (до ' + D.w + '×' + D.h + ' м)';
+    if (D[grp].some(x => wc >= x[0] - 1e-9 && hc >= x[1] - 1e-9)) return 'негарантийные размеры для ткани группы ' + grp + ' (по диаграмме Амиго)';
+    if (hc > 3 * wc + 1e-9) return 'высота больше трёх ширин: превышено гарантийное соотношение 1:3, ткань может сматываться неравномерно';
+    return '';
+  }
+
   /* длина металлической цепи: высота изделия минус 15 см */
   const chainLen = hMm => Math.max(0, hMm - 150) / 1000;
 
@@ -137,6 +156,7 @@
     const unit = baseRetail + addSum, cost = base + costOpt;
     const wd = wind(it); out.wind = wd;
     if (wd && wd.max < 6 && H / 1000 > wd.max + 1e-9) out.warn.push('ткань не смотается: для этой системы и ткани максимум ' + Math.floor(wd.max * 100) + ' см, при ' + Math.round(H / 10) + ' см останется висеть около ' + Math.round(H / 10 - wd.max * 100) + ' см');
+    { const sw = sizeWarn(s.code, f, W, H); if (sw) out.warn.push(sw); }
     const pw = f.prodW || (f.roll ? f.roll - 10 : 0);
     if (pw && W / 10 > pw && !(o.flags['Сварка ткани'])) out.warn.push('ширина больше рабочей ширины ткани (' + pw + ' см): нужна сварка ткани');
     Object.assign(out, { ok: true, unit, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: profit0, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, gridW: L.w, gridH: L.h, usd: L.usd });
