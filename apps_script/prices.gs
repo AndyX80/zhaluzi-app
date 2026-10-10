@@ -13,6 +13,7 @@ function out_(o) {
 function doGet(e) {
   if (!e || !e.parameter || e.parameter.key !== KEY) return out_({ ok: false, error: 'bad key' });
   if (e.parameter.files) return files_();
+  if (e.parameter.fget) return fget_(e.parameter.fget);
   if (e.parameter.orders) return ordersGet_();
   if (e.parameter.catalog) return catalog_();
   if (e.parameter.inn) return inn_(e.parameter.inn);
@@ -83,6 +84,8 @@ function doPost(e) {
   if (d.key !== KEY) return out_({ ok: false, error: 'bad key' });
   if (d.mail) return mail_(d.mail);
   if (d.sync) return sync_(d);
+  if (d.fput) return fput_(d.fput);
+  if (d.fdel) return fdel_(d.fdel);
   const folder = folder_(), old = folder.getFilesByName('заказы.json');
   while (old.hasNext()) old.next().setTrashed(true);
   folder.createFile('заказы.json', JSON.stringify(d.orders), 'application/json');
@@ -125,6 +128,29 @@ function sync_(d) {
 function ordersGet_() {
   const it = folder_().getFilesByName('заказы.json');
   return out_({ ok: true, orders: it.hasNext() ? JSON.parse(it.next().getBlob().getDataAsString('UTF-8')) : [] });
+}
+
+// Файлы заказов (фото и сканы замерников, PDF): папка «Файлы заказов» внутри папки приложения, по подпапке на заказ.
+function ofolder_(uid) {
+  const root = folder_(), it = root.getFoldersByName('Файлы заказов'), top = it.hasNext() ? it.next() : root.createFolder('Файлы заказов');
+  const sub = top.getFoldersByName(uid);
+  return sub.hasNext() ? sub.next() : top.createFolder(uid);
+}
+function fput_(f) {
+  try {
+    const blob = Utilities.newBlob(Utilities.base64Decode(f.data), f.mime || 'application/octet-stream', f.name || 'файл');
+    const file = ofolder_(String(f.order || 'без-заказа')).createFile(blob);
+    return out_({ ok: true, fid: file.getId(), size: file.getSize() });
+  } catch (x) { return out_({ ok: false, error: String(x) }); }
+}
+function fget_(fid) {
+  try {
+    const file = DriveApp.getFileById(fid), blob = file.getBlob();
+    return out_({ ok: true, name: file.getName(), mime: blob.getContentType(), data: Utilities.base64Encode(blob.getBytes()) });
+  } catch (x) { return out_({ ok: false, error: String(x) }); }
+}
+function fdel_(fid) {
+  try { DriveApp.getFileById(fid).setTrashed(true); return out_({ ok: true }); } catch (x) { return out_({ ok: false, error: String(x) }); }
 }
 
 // Одноразово (и после каждого обновления кода): выбери эту функцию и нажми «Выполнить», чтобы Google выдал доступ к Диску.
