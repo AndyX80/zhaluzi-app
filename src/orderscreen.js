@@ -85,6 +85,7 @@
     const out = [];
     gs.filter(g => g.num).forEach(g => {
       const it = g.it;
+      if (it.prod) { out.push('Поз. ' + g.num + ': ' + it.title + '.'); return; }
       out.push('Поз. ' + g.num + ': ГЖ ' + it.lam + ' ' + supUi(it.sup) + ', ' + lc(it.mat) + (it.o.color ? ', ' + lc(it.o.color) : '') + (it.o.opts && it.o.opts.length ? ', ' + it.o.opts.map(lc).join(', ') : '') +
         '.');
       if (it.o.fix) out.push('Поз. ' + g.num + ': ' + lc(it.o.fix) + '.');
@@ -132,8 +133,8 @@
     const quiet = (k, f) => ({ value: S[k], set: e => { S[k] = e.target.value; persist(); } });
     const seg = on => 'min-height: 52px; border: 0; background: transparent; padding: 0 4px; font-size: 15px; text-align: center; line-height: 1.2; border-bottom: 3px solid ' + (on ? 'var(--ac)' : 'transparent') + '; font-weight: ' + (on ? 800 : 600) + '; color: ' + (on ? 'var(--ink)' : 'var(--m3)');
     const segS = on => seg(on).replace('font-size: 15px', 'font-size: 15px');
-    const sups = co.items.filter(i => i.sup && !i.kind).map(i => i.sup);
-    const termMax = sups.reduce((m, x) => Math.max(m, SUP_TERM[x] || 12), 0) || 12, termSup = supUi(sups.filter(x => (SUP_TERM[x] || 12) === termMax)[0] || '');
+    const sups = co.items.filter(i => i.sup && !i.kind && !i.prod).map(i => i.sup), roloT = co.items.reduce((m, i) => Math.max(m, +i.term || 0), 0);
+    const termMax = Math.max(sups.reduce((m, x) => Math.max(m, SUP_TERM[x] || 12), 0), roloT) || 12, termSup = supUi(sups.filter(x => (SUP_TERM[x] || 12) === termMax)[0] || '');
     if (S.term === '') { S.term = String(termMax); persist(); }
     const preRub = S.pmode === 'pct' ? Math.round(total * Math.min(100, +S.prepay || 0) / 100) : Math.min(total, +S.prepay || 0);
     const yur = S.ctype === 'yur', ip = S.ctype === 'ip', s = S.step;
@@ -189,7 +190,7 @@
       },
       head, client, typeFiz: seg(!yur && !ip), typeYur: seg(yur), typeIp: seg(ip), setFiz: () => set({ ctype: 'fiz' }), setYur: () => set({ ctype: 'yur' }), setIp: () => set({ ctype: 'ip' }),
       sketch: blinds.map(g => { const it = g.it, d = (DRAW[it.lam] || DRAW[50])[it.ctrl] || (DRAW[it.lam] || DRAW[50]).TR;
-        return { n: String(g.num), w: String(Math.round(it.W * 10)), h: String(Math.round(it.H * 10)), thin: d[0], thick: d[1], note: 'ГЖ ' + it.lam + (short(it).length ? ' · ' + short(it).join(', ') : '') }; }),
+        return { n: String(g.num), w: String(Math.round(it.W * 10)), h: String(Math.round(it.H * 10)), thin: d[0], thick: d[1], note: it.prod ? 'Рулонная штора' : 'ГЖ ' + it.lam + (short(it).length ? ' · ' + short(it).join(', ') : '') }; }),
       ladder: blinds.map(g => { const n = g.num, own = !!(S.lad[n] && S.lad[n].own); const sg = on => 'height: 40px; flex: 1 1 0; min-width: 0; border: 0; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--ink); background: ' + (on ? 'var(--sel)' : 'var(--chip)');
         return { n, pickAuto: () => { S.lad[n] = { own: false, v: '' }; set({}); }, pickOwn: () => { S.lad[n] = { own: true, v: (S.lad[n] || {}).v || '' }; set({}); },
           autoStyle: sg(!own), ownStyle: sg(own), value: own ? S.lad[n].v : '', setVal: e => { S.lad[n] = { own: true, v: e.target.value }; persist(); },

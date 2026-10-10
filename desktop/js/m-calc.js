@@ -11,6 +11,7 @@
   const CHAIN_TXT = { L: 'цепочка слева', R: 'цепочка справа' };
   const O = { open: false, step: 0, fresh: false, sent: false, dog: false, q: '', ct: 'fiz', name: '', phone: '', email: '', addr: '', company: '', inn: '', ogrn: '', uaddr: '', repr: '', bank: '', innMsg: '', innOk: true, innBusy: false, inst: true, note: '', pre: '100', preU: '%', term: '12' };
   const F = { sup: 'Amigo', lam: 50, mat: 'Дерево', color: '', colOpen: false, cq: '', w: '', h: '', qty: 1, ctrl: 'TR', fix: '', opts: {}, own: '', note: '', edit: -1 };
+  const R = { sys: 'UNI-2', fab: '', fq: '', w: '', h: '', qty: 1, ctrl: 'L', sel: {}, flags: {}, own: '', note: '', edit: -1 };
   const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const CS = () => window.JalCalcScreen, JC = () => window.JalCart;
 
@@ -88,15 +89,15 @@
     let sl = ''; for (let i = 0; i < rows; i++) sl += '<rect x="5" y="' + (6 + i * (bh - 8) / rows) + '" width="' + (bw - 10) + '" height="' + ((bh - 8) / rows - 1.2) + '" rx="1" fill="' + c + '"/>';
     return '<svg class="pic" viewBox="0 0 ' + bw + ' ' + bh + '"><rect x=".5" y=".5" width="' + (bw - 1) + '" height="' + (bh - 1) + '" rx="3" fill="var(--panel2)" stroke="var(--line)"/><rect x="3" y="3" width="' + (bw - 6) + '" height="3" rx="1.5" fill="#6f6a63"/>' + sl + '</svg>';
   }
-  const MODELS = [['blinds', 'Горизонтальные деревянные'], ['', 'Горизонтальные алюминиевые (скоро)', 1], ['', 'Вертикальные (скоро)', 1], ['', 'Рулонные шторы (скоро)', 1], ['', 'Зебра (скоро)', 1], ['', 'Плиссе (скоро)', 1], ['', 'Римские шторы (скоро)', 1]];
+  const MODELS = [['blinds', 'Горизонтальные деревянные'], ['', 'Горизонтальные алюминиевые (скоро)', 1], ['', 'Вертикальные (скоро)', 1], ['rolo', 'Рулонные шторы'], ['', 'Зебра (скоро)', 1], ['', 'Плиссе (скоро)', 1], ['', 'Римские шторы (скоро)', 1]];
   const noPrices = () => '<div class="empty" style="padding:28px">Цены не загружены.<br><small>Укажите ссылку на скрипт цен и нажмите «Синхронизировать» в Настройках, раздел «Данные».</small></div>';
   function form() {
     const E = window.Eng;
     if (!E || E.err && !E.ready) return '<div class="card"><div class="callout bad">' + e(E ? E.err : 'Движок расчёта не загрузился') + '</div></div>';
     if (!E.ready) return '<div class="card"><h2>Новое изделие</h2>' + noPrices() + '</div>';
-    return form0();
+    return F.mode === 'rolo' ? formRolo() : form0();
   }
-  const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (x[0] === 'blinds' ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
+  const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (x[0] === (F.mode === 'rolo' ? 'rolo' : 'blinds') ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
   const autoPanelBody = () => { const h = autoPanel(); return h.replace(/^<div class="card">/, '<div>').replace(/<h2>Автоматика<\/h2>/, ''); };
   function form0() {
     const cs = CS(), n = norm(), r = n.r, s = F, showProfit = !!S.showCost;
@@ -141,6 +142,54 @@
     return h;
   }
 
+  /* ===== рулонные шторы Амиго: система, ткань, размер, управление, опции по группам ===== */
+  const RJ = () => window.JalRolo;
+  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, w: +R.w || 0, h: +R.h || 0, ctrl: R.ctrl, sel: R.sel, flags: R.flags });
+  function normRolo() {
+    const J = RJ(), sy = J.systems(); if (!sy.some(x => x.code === R.sys)) R.sys = sy.length ? sy[0].code : '';
+    if (R.fab && !J.fabOf(R.fab)) R.fab = '';
+    const o = J.opts(roloItem()); R.sel = o.sel; R.flags = o.flags;
+    return { it: roloItem(), r: J.calc(roloItem()), groups: J.groups(R.sys) };
+  }
+  const roloName = (it, c) => { const d = RJ() ? RJ().describe(it, c) : { title: 'Рулонная штора', sub: '' }; return { title: d.title + ' (Амиго)', sub: it.w + '×' + it.h + ' мм · ' + d.sub + (c.ok && c.termDays ? ' · срок ' + c.termDays + ' дн' : '') }; };
+  function formRolo() {
+    const J = RJ(), showProfit = !!S.showCost;
+    if (!J || !J.ready()) return '<div class="card cform"><div class="ftop"><h2>Рулонные шторы</h2></div><div class="fbody"><div class="empty" style="padding:28px">Цены на рулонки не загружены.<br><small>Добавьте в Google Таблицу «Цены для приложения» листы из файла «Рулонки_цены.xlsx» (Файл → Импорт → Вставить новые листы) и нажмите «Обновить цены».</small></div>' + pricesBar() + '</div></div>';
+    const n = normRolo(), r = n.r, it = n.it, qty = Math.max(1, +R.qty || 1);
+    const own = R.own !== '' && !isNaN(+R.own) && +R.own >= 0, unit = own ? Math.round(+R.own) : (r.ok ? r.unit : 0);
+    const f = J.fabOf(R.fab), q = (F.cq || '').trim().toLowerCase();
+    const shown = J.fabrics().filter(x => !q || (x.name + ' ' + x.ser + ' ' + x.cat).toLowerCase().indexOf(q) >= 0);
+    const sy = J.systems(), grpNames = sy.map(x => x.group).filter((g, i, a) => a.indexOf(g) === i);
+    const ICW = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M6 12h12M9 9l-3 3 3 3M15 9l3 3-3 3"/></svg>';
+    const ICH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9l3-3 3 3M9 15l3 3 3-3"/></svg>';
+    /* прибавка в рознице за вариант опции: считаем тем же расчётом с подставленным значением */
+    const delta = (g, val) => { if (!r.ok) return ''; const t = roloItem(); t.sel = Object.assign({}, R.sel); t.flags = Object.assign({}, R.flags);
+      if (g.type === 'flag') t.flags[g.name] = !R.flags[g.name]; else t.sel[g.name] = val;
+      const r2 = J.calc(t); if (!r2.ok) return ''; const d = r2.unit - r.unit; return d ? (d > 0 ? ' +' : ' −') + fmt(Math.abs(d)) + ' ₽' : ''; };
+    let h = '<div class="card cform"><div class="ftop"><h2>' + (R.edit >= 0 ? 'Рулонная штора, позиция ' + (R.edit + 1) : 'Новая рулонная штора') + '</h2><span class="sp"></span>' + (R.edit >= 0 ? '<button class="btn sm" data-a="cedcancel">Отменить правку</button>' : '') + '</div><div class="fbody rbody">';
+    let fabFld = '<div class="fld colf"><label>Ткань</label><button class="ul sel" data-a="ccol">' + (f ? '<b>' + e(f.name) + '</b><span class="mut sm">категория ' + e(f.cat) + ' · серия ' + e(f.ser) + '</span>' : '<span class="ph">Выберите ткань</span>') + '</button>';
+    if (F.colOpen) fabFld += '<div class="colpop"><input class="in" data-c="ccolq" placeholder="Поиск ткани (название, серия, категория)" value="' + e(F.cq) + '" id="ccolq"><div class="colist sc">' + (shown.length ? shown.map(x => '<button class="coli ' + (x.key === R.fab ? 'on' : '') + '" data-a="ccolpick" data-v="' + e(x.key) + '"><span><b>' + e(x.name) + '</b> <span class="mut sm">серия ' + e(x.ser) + '</span></span><span class="sp"></span><span class="pill">кат. ' + e(x.cat) + '</span></button>').join('') : '<div class="mut" style="padding:10px">Ничего не найдено</div>') + '</div></div>';
+    fabFld += '</div>';
+    h += '<div class="fgrid">' + modelRow() + '<div class="fld"><label>Система</label><select class="ul" data-c="rsys">' + grpNames.map(g => '<optgroup label="' + e(g) + '">' + sy.filter(x => x.group === g).map(x => '<option value="' + e(x.code) + '"' + (x.code === R.sys ? ' selected' : '') + '>' + e(x.name) + '</option>').join('') + '</optgroup>').join('') + '</select></div>' + fabFld + '</div>';
+    h += '<div class="fld sz"><label>Размер, мм</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(R.w) + '" data-c="rf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(R.h) + '" data-c="rf" data-k="h"></span></div></div>';
+    h += '<div class="fld"><label>Управление</label><div class="ctrls">' + [['L', 'цепочка слева'], ['R', 'цепочка справа']].map(k => '<button class="ctr ' + (R.ctrl === k[0] ? 'on' : '') + '" data-a="rf" data-k="ctrl" data-v="' + k[0] + '">' + ctrlSvg(50, k[0], true, 52) + '<span>' + k[1] + '</span></button>').join('') + '</div></div>';
+    const choice = n.groups.filter(g => g.type === 'choice' && g.items.length > 1), flags = n.groups.filter(g => g.type === 'flag');
+    if (choice.length) h += '<div class="fgrid ropts">' + choice.map(g => '<div class="fld"><label>' + e(g.name) + '</label><select class="ul" data-c="ropt" data-k="' + e(g.name) + '">' + g.items.map(x => '<option value="' + e(x.value) + '"' + (R.sel[g.name] === x.value ? ' selected' : '') + '>' + e(x.value + (R.sel[g.name] === x.value ? '' : delta(g, x.value))) + '</option>').join('') + '</select></div>').join('') + '</div>';
+    if (flags.length) h += '<div class="fld"><label>Дополнительно</label><div class="ochips">' + flags.map(g => '<button class="oc ' + (R.flags[g.name] ? 'on' : '') + '" data-a="rflag" data-v="' + e(g.name) + '">' + e(g.name) + (r.ok && R.flags[g.name] && r.optP[g.name] ? ' +' + fmt(r.optP[g.name]) : (R.flags[g.name] ? '' : delta(g))) + '</button>').join('') + '</div></div>';
+    let st = '';
+    if (+R.w > 0 && +R.h > 0 && f) st = '<div class="fnote ' + (r.ok && !r.warn.length ? 'ok' : 'bad') + '">' + (!r.ok ? e(r.msg) : r.warn.length ? '<b>НЕ ГАРАНТ.: </b>' + e(r.warn.join('; ')) : 'Размеры в пределах прайса (считаем по сетке ' + Math.round(r.gridW * 1000) + '×' + Math.round(r.gridH * 1000) + ' мм)') + '</div>';
+    if (r.ok) st += '<div class="fnote"><b>Срок:</b> ' + r.termDays + ' дн (завод ' + r.term + ' + ' + (r.termDays - r.term) + ' на выходные и доставку)</div>';
+    if (own && r.ok && showProfit && unit < r.cost) st += '<div class="fnote bad">Ниже закупа: убыток ' + m((r.cost - unit) * qty) + ' на позицию.</div>';
+    h += '<div class="fnotes">' + st + '</div></div>';
+    h += '<div class="ffoot"><button class="coin ' + (showProfit ? 'on' : '') + '" data-a="chide" title="' + (showProfit ? 'Закуп и прибыль показаны' : 'Показать закуп и прибыль') + '">' + A.icon('coin', 22) + '</button>' +
+      '<div class="fld"><label>Количество</label><div class="qst"><button data-a="rqty" data-d="-1">−</button><input class="num" type="number" min="1" max="99" value="' + qty + '" data-c="rf" data-k="qty"><button data-a="rqty" data-d="1">+</button></div></div>' +
+      '<div class="fprice"><div class="fown"><label>Своя цена за шт</label><input class="ul num" value="' + e(R.own) + '" data-c="rf" data-k="own" placeholder="' + (r.ok ? Math.round(r.unit) : '') + '"></div>' +
+      '<small class="mut">' + (r.ok ? (qty > 1 ? fmt(unit) + ' ₽ × ' + qty + ' шт' : 'изделие ' + fmt(r.base) + ' + доп. ' + fmt(r.addSum)) : '') + (own ? ' · своя цена' : '') + '</small>' +
+      '<div class="big num">' + (r.ok ? m(unit * qty) : '—') + '</div>' + (showProfit && r.ok ? '<small class="mut">прибыль ' + m((r.profit + (own ? unit - r.unit : 0)) * qty) + ' (закуп ' + fmt(r.cost) + ')</small>' : '') + '</div>' +
+      '<button class="btn pri fadd" data-a="cadd" style="opacity:' + (r.ok ? 1 : .45) + '">' + (R.edit >= 0 ? 'Сохранить' : 'В корзину') + '</button></div></div>';
+    return h;
+  }
+
   function itemName(it, c) {
     const extra = Object.keys(it.opts || {}).filter(k => it.opts[k]); if (it.fix) extra.push(CS().FIXLBL[it.fix] || it.fix);
     const col = c.col ? c.col.name : '';
@@ -155,8 +204,8 @@
     let prof = 0; items.forEach((it, i) => { const c = FF.calcs[i]; if (c.ok) prof += c.profit * it.qty; });
     const netProf = prof - FF.discAmt, cost = FF.goodsSum - prof, pct = C.discMode !== 'rub';
     const row = (it, i) => {
-      const c = FF.calcs[i], nm = it.kind ? kindName(it, c) : itemName(it, c), lineUnit = c.ok ? FF.lineSum[i] / it.qty : 0;
-      const warn = c.ok && c.warn && c.warn.length ? '<div class="cwarn">' + (c.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + e(c.warn.join('; ')) + '</div>' : '';
+      const c = FF.calcs[i], nm = it.kind ? kindName(it, c) : it.prod === 'rolo' ? roloName(it, c) : itemName(it, c), lineUnit = c.ok ? FF.lineSum[i] / it.qty : 0;
+      const warn = it.prod === 'rolo' && !c.ok ? '<div class="cwarn">' + e(c.msg || 'Нет цены') + '</div>' : c.ok && c.warn && c.warn.length ? '<div class="cwarn">' + (c.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + e(c.warn.join('; ')) + '</div>' : '';
       const q = it.kind === 'custom' ? '<button class="btn sm" data-a="ccq" data-i="' + i + '" data-d="-1">−</button><b>' + it.qty + '</b><button class="btn sm" data-a="ccq" data-i="' + i + '" data-d="1">+</button>' :
         it.kind ? '<button class="btn sm" data-a="cast" data-kind="' + it.kind + '" data-key="' + e(it.key) + '" data-d="-1" data-sup="' + e(it.sup) + '">−</button><b>' + it.qty + '</b><button class="btn sm" data-a="cast" data-kind="' + it.kind + '" data-key="' + e(it.key) + '" data-d="1" data-sup="' + e(it.sup) + '">+</button>' : '<b>' + it.qty + '</b>';
       return '<tr><td class="num mut">' + (i + 1) + '</td><td><b>' + e(nm.title) + '</b><div class="mut sm">' + e(nm.sub) + '</div>' + (it.note ? '<div class="mut sm">' + e(it.note) + '</div>' : '') + warn +
@@ -250,17 +299,23 @@
       else if (cur.matches && cur.matches('[data-a=cauto]') && !F.autoOpen) { F.autoOpen = true; rr(); }
     }, 0);
   });
-  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds') { F.mode = v; rr(); } };
+  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo') { F.mode = v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); } };
   A.fld.ctype = v => { const p = String(v).split('|'); F.mat = p[0]; F.lam = +p[1]; F.color = ''; F.colOpen = false; rr(); };
   A.fld.csup = v => { F.sup = v; Object.assign(F, { lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {}, colOpen: false }); rr(); };
   A.fld.cfix = v => { F.fix = v; rr(); };
+  A.fld.rsys = v => { R.sys = v; R.sel = {}; R.flags = {}; rr(); };
+  A.fld.rf = (v, el) => { const k = el.dataset.k; R[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
+  A.act.rf = el => { R[el.dataset.k] = el.dataset.v; rr(); };
+  A.fld.ropt = (v, el) => { R.sel[el.dataset.k] = v; rr(); };
+  A.act.rflag = el => { R.flags[el.dataset.v] = !R.flags[el.dataset.v]; rr(); };
+  A.act.rqty = el => { R.qty = Math.max(1, Math.min(99, (+R.qty || 1) + (+el.dataset.d))); rr(); };
   A.act.cqty = el => { F.qty = Math.max(1, Math.min(99, (+F.qty || 1) + (+el.dataset.d))); rr(); };
   A.act.cdraft = () => {
     const J = JC(), C = J.C; if (!C.cart.length) { A.toast('Корзина пуста'); return; }
     const co = J.toOrder(); if (!co.items.length) { A.toast('В корзине нет изделий с ценой'); return; }
     const total = Math.max(0, co.items.reduce((a, i) => a + (+i.price || 0), 0) - (+co.disc || 0)), reg = !!C.region, pvz = (C.pvz || '').trim(), editing = !!C.editNo;
     const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: reg ? 0 : co.delivery, cart: J.snapshot(), region: reg, pvz: reg ? pvz : '' };
-    if (!editing) Object.assign(data, { name: 'Без имени', phone: '', addr: '', install: !reg, buyer: 'физ', status: 'Черновик', pre: '100', preU: '%', term: '12', note: reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '' });
+    if (!editing) Object.assign(data, { name: 'Без имени', phone: '', addr: '', install: !reg, buyer: 'физ', status: 'Черновик', pre: '100', preU: '%', term: termDefault(), note: reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '' });
     const rec = DB.saveOrder(data, co.items, editing ? C.editNo : null, 'Черновик (компьютер)', m(total));
     J.clear(); O.open = false; Object.assign(F, { edit: -1 }); A.toast('Черновик сохранён: заказ № ' + rec.no); A.S.selOrder = 'ph' + rec.uid; A.save(); rr();
   };
@@ -268,7 +323,8 @@
   A.fld.cf = (v, el) => { const k = el.dataset.k; F[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
   A.act.copt = el => { F.opts[el.dataset.v] = !F.opts[el.dataset.v]; rr(); };
   A.act.ccol = () => { F.colOpen = !F.colOpen; F.cq = ''; rr(); };
-  A.act.ccolpick = el => { F.color = el.dataset.v; F.colOpen = false; F.cq = ''; rr(); };
+  A.act.ccolpick = el => { if (F.mode === 'rolo') R.fab = el.dataset.v; else F.color = el.dataset.v; F.colOpen = false; F.cq = ''; rr(); };
+  document.addEventListener('input', ev => { if (ev.target.id === 'ccolq' && ev.target.value !== F.cq) A.fld.ccolq(ev.target.value); });
   A.fld.ccolq = v => { F.cq = v; rr(); const q = document.getElementById('ccolq'); if (q) { q.focus(); q.setSelectionRange(v.length, v.length); } };
   A.act.cprices = () => { A.toast('Обновляю цены…'); Eng.refresh().then(() => { A.toast('Цены обновлены'); rr(); }).catch(x => A.toast('Ошибка: ' + x.message)); };
   A.fld.cscript = v => { const u = String(v).trim(); if (!u) return; try { localStorage.setItem('jal_prices_url', u); } catch (x) {} A.toast('Загружаю цены…'); Eng.refresh().then(() => { A.toast('Цены загружены'); rr(); }).catch(x => A.toast('Ошибка: ' + x.message)); };
@@ -281,7 +337,8 @@
   A.act.cdel = el => { const C = JC().C; C.cart.splice(+el.dataset.i, 1); JC().save(); rr(); };
   A.act.cclear = () => { JC().clear(); Object.assign(O, { open: false, fresh: false }); rr(); };
   A.act.cocancel = () => { O.open = false; rr(); };
-  const load = (it, edit) => { Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
+  const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
+    F.mode = 'blinds'; Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
   const cuSync = () => { document.querySelectorAll('.cuadd [data-k]').forEach(el => { const k = el.dataset.k; if (k !== 'title' && document.activeElement !== el) el.value = CU[k]; }); };
   A.fld.cuf = (v, el) => {
     const k = el.dataset.k;
@@ -317,8 +374,15 @@
   A.act.cast = el => { JC().autoStep(el.dataset.sup || F.sup, el.dataset.kind, el.dataset.key, +el.dataset.d); rr(); };
   A.act.cedit = el => load(JC().C.cart[+el.dataset.i], +el.dataset.i);
   A.act.cdup = el => load(JC().C.cart[+el.dataset.i], -1);
-  A.act.cedcancel = () => { F.edit = -1; rr(); };
+  A.act.cedcancel = () => { F.edit = -1; R.edit = -1; rr(); };
   A.act.cadd = () => {
+    if (F.mode === 'rolo') {
+      const n = normRolo(); if (!n.r.ok) { A.toast(n.r.msg || 'Заполните форму'); return; }
+      const own = R.own !== '' && !isNaN(+R.own) && +R.own >= 0 ? Math.round(+R.own) : '';
+      const item = Object.assign(roloItem(), { qty: Math.max(1, +R.qty || 1), own, note: R.note, sel: Object.assign({}, R.sel), flags: Object.assign({}, R.flags) });
+      if (R.edit >= 0) JC().replaceItem(R.edit, item); else JC().addItem(item);
+      Object.assign(R, { qty: 1, own: '', note: '', edit: -1 }); A.toast('Добавлено в корзину'); rr(); return;
+    }
     const n = norm(); if (!n.r.ok) { A.toast(n.r.needColor ? 'Выбери цвет' : (n.r.msg || 'Введи размеры')); return; }
     const own = F.own !== '' && !isNaN(+F.own) && +F.own >= 0 ? Math.round(+F.own) : '';
     const item = { sup: F.sup, lam: n.lam, mat: n.mat, color: n.color, ctrl: n.ctrl, fix: n.fix, opts: Object.assign({}, n.opts), w: +F.w, h: +F.h, qty: Math.max(1, +F.qty || 1), own, note: F.note };
@@ -371,10 +435,13 @@
     if (!C.editNo && !O.name.trim() && !O.company.trim() && !O.repr.trim() && !O.phone.trim()) { A.toast('Укажи имя или телефон клиента'); O.step = 0; rr(); return false; }
     return true;
   }
+  /* срок по умолчанию: 12 дней для дерева и прочего, у рулонок срок завода + 5 дней (берём самый долгий) */
+  const termDefault = () => { const cart = JC().C.cart, rt = cart.filter(x => x.prod === 'rolo').reduce((mx, x) => Math.max(mx, (RJ() && RJ().termFor(x)) || 0), 0), other = cart.some(x => !x.prod && x.kind !== 'custom' || x.kind === 'drive');
+    return String(rt && !other ? rt : Math.max(12, rt)); };
   A.act.cord = () => {
     const C = JC().C; if (!C.cart.length) { A.toast('Корзина пуста'); return; }
     if (!O.open) {
-      if (!C.editNo) Object.assign(O, { step: 0, fresh: false, sent: false, dog: false, q: '', ct: 'fiz', name: '', phone: '', email: '', addr: '', company: '', inn: '', ogrn: '', uaddr: '', repr: '', bank: '', innMsg: '', innOk: true, inst: !C.region, note: '', pre: '100', preU: '%', term: '12' });
+      if (!C.editNo) Object.assign(O, { step: 0, fresh: false, sent: false, dog: false, q: '', ct: 'fiz', name: '', phone: '', email: '', addr: '', company: '', inn: '', ogrn: '', uaddr: '', repr: '', bank: '', innMsg: '', innOk: true, inst: !C.region, note: '', pre: '100', preU: '%', term: termDefault() });
       O.open = true; rr(); return;
     }
     A.act.cosave();

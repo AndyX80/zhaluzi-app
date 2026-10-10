@@ -12,7 +12,7 @@
   }
   E.apply = function (raw) {
     const sheets = withFx(raw); E.sheets = sheets;
-    JalCalcScreen.setSheets(sheets); JalCart.setSheets(sheets); E.ready = true; E.err = '';
+    JalCalcScreen.setSheets(sheets); JalCart.setSheets(sheets); if (window.JalRolo) { try { JalRolo.setSheets(sheets); } catch (x) { console.error(x); } } E.ready = true; E.err = '';
   };
   E.url = () => lsGet('jal_prices_url');
   E.load = function () {

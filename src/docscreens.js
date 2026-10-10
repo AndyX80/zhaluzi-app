@@ -31,7 +31,7 @@
   const colorOf = it => it.o && it.o.color ? it.o.color : '';
   const sizeTxt = it => Math.round(it.W * 10) + '×' + Math.round(it.H * 10);
   function specKp(it) {
-    if (!isBl(it)) return '';
+    if (!isBl(it) || it.prod) return '';
     const chain = (it.o.opts || []).indexOf('Цепочка') >= 0;
     const parts = [it.mat + ' ' + it.lam + ' мм', sizeTxt(it) + ' мм'].concat((it.o.opts || []).map(o => OPT[o] != null ? OPT[o] : lc(o)).filter(Boolean)).concat(it.o.fix ? [FIX[it.o.fix] || lc(it.o.fix)] : []);
     return parts.join(', ') + '; ' + ((chain ? CHAIN : CTRL)[it.ctrl] || CTRL.TR);

@@ -54,6 +54,7 @@
       const a = autoOf(it);
       return a ? { ok: true, unit: a.price, profit: a.price - a.f.cost, warn: [], auto: a.f } : { ok: false, warn: [] };
     }
+    if (it.prod === 'rolo') return window.JalRolo ? window.JalRolo.calc(it) : { ok: false, warn: [] };
     return window.JalCalcScreen.calcRow(it);
   }
   function spread(rows, S) {
@@ -106,19 +107,19 @@
     // лимиты привода (по таблице РДО, принято для всех поставщиков)
     const hasDrive = {}; s.cart.forEach(x => { if (x.kind === 'drive') hasDrive[x.sup] = true; });
     const driveNote = it => {
-      if (!hasDrive[it.sup]) return '';
+      if (it.prod || !hasDrive[it.sup]) return '';
       const W = Number(it.w) || 0, H = Number(it.h) || 0, mn = it.lam === 25 ? 500 : 700, mx = it.lam === 25 ? 2400 : 2700, bad = [];
       if (W && W < mn) bad.push('ширина меньше ' + mn + ' мм');
       if (W > mx) bad.push('ширина больше ' + mx + ' мм');
       if (H > 3000) bad.push('высота больше 3000 мм');
       return bad.length ? ' ПРИВОД не подходит: ' + bad.join(', ') : '';
     };
-    const minFor = it => { const pk = it.kind === 'drive' ? 'Привод' : it.kind === 'remote' ? 'Пульт' : it.kind === 'custom' ? 'Своя строка' : it.mat + ' ' + it.lam;
+    const minFor = (it, c) => { if (it.prod === 'rolo') return c && c.minProfit != null ? c.minProfit : 1000; const pk = it.kind === 'drive' ? 'Привод' : it.kind === 'remote' ? 'Пульт' : it.kind === 'custom' ? 'Своя строка' : it.mat + ' ' + it.lam;
       const v = (MINP.p[it.sup] || {})[pk]; if (v !== undefined) return v; return (pk === 'Пульт' || pk === 'Своя строка') ? 0 : MINP.def; };
     const below = [];
     const profInfo = s.cart.map((it, i) => { const c = calcs[i];
       if (!c.ok || (it.kind === 'custom' && c.noCost)) return null;
-      const share = goodsSum ? discAmt * (c.unit * it.qty) / goodsSum / it.qty : 0, pp = c.profit - share, mn = minFor(it);
+      const share = goodsSum ? discAmt * (c.unit * it.qty) / goodsSum / it.qty : 0, pp = c.profit - share, mn = minFor(it, c);
       const low = mn > 0 && pp < mn; if (low) below.push(i + 1);
       return { pp, mn, low }; });
     const wireBtn = on => 'min-height: 44px; border: 0; background: transparent; font-size: 14px; text-align: center; border-bottom: 3px solid ' + (on ? 'var(--ac)' : 'transparent') + '; font-weight: ' + (on ? '800' : '600') + '; color: ' + (on ? 'var(--ink)' : 'var(--m3)');
@@ -149,6 +150,10 @@
         return mkRow(it, i, { title: it.sup, sub: (a ? a.name : '') + (it.kind === 'drive' ? ' · привод' : ' · пульт'), size: '—', sum: c.ok ? fmt(lineSum[i]) : '—',
           warn: needMsg, warnStyle: redWarn(!!needMsg), edit: () => { JalCalcScreen.editAuto(it.sup); window.JalApp.tab('calc'); }, remove: rm });
       }
+      if (it.prod === 'rolo') {
+        const d = window.JalRolo ? JalRolo.describe(it, c) : { title: 'Рулонная штора', sub: '' };
+        return mkRow(it, i, { title: d.title, sub: d.sub, size: it.w + '×' + it.h, sum: c.ok ? fmt(lineSum[i]) : '—', warn: c.ok ? (c.warn || []).join('; ') : (c.msg || ''), warnStyle: redWarn(!c.ok || !!(c.warn && c.warn.length)), edit: () => {}, remove: rm });
+      }
       const extra = Object.keys(it.opts || {}).filter(n => it.opts[n]);
       if (it.fix) extra.push(it.fix === 'Ниж. фиксация' ? 'Уголки' : it.fix);
       const colName = c.col ? (it.sup === 'Foroom' ? c.col.name + ' (' + c.col.ser.split(' · ')[0] + ')' : c.col.name) : '';
@@ -164,7 +169,8 @@
 
     let pcs = 0, areaSum = 0, kgSum = 0, kgPart = true, prof = 0, n50 = 0, n25 = 0, nAuto50 = 0, nAuto25 = 0;
     s.cart.forEach((it, i) => { const c = calcs[i]; if (c.ok) prof += c.profit * it.qty; pcs += it.qty;
-      if (!it.kind) { areaSum += (Number(it.w) || 0) * (Number(it.h) || 0) / 1e6 * it.qty; const kg = LM.weightKg(it.mat, it.lam, Number(it.w), Number(it.h)); if (kg) kgSum += kg * it.qty; else kgPart = false;
+      if (!it.kind && it.prod === 'rolo') { areaSum += (Number(it.w) || 0) * (Number(it.h) || 0) / 1e6 * it.qty; kgPart = false; }
+      else if (!it.kind) { areaSum += (Number(it.w) || 0) * (Number(it.h) || 0) / 1e6 * it.qty; const kg = LM.weightKg(it.mat, it.lam, Number(it.w), Number(it.h)); if (kg) kgSum += kg * it.qty; else kgPart = false;
         if (it.lam === 50) n50 += it.qty; else if (it.lam === 25) n25 += it.qty; }
       else if (it.kind === 'drive' && c.auto) { if (c.auto.lam === 50) nAuto50 += it.qty; else if (c.auto.lam === 25) nAuto25 += it.qty; } });
     nAuto50 = Math.min(nAuto50, n50); nAuto25 = Math.min(nAuto25, n25);
@@ -232,9 +238,9 @@
   function variants(st) {
     const sC = st || C, CS = window.JalCalcScreen, base = sC.cart.map(calcRow);
     return CS.VARIANTS.map(v => {
-      const sups = sC.cart.map(it => (it.kind || it.sup === undefined ? it.sup : v.sup));
+      const sups = sC.cart.map(it => (it.kind || it.prod || it.sup === undefined ? it.sup : v.sup));
       const calcs = sC.cart.map((it, i) => {
-        if (it.kind) return base[i];
+        if (it.kind || it.prod) return base[i];
         const r = CS.priceFor(it, v.sup, v.cat);
         return r ? { ok: true, unit: r.unit, profit: r.profit, warn: [] } : { ok: false, warn: [] };
       });
@@ -252,6 +258,8 @@
       for (let k = 0; k < it.qty; k++) {
         if (it.kind === 'custom') items.push({ kind: 'custom', title: it.title || 'Услуга', price, profit: c.profit, cost: it.cost === '' || it.cost == null ? '' : Number(it.cost), costOk: !!it.costOk, ci: i });
         else if (it.kind) items.push({ kind: it.kind, sup: SUPNAME[it.sup] || it.sup, title: c.auto.name + (it.kind === 'drive' ? ' (привод)' : ''), price, profit: c.profit });
+        else if (it.prod === 'rolo') { const d = window.JalRolo ? JalRolo.describe(it, c) : { title: 'Рулонная штора', sub: '' };
+          items.push({ sup: SUPNAME[it.sup] || it.sup, prod: 'rolo', mat: 'Рулонные шторы', lam: 0, title: d.title + ' (' + it.w + '×' + it.h + ' мм), ' + d.sub, W: (+it.w) / 10, H: (+it.h) / 10, ctrl: it.ctrl, term: c.termDays || 0, o: { color: null, opts: [], fix: null }, price, profit: c.profit }); }
         else items.push({ sup: SUPNAME[it.sup] || it.sup, mat: it.mat, lam: it.lam, W: (+it.w) / 10, H: (+it.h) / 10, ctrl: it.ctrl,
           o: { color: c.col ? c.col.name : null, opts: Object.keys(it.opts || {}).filter(n => it.opts[n]), fix: it.fix || null }, price, profit: c.profit });
       }

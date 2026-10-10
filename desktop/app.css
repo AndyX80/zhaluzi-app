@@ -232,3 +232,4 @@ button.ul.sel .ph{color:var(--bad)}.sm{font-size:12px}
 .ttab td.cdbt{color:var(--trd)!important;font-weight:700}
 .ttab td.topen .ib{border:1.5px solid color-mix(in srgb,var(--ink) 35%,transparent);background:var(--pop,#fff);color:var(--ink);border-radius:8px;width:28px;height:28px;font-weight:700}
 .ttab td.topen .ib:hover{background:var(--acc);border-color:var(--acc);color:#fff}
+.cform .rbody{overflow-y:auto;padding-right:4px}.cform .rbody>*{flex:none}
