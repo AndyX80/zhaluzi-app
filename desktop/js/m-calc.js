@@ -10,7 +10,7 @@
   const CTRL_TXT = { L: 'подъём и поворот слева', R: 'подъём и поворот справа', TL: 'поворот слева, подъём справа', TR: 'поворот справа, подъём слева' };
   const CHAIN_TXT = { L: 'цепочка слева', R: 'цепочка справа' };
   const O = { open: false, step: 0, fresh: false, sent: false, dog: false, q: '', ct: 'fiz', name: '', phone: '', email: '', addr: '', company: '', inn: '', ogrn: '', uaddr: '', repr: '', bank: '', innMsg: '', innOk: true, innBusy: false, inst: true, note: '', pre: '100', preU: '%', term: '12' };
-  const F = { sup: 'Amigo', lam: 50, mat: 'Дерево', color: '', colOpen: false, cq: '', w: '', h: '', qty: 1, ctrl: 'TR', fix: '', opts: {}, own: '', note: '', edit: -1 };
+  const F = { mode: '', sup: 'Amigo', lam: 50, mat: 'Дерево', color: '', colOpen: false, cq: '', w: '', h: '', qty: 1, ctrl: 'TR', fix: '', opts: {}, own: '', note: '', edit: -1 };
   const R = { sys: 'UNI-2', fab: '', fq: '', w: '', h: '', qty: 1, ctrl: 'L', sel: {}, flags: {}, own: '', note: '', edit: -1 };
   const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const CS = () => window.JalCalcScreen, JC = () => window.JalCart;
@@ -95,9 +95,10 @@
     const E = window.Eng;
     if (!E || E.err && !E.ready) return '<div class="card"><div class="callout bad">' + e(E ? E.err : 'Движок расчёта не загрузился') + '</div></div>';
     if (!E.ready) return '<div class="card"><h2>Новое изделие</h2>' + noPrices() + '</div>';
-    return F.mode === 'rolo' ? formRolo() : form0();
+    return F.mode === 'rolo' ? formRolo() : F.mode === 'blinds' ? form0() : formEmpty();
   }
-  const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (x[0] === (F.mode === 'rolo' ? 'rolo' : 'blinds') ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
+  const formEmpty = () => '<div class="card cform"><h2>Новое изделие</h2><div class="fgrid">' + modelRow() + '</div></div>';
+  const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + (F.mode ? '' : '<option value="" selected disabled>Выберите модель</option>') + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (F.mode && x[0] === F.mode ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
   const autoPanelBody = () => { const h = autoPanel(); return h.replace(/^<div class="card">/, '<div>').replace(/<h2>Автоматика<\/h2>/, ''); };
   function form0() {
     const cs = CS(), n = norm(), r = n.r, s = F, showProfit = !!S.showCost;
