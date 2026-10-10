@@ -259,7 +259,7 @@
         if (it.kind === 'custom') items.push({ kind: 'custom', title: it.title || 'Услуга', price, profit: c.profit, cost: it.cost === '' || it.cost == null ? '' : Number(it.cost), costOk: !!it.costOk, ci: i });
         else if (it.kind) items.push({ kind: it.kind, sup: SUPNAME[it.sup] || it.sup, title: c.auto.name + (it.kind === 'drive' ? ' (привод)' : ''), price, profit: c.profit });
         else if (it.prod === 'rolo') { const d = window.JalRolo ? JalRolo.describe(it, c) : { title: 'Рулонная штора', sub: '' };
-          items.push({ sup: SUPNAME[it.sup] || it.sup, prod: 'rolo', mat: 'Рулонные шторы', lam: 0, title: d.title + ' (' + it.w + '×' + it.h + ' мм), ' + d.sub, W: (+it.w) / 10, H: (+it.h) / 10, ctrl: it.ctrl, term: c.termDays || 0, o: { color: null, opts: [], fix: null }, price, profit: c.profit }); }
+          items.push({ sup: SUPNAME[it.sup] || it.sup, prod: 'rolo', mat: it.mat || 'Рулонные шторы', lam: 0, title: d.title + ' (' + it.w + '×' + it.h + ' мм), ' + d.sub, W: (+it.w) / 10, H: (+it.h) / 10, ctrl: it.ctrl, term: c.termDays || 0, o: { color: null, opts: [], fix: null }, price, profit: c.profit }); }
         else items.push({ sup: SUPNAME[it.sup] || it.sup, mat: it.mat, lam: it.lam, W: (+it.w) / 10, H: (+it.h) / 10, ctrl: it.ctrl,
           o: { color: c.col ? c.col.name : null, opts: Object.keys(it.opts || {}).filter(n => it.opts[n]), fix: it.fix || null }, price, profit: c.profit });
       }
