@@ -16,7 +16,7 @@
     const par = sh['Параметры'] || []; par.forEach(r => { if (r[0] === 'курс_usd') FX = Number(r[1]) || FX; });
     sh['Рулонки_системы'].slice(1).forEach(r => {
       if (!r[0]) return;
-      SYS.push({ code: String(r[0]), name: String(r[1] || r[0]), group: String(r[2] || ''), grid: String(r[3] || ''), term: Number(r[4]) || 1, profit: r[5] === '' || r[5] == null ? 1000 : Number(r[5]) || 0, note: String(r[6] || '') });
+      SYS.push({ code: String(r[0]), name: String(r[1] || r[0]), group: String(r[2] || ''), grid: String(r[3] || ''), term: Number(r[4]) || 1, mk: r[5] === '' || r[5] == null ? 2 : Number(r[5]) || 2, profit: r[6] === '' || r[6] == null ? 1000 : Number(r[6]) || 0, note: String(r[7] || '') });
     });
     SYS.forEach(s => {
       if (GRID[s.grid] || !sh[s.grid]) return;
@@ -77,8 +77,8 @@
     return { usd, w: g.widths[ci], h: row.h };
   }
 
-  /* длина металлической цепи: две трети высоты (уточняется) */
-  const chainLen = hMm => hMm * 2 / 3000;
+  /* длина металлической цепи: высота изделия минус 15 см */
+  const chainLen = hMm => Math.max(0, hMm - 150) / 1000;
 
   function calc(it) {
     const out = { ok: false, warn: [], msg: '' };
@@ -90,7 +90,7 @@
     const L = lookup(s.code, f.cat, W, H);
     if (L.err) { out.msg = L.err; if (L.hard) out.warn.hard = true; return out; }
     const disc = P['скидка_рулонки'] != null ? Number(P['скидка_рулонки']) : 0.4, k = (1 - disc) * FX;
-    const coef = Number(P['коэф_опций']) || 1.65, step = Number(P['округление']) || 100;
+    const coef = s.mk, step = Number(P['округление']) || 100;
     const base = Math.round(L.usd * k);
     const o = opts(it), optP = {}, optCost = {};
     let optUsd = 0;
@@ -103,7 +103,7 @@
       optCost[label] = Math.round(usd * k); optP[label] = Math.ceil(usd * k * coef / step - 1e-9) * step;
     });
     const costOpt = Math.round(optUsd * k), profit0 = s.profit;
-    const baseRetail = ceilTo(base + profit0, step), addSum = Object.keys(optP).reduce((a, n) => a + optP[n], 0);
+    const baseRetail = ceilTo(base * s.mk, step), addSum = Object.keys(optP).reduce((a, n) => a + optP[n], 0);
     const unit = baseRetail + addSum, cost = base + costOpt;
     if (f.roll && W / 10 > f.roll - 3 && !(o.flags['Сварка ткани'])) out.warn.push('ширина больше рулона ткани (' + f.roll + ' см): нужна сварка ткани');
     Object.assign(out, { ok: true, unit, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: profit0, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, gridW: L.w, gridH: L.h, usd: L.usd });
