@@ -319,7 +319,8 @@
   });
   A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo' || v === 'zebra' || v === 'vert') { const m = v === 'zebra' || v === 'vert' || v === 'rolo' ? v : ''; if (m) { if (RM() !== m) { R.sys = ''; R.fab = ''; R.sel = {}; R.flags = {}; } R.z = m === 'zebra'; R.v = m === 'vert'; } F.mode = m ? 'rolo' : v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); if ((m === 'zebra' && !RJ().systems(true).length) || (m === 'vert' && !RJ().systems('vert').length)) A.act.cprices(); } };
   A.fld.ctype = v => { const p = String(v).split('|'); F.mat = p[0]; F.lam = +p[1]; F.color = ''; F.colOpen = false; rr(); };
-  A.fld.csup = v => { F.sup = v; Object.assign(F, { lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {}, colOpen: false }); rr(); };
+  /* при смене поставщика тип, управление, фиксация и опции сохраняются, если он их поддерживает (иначе norm подставит допустимое) */
+  A.fld.csup = v => { F.sup = v; F.colOpen = false; rr(); };
   A.fld.cfix = v => { F.fix = v; rr(); };
   A.fld.rsys = v => { R.sys = v; R.sel = {}; R.flags = {}; R.tubeLock = false; rr(); };
   A.fld.rf = (v, el) => { const k = el.dataset.k; R[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
@@ -338,7 +339,7 @@
     const rec = DB.saveOrder(data, co.items, editing ? C.editNo : null, 'Черновик (компьютер)', m(total));
     J.clear(); resetO(); Object.assign(F, { edit: -1 }); A.toast('Просчёт сохранён'); A.S.selOrder = 'ph' + rec.uid; A.save(); rr();
   };
-  A.act.cf = el => { const k = el.dataset.k, v = el.dataset.v; F[k] = k === 'lam' ? +v : v; if (k === 'sup') { Object.assign(F, { lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {} }); } rr(); };
+  A.act.cf = el => { const k = el.dataset.k, v = el.dataset.v; F[k] = k === 'lam' ? +v : v; if (k === 'sup') F.colOpen = false; rr(); };
   A.fld.cf = (v, el) => { const k = el.dataset.k; F[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
   A.act.copt = el => { F.opts[el.dataset.v] = !F.opts[el.dataset.v]; rr(); };
   A.act.ccol = () => { F.colOpen = !F.colOpen; F.cq = ''; rr(); };
