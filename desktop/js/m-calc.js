@@ -182,14 +182,14 @@
     if (f && f.stock !== null && f.stock < 2) st += '<div class="fnote"><i class="sd" style="background:' + DOT[f.stock] + '"></i> ' + e(STOCK_TXT[f.stock][0].toUpperCase() + STOCK_TXT[f.stock].slice(1)) + '</div>';
     if (r.ok) st += '<div class="fnote"><b>Срок:</b> ' + r.termDays + ' дней</div>';
     if (own && r.ok && showProfit && unit < r.cost) st += '<div class="fnote bad">Ниже закупа: убыток ' + m((r.cost - unit) * qty) + ' на позицию.</div>';
-    h += '<div class="fnotes">' + st + '</div></div>';
+    h += '</div>';
     const ph = J.photoUrl(f);
-    h += '<div class="ffoot">' + (ph ? '<button class="rph" data-a="rphoto" title="Увеличить фото ткани"><img src="' + e(ph) + '" alt="" onerror="this.parentNode.style.display=\'none\'"></button>' : '') + '<button class="coin ' + (showProfit ? 'on' : '') + '" data-a="chide" title="' + (showProfit ? 'Закуп и прибыль показаны' : 'Показать закуп и прибыль') + '">' + A.icon('coin', 22) + '</button>' +
+    h += '<div class="ffoot">' + (ph ? '<button class="rph" data-a="rphoto" title="Увеличить фото ткани"><img src="' + e(ph) + '" alt="" onerror="this.parentNode.style.display=\'none\'"></button>' : '') + '<div class="fright"><div class="fnotes">' + st + '</div><div class="frow">' + '<button class="coin ' + (showProfit ? 'on' : '') + '" data-a="chide" title="' + (showProfit ? 'Закуп и прибыль показаны' : 'Показать закуп и прибыль') + '">' + A.icon('coin', 22) + '</button>' +
       '<div class="fld"><label>Количество</label><div class="qst"><button data-a="rqty" data-d="-1">−</button><input class="num" type="number" min="1" max="99" value="' + qty + '" data-c="rf" data-k="qty"><button data-a="rqty" data-d="1">+</button></div></div>' +
       '<div class="fprice"><div class="fown"><label>Своя цена за шт</label><input class="ul num" value="' + e(R.own) + '" data-c="rf" data-k="own" placeholder="' + (r.ok ? Math.round(r.unit) : '') + '"></div>' +
       '<small class="mut">' + (r.ok ? (qty > 1 ? fmt(unit) + ' ₽ × ' + qty + ' шт' : 'изделие ' + fmt(r.base) + ' + доп. ' + fmt(r.addSum)) : '') + (own ? ' · своя цена' : '') + '</small>' +
       '<div class="big num">' + (r.ok ? m(unit * qty) : '—') + '</div>' + (showProfit && r.ok ? '<small class="mut">прибыль ' + m((r.profit + (own ? unit - r.unit : 0)) * qty) + ' (закуп ' + fmt(r.cost) + ')</small>' : '') + '</div>' +
-      '<button class="btn pri fadd" data-a="cadd" style="opacity:' + (r.ok ? 1 : .45) + '">' + (R.edit >= 0 ? 'Сохранить' : 'В корзину') + '</button></div></div>' +
+      '<button class="btn pri fadd" data-a="cadd" style="opacity:' + (r.ok ? 1 : .45) + '">' + (R.edit >= 0 ? 'Сохранить' : 'В корзину') + '</button></div></div></div></div>' +
       (R.photo && ph ? '<div class="rphbig" data-a="rphoto"><img src="' + e(ph) + '" alt=""><div class="mut">' + e(f.name) + (f.qty !== null ? ' · на складе ' + fmt(f.qty) + ' м' : '') + '</div></div>' : '');
     return h;
   }
