@@ -37,7 +37,7 @@
     /* список тканей с цветами (выгрузка из кабинета Амиго: один на все системы); иначе только серии */
     (sh['Рулонки_ткани_цвета'] || []).slice(1).forEach(r => {
       if (!r[0]) return;
-      const sr = SER[String(r[1])] || {}, f = Object.assign({ maxs: '', dens: 0, wgrp: '', wet: '', coll: '' }, sr, { key: String(r[0]), name: String(r[2]), ser: String(r[1] || ''), cat: String(r[4]), roll: Number(r[3]) || sr.roll || 0 });
+      const sr = SER[String(r[1])] || {}, f = Object.assign({ maxs: '', dens: 0, wgrp: '', wet: '', coll: '' }, sr, { key: String(r[0]), name: String(r[2]), ser: String(r[1] || ''), cat: String(r[4]), roll: Number(r[3]) || sr.roll || 0, prodW: Number(r[5]) || 0, stock: r[6] === '' || r[6] == null ? null : Number(r[6]), qty: r[7] === '' || r[7] == null ? null : Number(r[7]), img: String(r[8] || '') });
       FAB.push(f); FAB_BY[f.key] = f;
     });
     if (!FAB.length) (sh['Рулонки_ткани'] || []).slice(1).forEach(r => {
@@ -105,7 +105,8 @@
     const costOpt = Math.round(optUsd * k), profit0 = s.profit;
     const baseRetail = ceilTo(base * s.mk, step), addSum = Object.keys(optP).reduce((a, n) => a + optP[n], 0);
     const unit = baseRetail + addSum, cost = base + costOpt;
-    if (f.roll && W / 10 > f.roll - 3 && !(o.flags['Сварка ткани'])) out.warn.push('ширина больше рулона ткани (' + f.roll + ' см): нужна сварка ткани');
+    const pw = f.prodW || (f.roll ? f.roll - 10 : 0);
+    if (pw && W / 10 > pw && !(o.flags['Сварка ткани'])) out.warn.push('ширина больше рабочей ширины ткани (' + pw + ' см): нужна сварка ткани');
     Object.assign(out, { ok: true, unit, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: profit0, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, gridW: L.w, gridH: L.h, usd: L.usd });
     return out;
   }
@@ -123,6 +124,7 @@
   window.JalRolo = {
     SUP, setSheets, ready: () => ready, systems: () => SYS, sysOf, fabrics: () => FAB, fabOf, groups: groupsOf, opts, calc, describe,
     termFor: it => { const s = sysOf(it.sys); return s ? s.term + (Number(P['срок_добавка_дн']) || 5) : 0; },
+    photoUrl: f => (f && f.img ? String(P['фото_адрес'] || 'https://customizer.amigo.ru').replace(/\/$/, '') + f.img : ''),
     param: k => P[k]
   };
 })();

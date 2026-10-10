@@ -89,7 +89,7 @@
     let sl = ''; for (let i = 0; i < rows; i++) sl += '<rect x="5" y="' + (6 + i * (bh - 8) / rows) + '" width="' + (bw - 10) + '" height="' + ((bh - 8) / rows - 1.2) + '" rx="1" fill="' + c + '"/>';
     return '<svg class="pic" viewBox="0 0 ' + bw + ' ' + bh + '"><rect x=".5" y=".5" width="' + (bw - 1) + '" height="' + (bh - 1) + '" rx="3" fill="var(--panel2)" stroke="var(--line)"/><rect x="3" y="3" width="' + (bw - 6) + '" height="3" rx="1.5" fill="#6f6a63"/>' + sl + '</svg>';
   }
-  const MODELS = [['blinds', 'Горизонтальные деревянные'], ['', 'Горизонтальные алюминиевые (скоро)', 1], ['', 'Вертикальные (скоро)', 1], ['rolo', 'Рулонные шторы'], ['', 'Зебра (скоро)', 1], ['', 'Плиссе (скоро)', 1], ['', 'Римские шторы (скоро)', 1]];
+  const MODELS = [['rolo', 'Рулонные шторы'], ['', 'Зебра (скоро)', 1], ['', 'Горизонтальные алюминиевые (скоро)', 1], ['blinds', 'Горизонтальные деревянные'], ['', 'Вертикальные (скоро)', 1], ['', 'Плиссе (скоро)', 1], ['', 'Римские шторы (скоро)', 1]];
   const noPrices = () => '<div class="empty" style="padding:28px">Цены не загружены.<br><small>Укажите ссылку на скрипт цен и нажмите «Синхронизировать» в Настройках, раздел «Данные».</small></div>';
   function form() {
     const E = window.Eng;
@@ -167,8 +167,8 @@
       if (g.type === 'flag') t.flags[g.name] = !R.flags[g.name]; else t.sel[g.name] = val;
       const r2 = J.calc(t); if (!r2.ok) return ''; const d = r2.unit - r.unit; return d ? (d > 0 ? ' +' : ' −') + fmt(Math.abs(d)) + ' ₽' : ''; };
     let h = '<div class="card cform"><div class="ftop"><h2>' + (R.edit >= 0 ? 'Рулонная штора, позиция ' + (R.edit + 1) : 'Новая рулонная штора') + '</h2><span class="sp"></span>' + (R.edit >= 0 ? '<button class="btn sm" data-a="cedcancel">Отменить правку</button>' : '') + '</div><div class="fbody rbody">';
-    let fabFld = '<div class="fld colf"><label>Ткань</label><button class="ul sel" data-a="ccol">' + (f ? '<b>' + e(f.name) + '</b><span class="mut sm">категория ' + e(f.cat) + ' · серия ' + e(f.ser) + '</span>' : '<span class="ph">Выберите ткань</span>') + '</button>';
-    if (F.colOpen) fabFld += '<div class="colpop"><input class="in" data-c="ccolq" placeholder="Поиск ткани (название, серия, категория)" value="' + e(F.cq) + '" id="ccolq"><div class="colist sc">' + (shown.length ? shown.map(x => '<button class="coli ' + (x.key === R.fab ? 'on' : '') + '" data-a="ccolpick" data-v="' + e(x.key) + '"><span><b>' + e(x.name) + '</b> <span class="mut sm">серия ' + e(x.ser) + '</span></span><span class="sp"></span><span class="pill">кат. ' + e(x.cat) + '</span></button>').join('') : '<div class="mut" style="padding:10px">Ничего не найдено</div>') + '</div></div>';
+    let fabFld = '<div class="fld colf"><label>Ткань</label><button class="ul sel" data-a="ccol">' + (f ? (f.stock !== null ? '<i class="sd" style="background:' + DOT[f.stock] + '"></i>' : '') + '<b>' + e(f.name) + '</b><span class="mut sm">категория ' + e(f.cat) + ' · серия ' + e(f.ser) + '</span>' : '<span class="ph">Выберите ткань</span>') + '</button>';
+    if (F.colOpen) fabFld += '<div class="colpop"><input class="in" data-c="ccolq" placeholder="Поиск ткани (название, серия, категория)" value="' + e(F.cq) + '" id="ccolq"><div class="colist sc">' + (shown.length ? shown.map(x => '<button class="coli ' + (x.key === R.fab ? 'on' : '') + '" data-a="ccolpick" data-v="' + e(x.key) + '">' + (x.stock !== null ? '<i class="sd" style="background:' + DOT[x.stock] + '"></i>' : '') + '<span><b>' + e(x.name) + '</b> <span class="mut sm">серия ' + e(x.ser) + '</span></span><span class="sp"></span><span class="pill">кат. ' + e(x.cat) + '</span></button>').join('') : '<div class="mut" style="padding:10px">Ничего не найдено</div>') + '</div></div>';
     fabFld += '</div>';
     h += '<div class="fgrid">' + modelRow() + '<div class="fld"><label>Система</label><select class="ul" data-c="rsys">' + grpNames.map(g => '<optgroup label="' + e(g) + '">' + sy.filter(x => x.group === g).map(x => '<option value="' + e(x.code) + '"' + (x.code === R.sys ? ' selected' : '') + '>' + e(x.name) + '</option>').join('') + '</optgroup>').join('') + '</select></div>' + fabFld + '</div>';
     h += '<div class="fld sz"><label>Размер, мм</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(R.w) + '" data-c="rf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(R.h) + '" data-c="rf" data-k="h"></span></div></div>';
@@ -178,15 +178,18 @@
     if (flags.length) h += '<div class="fld"><label>Дополнительно</label><div class="ochips">' + flags.map(g => '<button class="oc ' + (R.flags[g.name] ? 'on' : '') + '" data-a="rflag" data-v="' + e(g.name) + '">' + e(g.name) + (r.ok && R.flags[g.name] && r.optP[g.name] ? ' +' + fmt(r.optP[g.name]) : (R.flags[g.name] ? '' : delta(g))) + '</button>').join('') + '</div></div>';
     let st = '';
     if (+R.w > 0 && +R.h > 0 && f) st = '<div class="fnote ' + (r.ok && !r.warn.length ? 'ok' : 'bad') + '">' + (!r.ok ? e(r.msg) : r.warn.length ? '<b>НЕ ГАРАНТ.: </b>' + e(r.warn.join('; ')) : 'Размеры в пределах прайса (считаем по сетке ' + Math.round(r.gridW * 1000) + '×' + Math.round(r.gridH * 1000) + ' мм)') + '</div>';
+    if (f && f.stock !== null && f.stock < 2) st += '<div class="fnote"><i class="sd" style="background:' + DOT[f.stock] + '"></i> ' + e(STOCK_TXT[f.stock][0].toUpperCase() + STOCK_TXT[f.stock].slice(1)) + '</div>';
     if (r.ok) st += '<div class="fnote"><b>Срок:</b> ' + r.termDays + ' дней</div>';
     if (own && r.ok && showProfit && unit < r.cost) st += '<div class="fnote bad">Ниже закупа: убыток ' + m((r.cost - unit) * qty) + ' на позицию.</div>';
     h += '<div class="fnotes">' + st + '</div></div>';
-    h += '<div class="ffoot"><button class="coin ' + (showProfit ? 'on' : '') + '" data-a="chide" title="' + (showProfit ? 'Закуп и прибыль показаны' : 'Показать закуп и прибыль') + '">' + A.icon('coin', 22) + '</button>' +
+    const ph = J.photoUrl(f);
+    h += '<div class="ffoot">' + (ph ? '<button class="rph" data-a="rphoto" title="Увеличить фото ткани"><img src="' + e(ph) + '" alt="" onerror="this.parentNode.style.display=\'none\'"></button>' : '') + '<button class="coin ' + (showProfit ? 'on' : '') + '" data-a="chide" title="' + (showProfit ? 'Закуп и прибыль показаны' : 'Показать закуп и прибыль') + '">' + A.icon('coin', 22) + '</button>' +
       '<div class="fld"><label>Количество</label><div class="qst"><button data-a="rqty" data-d="-1">−</button><input class="num" type="number" min="1" max="99" value="' + qty + '" data-c="rf" data-k="qty"><button data-a="rqty" data-d="1">+</button></div></div>' +
       '<div class="fprice"><div class="fown"><label>Своя цена за шт</label><input class="ul num" value="' + e(R.own) + '" data-c="rf" data-k="own" placeholder="' + (r.ok ? Math.round(r.unit) : '') + '"></div>' +
       '<small class="mut">' + (r.ok ? (qty > 1 ? fmt(unit) + ' ₽ × ' + qty + ' шт' : 'изделие ' + fmt(r.base) + ' + доп. ' + fmt(r.addSum)) : '') + (own ? ' · своя цена' : '') + '</small>' +
       '<div class="big num">' + (r.ok ? m(unit * qty) : '—') + '</div>' + (showProfit && r.ok ? '<small class="mut">прибыль ' + m((r.profit + (own ? unit - r.unit : 0)) * qty) + ' (закуп ' + fmt(r.cost) + ')</small>' : '') + '</div>' +
-      '<button class="btn pri fadd" data-a="cadd" style="opacity:' + (r.ok ? 1 : .45) + '">' + (R.edit >= 0 ? 'Сохранить' : 'В корзину') + '</button></div></div>';
+      '<button class="btn pri fadd" data-a="cadd" style="opacity:' + (r.ok ? 1 : .45) + '">' + (R.edit >= 0 ? 'Сохранить' : 'В корзину') + '</button></div></div>' +
+      (R.photo && ph ? '<div class="rphbig" data-a="rphoto"><img src="' + e(ph) + '" alt=""><div class="mut">' + e(f.name) + (f.qty !== null ? ' · на складе ' + fmt(f.qty) + ' м' : '') + '</div></div>' : '');
     return h;
   }
 
@@ -307,6 +310,7 @@
   A.fld.rf = (v, el) => { const k = el.dataset.k; R[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
   A.act.rf = el => { R[el.dataset.k] = el.dataset.v; rr(); };
   A.fld.ropt = (v, el) => { R.sel[el.dataset.k] = v; rr(); };
+  A.act.rphoto = () => { R.photo = !R.photo; rr(); };
   A.act.rflag = el => { R.flags[el.dataset.v] = !R.flags[el.dataset.v]; rr(); };
   A.act.rqty = el => { R.qty = Math.max(1, Math.min(99, (+R.qty || 1) + (+el.dataset.d))); rr(); };
   A.act.cqty = el => { F.qty = Math.max(1, Math.min(99, (+F.qty || 1) + (+el.dataset.d))); rr(); };
