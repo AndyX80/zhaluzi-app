@@ -38,7 +38,7 @@
     const colorRows = (sh['Рулонки_ткани_цвета'] || []).slice(1).map(r => ({ r, z: false })).concat((sh['Зебра_ткани_цвета'] || []).slice(1).map(r => ({ r, z: true })));
     colorRows.forEach(o => {
       const r = o.r; if (!r[0]) return;
-      const sr = SER[String(r[1])] || {}, f = Object.assign({ maxs: '', dens: 0, wgrp: '', wet: '', coll: '' }, sr, { z: o.z, key: String(r[0]), name: String(r[2]), ser: String(r[1] || ''), cat: String(r[4]), roll: Number(r[3]) || sr.roll || 0, prodW: Number(r[5]) || 0, stock: r[6] === '' || r[6] == null ? null : Number(r[6]), qty: r[7] === '' || r[7] == null ? null : Number(r[7]), img: (v => !v ? '' : v.charAt(0) === '/' ? v : '/storage-new/materials/rollers/' + String(r[0]) + '.' + v.replace(/^\./, ''))(String(r[8] || '')) });
+      const sr = SER[String(r[1])] || {}, f = Object.assign({ maxs: '', dens: 0, wgrp: '', wet: '', coll: '' }, sr, { z: o.z, key: String(r[0]), name: String(r[2]), ser: String(r[1] || ''), cat: String(r[4]), roll: Number(r[3]) || sr.roll || 0, prodW: Number(r[5]) || 0, stock: r[6] === '' || r[6] == null ? null : Number(r[6]), qty: r[7] === '' || r[7] == null ? null : Number(r[7]), img: (v => !v && !o.z ? '' : (v = v || 'png').charAt(0) === '/' ? v : '/storage-new/materials/' + (o.z ? 'zebra' : 'rollers') + '/' + String(r[0]) + '.' + v.replace(/^\./, ''))(String(r[8] || '')) });
       FAB.push(f); FAB_BY[f.key] = f;
     });
     if (!FAB.length) (sh['Рулонки_ткани'] || []).slice(1).forEach(r => {
