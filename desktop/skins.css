@@ -47,7 +47,7 @@
 :root[data-skin=glass] .toast,:root[data-skin=dock] .toast{border-radius:99px}
 
 /* ---------- Стекло: каркас ---------- */
-:root[data-skin=glass] .app{grid-template-columns:232px minmax(0,1fr);grid-template-rows:auto 40px minmax(0,1fr) 38px;gap:0}
+:root[data-skin=glass] .app{grid-template-columns:232px minmax(0,1fr);grid-template-rows:auto 40px minmax(0,1fr) 0px;gap:0}
 :root[data-skin=glass] .app.collapsed{grid-template-columns:96px minmax(0,1fr)}
 :root[data-skin=glass] .top{grid-column:2;grid-row:1;background:transparent;border:0;padding:16px 22px 6px;backdrop-filter:none}
 :root[data-skin=glass] .top .brand{display:none}
@@ -68,7 +68,7 @@
 :root[data-skin=glass] .ver{display:none}
 
 /* ---------- Док: каркас ---------- */
-:root[data-skin=dock] .app,:root[data-skin=dock] .app.collapsed{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 40px minmax(0,1fr) 38px}
+:root[data-skin=dock] .app,:root[data-skin=dock] .app.collapsed{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 40px minmax(0,1fr) 0px}
 :root[data-skin=dock] .top,:root[data-skin=dock] .tabs,:root[data-skin=dock] .view,:root[data-skin=dock] .bar{grid-column:1}
 :root[data-skin=dock] .top{background:transparent;border:0;padding:16px 28px 6px}
 :root[data-skin=dock] .top .burger{display:none}
@@ -95,7 +95,7 @@
 :root[data-skin=glass] .callout.bad,:root[data-skin=dock] .callout.bad{border-left-color:var(--bad)}
 :root[data-skin=glass] .callout.info,:root[data-skin=dock] .callout.info{border-left-color:var(--info)}
 
-:root[data-skin=glass] .app.notabs,:root[data-skin=dock] .app.notabs{grid-template-rows:auto 0 minmax(0,1fr) 38px}
+:root[data-skin=glass] .app.notabs,:root[data-skin=dock] .app.notabs{grid-template-rows:auto 0 minmax(0,1fr) 0px}
 :root[data-skin=glass] .ul,:root[data-skin=dock] .ul{border-bottom-color:color-mix(in srgb,var(--ink) 55%,transparent)}
 :root[data-skin=glass] .ctr,:root[data-skin=glass] .oc,:root[data-skin=dock] .ctr,:root[data-skin=dock] .oc{border-radius:16px}
 :root[data-skin=glass] .oc,:root[data-skin=dock] .oc{border-radius:99px}

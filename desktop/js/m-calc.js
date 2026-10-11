@@ -372,7 +372,7 @@
 
   A.module('calc', {
     render() { const C = JC() ? JC().C : {}, E = window.Eng, when = E && E.at ? new Date(E.at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-      return '<div class="head" style="display:flex;align-items:center;gap:12px"><h1>' + (C.editNo ? cap(eno()) : 'Новый заказ') + '</h1><span class="sp"></span>' + (when ? '<span class="mut sm">Цены из таблицы: ' + e(when) + '</span>' : '') + '<button class="btn sm" data-a="cprices" title="Загрузить свежие цены, наличие и ткани из Google Таблицы">Обновить цены</button><button class="btn pri sm" data-a="cnew" title="Очистить корзину и все поля, начать с нуля">Новый расчёт</button></div><div class="calcwrap">' + form() + cart() + '</div>'; }
+      return '<div class="head" style="display:flex;align-items:center;gap:12px"><h1>' + (C.editNo ? cap(eno()) : 'Новый заказ') + '</h1><button class="btn pri sm" data-a="cnew" title="Очистить корзину и все поля, начать с нуля">Новый расчёт</button><span class="sp"></span>' + (when ? '<span class="mut sm">Цены из таблицы: ' + e(when) + '</span>' : '') + '<button class="btn sm" data-a="cprices" title="Загрузить свежие цены, наличие и ткани из Google Таблицы">Обновить цены</button></div><div class="calcwrap">' + form() + cart() + '</div>'; }
   });
 
   /* ===== Tab по полям формы: слева направо, сверху вниз; выпадающее поле открывается сразу ===== */
