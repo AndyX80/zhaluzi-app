@@ -49,7 +49,7 @@
         '<div class="card"><h2>Безопасность</h2><p class="mut">Вход: логин и ПИН. Пользователь один (владелец), роли заложены в модель данных. Закуп и прибыль видны только владельцу.</p></div></div>';
     }
   });
-  const irCard = () => '<p class="mut" style="margin:6px 0 10px">Оплата монтажнику считается по этим ставкам и подставляется в «Финансы» заказа; там её можно поправить вручную.</p><table class="tbl"><tbody>' + DB.IRATES.map(x => '<tr><td>' + A.esc(x[1]) + '</td><td class="r mut" style="white-space:nowrap">' + x[3] + '</td><td class="r"><input class="in num" style="width:90px;text-align:right" value="' + DB.irate(x[0]) + '" data-c="irate" data-k="' + x[0] + '"></td></tr>').join('') + '</tbody></table><div class="row" style="margin-top:10px"><button class="btn sm" data-a="irreset">Вернуть исходные ставки</button></div>';
+  const irCard = () => '<p class="mut sm" style="margin:0 0 10px">Оплата монтажнику считается по этим ставкам и подставляется в «Финансы» заказа; там её можно поправить вручную.</p><div class="irg">' + DB.IRATES.map(x => '<div class="irr"><span class="irn">' + A.esc(x[1]) + '</span><input class="in num" value="' + DB.irate(x[0]) + '" data-c="irate" data-k="' + x[0] + '"><span class="iru mut">' + (x[3] === 'за шт' ? '₽/шт' : '₽/п.м') + '</span></div>').join('') + '</div><div class="row" style="margin-top:10px"><button class="btn sm" data-a="irreset">Вернуть исходные ставки</button></div>';
   A.fld.irate = (v, el) => { DB.setIrate(el.dataset.k, v); A.render(); };
   A.act.irreset = () => { DB.resetIrates(); A.toast('Ставки возвращены'); A.render(); };
   A.act.sth = el => { S.theme = el.dataset.v; A.save(); A.render(); };
