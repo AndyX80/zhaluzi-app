@@ -92,7 +92,7 @@
     let sl = ''; for (let i = 0; i < rows; i++) sl += '<rect x="5" y="' + (6 + i * (bh - 8) / rows) + '" width="' + (bw - 10) + '" height="' + ((bh - 8) / rows - 1.2) + '" rx="1" fill="' + c + '"/>';
     return '<svg class="pic" viewBox="0 0 ' + bw + ' ' + bh + '"><rect x=".5" y=".5" width="' + (bw - 1) + '" height="' + (bh - 1) + '" rx="3" fill="var(--panel2)" stroke="var(--line)"/><rect x="3" y="3" width="' + (bw - 6) + '" height="3" rx="1.5" fill="#6f6a63"/>' + sl + '</svg>';
   }
-  const MODELS = [['rolo', 'Рулонные шторы'], ['zebra', 'Зебра'], ['', 'Горизонтальные алюминиевые (скоро)', 1], ['blinds', 'Горизонтальные деревянные'], ['vert', 'Вертикальные жалюзи'], ['', 'Плиссе (скоро)', 1], ['', 'Римские шторы (скоро)', 1], ['auto', 'Автоматика (отдельно)']];
+  const MODELS = [['rolo', 'Рулонные шторы'], ['zebra', 'Зебра'], ['', 'Горизонтальные алюминиевые (скоро)', 1], ['blinds', 'Горизонтальные деревянные'], ['vert', 'Вертикальные жалюзи'], ['', 'Плиссе (скоро)', 1], ['', 'Римские шторы (скоро)', 1], ['auto', 'Автоматика - без добавки (отдельно)']];
   const noPrices = () => '<div class="empty" style="padding:28px">Цены не загружены.<br><small>Укажите ссылку на скрипт цен и нажмите «Синхронизировать» в Настройках, раздел «Данные».</small></div>';
   function form() {
     const E = window.Eng;
@@ -103,25 +103,30 @@
   const formEmpty = () => '<div class="card cform"><h2>Новое изделие</h2><div class="fgrid">' + modelRow() + '</div></div>';
   const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + (F.mode ? '' : '<option value="" selected disabled>Выберите модель</option>') + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (F.mode && x[0] === (F.mode === 'rolo' ? RM() : F.mode) ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
   /* категория «Автоматика»: Моторизация (по типам изделий и видам) → Радиопередатчики → Источники питания → Разное */
-  const ASEC = ['Моторизация', 'Радиопередатчики', 'Источники питания', 'Разное'], ATYPES = ['Рулонные шторы', 'Мираж', 'Roof', 'Вертикальные', 'Горизонтальные', 'Венус (кассетные ГЖ)', 'Плиссе', 'Римские'];
-  const ATLBL = { 'Горизонтальные': 'Горизонтальные (дерево, алюминий)' }, AGRP = ['Проводные', 'Радио', 'Радио + АКБ'];
+  const ASEC = ['Моторизация', 'Радиопередатчики', 'Источники питания', 'Разное'], ATYPES = ['Рулонные шторы', 'Зебра', 'ГЖ', 'Вертикальные', 'Плиссе', 'Мираж', 'Римские'];
+  const ATLBL = { 'ГЖ': 'Горизонтальные жалюзи (дерево, алюминий, Венус)', 'Зебра': 'Зебра (системы как у рулонных)' }, AGRP = ['Проводные', 'Радио', 'Радио + АКБ'];
+  /* тип изделия из листа → тип в списке: Roof в рулонных, Венус и дерево в ГЖ; у зебры те же комплекты, что у рулонных */
+  const ATMAP = { 'Roof': 'Рулонные шторы', 'Горизонтальные': 'ГЖ', 'Венус (кассетные ГЖ)': 'ГЖ' }, atOf = f => ATMAP[f.t] || f.t, atHas = (f, t) => atOf(f) === (t === 'Зебра' ? 'Рулонные шторы' : t);
+  /* рулонные и зебра: MINI, UNI, МГ (AMG), Бентин, Roof; внутри системы по возрастанию трубы */
+  const sysKey = n => { const r = /MINI/.test(n) ? 0 : /UNI/.test(n) ? 1 : /AMG/.test(n) ? 2 : /Bent/.test(n) ? 3 : 4, x = /(?:AMG(?: L)?|Bent(?:hin)?)\s*(\d+)/.exec(n); return r * 1000 + (x ? +x[1] : 0); };
   const txGrp = n => /^Пульт/.test(n) ? 'Пульты' : /выключатель/i.test(n) ? 'Радиовыключатели' : /приемник|приёмник/i.test(n) ? 'Радиоприёмники' : /Датчик/.test(n) ? 'Датчики' : 'Прочее';
   function formAuto() {
     const J = JC(), cs = CS(), all = J.autoAll(), hasAm = !!(window.Eng && Eng.sheets && Eng.sheets['Автоматика_Амиго']);
     const sec = ASEC.indexOf(F.asec) >= 0 ? F.asec : 'Моторизация', inSec = all.filter(f => f.sec === sec);
-    const types = sec === 'Моторизация' ? ATYPES.filter(t => inSec.some(f => f.t === t)) : [], typ = types.indexOf(F.at) >= 0 ? F.at : types[0] || '';
-    const list = inSec.filter(f => sec !== 'Моторизация' || f.t === typ), sups = SUPS.filter(x => list.some(f => f.sup === x)), sup = sups.indexOf(F.asup) >= 0 ? F.asup : sups[0] || '';
+    const types = ATYPES.filter(t => all.some(f => f.sec === 'Моторизация' && atHas(f, t))), typ = types.indexOf(F.at) >= 0 ? F.at : types[0] || '';
+    const list = inSec.filter(f => sec !== 'Моторизация' || atHas(f, typ)), sups = SUPS.filter(x => list.some(f => f.sup === x)), sup = sups.indexOf(F.asup) >= 0 ? F.asup : sups[0] || '';
     const mine = list.filter(f => f.sup === sup), grpOf = f => sec === 'Моторизация' ? f.grp || 'Радио' : sec === 'Радиопередатчики' ? txGrp(f.name) : '';
     const names = []; mine.forEach(f => { const g = grpOf(f); if (names.indexOf(g) < 0) names.push(g); });
     if (sec === 'Моторизация') names.sort((a, b) => AGRP.indexOf(a) - AGRP.indexOf(b));
+    if (sec === 'Моторизация' && (typ === 'Рулонные шторы' || typ === 'Зебра')) mine.sort((a, b) => sysKey(a.name) - sysKey(b.name));
     const row = f => { const q = J.autoQty(f.sup, f.kind, f.key), at = ' data-kind="' + f.kind + '" data-key="' + e(f.key) + '" data-sup="' + e(f.sup) + '"';
       return '<div class="row" style="padding:8px 10px;border-radius:10px;border:1.5px solid ' + (q ? 'var(--acc)' : 'var(--line,#ddd)') + ';background:' + (q ? 'var(--acc-s)' : 'transparent') + '"><div style="flex:1;min-width:0"><b>' + e(f.name) + '</b>' + (f.sub ? '<div class="mut" style="font-size:12px">' + e(f.sub) + '</div>' : '') + '</div>' +
         '<div class="num b" style="white-space:nowrap">' + m(f.price) + '</div><div class="row" style="gap:4px"><button class="btn sm" data-a="cast"' + at + ' data-d="-1">−</button><b class="num" style="min-width:22px;text-align:center">' + q + '</b><button class="btn sm" data-a="cast"' + at + ' data-d="1">+</button></div></div>'; };
     const opt = (v, cur, lbl) => '<option value="' + e(v) + '"' + (v === cur ? ' selected' : '') + '>' + e(lbl || v) + '</option>';
     const cnt = J.counts();
     return '<div class="card cform"><div class="ftop"><h2>Автоматика отдельно</h2></div><div class="fbody"><div class="mut sm" style="margin-bottom:8px">Нужно, чтобы дозаказать привод или пульт отдельно. Если автоматика нужна к жалюзи, выбери её прямо в форме изделия: она войдёт в цену жалюзи.</div>' +
-      '<div class="fgrid fcol">' + modelRow() + '<div class="fld"><label>Раздел</label><select class="ul" data-c="asec">' + ASEC.map(x => opt(x, sec)).join('') + '</select></div>' +
-      (types.length ? '<div class="fld"><label>Тип изделия</label><select class="ul" data-c="atype">' + types.map(x => opt(x, typ, ATLBL[x])).join('') + '</select></div>' : '') +
+      '<div class="fgrid fcol">' + modelRow() + '<div class="fld"><label>Тип изделия</label><select class="ul" data-c="atype"' + (sec === 'Моторизация' ? '' : ' disabled') + '>' + (sec === 'Моторизация' ? types.map(x => opt(x, typ, ATLBL[x])).join('') : '<option>не нужен для этого раздела</option>') + '</select></div>' +
+      '<div class="fld"><label>Раздел</label><select class="ul" data-c="asec">' + ASEC.map(x => opt(x, sec)).join('') + '</select></div>' +
       (sups.length > 1 ? '<div class="fld"><label>Поставщик</label><select class="ul" data-c="asup">' + sups.map(x => opt(x, sup, cs.COLL_ALL[x] + ' (' + ru(x) + ')')).join('') + '</select></div>' : '') + '</div>' +
       '<div class="row" style="margin:12px 0 4px"><b>' + e(sec + (typ ? ' · ' + (ATLBL[typ] || typ) : '') + (sup ? ' · ' + cs.COLL_ALL[sup] + ' (' + ru(sup) + ')' : '')) + '</b><span class="sp"></span><span class="mut sm">в корзине: приводов ' + cnt.drive + ', пультов и прочего ' + cnt.remote + '</span></div>' +
       (mine.length ? names.map(g => (g ? '<h3 style="margin:12px 0 6px">' + e(g) + '</h3>' : '') + '<div class="stack" style="gap:6px">' + mine.filter(f => grpOf(f) === g).map(row).join('') + '</div>').join('') : '<div class="empty" style="padding:24px">В этом разделе нет позиций.</div>') +
