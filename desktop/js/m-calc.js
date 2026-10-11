@@ -92,7 +92,7 @@
     let sl = ''; for (let i = 0; i < rows; i++) sl += '<rect x="5" y="' + (6 + i * (bh - 8) / rows) + '" width="' + (bw - 10) + '" height="' + ((bh - 8) / rows - 1.2) + '" rx="1" fill="' + c + '"/>';
     return '<svg class="pic" viewBox="0 0 ' + bw + ' ' + bh + '"><rect x=".5" y=".5" width="' + (bw - 1) + '" height="' + (bh - 1) + '" rx="3" fill="var(--panel2)" stroke="var(--line)"/><rect x="3" y="3" width="' + (bw - 6) + '" height="3" rx="1.5" fill="#6f6a63"/>' + sl + '</svg>';
   }
-  const MODELS = [['auto', 'Автоматика (отдельно)'], ['rolo', 'Рулонные шторы'], ['zebra', 'Зебра'], ['', 'Горизонтальные алюминиевые (скоро)', 1], ['blinds', 'Горизонтальные деревянные'], ['vert', 'Вертикальные жалюзи'], ['', 'Плиссе (скоро)', 1], ['', 'Римские шторы (скоро)', 1]];
+  const MODELS = [['rolo', 'Рулонные шторы'], ['zebra', 'Зебра'], ['', 'Горизонтальные алюминиевые (скоро)', 1], ['blinds', 'Горизонтальные деревянные'], ['vert', 'Вертикальные жалюзи'], ['', 'Плиссе (скоро)', 1], ['', 'Римские шторы (скоро)', 1], ['auto', 'Автоматика (отдельно)']];
   const noPrices = () => '<div class="empty" style="padding:28px">Цены не загружены.<br><small>Укажите ссылку на скрипт цен и нажмите «Синхронизировать» в Настройках, раздел «Данные».</small></div>';
   function form() {
     const E = window.Eng;
@@ -285,12 +285,28 @@
       '<div class="cfoot"><div class="cline">' +
       (C.region ? '<input class="ul" style="flex:1" value="' + e(C.pvz || '') + '" placeholder="Адрес ПВЗ и транспортная компания" data-c="cpvz">' :
         '<label style="font-size:15px;font-weight:700;color:var(--fg)">Доставка и установка, ₽</label><input class="ul num" style="width:140px;font-size:18px;font-weight:700;padding:8px 10px;border:2px solid var(--acc,#F1780F);border-radius:8px" value="' + (C.service || '') + '" placeholder="0" data-c="cserv">' + (function () { const g = JC().instSugg(FF); return g.sum ? '<div style="display:flex;flex-direction:column;gap:4px;margin-left:10px"><small class="mut" style="max-width:360px">По ставкам монтажа (ориентировочно): ' + e(g.text) + ' = <b>' + m(g.sum) + '</b></small><button class="btn sm" style="align-self:flex-start;' + (+C.service === g.sum ? 'opacity:.6' : '') + '" data-a="cservsug" data-v="' + g.sum + '">Подставить ' + m(g.sum) + '</button></div>' : '<small class="mut" style="margin-left:10px">Ставки монтажа для рулонок и других видов добавим позже</small>'; })()) +
-      '<span class="sp"></span><label title="Со знаком минус — наценка">Скидка</label><div class="seg"><button class="' + (pct ? 'on' : '') + '" data-a="cdm" data-v="pct">%</button><button class="' + (!pct ? 'on' : '') + '" data-a="cdm" data-v="rub">₽</button></div><input class="ul num" type="number" style="width:72px" value="' + (C.disc || '') + '" data-c="cdisc" placeholder="0" title="Скидка; значение со знаком минус = наценка"></div>' +
+      '<span class="sp"></span><label title="Со знаком минус — наценка">Скидка</label><div class="seg"><button class="' + (pct ? 'on' : '') + '" data-a="cdm" data-v="pct">%</button><button class="' + (!pct ? 'on' : '') + '" data-a="cdm" data-v="rub">₽</button></div><input class="ul num" type="number" style="width:72px" value="' + (C.disc || '') + '" data-c="cdisc" placeholder="0" title="Скидка; значение со знаком минус = наценка"' + (FF.fixed ? ' disabled' : '') + '><label title="Итоговая стоимость заказа, заданная вручную. Главнее скидки">Итог, ₽</label><input class="ul num" type="number" style="width:110px' + (FF.fixed ? ';border:2px solid #d9381e;font-weight:700' : '') + '" value="' + (C.fixTotal || '') + '" data-c="cfixt" placeholder="свой итог" title="Впиши итоговую сумму заказа: она станет главной, скидка отключится"></div>' + (FF.fixed ? '<div class="fixwarn">⚠ СТОИМОСТЬ НЕ РАСЧЁТНАЯ, ЗАДАНА МЕНЕДЖЕРОМ: по прайсу ' + m(FF.total) + ', в заказ идёт ' + m(FF.netTotal) + ' (' + (FF.discAmt > 0 ? 'ниже расчёта на ' : 'выше расчёта на ') + m(Math.abs(FF.discAmt)) + ')</div>' : '') +
       '<div class="sumbar" style="grid-template-columns:repeat(' + (hide ? 2 : 4) + ',1fr)"><div><small>Сумма без скидки</small><b>' + m(FF.total) + '</b></div><div><small>Итого' + (FF.discAmt ? (FF.discAmt > 0 ? ' (скидка −' : ' (наценка +') + m(Math.abs(FF.discAmt)) + ')' : '') + '</small><b style="color:var(--acc)">' + m(FF.netTotal) + '</b></div>' +
       (hide ? '' : '<div><small>Закуп (оценка)</small><b>' + m(Math.max(0, cost)) + '</b></div><div><small>Прибыль</small><b' + (netProf < 0 ? ' style="color:var(--bad)"' : '') + '>' + m(netProf) + '</b></div>') + '</div>' +
       '<div class="cacts"><button class="btn pri" data-a="cord">' + (C.editNo ? 'Сохранить в ' + eno() : 'Оформить заказ') + '</button><button class="btn" data-a="cdraft">Сохранить как просчёт</button><button class="btn" data-a="cclear">Без сохранения</button></div></div></div>' +
-      (O.open ? checkout() : '');
+      (O.open ? checkout() : '') + (DR.open ? draftModal() : '');
   }
+  /* форма «Сохранить как просчёт»: ФИО, телефон, примечание и фото (всё необязательно), чтобы потом узнать расчёт */
+  const DR = { open: false, name: '', phone: '', note: '', files: [] };
+  function draftModal() {
+    return '<div class="mback" data-a="drcancel"></div><div class="modal" style="width:min(520px,calc(100vw - 32px))"><div class="mhead"><h2>Сохранить как просчёт</h2><span class="sp"></span><button class="ib" data-a="drcancel" title="Закрыть">' + A.icon('close', 18) + '</button></div>' +
+      '<div class="mbody"><p class="mut" style="margin:0 0 12px">Все поля необязательные: впиши то, что поможет потом быстро понять, чей это расчёт.</p>' +
+      '<div class="fld"><label>ФИО</label><input class="ul" id="drname" value="' + e(DR.name) + '" data-c="drname" placeholder="Иван Петров"></div>' +
+      '<div class="fld"><label>Телефон</label><input class="ul" value="' + e(DR.phone) + '" data-c="drphone" placeholder="+7 ___ ___-__-__"></div>' +
+      '<div class="fld"><label>Примечание</label><textarea class="ul" rows="3" data-c="drnote" placeholder="Например: кухня и спальня, звонил с Авито">' + e(DR.note) + '</textarea></div>' +
+      '<div class="fld"><label>Фото</label><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><label class="btn" style="cursor:pointer">Приложить фото<input type="file" id="drpick" multiple accept="image/*,application/pdf" hidden></label>' +
+      DR.files.map((f, i) => '<span class="pill">' + e(f.name) + ' <a href="#" data-a="drrm" data-i="' + i + '" title="Убрать" style="margin-left:4px">×</a></span>').join('') + '</div></div></div>' +
+      '<div class="mfoot"><button class="btn" data-a="drcancel">Отмена</button><span class="sp"></span><button class="btn pri" data-a="drsave">Сохранить просчёт</button></div></div>';
+  }
+  document.addEventListener('change', ev => { if (ev.target.id === 'drpick') { DR.files = DR.files.concat(Array.from(ev.target.files || [])); rr(); } });
+  A.fld.drname = v => { DR.name = v; }; A.fld.drphone = v => { DR.phone = v; }; A.fld.drnote = v => { DR.note = v; };
+  A.act.drcancel = () => { DR.open = false; rr(); };
+  A.act.drrm = el => { DR.files.splice(+el.dataset.i, 1); rr(); };
   /* оформление: окно по центру экрана, три шага: клиент, условия, документы и отправка */
   A.calcO = () => O;
   const eno = () => { const r = DB.byKey(JC().C.editNo); return r && r.no ? 'заказ № ' + r.no : 'просчёт'; }, cap = t => e(t.charAt(0).toUpperCase() + t.slice(1));
@@ -332,7 +348,7 @@
   });
 
   /* ===== Tab по полям формы: слева направо, сверху вниз; выпадающее поле открывается сразу ===== */
-  let want = null, kbd = false;
+  let want = null, kbd = false, tabSel = false;
   const keyOf = el => { if (!el || !el.dataset) return null; if (el.id) return '#' + el.id; const d = el.dataset, at = (n, v) => v ? '[data-' + n + '="' + v + '"]' : '';
     return d.c ? '[data-c="' + d.c + '"]' + at('k', d.k) : d.a ? '[data-a="' + d.a + '"]' + at('k', d.k) + at('v', d.v) + at('d', d.d) : null; };
   const rr = () => {
@@ -346,7 +362,7 @@
     if (ev.key === 'Escape' && (F.colOpen || F.autoOpen)) { ev.stopPropagation(); kbd = false; want = F.colOpen ? '[data-a="ccol"]' : '[data-a="cauto"]'; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); return; }
     if (ev.key === 'Enter' && a.id === 'ccolq') { const f = document.querySelector('.colist .coli'); if (f) { ev.preventDefault(); A.act.ccolpick(f); } return; }
     if (ev.key !== 'Tab' || ev.ctrlKey || ev.altKey || !a.closest('.cform') && !a.closest('.colpop')) return;
-    kbd = true;
+    kbd = true; tabSel = true;
     const inCol = !!a.closest('.colpop'), inAuto = !!a.closest('.autopop');
     const base = inCol ? document.querySelector('[data-a=ccol]') : inAuto ? document.querySelector('[data-a=cauto]') : a;
     const list = formList(), i = list.indexOf(base), nx = list[i + (ev.shiftKey ? -1 : 1)];
@@ -360,7 +376,8 @@
     const el = ev.target; if (!kbd || !el.closest || !el.closest('.cform')) return;
     setTimeout(() => {
       if (document.activeElement !== el && !(el.isConnected === false && keyOf(el) === keyOf(document.activeElement))) return;
-      const cur = document.activeElement;
+      const cur = document.activeElement, sel = tabSel; tabSel = false;
+      if (sel && cur.matches && cur.matches('input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=file])')) { try { cur.select(); } catch (x) {} }
       if (cur.matches && cur.matches('select')) { try { cur.showPicker(); } catch (x) {} }
       else if (cur.matches && cur.matches('[data-a=ccol]') && !F.colOpen) { F.colOpen = true; F.cq = ''; want = '#ccolq'; rr(); }
       else if (cur.matches && cur.matches('[data-a=cauto]') && !F.autoOpen) { F.autoOpen = true; rr(); }
@@ -383,15 +400,26 @@
   A.act.cqty = el => { F.qty = Math.max(1, Math.min(99, (+F.qty || 1) + (+el.dataset.d))); rr(); };
   A.act.cdraft = () => {
     const J = JC(), C = J.C; if (!C.cart.length) { A.toast('Корзина пуста'); return; }
+    if (!J.toOrder().items.length) { A.toast('В корзине нет изделий с ценой'); return; }
+    const old = C.editNo ? DB.byKey(C.editNo) : null;
+    if (old && old.status === 'Оплачен') { A.toast('Заказ оплачен: это уже не просчёт. Используй «Сохранить в заказ»'); return; }
+    Object.assign(DR, { open: true, name: old ? old.name || '' : '', phone: old ? old.phone || '' : '', note: old ? old.comment || '' : '', files: [] });
+    rr(); setTimeout(() => { const i = document.getElementById('drname'); if (i) i.focus(); }, 0);
+  };
+  A.act.drsave = async () => {
+    const J = JC(), C = J.C;
     const co = J.toOrder(); if (!co.items.length) { A.toast('В корзине нет изделий с ценой'); return; }
     const total = Math.max(0, co.items.reduce((a, i) => a + (+i.price || 0), 0) - (+co.disc || 0)), reg = !!C.region, pvz = (C.pvz || '').trim(), editing = !!C.editNo;
     const old = editing ? DB.byKey(C.editNo) : null;
     if (old && old.status === 'Оплачен') { A.toast('Заказ оплачен: это уже не просчёт. Используй «Сохранить в заказ»'); return; }
     const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: reg ? 0 : co.delivery, cart: J.snapshot(), region: reg, pvz: reg ? pvz : '', status: 'Черновик' };
     if (!editing) Object.assign(data, { name: '', phone: '', addr: '', install: !reg, buyer: 'физ', pre: '100', preU: '%', term: termDefault(), note: reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '' });
+    if (DR.name.trim()) data.name = DR.name.trim(); if (DR.phone.trim()) data.phone = DR.phone.trim(); if (DR.note.trim()) data.comment = DR.note.trim();
     const rec = DB.saveOrder(data, co.items, editing ? C.editNo : null, 'Просчёт (компьютер)', m(total));
+    const pics = DR.files; DR.open = false; DR.files = [];
     J.clear(); resetO(); Object.assign(F, { edit: -1 }); A.toast('Сохранено как просчёт: вкладка «Просчёты» в «Заказах»');
     A.S.selOrder = 'ph' + rec.uid; A.S.ordersFilter = 'calc'; A.S.orderTab = 'main'; A.save(); A.open('orders');
+    if (pics.length && A.attachFiles) { A.toast('Загружаю фото…'); await A.attachFiles(rec.uid, pics); }
   };
   A.act.cf = el => { const k = el.dataset.k, v = el.dataset.v; F[k] = k === 'lam' ? +v : v; if (k === 'sup') F.colOpen = false; rr(); };
   A.fld.cf = (v, el) => { const k = el.dataset.k; F[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
@@ -405,6 +433,7 @@
   A.act.creg = el => { JC().setRegion(el.dataset.v === '1'); rr(); };
   A.act.chide = () => { S.showCost = !S.showCost; A.save(); rr(); };
   A.act.cdm = el => { JC().C.discMode = el.dataset.v; JC().save(); rr(); };
+  A.fld.cfixt = v => { const C = JC().C; C.fixTotal = Math.max(0, Math.round(+String(v).replace(/\s/g, '') || 0)) || ''; JC().save(); rr(); };
   A.fld.cdisc = v => { const C = JC().C; C.disc = (+v || 0) || ''; JC().save(); rr(); };
   A.act.cservsug = el => { JC().C.service = +el.dataset.v || 0; JC().save(); rr(); };
   A.fld.cserv = v => { JC().C.service = Math.max(0, Math.round(+String(v).replace(/\s/g, '') || 0)); JC().save(); rr(); };

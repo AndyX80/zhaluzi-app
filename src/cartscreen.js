@@ -5,9 +5,9 @@
   const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const ceil100 = x => Math.ceil(x / 100 - 1e-9) * 100;
   const K0 = window.JAL_CART_KEY || 'jal_cart2'; /* десктоп ведёт свою корзину под другим ключом */
-  const C = { cart: [], service: 0, region: false, pvz: '', disc: '', discMode: 'pct', needDog: true, cf: null, undoItem: null };
+  const C = { cart: [], service: 0, region: false, pvz: '', disc: '', fixTotal: '', discMode: 'pct', needDog: true, cf: null, undoItem: null };
   try { Object.assign(C, JSON.parse(localStorage.getItem(K0) || '{}')); C.cf = null; C.undoItem = null; } catch (e) {}
-  const save = () => { try { localStorage.setItem(K0, JSON.stringify({ cart: C.cart, service: C.service, region: C.region, pvz: C.pvz, disc: C.disc, discMode: C.discMode, needDog: C.needDog })); } catch (e) {} };
+  const save = () => { try { localStorage.setItem(K0, JSON.stringify({ cart: C.cart, service: C.service, region: C.region, pvz: C.pvz, disc: C.disc, fixTotal: C.fixTotal, discMode: C.discMode, needDog: C.needDog })); } catch (e) {} };
 
   const CTRL_TXT = { L: 'поворот и подъём слева', R: 'поворот и подъём справа', TL: 'поворот слева, подъём справа', TR: 'поворот справа, подъём слева' };
   const CTRL_TXT_CHAIN = { L: 'цепочка слева', R: 'цепочка справа' };
@@ -101,9 +101,10 @@
     const svcLeft = S && !s.cart.some((it, i) => calcs[i].ok && it.kind !== 'custom' && !calcs[i].ownPrice) ? S : 0;
     const total = lineSum.reduce((x, y) => x + y, 0) + svcLeft;
     const dv = Number(s.disc) || 0; /* отрицательное значение = наценка */
-    const discAmt = s.discMode === 'pct' ? Math.round(total * Math.max(-100, Math.min(dv, 50)) / 100 / 100) * 100 : Math.max(-total, Math.min(dv, total * 0.5));
+    const fx = Math.round(Number(s.fixTotal) || 0), fixed = fx > 0 && total > 0; /* итог, заданный менеджером, главнее скидки */
+    const discAmt = fixed ? total - fx : s.discMode === 'pct' ? Math.round(total * Math.max(-100, Math.min(dv, 50)) / 100 / 100) * 100 : Math.max(-total, Math.min(dv, total * 0.5));
     const goodsSum = s.cart.reduce((x, it, i) => x + (calcs[i].ok ? calcs[i].unit * it.qty : 0), 0);
-    return { calcs, S, svcLeft, adds, ships, lineSum, total, dv, discAmt, goodsSum, netTotal: total - discAmt };
+    return { calcs, S, svcLeft, adds, ships, lineSum, total, dv, discAmt, fixed, goodsSum, netTotal: total - discAmt };
   }
 
   function build() {
@@ -304,8 +305,8 @@
         for (let q = 0; q < it.qty; q++, k++) items[k].pv = vs.map(x => (x.F.calcs[i].ok ? (x.F.calcs[i].ownPrice ? x.F.calcs[i].unit : ceil100(x.F.calcs[i].unit + x.F.ships[i] + x.F.adds[i])) : null)); });
     } catch (e) { vars = null; }
     /* наценка (отрицательная скидка) видна только в калькуляторе: в документах она растворяется в ценах изделий */
-    const M = F.discAmt < 0 ? -F.discAmt : 0;
-    if (M && items.length) {
+    const M = F.fixed ? -F.discAmt : F.discAmt < 0 ? -F.discAmt : 0;
+    if (M && items.length && items.reduce((x, y) => x + y.price, 0) + M > 0) {
       const base = items.reduce((x, y) => x + y.price, 0), ratio = base ? 1 + M / base : 1; let left = M;
       items.forEach(x => { const add = Math.round(x.price * M / base); x.price += add; x.profit = (x.profit || 0) + add; left -= add; });
       if (left) { const big = items.reduce((b, x) => (x.price > b.price ? x : b), items[0]); big.price += left; big.profit = (big.profit || 0) + left; }
@@ -313,7 +314,7 @@
       items.forEach(x => { if (x.pv) x.pv = x.pv.map(v => (v == null ? null : Math.round(v * ratio))); });
     }
     if (F.svcLeft) items.push({ kind: 'custom', title: 'Доставка и установка', price: F.svcLeft, profit: F.svcLeft, cost: 0, costOk: true, ci: -1, pv: (vars || []).map(() => F.svcLeft) });
-    return { items, priced: true, delivery: F.S, disc: Math.max(0, F.discAmt), needDog: sC.needDog, vars };
+    return { items, priced: true, delivery: F.S, disc: F.fixed ? 0 : Math.max(0, F.discAmt), fixed: F.fixed ? Math.round(Number(sC.fixTotal)) : 0, needDog: sC.needDog, vars };
   }
 
   let mounted = null, TAB = 'items';
@@ -331,9 +332,9 @@
   /* для главного экрана */
   function addItem(item) { C.cart.push(item); save(); }
   function replaceItem(i, item) { C.cart[i] = item; save(); }
-  const snapshot = () => JSON.parse(JSON.stringify({ cart: C.cart, service: C.service, region: C.region, pvz: C.pvz, disc: C.disc, discMode: C.discMode, needDog: C.needDog }));
+  const snapshot = () => JSON.parse(JSON.stringify({ cart: C.cart, service: C.service, region: C.region, pvz: C.pvz, disc: C.disc, fixTotal: C.fixTotal, discMode: C.discMode, needDog: C.needDog }));
   function restore(snap, no) { Object.assign(C, { region: false, pvz: '' }, JSON.parse(JSON.stringify(snap)), { editNo: no || null, cf: null, undoItem: null }); save(); }
-  function clear() { C.editNo = null; C.cart = []; C.service = 0; C.pvz = ''; C.disc = ''; save(); }
+  function clear() { C.editNo = null; C.cart = []; C.service = 0; C.pvz = ''; C.disc = ''; C.fixTotal = ''; save(); }
 
   const setRegion = on => { C.region = !!on; save(); rerender(); };
   window.JalCart = { instSugg, withAuto, autoTxt, driveWarn, save, rerender, setRegion, RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,

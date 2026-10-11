@@ -173,6 +173,17 @@
   };
 
   /* ---------- вкладка в карточке заказа ---------- */
+  /* фото к просчёту из формы сохранения: сжимаем до 1600 px и кладём в файлы заказа */
+  A.attachFiles = async (uid, list) => {
+    for (const f of list) {
+      try {
+        if (f.type === 'application/pdf') { await add(uid, f, f.name.replace(/\.pdf$/i, '') || 'Файл', 'application/pdf', ''); continue; }
+        const im = await loadImg(f), k = Math.min(1, 1600 / Math.max(im.width, im.height)), cv = document.createElement('canvas');
+        cv.width = Math.max(1, Math.round(im.width * k)); cv.height = Math.max(1, Math.round(im.height * k)); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+        await add(uid, await toBlob(cv, 0.8), f.name.replace(/\.\w{2,4}$/, '') || 'Фото', 'image/jpeg', thumbOf(cv));
+      } catch (x) { A.toast('Не добавился файл «' + f.name + '»: ' + (x.message || x)); }
+    }
+  };
   A.filesTab = o => {
     const l = filesOf(o.uid), at = ' data-uid="' + o.uid + '"';
     const icon = f => f.th ? '<img src="' + f.th + '" style="width:64px;height:84px;object-fit:cover;border-radius:6px;border:1px solid var(--fb)">' : '<div style="width:64px;height:84px;border-radius:6px;border:1px solid var(--fb);display:grid;place-items:center;font-weight:700;color:var(--mut)">' + (f.mime === 'application/pdf' ? 'PDF' : 'ФОТО') + '</div>';
