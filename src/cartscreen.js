@@ -100,8 +100,8 @@
     /* доставка и установка некуда разложить (все строки со своей ценой или свои товары): идёт отдельной суммой, чтобы не пропадала */
     const svcLeft = S && !s.cart.some((it, i) => calcs[i].ok && it.kind !== 'custom' && !calcs[i].ownPrice) ? S : 0;
     const total = lineSum.reduce((x, y) => x + y, 0) + svcLeft;
-    const dv = Math.max(0, Number(s.disc) || 0);
-    const discAmt = Math.min(total, s.discMode === 'pct' ? Math.round(total * Math.min(dv, 50) / 100 / 100) * 100 : Math.min(dv, total * 0.5));
+    const dv = Number(s.disc) || 0; /* отрицательное значение = наценка */
+    const discAmt = s.discMode === 'pct' ? Math.round(total * Math.max(-100, Math.min(dv, 50)) / 100 / 100) * 100 : Math.max(-total, Math.min(dv, total * 0.5));
     const goodsSum = s.cart.reduce((x, it, i) => x + (calcs[i].ok ? calcs[i].unit * it.qty : 0), 0);
     return { calcs, S, svcLeft, adds, ships, lineSum, total, dv, discAmt, goodsSum, netTotal: total - discAmt };
   }
@@ -238,9 +238,9 @@
       hasSugg: sugg > 0, suggText: 'По ставкам монтажа: ' + sp.join(' + ') + ' = ' + fmt(sugg) + ' ₽ (ориентировочно)',
       suggStyle: 'height: 36px; border-radius: 10px; border: 1.5px solid var(--line); background: ' + (S === sugg ? 'var(--chip)' : '#FFFFFF') + '; color: var(--dk); font-size: 13px; font-weight: 700; padding: 0 12px; white-space: nowrap; flex-shrink: 0',
       applySugg: () => set({ service: sugg }),
-      disc: s.disc || '', setDisc: e => { const v = Math.max(0, Number(e.target.value) || 0), mx = s.discMode === 'pct' ? 50 : Math.floor(total * 0.5); if (v > mx) alert('Скидка не больше 50% от суммы: ' + (s.discMode === 'pct' ? '50%' : fmt(mx) + ' ₽')); set({ disc: v ? String(Math.min(v, mx)) : '' }); },
+      disc: s.disc || '', setDisc: e => { const v0 = Number(e.target.value) || 0, mx = s.discMode === 'pct' ? 50 : Math.floor(total * 0.5), v = Math.max(s.discMode === 'pct' ? -100 : -total, v0); if (v > mx) alert('Скидка не больше 50% от суммы: ' + (s.discMode === 'pct' ? '50%' : fmt(mx) + ' ₽') + '. Чтобы добавить наценку, впиши число со знаком минус.'); set({ disc: v ? String(Math.min(v, mx)) : '' }); },
       discPct: () => set({ discMode: 'pct', disc: '' }), discRub: () => set({ discMode: 'rub', disc: '' }), discPctStyle: tabBtn(pctOn), discRubStyle: tabBtn(!pctOn),
-      hasDisc: discAmt > 0, discLine: 'Сумма без скидки ' + fmt(total) + ' ₽ · скидка −' + fmt(discAmt) + ' ₽' + (pctOn ? ' (' + dv + '%)' : ''),
+      hasDisc: discAmt !== 0, discLine: 'Сумма без скидки ' + fmt(total) + ' ₽ · ' + (discAmt > 0 ? 'скидка −' : 'наценка +') + fmt(Math.abs(discAmt)) + ' ₽' + (pctOn ? ' (' + Math.abs(dv) + '%)' : ''),
       hasBelow: showProfit && below.length > 0, belowText: 'Ниже минимальной прибыли: позиции ' + below.join(', ') + (discAmt > 0 ? '. Скидка съедает прибыль, уменьши её.' : '.'),
       needDog: s.needDog, toggleDog: () => set({ needDog: !C.needDog }),
       dogRowStyle: 'height: 46px; border: 0; border-radius: 12px; display: flex; align-items: center; gap: 12px; padding: 0 10px; font-size: 15px; color: var(--ink); font-weight: ' + (s.needDog ? '700' : '500') + '; background: ' + (s.needDog ? 'var(--sel)' : 'transparent'),

@@ -41,7 +41,7 @@
   function vmKp(order, sig) {
     const rows = rowsOf(order, nameKp, specKp), total = D().orderTotal(order);
     const all = rows.map(r => ({ n: r.n, name: r.name, spec: r.spec, qty: String(r.qty), price: rubS(r.price), sum: rubS(r.qty * r.price) }));
-    if (+order.disc > 0) all.push({ n: '', name: 'Скидка', spec: '', qty: '', price: '', sum: '−' + rubS(+order.disc) });
+    if (+order.disc) all.push({ n: '', name: +order.disc > 0 ? 'Скидка' : 'Наценка', spec: '', qty: '', price: '', sum: (+order.disc > 0 ? '−' : '+') + rubS(Math.abs(+order.disc)) });
     const FIRST = 14, CONT = 19, WITH_LOWER = 5, pages = [];
     if (all.length <= WITH_LOWER) pages.push({ first: true, rows: all, hasTotal: true, hasLower: true });
     else {
@@ -69,7 +69,7 @@
       const f = acc.find(r => r.key === key); if (f) f.qty++; else acc.push({ key, it, pv: it.pv || vs.map(() => it.price), qty: 1 }); });
     const disc = +order.disc || 0, cell = v => 'text-align: center; font-weight: 700' + (v.best ? '; background: #FDEBDB; padding: 12px 0' : '');
     const all = acc.map((r, i) => ({ n: String(i + 1), name: r.it.title ? r.it.title : 'Горизонтальные жалюзи', spec: specKp(r.it), qty: String(r.qty), sums: vs.map((v, k) => ({ v: r.pv[k] == null ? 'нет' : rubS(r.qty * r.pv[k]), style: cell(v) })) }));
-    if (disc > 0) all.push({ n: '', name: 'Скидка', spec: '', qty: '', sums: vs.map(v => ({ v: '−' + rubS(disc), style: cell(v) })) });
+    if (disc) all.push({ n: '', name: disc > 0 ? 'Скидка' : 'Наценка', spec: '', qty: '', sums: vs.map(v => ({ v: (disc > 0 ? '−' : '+') + rubS(Math.abs(disc)), style: cell(v) })) });
     const FIRST = 14, CONT = 19, WITH_LOWER = lower == null ? 5 : lower, pages = [];
     if (all.length <= WITH_LOWER) pages.push({ first: true, rows: all, hasTotal: true, hasLower: true });
     else {
@@ -94,7 +94,7 @@
     const bl = acc.filter(g => isBl(g.it)), ot = acc.filter(g => !isBl(g.it));
     const gs = bl.concat(ot);
     const lines = gs.map((g, i) => ({ name: (i + 1) + '. ' + (g.it.title || ('ГЖ ' + g.it.lam + ' ' + (SUP[g.it.sup] || g.it.sup) + (colorOf(g.it) ? ', ' + lc(colorOf(g.it)) : '') + ', ' + sizeTxt(g.it))), qty: String(g.qty), price: fmt(g.price), sum: fmt(g.price * g.qty) }));
-    if (+order.disc > 0) lines.push({ name: 'Скидка', qty: '', price: '', sum: '−' + fmt(+order.disc) });
+    if (+order.disc) lines.push({ name: +order.disc > 0 ? 'Скидка' : 'Наценка', qty: '', price: '', sum: (+order.disc > 0 ? '−' : '+') + fmt(Math.abs(+order.disc)) });
     const total = D().orderTotal(order);
     const cellOf = (g, i) => { if (!g) return { n: String(i + 1), w: '', h: '', thin: '', thick: '', opt: '', box: '#888888', bw: '0.8', dash: '2 2' };
       const it = g.it, d = (DRAW[it.lam] || DRAW[50])[it.ctrl] || (DRAW[it.lam] || DRAW[50]).TR, opt = (it.o.fix ? '+' + lc(it.o.fix).replace('ниж. фиксация', 'ниж. фиксация') : '');
@@ -133,7 +133,7 @@
     const bt = order.buyer === 'юр' ? 'юр' : order.buyer === 'ип' ? 'ип' : 'физ';
     const rows = rowsOf(order, it => it.title ? it.title : 'Горизонтальные жалюзи (' + [lc(it.mat) + ' ' + it.lam + ' мм', colorOf(it) ? '«' + colorOf(it) + '»' : '', sizeTxt(it) + ' мм'].concat((it.o.opts || []).map(o => OPT[o] != null ? OPT[o] : lc(o)).filter(Boolean)).concat(it.o.fix ? [FIX[it.o.fix] || lc(it.o.fix)] : []).concat(it.au ? [it.au] : []).filter(Boolean).join(', ') + ')', () => '');
     const tr = rows.map(r => ({ n: r.n, name: r.name, qty: String(r.qty), price: numZ(r.price), sum: numZ(r.qty * r.price) }));
-    if (+order.disc > 0) tr.push({ n: '', name: 'Скидка', qty: '', price: '', sum: '−' + numZ(+order.disc) });
+    if (+order.disc) tr.push({ n: '', name: +order.disc > 0 ? 'Скидка' : 'Наценка', qty: '', price: '', sum: (+order.disc > 0 ? '−' : '+') + numZ(Math.abs(+order.disc)) });
     const pre = Math.max(0, Math.min(total, order.preU === '₽' ? +order.pre : Math.round(total * (+order.pre || 100) / 100))), rest = total - pre;
     const pay = '2.2. Оплата по настоящему Договору производится следующим образом: предоплата в размере ' + numZ(pre) + ' руб. (' + words(pre) + ') вносится на расчётный счёт или в кассу ' + Rg + ' при подписании настоящего Договора'
       + (rest > 0 ? '; оставшаяся сумма в размере ' + numZ(rest) + ' руб. (' + words(rest) + ') вносится на расчётный счёт или в кассу ' + Rg + (inst ? ' в течение 3 (трёх) дней после установки Товара.' : ' при получении Товара.') : '.');

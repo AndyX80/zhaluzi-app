@@ -27,7 +27,7 @@
       '<div class="s">от ' + dateRu(created) + ' · действительно до ' + dateRu(until) + '</div>' +
       '<p><b>' + esc(order.name || 'Клиент') + '</b>' + (order.addr ? '<br>' + esc(order.addr) : '') + '</p>' +
       '<table><tr><th>№</th><th>Изделие</th><th>Размер</th><th class="r">Цена</th></tr>' + rows +
-      (+order.disc ? '<tr><td colspan="3" class="r">Скидка</td><td class="r">−' + rub(+order.disc) + '</td></tr>' : '') + '<tr><td colspan="3" class="r"><b>Итого</b></td><td class="r"><b>' + rub(total) + '</b></td></tr></table>' +
+      (+order.disc ? '<tr><td colspan="3" class="r">' + (+order.disc > 0 ? 'Скидка' : 'Наценка') + '</td><td class="r">' + (+order.disc > 0 ? '−' : '+') + rub(Math.abs(+order.disc)) + '</td></tr>' : '') + '<tr><td colspan="3" class="r"><b>Итого</b></td><td class="r"><b>' + rub(total) + '</b></td></tr></table>' +
       '<p class="s">Предоплата ' + rub(pre) + ' (' + esc(order.pre || 100) + (order.preU || '%') + '). Срок изготовления ' + esc(order.term || 12) + ' календарных дней.</p>' +
       '</div>';
   }
@@ -125,7 +125,7 @@
       (dlv ? P('1.3. Адрес доставки и установки Товара: ' + esc(order.addr || '—') + '.') : '') +
       P('1.' + (dlv ? 4 : 3) + '. Количество, размеры, конфигурация, цвет и стоимость Товара указаны в замерном листе.') +
       '<table><tr><th>№</th><th>Наименование</th><th>Кол-во</th><th>Ед.</th><th class="r">Цена</th><th class="r">Сумма</th></tr>' + rows +
-      (+order.disc ? '<tr><td colspan="5" class="r">Скидка:</td><td class="r">−' + rub(+order.disc) + '</td></tr>' : '') + '<tr><td colspan="5" class="r"><b>Итого:</b></td><td class="r"><b>' + rub(total) + '</b></td></tr></table>' +
+      (+order.disc ? '<tr><td colspan="5" class="r">' + (+order.disc > 0 ? 'Скидка:' : 'Наценка:') + '</td><td class="r">' + (+order.disc > 0 ? '−' : '+') + rub(Math.abs(+order.disc)) + '</td></tr>' : '') + '<tr><td colspan="5" class="r"><b>Итого:</b></td><td class="r"><b>' + rub(total) + '</b></td></tr></table>' +
       hd('2. ЦЕНА И ПОРЯДОК ОПЛАТЫ') +
       P('2.1. Общая цена Договора составляет: ' + money(total) + ' (' + rublesWords(total) + '). НДС не облагается (УСН/НПД).') +
       P('2.2. ' + pay) +
