@@ -316,7 +316,7 @@
       '<span class="sp"></span><label title="Со знаком минус — наценка">Скидка</label><div class="seg"><button class="' + (pct ? 'on' : '') + '" data-a="cdm" data-v="pct">%</button><button class="' + (!pct ? 'on' : '') + '" data-a="cdm" data-v="rub">₽</button></div><input class="ul num" type="number" style="width:72px" value="' + (C.disc || '') + '" data-c="cdisc" placeholder="0" title="Скидка; значение со знаком минус = наценка"' + (FF.fixed ? ' disabled' : '') + '><label title="Итоговая стоимость заказа, заданная вручную. Главнее скидки">Итог, ₽</label><input class="ul num" type="number" style="width:110px' + (FF.fixed ? ';border:2px solid #d9381e;font-weight:700' : '') + '" value="' + (C.fixTotal || '') + '" data-c="cfixt" placeholder="свой итог" title="Впиши итоговую сумму заказа: она станет главной, скидка отключится"></div>' + (FF.fixed ? '<div class="fixwarn">⚠ СТОИМОСТЬ НЕ РАСЧЁТНАЯ, ЗАДАНА МЕНЕДЖЕРОМ: по прайсу ' + m(FF.total) + ', в заказ идёт ' + m(FF.netTotal) + ' (' + (FF.discAmt > 0 ? 'ниже расчёта на ' : 'выше расчёта на ') + m(Math.abs(FF.discAmt)) + ')</div>' : '') +
       '<div class="sumbar" style="grid-template-columns:repeat(' + (hide ? 2 : 4) + ',1fr)"><div><small>Сумма без скидки</small><b>' + m(FF.total) + '</b></div><div><small>Итого' + (FF.discAmt ? (FF.discAmt > 0 ? ' (скидка −' : ' (наценка +') + m(Math.abs(FF.discAmt)) + ')' : '') + '</small><b style="color:var(--acc)">' + m(FF.netTotal) + '</b></div>' +
       (hide ? '' : '<div><small>Закуп (оценка)</small><b>' + m(Math.max(0, cost)) + '</b></div><div><small>Прибыль</small><b' + (netProf < 0 ? ' style="color:var(--bad)"' : '') + '>' + m(netProf) + '</b></div>') + '</div>' +
-      '<div class="cacts"><button class="btn pri" data-a="cord">' + (C.editNo ? 'Сохранить в ' + eno() : 'Оформить заказ') + '</button><button class="btn" data-a="cdraft">Сохранить как просчёт</button><button class="btn" data-a="cclear">Без сохранения</button></div></div></div>' +
+      '<div class="cacts"><button class="btn pri" data-a="cord">' + (C.editNo ? 'Сохранить в ' + eno() : 'Оформить заказ') + '</button><button class="btn" data-a="cdraft">Сохранить как просчёт</button>' + (C.editNo && (rec0 => rec0 && (rec0.status === 'Черновик' || rec0.status === 'КП отправлено'))(DB.byKey(C.editNo)) ? '<button class="btn" data-a="ctoorder">Перевести в заказ</button>' : '') + '<button class="btn" data-a="cclear">Без сохранения</button></div></div></div>' +
       (O.open ? checkout() : '') + (DR.open ? draftModal() : '');
   }
   /* форма «Сохранить как просчёт»: ФИО, телефон, примечание и фото (всё необязательно), чтобы потом узнать расчёт */
@@ -579,6 +579,12 @@
       O.open = true; rr(); return;
     }
     A.act.cosave();
+  };
+  A.act.ctoorder = () => {
+    if (!checkReady()) return;
+    const J = JC(), rec = persist(); DB.patchRec(rec.uid, { status: 'Договор' }); const no = DB.ensureNo(rec.uid); DB.addEvent(rec.uid, 'Договор', 'просчёт переведён в заказ');
+    J.clear(); resetO(); Object.assign(F, { edit: -1 });
+    A.S.selOrder = 'ph' + rec.uid; A.S.orderTab = 'items'; A.S.ordersFilter = 'all'; A.save(); A.toast('Просчёт стал заказом № ' + no); A.open('orders');
   };
   A.act.cosave = () => {
     if (!checkReady()) return;
