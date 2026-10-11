@@ -252,3 +252,5 @@ button.ul.sel.fabsel{white-space:normal;overflow:visible;height:auto;min-height:
 input.in,select.in,textarea.in{border:1.5px solid var(--fb)!important;background:var(--panel)!important}
 input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--acc)!important;box-shadow:0 0 0 3px var(--acc-s)}
 .ul{border-bottom-color:var(--fb)!important}.ul:focus{border-bottom-color:var(--acc)!important}
+
+.cxb.on svg{transform:rotate(180deg)}.cdet td{background:var(--panel2);padding:8px 12px!important;border-top:0}.cdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:5px 20px;font-size:12.5px;white-space:normal}.cdgrid b{font-weight:600;color:var(--ink)}

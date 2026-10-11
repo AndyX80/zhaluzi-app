@@ -33,7 +33,7 @@
   function specKp(it) {
     if (!isBl(it) || it.prod) return '';
     const chain = (it.o.opts || []).indexOf('Цепочка') >= 0;
-    const parts = [it.mat + ' ' + it.lam + ' мм', sizeTxt(it) + ' мм'].concat((it.o.opts || []).map(o => OPT[o] != null ? OPT[o] : lc(o)).filter(Boolean)).concat(it.o.fix ? [FIX[it.o.fix] || lc(it.o.fix)] : []);
+    const parts = [it.mat + ' ' + it.lam + ' мм', sizeTxt(it) + ' мм'].concat((it.o.opts || []).map(o => OPT[o] != null ? OPT[o] : lc(o)).filter(Boolean)).concat(it.o.fix ? [FIX[it.o.fix] || lc(it.o.fix)] : []).concat(it.au ? [it.au] : []);
     return parts.join(', ') + '; ' + ((chain ? CHAIN : CTRL)[it.ctrl] || CTRL.TR);
   }
   const nameKp = it => it.title ? it.title : 'Горизонтальные жалюзи' + (colorOf(it) ? ' «' + colorOf(it) + '»' : '');
@@ -131,7 +131,7 @@
     const total = D().orderTotal(order), inst = order.install !== false && +order.delivery > 0, reg = !!order.region;
     const R = inst ? 'Поставщик' : 'Продавец', Rg = inst ? 'Поставщика' : 'Продавца';
     const bt = order.buyer === 'юр' ? 'юр' : order.buyer === 'ип' ? 'ип' : 'физ';
-    const rows = rowsOf(order, it => it.title ? it.title : 'Горизонтальные жалюзи (' + [lc(it.mat) + ' ' + it.lam + ' мм', colorOf(it) ? '«' + colorOf(it) + '»' : '', sizeTxt(it) + ' мм'].concat((it.o.opts || []).map(o => OPT[o] != null ? OPT[o] : lc(o)).filter(Boolean)).concat(it.o.fix ? [FIX[it.o.fix] || lc(it.o.fix)] : []).filter(Boolean).join(', ') + ')', () => '');
+    const rows = rowsOf(order, it => it.title ? it.title : 'Горизонтальные жалюзи (' + [lc(it.mat) + ' ' + it.lam + ' мм', colorOf(it) ? '«' + colorOf(it) + '»' : '', sizeTxt(it) + ' мм'].concat((it.o.opts || []).map(o => OPT[o] != null ? OPT[o] : lc(o)).filter(Boolean)).concat(it.o.fix ? [FIX[it.o.fix] || lc(it.o.fix)] : []).concat(it.au ? [it.au] : []).filter(Boolean).join(', ') + ')', () => '');
     const tr = rows.map(r => ({ n: r.n, name: r.name, qty: String(r.qty), price: numZ(r.price), sum: numZ(r.qty * r.price) }));
     if (+order.disc > 0) tr.push({ n: '', name: 'Скидка', qty: '', price: '', sum: '−' + numZ(+order.disc) });
     const pre = Math.max(0, Math.min(total, order.preU === '₽' ? +order.pre : Math.round(total * (+order.pre || 100) / 100))), rest = total - pre;

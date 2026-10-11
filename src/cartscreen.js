@@ -44,8 +44,27 @@
   }
   const chanOf = f => { const m = f && /(\d+)[‑-]канал/.exec(f.name || ''); return m ? Number(m[1]) : 1; };
 
+  /* автоматика, выбранная прямо в изделии (it.auto = { drive, remote }): входит в цену жалюзи, отдельной строкой не показывается */
+  const autoPick = it => { const A = AUTO && AUTO[it.sup], a = it.auto || {}; if (!A || it.kind) return []; return ['drive', 'remote'].map(k => { const f = a[k] && A[k].find(x => x.key === a[k]); return f ? { kind: k, f } : null; }).filter(Boolean); };
+  const autoTxt = it => autoPick(it).map(x => (x.kind === 'drive' ? 'электропривод ' : 'пульт ') + x.f.name).join(', ');
+  function withAuto(it, r) {
+    const pk = autoPick(it); if (!r || !r.ok || !pk.length) return r;
+    const add = pk.reduce((a, x) => a + x.f.price, 0), cost = pk.reduce((a, x) => a + x.f.cost, 0);
+    return Object.assign({}, r, { unit: r.unit + add, profit: (r.profit || 0) + add - cost, cost: (r.cost || 0) + cost, addSum: (r.addSum || 0) + add, autoAdd: add });
+  }
+  /* предел размеров привода (по таблице РДО, принято для всех поставщиков) */
+  function driveWarn(it) {
+    if (it.prod || it.kind || !(it.auto && it.auto.drive)) return '';
+    const W = Number(it.w) || 0, H = Number(it.h) || 0, mn = it.lam === 25 ? 500 : 700, mx = it.lam === 25 ? 2400 : 2700, bad = [];
+    if (W && W < mn) bad.push('ширина меньше ' + mn + ' мм'); if (W > mx) bad.push('ширина больше ' + mx + ' мм'); if (H > 3000) bad.push('высота больше 3000 мм');
+    return bad.length ? 'ПРИВОД не подходит: ' + bad.join(', ') : '';
+  }
+
   /* ---------- расчёт строки ---------- */
   function calcRow(it) {
+    const r0 = calcRow0(it); return it.kind || it.prod === 'rolo' ? r0 : withAuto(it, r0);
+  }
+  function calcRow0(it) {
     if (it.kind === 'custom') {
       const p = Number(it.price) || 0, hasCost = it.cost !== '' && it.cost != null;
       return { ok: p > 0, unit: p, profit: hasCost ? p - Number(it.cost) : 0, noCost: !hasCost, warn: [] };
@@ -105,7 +124,7 @@
       if (o.D && !o.R) autoErrors.push(grpName(o) + ': заказано приводов ' + o.D + ', а пультов или выключателей нет.');
       else if (o.D && o.C < o.D) autoErrors.push('ОШИБКА, ' + grpName(o) + ': приводов ' + o.D + ', а каналов в пультах только ' + o.C + '. Нужны 1-канальные пульты на каждый привод или один многоканальный.'); });
     // лимиты привода (по таблице РДО, принято для всех поставщиков)
-    const hasDrive = {}; s.cart.forEach(x => { if (x.kind === 'drive') hasDrive[x.sup] = true; });
+    const hasDrive = {}; s.cart.forEach(x => { if (x.kind === 'drive' || (x.auto && x.auto.drive)) hasDrive[x.sup] = true; });
     const driveNote = it => {
       if (it.prod || !hasDrive[it.sup]) return '';
       const W = Number(it.w) || 0, H = Number(it.h) || 0, mn = it.lam === 25 ? 500 : 700, mx = it.lam === 25 ? 2400 : 2700, bad = [];
@@ -274,7 +293,7 @@
         else if (it.prod === 'rolo') { const d = window.JalRolo ? JalRolo.describe(it, c) : { title: 'Рулонная штора', sub: '' };
           items.push({ sup: SUPNAME[it.sup] || it.sup, prod: 'rolo', mat: it.mat || 'Рулонные шторы', lam: 0, title: d.title + ' (' + it.w + '×' + it.h + ' мм), ' + d.sub, W: (+it.w) / 10, H: (+it.h) / 10, ctrl: it.ctrl, term: c.termDays || 0, o: { color: null, opts: [], fix: null }, price, profit: c.profit, ci: i }); }
         else items.push({ sup: SUPNAME[it.sup] || it.sup, mat: it.mat, lam: it.lam, W: (+it.w) / 10, H: (+it.h) / 10, ctrl: it.ctrl,
-          o: { color: c.col ? c.col.name : null, opts: Object.keys(it.opts || {}).filter(n => it.opts[n]), fix: it.fix || null }, price, profit: c.profit, ci: i });
+          o: { color: c.col ? c.col.name : null, opts: Object.keys(it.opts || {}).filter(n => it.opts[n]), fix: it.fix || null }, au: autoTxt(it), price, profit: c.profit, ci: i });
       }
     });
     let vars = null;
@@ -308,7 +327,7 @@
   function clear() { C.editNo = null; C.cart = []; C.service = 0; C.pvz = ''; C.disc = ''; save(); }
 
   const setRegion = on => { C.region = !!on; save(); rerender(); };
-  window.JalCart = { instSugg, save, rerender, setRegion, RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
+  window.JalCart = { instSugg, withAuto, autoTxt, driveWarn, save, rerender, setRegion, RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
     autoList: (sup, kind) => (AUTO && AUTO[sup] ? AUTO[sup][kind] : null), autoQty, autoStep, hasAuto: sup => !!(AUTO && AUTO[sup]),
     counts: () => ({ drive: C.cart.filter(x => x.kind === 'drive').reduce((a, x) => a + x.qty, 0), remote: C.cart.filter(x => x.kind === 'remote').reduce((a, x) => a + x.qty, 0) }) };
 })();
