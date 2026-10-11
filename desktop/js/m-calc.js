@@ -344,15 +344,15 @@
   /* оформление: окно по центру экрана, три шага: клиент, условия, документы и отправка */
   A.calcO = () => O;
   const eno = () => { const r = DB.byKey(JC().C.editNo); return r && r.no ? 'заказ № ' + r.no : 'просчёт'; }, cap = t => e(t.charAt(0).toUpperCase() + t.slice(1));
-  const resetO = () => { Object.assign(O, O0(), { inst: false, term: termDefault(), kept: false, req: false }); };
+  const resetO = () => { Object.assign(O, O0(), { term: termDefault(), kept: false, req: false }); };
   const STEPS = ['Клиент', 'Условия', 'Документы'];
   function checkout() {
-    const C = JC().C, q = O.q.trim().toLowerCase(), D = A.D, edit = !!C.editNo && !O.fresh, st = edit ? 1 : O.step, svc = !C.region && (+C.service || 0) > 0; const smOn = O.selfMeas == null ? !(svc || (!C.region && O.inst)) : !!O.selfMeas;
+    const C = JC().C, q = O.q.trim().toLowerCase(), D = A.D, edit = !!C.editNo && !O.fresh, st = edit ? 1 : O.step, svc = !C.region && (+C.service || 0) > 0; const smOn = O.selfMeas == null ? !svc : !!O.selfMeas;
     const found = q.length >= 2 ? D.clients.filter(c => (c.name + ' ' + c.phone + ' ' + String(c.phone).replace(/\D/g, '')).toLowerCase().indexOf(q) >= 0).slice(0, 6) : [];
     const fld = (k, l) => '<div class="fld"><label>' + l + '</label><input class="ul" value="' + e(O[k]) + '" data-c="cof" data-k="' + k + '"></div>';
     let b = '';
     if (!edit && st === 0) {
-      const yur = O.ct === 'yur', ip = O.ct === 'ip', reg = !!C.region, instOn = !reg && (svc || O.inst);
+      const yur = O.ct === 'yur', ip = O.ct === 'ip', reg = !!C.region, instOn = !reg && svc;
       const typ = '<div class="seg" style="align-self:flex-start">' + [['fiz', 'Физ. лицо'], ['yur', 'Юр. лицо'], ['ip', 'ИП']].map(t => '<button class="' + (O.ct === t[0] ? 'on' : '') + '" data-a="coct" data-v="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
       const innRow = (yur || ip) ? '<div class="fld"><label>ИНН</label><div class="row" style="gap:8px"><input class="ul num" inputmode="numeric" value="' + e(O.inn) + '" data-c="cof" data-k="inn"><button class="btn" data-a="cinn" style="flex:none">' + (O.innBusy ? 'Ищу…' : 'Найти по ИНН') + '</button></div>' + (O.innMsg ? '<small style="color:' + (O.innOk ? 'var(--ok)' : 'var(--bad)') + '">' + e(O.innMsg) + '</small>' : '') + '</div>' : '';
       const fields = yur ? [innRow, fld('company', 'Название'), fld('ogrn', 'ОГРН'), fld('uaddr', 'Юридический адрес'), fld('phone', 'Телефон'), fld('phone2', 'Доп. телефон'), fld('repr', 'ФИО представителя'), fld('email', 'E-mail'), instOn ? fld('addr', 'Адрес установки') : '', fld('bank', 'Банковские реквизиты')]
@@ -361,9 +361,9 @@
       b = '<div class="fld"><label>Найти клиента в базе</label><input class="ul" id="cofq" value="' + e(O.q) + '"></div>' +
         (found.length ? '<div class="chips" style="margin:8px 0">' + found.map(c => '<button class="btn sm" data-a="cofpick" data-id="' + c.id + '">' + e(c.name) + (c.phone ? ' · ' + e(c.phone) : '') + '</button>').join('') + '</div>' : '') +
         '<div style="margin-top:14px">' + typ + '</div><div class="fgrid cgrid" style="margin-top:12px">' + fields.join('') + '</div>' +
-        (reg ? '<div class="fld" style="margin-top:12px"><label>Отправка: адрес ПВЗ и транспортная компания</label><input class="ul" value="' + e(C.pvz || '') + '" data-c="cpvz"></div>' : !svc ? '<label class="row" style="gap:8px;margin-top:12px"><input type="checkbox" data-c="cofi"' + (O.inst ? ' checked' : '') + '> С монтажом</label>' : '');
+        (reg ? '<div class="fld" style="margin-top:12px"><label>Отправка: адрес ПВЗ и транспортная компания</label><input class="ul" value="' + e(C.pvz || '') + '" data-c="cpvz"></div>' : '');
     } else if (st === 1) {
-      b = (edit ? '<div class="mut sm" style="margin-bottom:10px">Состав обновится, клиент и условия останутся как были.</div>' : '<div class="fgrid"><div class="fld"><label>Предоплата</label><div class="row" style="gap:8px"><input class="ul num" value="' + e(O.pre) + '" data-c="cof" data-k="pre"><select class="ul" style="width:64px" data-c="cof" data-k="preU"><option' + (O.preU !== '₽' ? ' selected' : '') + '>%</option><option' + (O.preU === '₽' ? ' selected' : '') + '>₽</option></select></div></div>' + fld('term', 'Срок изготовления, календарных дней') + (O.inst ? '<div class="fld"><label>Оплата монтажника, ₽ <span class="mut">(необязательно)</span></label><input class="ul num" placeholder="по расценкам" value="' + e(O.instPay) + '" data-c="cof" data-k="instPay"></div>' : '') + '</div>') +
+      b = (edit ? '<div class="mut sm" style="margin-bottom:10px">Состав обновится, клиент и условия останутся как были.</div>' : '<div class="fgrid"><div class="fld"><label>Предоплата</label><div class="row" style="gap:8px"><input class="ul num" value="' + e(O.pre) + '" data-c="cof" data-k="pre"><select class="ul" style="width:64px" data-c="cof" data-k="preU"><option' + (O.preU !== '₽' ? ' selected' : '') + '>%</option><option' + (O.preU === '₽' ? ' selected' : '') + '>₽</option></select></div></div>' + fld('term', 'Срок изготовления, календарных дней') + (instOn ? '<div class="fld"><label>Оплата монтажника, ₽ <span class="mut">(необязательно)</span></label><input class="ul num" placeholder="по расценкам" value="' + e(O.instPay) + '" data-c="cof" data-k="instPay"></div>' : '') + '</div>') +
         (edit ? '' : '<div style="margin-top:14px"><button class="oc ' + (smOn ? 'on' : '') + '" data-a="cosm" title="Включено: в договоре будет, что замер делает заказчик и отвечает за размеры. Выключено: замер делает продавец, этот текст из договора убирается">Замер делает заказчик</button></div>') + '<div class="fld" style="margin-top:14px"><label>Примечания</label><textarea class="ul ta" rows="4" data-c="cof" data-k="note">' + e(O.note) + '</textarea></div>';
     } else {
       b = '<div class="mdocs"><button class="btn" data-a="cdoc" data-fn="kpHtml">КП</button><button class="btn" data-a="cdoc" data-fn="kpVarHtml">КП три варианта</button><button class="btn" data-a="codoc" data-fn="zamernikHtml">Замерник</button><button class="btn" data-a="codoc" data-fn="dogovorHtml">Договор</button></div>' +
@@ -470,7 +470,7 @@
   A.fld.cfixt = v => { const C = JC().C; C.fixTotal = Math.max(0, Math.round(+String(v).replace(/\s/g, '') || 0)) || ''; JC().save(); rr(); };
   A.fld.cdisc = v => { const C = JC().C; C.disc = (+v || 0) || ''; JC().save(); rr(); };
   A.act.cservsug = el => { JC().C.service = +el.dataset.v || 0; JC().save(); rr(); };
-  A.fld.cserv = v => { JC().C.service = Math.max(0, Math.round(+String(v).replace(/\s/g, '') || 0)); JC().save(); rr(); };
+  A.fld.cserv = v => { const n = Math.round(+String(v).replace(/\s/g, '') || 0); if (n < 0) A.toast('Доставка и установка не может быть отрицательной'); JC().C.service = Math.max(0, n); JC().save(); rr(); };
   A.fld.cprice = (v, el) => { const C = JC().C, i = +el.dataset.i, s = String(v).replace(/\s/g, ''); if (!C.cart[i]) return; C.cart[i] = Object.assign({}, C.cart[i], { own: s === '' ? '' : Math.max(0, Math.round(+s || 0)) }); JC().save(); rr(); };
   A.act.cdel = el => { const C = JC().C; C.cart.splice(+el.dataset.i, 1); JC().save(); rr(); };
   A.act.cclear = () => { JC().clear(); resetO(); rr(); };
@@ -541,10 +541,9 @@
     Object.assign(F, { qty: 1, own: '', note: '', edit: -1, auto: { drive: '', remote: '' } }); A.toast('Добавлено в корзину'); rr();
   };
   A.fld.cof = (v, el) => { O[el.dataset.k] = v; };
-  A.act.cosm = () => { const C = JC().C, instOn = !C.region && ((+C.service || 0) > 0 || O.inst); O.selfMeas = !(O.selfMeas == null ? !instOn : O.selfMeas); A.render(); };
+  A.act.cosm = () => { const C = JC().C, instOn = !C.region && (+C.service || 0) > 0; O.selfMeas = !(O.selfMeas == null ? !instOn : O.selfMeas); A.render(); };
   document.addEventListener('input', ev => { if (ev.target.id === 'cofq') cofq(ev.target.value); });
   const cofq = v => { O.q = v; rr(); const q = document.getElementById('cofq'); if (q) { q.focus(); q.setSelectionRange(v.length, v.length); } };
-  A.fld.cofi = v => { O.inst = !!v; };
   A.act.cofpick = el => { const c = A.D.clients.find(x => x.id === el.dataset.id); if (!c) return; Object.assign(O, { ct: 'fiz', name: c.name, phone: c.phone || '', addr: c.addr || '', q: '' }); rr(); };
   A.act.coct = el => { O.ct = el.dataset.v; O.innMsg = ''; rr(); };
   A.fld.cpvz = v => { JC().C.pvz = v; JC().save(); };
@@ -573,7 +572,7 @@
     const reg = !!C.region, pvz = (C.pvz || '').trim();
     const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: reg ? 0 : co.delivery, cart: J.snapshot(), region: reg, pvz: reg ? pvz : '' };
     const yur = O.ct === 'yur', ip = O.ct === 'ip', cl = (yur ? O.repr.trim() || O.company.trim() : O.name.trim()) || '';
-    if (fill) Object.assign(data, { name: cl, phone: O.phone.trim(), phone2: O.phone2.trim(), comment: O.comment.trim(), email: O.email.trim(), addr: O.addr.trim(), install: !reg && (O.inst || (+C.service || 0) > 0), buyer: yur ? 'юр' : ip ? 'ип' : 'физ', company: yur ? O.company.trim() : '', inn: yur || ip ? O.inn.replace(/\D/g, '') : '', uaddr: yur || ip ? O.uaddr.trim() : '', ogrn: yur || ip ? O.ogrn.trim() : '', bank: yur || ip ? O.bank.trim() : '', status: autoStatus(), pre: O.pre === '' ? '100' : O.pre, preU: O.preU, instCost: String(O.instPay).replace(/\s/g, '') !== '' && !reg ? Math.max(0, Math.round(+String(O.instPay).replace(/\s/g, '').replace(',', '.') || 0)) : undefined, term: O.term || '12', selfMeas: O.selfMeas == null ? (!reg && (O.inst || (+C.service || 0) > 0) ? false : true) : !!O.selfMeas,
+    if (fill) Object.assign(data, { name: cl, phone: O.phone.trim(), phone2: O.phone2.trim(), comment: O.comment.trim(), email: O.email.trim(), addr: O.addr.trim(), install: !reg && (+C.service || 0) > 0, buyer: yur ? 'юр' : ip ? 'ип' : 'физ', company: yur ? O.company.trim() : '', inn: yur || ip ? O.inn.replace(/\D/g, '') : '', uaddr: yur || ip ? O.uaddr.trim() : '', ogrn: yur || ip ? O.ogrn.trim() : '', bank: yur || ip ? O.bank.trim() : '', status: autoStatus(), pre: O.pre === '' ? '100' : O.pre, preU: O.preU, instCost: String(O.instPay).replace(/\s/g, '') !== '' && !reg ? Math.max(0, Math.round(+String(O.instPay).replace(/\s/g, '').replace(',', '.') || 0)) : undefined, term: O.term || '12', selfMeas: O.selfMeas == null ? (!reg && (+C.service || 0) > 0 ? false : true) : !!O.selfMeas,
       note: [O.note.trim(), reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : ''].filter(Boolean).join('\n') });
     else { if (O.note.trim()) data.note = O.note.trim(); if (O.comment.trim()) data.comment = O.comment.trim(); }
     const rec = DB.saveOrder(data, co.items, editing ? C.editNo : null, 'Расчёт (компьютер)', m(total));
