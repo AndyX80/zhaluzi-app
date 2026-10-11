@@ -87,6 +87,10 @@
         FAB.push(f); FAB_BY[f.key] = f;
       });
     }
+    /* серия, у которой выгружены цвета, в списке не дублируется общей строкой (в FAB_BY она остаётся для старых просчётов) */
+    /* если для типа цвета выгружены, серии без цветов в кабинете нет: снята с продажи, не показываем */
+    const hasCol = {}, typCol = {}; FAB.forEach(f => { if (f.m === 'vert' && f.key.indexOf('V|') !== 0) { hasCol[f.vt + '|' + f.ser] = 1; typCol[f.vt] = 1; } });
+    FAB = FAB.filter(f => !(f.m === 'vert' && f.key.indexOf('V|') === 0 && (hasCol[f.vt + '|' + f.ser] || typCol[f.vt])));
     FAB.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
     /* максимальные высоты намотки ткани по системе (таблицы Амиго «максимальных намоток»), м */
     [['Рул_намотка', WIND], ['Зебра_намотка', WINDZ]].forEach(([nm, dst]) => {
