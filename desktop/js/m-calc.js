@@ -103,8 +103,8 @@
   const formEmpty = () => '<div class="card cform"><h2>Новое изделие</h2><div class="fgrid">' + modelRow() + '</div></div>';
   const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + (F.mode ? '' : '<option value="" selected disabled>Выберите модель</option>') + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (F.mode && x[0] === (F.mode === 'rolo' ? RM() : F.mode) ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
   /* категория «Автоматика»: Моторизация (по типам изделий и видам) → Радиопередатчики → Источники питания → Разное */
-  const ASEC = ['Моторизация', 'Радиопередатчики', 'Источники питания', 'Разное'], ATYPES = ['Рулонные шторы', 'ГЖ алюминий 16/25', 'ГЖ 50', 'Дерево', 'Венус', 'Вертикальные', 'Плиссе', 'Мираж', 'Римские'];
-  const ATLBL = { 'ГЖ алюминий 16/25': 'ГЖ алюминий 16/25 мм', 'ГЖ 50': 'ГЖ 50 мм', 'Дерево': 'Дерево и бамбук (все поставщики)', 'Венус': 'Венус (кассетные ГЖ)', 'Рулонные шторы': 'Рулонные шторы и зебра' }, AGRP = ['Проводные', 'Радио', 'Радио + АКБ'];
+  const ASEC = ['Моторизация', 'Радиопередатчики', 'Источники питания', 'Разное'], GSUB = ['ГЖ алюминий 16/25', 'ГЖ 50', 'Дерево', 'Венус'], ATYPES = ['Рулонные шторы', 'ГЖ', 'Вертикальные', 'Плиссе', 'Мираж', 'Римские'];
+  const ATLBL = { 'ГЖ': 'Горизонтальные жалюзи', 'ГЖ алюминий 16/25': 'ГЖ алюминий 16/25 мм', 'ГЖ 50': 'ГЖ 50 мм', 'Дерево': 'Дерево и бамбук (все поставщики)', 'Венус': 'Венус (кассетные ГЖ)', 'Рулонные шторы': 'Рулонные шторы и зебра' }, AGRP = ['Проводные', 'Радио', 'Радио + АКБ'];
   /* тип изделия из листа → тип в списке: Roof в рулонных, Венус и дерево в ГЖ; у зебры те же комплекты, что у рулонных */
   const ATMAP = { 'Roof': 'Рулонные шторы', 'Венус (кассетные ГЖ)': 'Венус' }, atOf = f => ATMAP[f.t] || f.t;
   /* ГЖ: алюминий 16/25 и 50 — комплекты Амиго по ламели; дерево — свои приводы у каждого поставщика (Амиго — те же комплекты по ламели) */
@@ -115,7 +115,8 @@
   function formAuto() {
     const J = JC(), cs = CS(), all = J.autoAll(), hasAm = !!(window.Eng && Eng.sheets && Eng.sheets['Автоматика_Амиго']);
     const sec = ASEC.indexOf(F.asec) >= 0 ? F.asec : 'Моторизация', inSec = all.filter(f => f.sec === sec);
-    const types = ATYPES.filter(t => all.some(f => f.sec === 'Моторизация' && atHas(f, t))), typ = types.indexOf(F.at) >= 0 ? F.at : types[0] || '';
+    const has = t => all.some(f => f.sec === 'Моторизация' && atHas(f, t)), types = ATYPES.filter(t => t === 'ГЖ' ? GSUB.some(has) : has(t)), top = types.indexOf(F.at) >= 0 ? F.at : types[0] || '';
+    const subs = top === 'ГЖ' ? GSUB.filter(has) : [], sub = subs.indexOf(F.ag) >= 0 ? F.ag : subs[0] || '', typ = top === 'ГЖ' ? sub : top;
     const list = inSec.filter(f => sec !== 'Моторизация' || atHas(f, typ)), sups = SUPS.filter(x => list.some(f => f.sup === x)), sup = sups.indexOf(F.asup) >= 0 ? F.asup : sups[0] || '';
     const mine = list.filter(f => f.sup === sup), grpOf = f => sec === 'Моторизация' ? f.grp || 'Радио' : sec === 'Радиопередатчики' ? txGrp(f.name) : '';
     const names = []; mine.forEach(f => { const g = grpOf(f); if (names.indexOf(g) < 0) names.push(g); });
@@ -127,14 +128,15 @@
     const opt = (v, cur, lbl) => '<option value="' + e(v) + '"' + (v === cur ? ' selected' : '') + '>' + e(lbl || v) + '</option>';
     const cnt = J.counts();
     return '<div class="card cform"><div class="ftop"><h2>Автоматика отдельно</h2></div><div class="fbody"><div class="mut sm" style="margin-bottom:8px">Нужно, чтобы дозаказать привод или пульт отдельно. Если автоматика нужна к жалюзи, выбери её прямо в форме изделия: она войдёт в цену жалюзи.</div>' +
-      '<div class="fgrid fcol">' + modelRow() + '<div class="fld"><label>Раздел</label><select class="ul" data-c="asec">' + ASEC.map(x => opt(x, sec, x === 'Моторизация' ? 'Виды систем' : x)).join('') + '</select></div>' +
-      (sec === 'Моторизация' ? '<div class="fld"><label>Вид системы</label><select class="ul" data-c="atype">' + types.map(x => opt(x, typ, ATLBL[x])).join('') + '</select></div>' : '') +
+      '<div class="fgrid fcol">' + modelRow() + '<div class="fld"><label>Вид системы</label><select class="ul" data-c="atype">' + types.map(x => opt(x, top, ATLBL[x] || x)).join('') + '</select></div>' +
+      (subs.length ? '<div class="fld"><label>Подвид ГЖ</label><select class="ul" data-c="asub">' + subs.map(x => opt(x, sub, ATLBL[x])).join('') + '</select></div>' : '') +
+      '<div class="fld"><label>Раздел автоматики</label><select class="ul" data-c="asec">' + ASEC.map(x => opt(x, sec, x === 'Моторизация' ? 'Приводы (моторизация)' : x)).join('') + '</select></div>' +
       (sups.length > 1 ? '<div class="fld"><label>Поставщик</label><select class="ul" data-c="asup">' + sups.map(x => opt(x, sup, cs.COLL_ALL[x] + ' (' + ru(x) + ')')).join('') + '</select></div>' : '') + '</div>' +
-      '<div class="row" style="margin:12px 0 4px"><b>' + e((sec === 'Моторизация' ? 'Виды систем' : sec) + (typ && sec === 'Моторизация' ? ' · ' + (ATLBL[typ] || typ) : '') + (sup ? ' · ' + cs.COLL_ALL[sup] + ' (' + ru(sup) + ')' : '')) + '</b><span class="sp"></span><span class="mut sm">в корзине: приводов ' + cnt.drive + ', пультов и прочего ' + cnt.remote + '</span></div>' +
+      '<div class="row" style="margin:12px 0 4px"><b>' + e((sec === 'Моторизация' ? 'Приводы' : sec) + (typ && sec === 'Моторизация' ? ' · ' + (ATLBL[typ] || typ) : '') + (sup ? ' · ' + cs.COLL_ALL[sup] + ' (' + ru(sup) + ')' : '')) + '</b><span class="sp"></span><span class="mut sm">в корзине: приводов ' + cnt.drive + ', пультов и прочего ' + cnt.remote + '</span></div>' +
       (mine.length ? names.map(g => (g ? '<h3 style="margin:12px 0 6px">' + e(g) + '</h3>' : '') + '<div class="stack" style="gap:6px">' + mine.filter(f => grpOf(f) === g).map(row).join('') + '</div>').join('') : '<div class="empty" style="padding:24px">В этом разделе нет позиций.</div>') +
       (sec === 'Моторизация' ? '<div class="mut" style="font-size:12px;margin-top:12px">К приводу нужен пульт или выключатель: добавь их из разделов «Радиопередатчики» и «Разное». Привод и пульт берутся у одного поставщика.</div>' : '') + '</div></div>';
   }
-  A.fld.asec = v => { F.asec = v; rr(); }; A.fld.atype = v => { F.at = v; rr(); }; A.fld.asup = v => { F.asup = v; rr(); };
+  A.fld.asec = v => { F.asec = v; rr(); }; A.fld.atype = v => { F.at = v; rr(); }; A.fld.asub = v => { F.ag = v; rr(); }; A.fld.asup = v => { F.asup = v; rr(); };
   const autoPanelBody = () => { const h = autoPanel(); return h.replace(/^<div class="card">/, '<div>').replace(/<h2>Автоматика<\/h2>/, ''); };
   function form0() {
     const cs = CS(), n = norm(), r = n.r, s = F, showProfit = !!S.showCost;
