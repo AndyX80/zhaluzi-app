@@ -187,7 +187,7 @@
     { k: 'review', l: 'Отзыв', t: 't', v: o => o.review || '', f: o => o.review || '' }
   ];
   /* какие ячейки правятся прямо в таблице: ed = тип поля, ph = можно у заказов с телефона */
-  const ED = { name: { ed: 'text', ph: 1 }, phone: { ed: 'text', ph: 1 }, created: { ed: 'date', ph: 1 }, cat: { ed: 'sel' }, sup: { ed: 'sel' }, src: { ed: 'sel' }, inst: { ed: 'bool', ph: 1 }, zone: { ed: 'sel' },
+  const ED = { no: { ed: 'text', ph: 1 }, name: { ed: 'text', ph: 1 }, phone: { ed: 'text', ph: 1 }, created: { ed: 'date', ph: 1 }, cat: { ed: 'sel' }, sup: { ed: 'sel' }, src: { ed: 'sel' }, inst: { ed: 'bool', ph: 1 }, zone: { ed: 'sel' },
     sum: { ed: 'num' }, paid: { ed: 'num' }, cost: { ed: 'num' }, instCost: { ed: 'num' }, stage: { ed: 'sel', ph: 1 }, claim: { ed: 'bool', ph: 1 }, due: { ed: 'date' }, tk: { ed: 'text', ph: 1 }, factory: { ed: 'text' }, review: { ed: 'text' } };
   const PHST = ['Черновик', 'КП отправлено', 'Договор', 'Оплачен'];
   const canEdit = (o, c) => { const x = ED[c.k]; return !!x && (o.ph ? !!x.ph : !!o.legacy); };
@@ -201,6 +201,7 @@
   function setCell(o, k, v) {
     if (o.ph) {
       const r = DB.raw().find(x => x.uid === o.uid); if (!r) return;
+      if (k === 'no') { const res = DB.setNo(o.uid, v); if (!res.ok) A.toast(res.msg); else A.S.selOrder = 'ph' + o.uid; return; }
       const P = { name: r.company ? { company: v } : { name: v }, phone: { phone: v }, created: { created: v }, tk: { note: v }, inst: { install: v === 'да' }, claim: { claim: v === 'да' }, stage: { status: v } }[k];
       if (P) DB.patchRec(o.uid, P); return;
     }
@@ -249,7 +250,7 @@
     base += red;
     if (!ok) return '<td class="' + base + '" title="' + (c.wide ? e(c.f(o)) : '') + '">' + e(c.f(o)) + '</td>';
     if (!ed) return '<td class="' + base + ' ted" data-a="otcell" data-id="' + o.id + '" data-k="' + c.k + '" title="' + (c.wide ? e(c.f(o)) : 'Нажми, чтобы изменить') + '">' + (e(c.f(o)) || '<span class="mut">·</span>') + '</td>';
-    const at = ' data-c="otedit" data-id="' + o.id + '" data-k="' + c.k + '"', raw = c.v(o);
+    const at = ' data-c="otedit" data-id="' + o.id + '" data-k="' + c.k + '"', raw = c.k === 'no' ? (o.rawNo || '') : c.v(o);
     let inner;
     if (x.ed === 'bool') inner = '<select class="in tf"' + at + '><option' + (raw === 'нет' ? ' selected' : '') + '>нет</option><option' + (raw === 'да' ? ' selected' : '') + '>да</option></select>';
     else if (x.ed === 'sel') { const cur = c.k === 'stage' ? (o.ph ? D.STAGES[o.stage] && PHST.find(p => p === o.status) : String(o.stage)) : raw; inner = '<select class="in tf"' + at + '>' + optsOf(o, c).map(v => '<option value="' + e(v[0]) + '"' + (String(v[0]) === String(c.k === 'stage' ? (o.ph ? o.status : o.stage) : raw) ? ' selected' : '') + '>' + e(v[1]) + '</option>').join('') + '</select>'; }
