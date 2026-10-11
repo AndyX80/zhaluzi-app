@@ -79,7 +79,9 @@
       /* цвета/артикулы из кабинета Амиго (если выгружены): серия ищется по началу названия */
       (sh['Верт_ткани_цвета'] || []).slice(1).forEach(r => {
         if (!r[0]) return; const t = String(r[3] || 'ткань'), nm = String(r[2] || '').toUpperCase();
-        let b = null; Object.keys(ser).forEach(k => { const o = ser[k]; if (o.vt === t && (nm === o.name.toUpperCase() || nm.indexOf(o.name.toUpperCase() + ' ') === 0) && (!b || o.name.length > b.name.length)) b = o; });
+        const ye = x => String(x || '').toUpperCase().replace(/Ё/g, 'Е').trim(); /* серия: явная из колонки B, иначе по началу названия */
+        let b = null; const sn = ye(r[1]); if (sn) Object.keys(ser).forEach(k => { const o = ser[k]; if (o.vt === t && ye(o.name) === sn) b = o; });
+        if (!b) Object.keys(ser).forEach(k => { const o = ser[k]; if (o.vt === t && (ye(nm) === ye(o.name) || ye(nm).indexOf(ye(o.name) + ' ') === 0) && (!b || o.name.length > b.name.length)) b = o; });
         if (!b) return;
         const v = String(r[8] || 'png'), f = { z: false, m: 'vert', vt: t, key: String(r[0]), name: String(r[2]), ser: b.name, cat: b.cat, usd: b.usd, line: b.line, dens: b.dens, roll: 0, prodW: 0, stock: r[6] === '' || r[6] == null ? null : Number(r[6]), qty: r[7] === '' || r[7] == null ? null : Number(r[7]), img: v.charAt(0) === '/' ? v : '/storage-new/materials/' + (VP['фото_папка'] || 'vertical') + '/' + String(r[0]) + '.' + v.replace(/^\./, ''), maxs: '', wgrp: '', wet: '', coll: '' };
         FAB.push(f); FAB_BY[f.key] = f;
