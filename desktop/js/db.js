@@ -15,7 +15,8 @@
   const SRC = { 'авито': 'Авито', 'повторный': 'Повторный', 'другое': 'Другое', 'по рекомендации': 'По рекомендации', 'яндекс': 'Яндекс Карты', 'сарафан': 'Сарафан', 'сайт': 'Сайт', 'telegram': 'Telegram', 'вконтакте': 'ВКонтакте' };
   const norm = (map, v, dflt) => { const s = str(v); return s ? (map[s.toLowerCase()] || s) : (dflt || ''); };
   const phoneDigits = v => { let d = String(v == null ? '' : v).replace(/\D/g, ''); if (d.length === 11 && /^[78]/.test(d)) d = d.slice(1); return d; };
-  const phoneFmt = v => { const d = phoneDigits(v); return d.length === 10 ? '+7 ' + d.slice(0, 3) + ' ' + d.slice(3, 6) + '-' + d.slice(6, 8) + '-' + d.slice(8) : str(v); };
+  /* единый вид: мобильные и с кодом +7 900 123-45-67, городские без кода ххх-хх-хх (7 цифр) и хх-хх-хх (6 цифр) */
+  const phoneFmt = v => { const d = phoneDigits(v); return d.length === 10 ? '+7 ' + d.slice(0, 3) + ' ' + d.slice(3, 6) + '-' + d.slice(6, 8) + '-' + d.slice(8) : d.length === 7 ? d.slice(0, 3) + '-' + d.slice(3, 5) + '-' + d.slice(5) : d.length === 6 ? d.slice(0, 2) + '-' + d.slice(2, 4) + '-' + d.slice(4) : str(v); };
 
   /* линейная воронка из галочек Excel */
   const STAGE_OF = f => f.closed ? 9 : f.zp ? 8 : f.got ? 7 : f.sent ? 6 : f.sup ? 5 : f.work ? 4 : 3;
@@ -68,7 +69,7 @@
       if (!c) { c = byKey[key] = { id: 'c' + (clients.length + 1), name: '', phone: '', addr: '', src: '', note: '' }; clients.push(c); }
       c.name = (o.yur && o.yur.name) || o.name || c.name || 'Без имени'; if (o.phone) c.phone = o.phone; if (o.src) c.src = o.src;
       if (o.yur) c.note = 'Юр. лицо / ИП' + (o.yur.edo ? ', ЭДО есть' : '');
-      if (o.email || o._e) c.email = o.email || o._e; if (o._p2 || o.phone2) c.phone2 = o._p2 || o.phone2; if (o.cnote) c.note = o.cnote;
+      if (o.email || o._e) c.email = o.email || o._e; if (o._p2 || o.phone2) c.phone2 = phoneFmt(o._p2 || o.phone2); if (o.cnote) c.note = o.cnote;
       o.client = c.id; delete o.name; delete o.phone;
     });
     orders.reverse();
@@ -161,7 +162,7 @@
       orders.push(fromPhone(r));
     });
     /* пометка «phone» стирает Excel-версию только на экране; в базе она остаётся, пока Андрей её не удалит */
-    orders.forEach(o => { o.name = o._n; o.phone = o._p; delete o._n; delete o._p; });
+    orders.forEach(o => { o.name = o._n; o.phone = phoneFmt(o._p); delete o._n; delete o._p; });
     const data = DB.build(orders, DB.loadOps());
     data.orders.forEach(o => { const c = data.clients.find(x => x.id === o.client); if (c && !c.addr && o._a) c.addr = o._a; delete o._a; });
     D.clients = data.clients; D.calcs = data.orders.filter(o => o.draft); D.orders = data.orders.filter(o => !o.draft); D.ops = data.ops; D.events = []; D.real = DB.real = true;
@@ -237,7 +238,7 @@
   DB.editClient = function (cid, patch) {
     const os = (D.orders || []).filter(o => o.client === cid && o.uid); if (!os.length) return null;
     const map = { name: 'name', phone: 'phone', phone2: 'phone2', email: 'email', addr: 'addr', src: 'src', note: 'cnote' }, p = {};
-    Object.keys(patch).forEach(k => { if (map[k]) p[map[k]] = patch[k]; });
+    Object.keys(patch).forEach(k => { if (map[k]) p[map[k]] = k === 'phone' || k === 'phone2' ? phoneFmt(patch[k]) : patch[k]; });
     const list = DB.raw(), t = nowIso(), uids = {}; os.forEach(o => { uids[o.uid] = 1; });
     DB.setRaw(list.map(r => { if (!uids[r.uid]) return r; const q = Object.assign({}, p); if (q.name !== undefined && r.company && !r.legacy) { q.company = q.name; delete q.name; } return Object.assign({}, r, q, { upd: t }); })); DB.later(); DB.derive();
     const o2 = (D.orders || []).find(o => o.uid === os[0].uid); return o2 ? o2.client : null;

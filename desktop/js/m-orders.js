@@ -206,7 +206,7 @@
     if (o.ph) {
       const r = DB.raw().find(x => x.uid === o.uid); if (!r) return;
       if (k === 'no') { const res = DB.setNo(o.uid, v); if (!res.ok) A.toast(res.msg); else A.S.selOrder = 'ph' + o.uid; return; }
-      const P = { name: r.company ? { company: v } : { name: v }, phone: { phone: v }, created: { created: v }, tk: { note: v }, inst: { install: v === 'да' }, claim: { claim: v === 'да' }, stage: { status: v }, zone: { region: v === 'Регионы' } }[k];
+      const P = { name: r.company ? { company: v } : { name: v }, phone: { phone: DB.phoneFmt(v) }, created: { created: v }, tk: { note: v }, inst: { install: v === 'да' }, claim: { claim: v === 'да' }, stage: { status: v }, zone: { region: v === 'Регионы' } }[k];
       if (P) { DB.patchRec(o.uid, P); return; }
       const ov = Object.assign({}, r.ov || {}), nums = { sum: 1, paid: 1, cost: 1, instCost: 1 };
       if (k === 'instCost') { DB.patchRec(o.uid, { instCost: v === '' ? '' : numv(v) }); return; }
