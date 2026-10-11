@@ -344,7 +344,7 @@
   /* оформление: окно по центру экрана, три шага: клиент, условия, документы и отправка */
   A.calcO = () => O;
   const eno = () => { const r = DB.byKey(JC().C.editNo); return r && r.no ? 'заказ № ' + r.no : 'просчёт'; }, cap = t => e(t.charAt(0).toUpperCase() + t.slice(1));
-  const resetO = () => { Object.assign(O, O0(), { inst: !JC().C.region, term: termDefault(), kept: false, req: false }); };
+  const resetO = () => { Object.assign(O, O0(), { inst: false, term: termDefault(), kept: false, req: false }); };
   const STEPS = ['Клиент', 'Условия', 'Документы'];
   function checkout() {
     const C = JC().C, q = O.q.trim().toLowerCase(), D = A.D, edit = !!C.editNo && !O.fresh, st = edit ? 1 : O.step, svc = !C.region && (+C.service || 0) > 0; const smOn = O.selfMeas == null ? !(svc || (!C.region && O.inst)) : !!O.selfMeas;
@@ -447,7 +447,7 @@
     const old = editing ? DB.byKey(C.editNo) : null;
     if (old && old.status === 'Оплачен') { A.toast('Заказ оплачен: это уже не просчёт. Используй «Сохранить в заказ»'); return; }
     const data = { priced: true, disc: co.disc, needDog: co.needDog, delivery: reg ? 0 : co.delivery, cart: J.snapshot(), region: reg, pvz: reg ? pvz : '', status: 'Черновик' };
-    if (!editing) Object.assign(data, { name: '', phone: '', addr: '', install: !reg, buyer: 'физ', pre: '100', preU: '%', term: termDefault(), note: reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '' });
+    if (!editing) Object.assign(data, { name: '', phone: '', addr: '', install: !reg && (+co.delivery || 0) > 0, buyer: 'физ', pre: '100', preU: '%', term: termDefault(), note: reg && pvz ? 'Отправка (ПВЗ, ТК): ' + pvz : '' });
     if (DR.name.trim()) data.name = DR.name.trim(); if (DR.phone.trim()) data.phone = DR.phone.trim(); if (DR.note.trim()) data.comment = DR.note.trim();
     const rec = DB.saveOrder(data, co.items, editing ? C.editNo : null, 'Просчёт (компьютер)', m(total));
     const pics = DR.files; DR.open = false; DR.files = [];
