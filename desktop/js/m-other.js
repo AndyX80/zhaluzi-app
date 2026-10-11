@@ -44,10 +44,14 @@
     render() {
       return '<div class="head"><h1>Настройки</h1></div><div class="g2"><div class="card"><h2>Вид</h2><div class="stack" style="gap:12px;margin-top:10px"><div class="field"><label>Тема</label><div class="seg">' + [['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Как в системе']].map(x => '<button class="' + (S.theme === x[0] ? 'on' : '') + '" data-a="sth" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div></div><div class="field"><label>Стиль</label><div class="seg">' + [['glass', 'Стекло'], ['dock', 'Док'], ['classic', 'Классика']].map(x => '<button class="' + ((S.skin || 'classic') === x[0] ? 'on' : '') + '" data-a="ssk" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div></div><div class="field"><label>Меню слева (в «Классике» и «Стекле»)</label><div class="seg"><button class="' + (!S.collapsed ? 'on' : '') + '" data-a="scol" data-v="0">Развёрнуто</button><button class="' + (S.collapsed ? 'on' : '') + '" data-a="scol" data-v="1">Свёрнуто</button></div></div><p class="mut">Режимы работы переключаются сверху или Alt+1…6. Цвета и шрифты уточним после согласования каркаса.</p></div></div>' +
         '<div class="card"><h2>Подключения</h2><table class="tbl" style="margin-top:6px"><tbody>' + INTEG.map(i => '<tr><td>' + i[0] + '</td><td class="r"><span class="pill ' + (i[1].indexOf('работает') === 0 ? 'ok' : '') + '">' + i[1] + '</span></td></tr>').join('') + '</tbody></table></div>' +
+        '<div class="card"><h2>Расценки монтажника</h2>' + irCard() + '</div>' +
         '<div class="card"><h2>Данные</h2>' + dataCard() + '</div>' +
         '<div class="card"><h2>Безопасность</h2><p class="mut">Вход: логин и ПИН. Пользователь один (владелец), роли заложены в модель данных. Закуп и прибыль видны только владельцу.</p></div></div>';
     }
   });
+  const irCard = () => '<p class="mut" style="margin:6px 0 10px">Оплата монтажнику считается по этим ставкам и подставляется в «Финансы» заказа; там её можно поправить вручную.</p><table class="tbl"><tbody>' + DB.IRATES.map(x => '<tr><td>' + A.esc(x[1]) + '</td><td class="r mut" style="white-space:nowrap">' + x[3] + '</td><td class="r"><input class="in num" style="width:90px;text-align:right" value="' + DB.irate(x[0]) + '" data-c="irate" data-k="' + x[0] + '"></td></tr>').join('') + '</tbody></table><div class="row" style="margin-top:10px"><button class="btn sm" data-a="irreset">Вернуть исходные ставки</button></div>';
+  A.fld.irate = (v, el) => { DB.setIrate(el.dataset.k, v); A.render(); };
+  A.act.irreset = () => { DB.resetIrates(); A.toast('Ставки возвращены'); A.render(); };
   A.act.sth = el => { S.theme = el.dataset.v; A.save(); A.render(); };
   A.act.ssk = el => { S.skin = el.dataset.v; A.save(); A.render(); };
   A.act.scol = el => { S.collapsed = el.dataset.v === '1'; A.save(); A.render(); };

@@ -102,14 +102,39 @@
     const o = Object.assign({}, r); o.id = 'o' + String(r.uid).slice(1); o._n = r.name; o._p = r.phone; delete o.name; delete o.phone; delete o.sat; delete o.upd; delete o.status; delete o.legacy;
     o.uid = r.uid; o.legacy = true; o.archived = !!r.archived; return o;
   }
+  /* расценки на монтаж (оплата монтажнику) по типам: редактируются в Настройках, хранятся на компьютере */
+  DB.IRATES = [
+    ['rolo_mini', 'Рулонки и зебра: MINI, UNI, ROLLA', 500, 'за шт'], ['rolo_mg', 'Рулонки и зебра: MG, MGS', 1500, 'за шт'], ['rolo_bnt', 'Рулонки и зебра: Бентин (BNT, кассеты)', 3000, 'за шт'], ['rolo_roof', 'Рулонки: Руф', 1500, 'за шт'],
+    ['vzh', 'Вертикальные жалюзи', 500, 'за 1 п.м ширины'], ['vzh_gr', 'Вертикальные жалюзи с грувером', 1000, 'за 1 п.м ширины'],
+    ['gj25', 'ГЖ 25 и 16 мм, дерево 25 мм (классические)', 500, 'за шт'], ['gj25s', 'ГЖ 25 и 16 мм со струной', 1000, 'за шт'], ['gj_cas', 'Кассетные ГЖ 16/25 (Венус)', 1000, 'за шт'], ['gj50', 'ГЖ 50 мм, дерево 50 мм', 3000, 'за шт'],
+    ['pl', 'Плиссе обычные', 1000, 'за шт'], ['pl_a', 'Плиссе малые с автоматикой', 2000, 'за шт'], ['pl_max', 'Плиссе Макс', 3000, 'за шт'], ['pl_max_a', 'Плиссе Макс с автоматикой', 5000, 'за шт'],
+    ['rim', 'Римские шторы', 3000, 'за шт'], ['rim_a', 'Римские шторы с автоматикой', 5000, 'за шт'], ['mir', 'Мираж', 3000, 'за шт'], ['mir_a', 'Мираж с автоматикой', 5000, 'за шт']];
+  const irGet = () => { try { return JSON.parse(lsGet('jald_irates') || '{}') || {}; } catch (e) { return {}; } };
+  DB.irate = k => { const o = irGet(); if (o[k] !== undefined && o[k] !== '') return +o[k]; const d = DB.IRATES.find(x => x[0] === k); return d ? d[2] : 0; };
+  DB.setIrate = (k, v) => { const o = irGet(); const n = Math.max(0, Math.round(+String(v).replace(/\s/g, '').replace(',', '.') || 0)); o[k] = n; lsSet('jald_irates', JSON.stringify(o)); };
+  DB.resetIrates = () => lsSet('jald_irates', '{}');
+  /* оплата монтажнику по ставкам: по составу корзины заказа { sum, lines } */
+  DB.instCalc = snap => {
+    const cart = (snap && snap.cart) || [], lines = []; let sum = 0, nUsed = 0;
+    const add = (name, rate, n, per) => { const v = Math.round(rate * n); sum += v; lines.push(name + ': ' + (per ? n.toFixed(2).replace(/\.?0+$/, '') + ' м × ' : n + ' × ') + rate + ' = ' + v); };
+    cart.forEach(it => { if (it.kind) return; const q = +it.qty || 1;
+      if (it.prod === 'rolo') {
+        if (it.mat === 'Вертикальные') add('ВЖ', DB.irate('vzh'), (+it.w || 0) / 1000 * q, 1);
+        else { const sy = String(it.sys || ''), k = /^(Z-)?(MINI|UNI|ROLLA)/.test(sy) ? 'rolo_mini' : /^(MG|Z-MGS)/.test(sy) ? 'rolo_mg' : 'rolo_bnt'; add(DB.IRATES.find(x => x[0] === k)[1].replace(/^Рулонки и зебра: /, ''), DB.irate(k), q); }
+      } else if (+it.lam === 50) add('ГЖ/дерево 50 мм', DB.irate('gj50'), q);
+      else if (+it.lam === 25) add('ГЖ/дерево 25 мм', DB.irate('gj25'), q);
+    });
+    return { sum, lines };
+  };
   /* просчёт = пока нет договора и предоплаты (черновик, КП отправлено) */
   const isDraftSt = st => !st || st === 'Черновик' || st === 'КП отправлено';
   function fromPhone(r) {
+    const ic = r.install === false || r.region ? { sum: 0, lines: [] } : DB.instCalc(r.cart), icSet = r.instCost !== undefined && r.instCost !== '' && r.instCost != null;
     const items = r.items || [], goods = items.reduce((a, i) => a + (+i.price || 0), 0), prof = items.reduce((a, i) => a + (+i.profit || 0), 0);
     const sum = Math.max(0, goods + (r.priced ? 0 : (+r.delivery || 0)) - (+r.disc || 0)), cat = items.some(i => /дерев|бамбук/i.test(i.mat || i.title || '')) ? 'Дерево' : items.some(i => i.prod === 'rolo') ? 'Рулонные' : 'Разное';
     const sups = {}; items.forEach(i => { if (i.sup) sups[i.sup] = 1; });
     return { id: 'ph' + r.uid, no: r.no ? String(r.no) : 'Просчёт', cnote: r.cnote || '', draft: isDraftSt(r.status), rawNo: r.no ? String(r.no) : '', uid: r.uid, ph: true, pre: r.pre, preU: r.preU, term: r.term, meas: !!r.meas, _p2: r.phone2 || '', _e: r.email || '', sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: r.src || '', factory: r.factory || '',
-      inst: !!r.install, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: 0,
+      inst: !!r.install, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: icSet ? +r.instCost : ic.sum, instAuto: ic.sum, instLines: ic.lines, instSet: icSet,
       created: (r.created || '').slice(0, 10), due: r.due || '', tk: r.tk != null ? r.tk : (r.note || ''), review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: !!r.claim, legacy: false, archived: !!r.archived,
       _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '', items, disc: +r.disc || 0, delivery: +r.delivery || 0, priced: !!r.priced, hasCart: !!(r.cart && r.cart.cart), supSent: !!r.supSent,
       needCost: Object.keys(items.filter(i => i.kind === 'custom' && !i.costOk && !(+i.cost > 0)).reduce((a, i) => { a[i.title || 'Услуга'] = 1; return a; }, {})) };

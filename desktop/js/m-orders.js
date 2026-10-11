@@ -97,6 +97,7 @@
   A.fld.phfld = (v, el) => {
     const uid = el.dataset.uid, k = el.dataset.k, r = DB.raw().find(x => x.uid === uid); if (!r) return;
     if (k === 'no') { const res = DB.setNo(uid, v); if (!res.ok) { A.toast(res.msg); A.render(); return; } A.S.selOrder = 'ph' + uid; A.toast(String(v).trim() ? 'Номер изменён' : 'Заказ вернулся в просчёты'); A.render(); return; }
+    if (k === 'instCost') { const t = String(v).trim(); DB.patchRec(uid, { instCost: t === '' ? '' : Math.max(0, Math.round(+t.replace(/\s/g, '').replace(',', '.') || 0)) }); A.render(); return; }
     const P = {}; P[k] = k === 'pre' ? String(v).replace(/[^\d.]/g, '') : v;
     if (k === 'buyer' || k === 'preU') { DB.patchRec(uid, P); A.render(); return; }
     DB.patchRec(uid, P);
@@ -129,7 +130,7 @@
     if (t === 'items') return real && o.legacy ? '<div class="callout info">Это заказ из вашего Excel-учёта: состав изделий там не вёлся (только категория «' + e(o.cat) + '» и поставщик «' + e(o.sup || '—') + '»). Новые заказы, собранные в расчёте, сохраняют полный список изделий.</div>' :
       '<table class="tbl"><thead><tr><th>№</th><th>Изделие</th><th>Размер</th><th class="r">Шт</th><th class="r">Сумма</th></tr></thead><tbody><tr><td>1</td><td>Дерево 50, Белый (павловния)</td><td>1200×1500</td><td class="r">2</td><td class="r num">18 400 ₽</td></tr><tr><td>2</td><td>Дерево 50, Белый (павловния)</td><td>900×1400</td><td class="r">1</td><td class="r num">8 200 ₽</td></tr></tbody></table><div class="row" style="margin-top:12px"><button class="btn pri" data-a="nav" data-id="calc">Открыть в расчёте</button><button class="btn" data-a="stub" data-t="пересчёт по новым ценам">Пересчитать по новым ценам</button></div>';
     if (t === 'fin') return '<div class="g3"><div class="kpi"><small>Сумма заказа</small><b>' + m(o.sum) + '</b></div><div class="kpi"><small>Получено</small><b>' + m(o.paid) + '</b></div><div class="kpi"><small>Долг клиента</small><b>' + m(Math.max(0, o.sum - o.paid)) + '</b></div></div>' +
-      '<div class="g3" style="margin-top:12px"><div class="kpi"><small>Закуп</small><b>' + m(o.cost) + '</b></div><div class="kpi"><small>Оплата монтажника</small><b>' + m(o.instCost || 0) + '</b></div><div class="kpi"><small>Прибыль</small><b>' + m(prof(o)) + '</b><i> ' + (o.sum ? Math.round(prof(o) / o.sum * 100) : 0) + '%</i></div></div>' +
+      '<div class="g3" style="margin-top:12px"><div class="kpi"><small>Закуп</small><b>' + m(o.cost) + '</b></div>' + (o.ph ? '<div class="kpi"><small>Оплата монтажника</small><input class="ul num" style="font-size:24px;font-weight:700;width:100%" value="' + (o.instCost || 0) + '" data-c="phfld" data-k="instCost" data-uid="' + o.uid + '" title="Впиши сумму оплаты монтажнику; пусто = по ставкам"><small class="mut">' + (o.instSet ? 'вручную · ' : '') + 'по ставкам: ' + m(o.instAuto || 0) + (o.instSet ? ' <button class="btn sm" data-a="oinstauto" data-uid="' + o.uid + '">сбросить на расчёт</button>' : '') + '</small>' + ((o.instLines || []).length ? '<small class="mut" style="display:block;margin-top:4px">' + o.instLines.map(e).join('<br>') + '</small>' : '') + '</div>' : '<div class="kpi"><small>Оплата монтажника</small><b>' + m(o.instCost || 0) + '</b></div>') + '<div class="kpi"><small>Прибыль</small><b>' + m(prof(o)) + '</b><i> ' + (o.sum ? Math.round(prof(o) / o.sum * 100) : 0) + '%</i></div></div>' +
       '<div class="row" style="margin-top:10px"><button class="btn" data-a="stub" data-t="приход по заказу">+ Приход</button><button class="btn" data-a="stub" data-t="расход по заказу">+ Расход</button></div>';
     if (t === 'docs' && o.ph && A.docsTab) return A.docsTab(o);
     if (t === 'docs' && D.real && A.docsLegacy) return A.docsLegacy(o);
@@ -321,6 +322,7 @@
     DB.patchRec(o.uid, { status: 'Договор' }); const no = DB.ensureNo(o.uid); DB.addEvent(o.uid, 'Договор', 'просчёт переведён в заказ');
     A.S.ordersFilter = 'all'; A.S.selOrder = 'ph' + o.uid; A.save(); A.toast('Просчёт стал заказом № ' + no); A.open('orders');
   };
+  A.act.oinstauto = el => { DB.patchRec(el.dataset.uid, { instCost: '' }); A.render(); };
   A.act.oreopen = el => {
     const o = A.order(el.dataset.id), r = o && DB.raw().find(x => x.uid === o.uid); if (!r || !r.cart) return;
     JalCart.restore(r.cart, DB.keyOf(r)); A.toast((r.no ? 'Заказ № ' + r.no : 'Черновик') + ' открыт в расчёте'); A.open('calc');
