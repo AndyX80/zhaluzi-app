@@ -107,7 +107,7 @@
   const ATLBL = { 'Горизонтальные': 'Горизонтальные (дерево, алюминий)' }, AGRP = ['Проводные', 'Радио', 'Радио + АКБ'];
   const txGrp = n => /^Пульт/.test(n) ? 'Пульты' : /выключатель/i.test(n) ? 'Радиовыключатели' : /приемник|приёмник/i.test(n) ? 'Радиоприёмники' : /Датчик/.test(n) ? 'Датчики' : 'Прочее';
   function formAuto() {
-    const J = JC(), cs = CS(), all = J.autoAll();
+    const J = JC(), cs = CS(), all = J.autoAll(), hasAm = !!(window.Eng && Eng.sheets && Eng.sheets['Автоматика_Амиго']);
     const sec = ASEC.indexOf(F.asec) >= 0 ? F.asec : 'Моторизация', inSec = all.filter(f => f.sec === sec);
     const types = sec === 'Моторизация' ? ATYPES.filter(t => inSec.some(f => f.t === t)) : [], typ = types.indexOf(F.at) >= 0 ? F.at : types[0] || '';
     const list = inSec.filter(f => sec !== 'Моторизация' || f.t === typ), sups = SUPS.filter(x => list.some(f => f.sup === x)), sup = sups.indexOf(F.asup) >= 0 ? F.asup : sups[0] || '';

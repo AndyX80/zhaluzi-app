@@ -23,7 +23,7 @@
   };
   E.refresh = async function () {
     const u = E.url(); if (!u) throw new Error('Вставь ссылку на скрипт цен (кнопка ниже)');
-    const j = await (await fetch(u)).json();
+    const j = await (await fetch(u + (u.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now(), { cache: 'no-store' })).json();
     if (!j.ok) throw new Error(j.error === 'bad key' ? 'Неверный пароль в ссылке' : 'Таблица не отдала данные');
     try { localStorage.setItem('jal_prices', JSON.stringify(j.sheets)); localStorage.setItem('jal_prices_at', String(Date.now())); } catch (e) {}
     E.at = Date.now(); E.apply(j.sheets);
