@@ -221,7 +221,7 @@
     if (R.v) {
       const vf = R.vf = Object.assign(VF0(), R.vf || {}), sel = (k, lab, opts) => '<div class="fld"><label>' + lab + '</label><select class="ul" data-c="vf" data-k="' + k + '">' + opts.map(o => '<option value="' + e(o[0]) + '"' + (vf[k] === o[0] ? ' selected' : '') + '>' + e(o[1]) + '</option>').join('') + '</select></div>';
       h += '<div class="fgrid">' + sel('side', 'Управление', [['', 'не выбрано'], ['L', 'левое'], ['R', 'правое']]) +
-        '<div class="fld"><label>Длина управления, мм</label><input class="ul num" type="number" min="0" data-c="vf" data-k="len" value="' + e(vf.len) + '" placeholder="' + (+R.h ? Math.max(0, +R.h - 500) : 'высота − 500') + '"></div>' +
+        '<div class="fld"><label>Длина управления, мм</label><input class="ul num" type="number" min="0" data-c="vf" data-k="len" value="' + e(vf.len !== '' && vf.len != null ? vf.len : (+R.h ? Math.max(0, +R.h - 500) : '')) + '"></div>' +
         sel('chain', 'Фурнитура', [['Пластиковая', 'пластиковая'], ['Металл', 'металлическая (цепь + нижняя обвязка)'], ['Прозрачная', 'прозрачная (цепь + замок)']]) +
         sel('ceil', 'Тип потолочного кронштейна', [['Обычный', 'обычный'], ['Армстронг', 'армстронг'], ['Не класть', 'не класть']]) +
         sel('ctype', 'Тип управления', [['К управлению', 'к управлению'], ['От управления', 'от управления'], ['От центра', 'от центра'], ['К центру', 'к центру']]) +

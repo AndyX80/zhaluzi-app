@@ -318,7 +318,7 @@
     const v = it.vf; if (!v) return ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева');
     const a = [];
     if (v.side) a.push('управление ' + (v.side === 'R' ? 'правое' : 'левое'));
-    if (v.len) a.push('длина упр. ' + v.len + ' мм');
+    { const ln = v.len || (Number(it.h) > 500 ? Number(it.h) - 500 : 0); if (ln) a.push('длина упр. ' + ln + ' мм'); }
     if (v.chain && v.chain !== 'Пластиковая') a.push(v.chain === 'Металл' ? 'фурнитура металлическая' : 'прозрачная комплектация');
     if (v.ceil && v.ceil !== 'Обычный') a.push('потолочный кронштейн: ' + v.ceil.toLowerCase());
     if (v.ctype && v.ctype !== 'К управлению') a.push(v.ctype.toLowerCase());
