@@ -166,7 +166,7 @@
   const COLS = [
     { k: 'no', l: 'Номер', t: 'n', v: o => +o.no || 0, f: o => o.no },
     { k: 'created', l: 'Дата', t: 'd', v: o => o.created || '', f: o => dmy(o.created) },
-    { k: 'name', l: 'Клиент', t: 't', v: cn, f: cn },
+    { k: 'name', l: 'Клиент', t: 't', v: cn, f: o => { const w = cn(o).trim().split(/\s+/); return /^(ип|ооо|зао|ао|пао|нко)$/i.test(w[0]) && w.length > 1 ? w[1] : w[0] || ''; } },
     { k: 'phone', l: 'Телефон', t: 't', v: cph, f: cph },
     { k: 'cat', l: 'Категория', t: 's', v: o => o.cat || '', f: o => o.cat || '' },
     { k: 'sup', l: 'Поставщик', t: 's', v: o => o.sup || '', f: o => o.sup || '' },
