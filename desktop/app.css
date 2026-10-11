@@ -267,3 +267,8 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--acc)!importa
 @media(max-width:1100px){.irg{grid-template-columns:1fr}}
 .irg{grid-template-columns:repeat(2,max-content);justify-content:start;gap:2px 56px}.irn{flex:none;width:330px}
 @media(max-width:1100px){.irg{grid-template-columns:max-content}}
+.tbl:not(.ttab) th{position:relative}.rsz{position:absolute;right:-4px;top:0;bottom:0;width:9px;cursor:col-resize;z-index:5}.rsz:hover,.rszing .rsz{background:color-mix(in srgb,var(--acc) 45%,transparent)}
+.rszing{cursor:col-resize;user-select:none}
+.tbl.tfix{table-layout:fixed}.tbl.tfix td,.tbl.tfix th{overflow:hidden;text-overflow:ellipsis}.tbl.tfix th{white-space:normal}.tbl.tfix .tf{min-width:0;width:100%}
+.tfr{flex-direction:column;gap:3px}.tfr .tf{min-width:0!important;width:100%!important}.tf{min-width:64px}
+.tqf{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tqf select{height:34px}
