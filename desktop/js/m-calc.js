@@ -372,7 +372,7 @@
 
   A.module('calc', {
     render() { const C = JC() ? JC().C : {}, E = window.Eng, when = E && E.at ? new Date(E.at).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-      return '<div class="head" style="display:flex;align-items:center;gap:12px"><h1>' + (C.editNo ? cap(eno()) : 'Новый заказ') + '</h1><span class="sp"></span>' + (when ? '<span class="mut sm">Цены из таблицы: ' + e(when) + '</span>' : '') + '<button class="btn sm" data-a="cprices" title="Загрузить свежие цены, наличие и ткани из Google Таблицы">Обновить цены</button></div><div class="calcwrap">' + form() + cart() + '</div>'; }
+      return '<div class="head" style="display:flex;align-items:center;gap:12px"><h1>' + (C.editNo ? cap(eno()) : 'Новый заказ') + '</h1><span class="sp"></span>' + (when ? '<span class="mut sm">Цены из таблицы: ' + e(when) + '</span>' : '') + '<button class="btn sm" data-a="cprices" title="Загрузить свежие цены, наличие и ткани из Google Таблицы">Обновить цены</button><button class="btn pri sm" data-a="cnew" title="Очистить корзину и все поля, начать с нуля">Новый расчёт</button></div><div class="calcwrap">' + form() + cart() + '</div>'; }
   });
 
   /* ===== Tab по полям формы: слева направо, сверху вниз; выпадающее поле открывается сразу ===== */
@@ -468,6 +468,14 @@
   A.fld.cprice = (v, el) => { const C = JC().C, i = +el.dataset.i, s = String(v).replace(/\s/g, ''); if (!C.cart[i]) return; C.cart[i] = Object.assign({}, C.cart[i], { own: s === '' ? '' : Math.max(0, Math.round(+s || 0)) }); JC().save(); rr(); };
   A.act.cdel = el => { const C = JC().C; C.cart.splice(+el.dataset.i, 1); JC().save(); rr(); };
   A.act.cclear = () => { JC().clear(); resetO(); rr(); };
+  /* «Новый расчёт»: корзина, скидка, итог, клиент и поля изделия — всё в ноль; выбранные модель и поставщик остаются */
+  A.act.cnew = () => {
+    JC().clear(); resetO();
+    Object.assign(F, { color: '', colOpen: false, cq: '', w: '', h: '', qty: 1, ctrl: 'TR', fix: '', opts: {}, auto: { drive: '', remote: '' }, own: '', note: '', edit: -1 });
+    Object.assign(R, { fab: '', fq: '', w: '', h: '', qty: 1, vf: null, sel: {}, flags: {}, own: '', note: '', edit: -1 });
+    Object.assign(CU, { title: '', price: '', sum: '', qty: 1, cost: '', drv: 'price' }); Object.assign(DR, { open: false, name: '', phone: '', note: '', files: [] });
+    rr(); A.toast('Новый расчёт: корзина и поля очищены');
+  };
   A.act.cocancel = () => { O.open = false; rr(); };
   const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', vf: it.vf ? Object.assign(VF0(), it.vf) : null, sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
     F.mode = 'blinds'; Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), auto: Object.assign({ drive: '', remote: '' }, it.auto), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
