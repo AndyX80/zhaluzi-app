@@ -164,7 +164,7 @@
   const years = () => { const y = {}; D.orders.forEach(o => { if (/^\d{4}/.test(o.created || '')) y[o.created.slice(0, 4)] = 1; }); return Object.keys(y).sort().reverse(); };
 
   /* ===== табличный вид: как в Excel, столбцы на выбор, фильтры по каждому ===== */
-  const cn = o => o.name || (A.client(o.client) || {}).name || '', cph = o => o.phone || (A.client(o.client) || {}).phone || '';
+  const cn = o => { const n = o.name || (A.client(o.client) || {}).name || ''; return n === 'Без имени' ? '' : n; }, /* имя не указано: пустая ячейка */ cph = o => o.phone || (A.client(o.client) || {}).phone || '';
   const itemTxt = o => { if (o.itemsTxt) return o.itemsTxt; const u = {}; (o.items || []).forEach(i => { u[i.kind ? (i.title || 'Услуга') : i.prod ? 'Рулонные шторы' : [i.sup, i.mat, i.lam ? i.lam + ' мм' : ''].filter(Boolean).join(' ')] = 1; }); return Object.keys(u).join('; '); };
   const COLS = [
     { k: 'no', l: 'Номер', t: 'n', v: o => +o.no || 0, f: o => o.no },
