@@ -347,7 +347,7 @@
   function addItem(item) { C.cart.push(item); save(); }
   function replaceItem(i, item) { C.cart[i] = item; save(); }
   const snapshot = () => JSON.parse(JSON.stringify({ cart: C.cart, service: C.service, region: C.region, pvz: C.pvz, disc: C.disc, fixTotal: C.fixTotal, discMode: C.discMode, needDog: C.needDog }));
-  function restore(snap, no) { Object.assign(C, { region: false, pvz: '' }, JSON.parse(JSON.stringify(snap)), { editNo: no || null, cf: null, undoItem: null }); save(); }
+  function restore(snap, no) { Object.assign(C, { service: 0, region: false, pvz: '', disc: '', fixTotal: '', discMode: 'pct', needDog: true }, JSON.parse(JSON.stringify(snap)), { editNo: no || null, cf: null, undoItem: null }); save(); }
   function clear() { C.editNo = null; C.cart = []; C.service = 0; C.pvz = ''; C.disc = ''; C.fixTotal = ''; save(); }
 
   const setRegion = on => { C.region = !!on; save(); rerender(); };
