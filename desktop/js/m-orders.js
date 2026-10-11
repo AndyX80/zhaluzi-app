@@ -1,3 +1,6 @@
+  /* правится всё: по умолчанию тип поля берётся из типа столбца, так что новые столбцы тоже редактируются; ro = только чтение */
+  const ED = { inst: { ed: 'bool' }, claim: { ed: 'bool' }, stage: { ed: 'sel' }, zone: { ed: 'sel' }, cat: { ed: 'list' }, sup: { ed: 'list' }, src: { ed: 'list' } };
+  const edOf = c => c.ro ? null : ED[c.k] || { ed: { n: 'num', d: 'date', t: 'text', s: 'list' }[c.t] || 'text' };
 /* Заказы: центральный объект. Список, канбан, карточка с воронкой, вкладки. */
 (function () {
   const A = App, D = A.D, S = A.S, e = A.esc, m = A.money;
@@ -162,7 +165,7 @@
 
   /* ===== табличный вид: как в Excel, столбцы на выбор, фильтры по каждому ===== */
   const cn = o => o.name || (A.client(o.client) || {}).name || '', cph = o => o.phone || (A.client(o.client) || {}).phone || '';
-  const itemTxt = o => { const u = {}; (o.items || []).forEach(i => { u[i.kind ? (i.title || 'Услуга') : i.prod ? 'Рулонные шторы' : [i.sup, i.mat, i.lam ? i.lam + ' мм' : ''].filter(Boolean).join(' ')] = 1; }); return Object.keys(u).join('; '); };
+  const itemTxt = o => { if (o.itemsTxt) return o.itemsTxt; const u = {}; (o.items || []).forEach(i => { u[i.kind ? (i.title || 'Услуга') : i.prod ? 'Рулонные шторы' : [i.sup, i.mat, i.lam ? i.lam + ' мм' : ''].filter(Boolean).join(' ')] = 1; }); return Object.keys(u).join('; '); };
   const COLS = [
     { k: 'no', l: 'Номер', t: 'n', v: o => +o.no || 0, f: o => o.no },
     { k: 'created', l: 'Дата', t: 'd', v: o => o.created || '', f: o => dmy(o.created) },
@@ -191,7 +194,7 @@
   const ED = { no: { ed: 'text', ph: 1 }, name: { ed: 'text', ph: 1 }, phone: { ed: 'text', ph: 1 }, created: { ed: 'date', ph: 1 }, cat: { ed: 'sel' }, sup: { ed: 'sel' }, src: { ed: 'sel' }, inst: { ed: 'bool', ph: 1 }, zone: { ed: 'sel' },
     sum: { ed: 'num' }, paid: { ed: 'num' }, cost: { ed: 'num' }, instCost: { ed: 'num' }, stage: { ed: 'sel', ph: 1 }, claim: { ed: 'bool', ph: 1 }, due: { ed: 'date' }, tk: { ed: 'text', ph: 1 }, factory: { ed: 'text' }, review: { ed: 'text' } };
   const PHST = ['Черновик', 'КП отправлено', 'Договор', 'Оплачен'];
-  const canEdit = (o, c) => { const x = ED[c.k]; return !!x && (o.ph ? !!x.ph : !!o.legacy); };
+  const canEdit = (o, c) => !!edOf(c) && !!(o.ph || o.legacy);
   const optsOf = (o, c) => {
     if (c.k === 'stage') return o.ph ? PHST.map(v => [v, v]) : D.STAGES.map((v, i) => [String(i), v]).filter(x => +x[0] >= 3);
     if (c.k === 'zone') return [['СПб', 'СПб'], ['Регионы', 'Регионы']];
@@ -203,12 +206,22 @@
     if (o.ph) {
       const r = DB.raw().find(x => x.uid === o.uid); if (!r) return;
       if (k === 'no') { const res = DB.setNo(o.uid, v); if (!res.ok) A.toast(res.msg); else A.S.selOrder = 'ph' + o.uid; return; }
-      const P = { name: r.company ? { company: v } : { name: v }, phone: { phone: v }, created: { created: v }, tk: { note: v }, inst: { install: v === 'да' }, claim: { claim: v === 'да' }, stage: { status: v } }[k];
-      if (P) DB.patchRec(o.uid, P); return;
+      const P = { name: r.company ? { company: v } : { name: v }, phone: { phone: v }, created: { created: v }, tk: { note: v }, inst: { install: v === 'да' }, claim: { claim: v === 'да' }, stage: { status: v }, zone: { region: v === 'Регионы' } }[k];
+      if (P) { DB.patchRec(o.uid, P); return; }
+      const ov = Object.assign({}, r.ov || {}), nums = { sum: 1, paid: 1, cost: 1, instCost: 1 };
+      if (k === 'instCost') { DB.patchRec(o.uid, { instCost: v === '' ? '' : numv(v) }); return; }
+      if (k === 'debt') ov.paid = Math.max(0, o.sum - numv(v));
+      else if (k === 'profit') ov.cost = Math.max(0, o.sum - (+o.instCost || 0) - numv(v));
+      else if (k === 'items') ov.itemsTxt = v;
+      else ov[k] = nums[k] ? numv(v) : v;
+      DB.patchRec(o.uid, { ov }); return;
     }
     if (k === 'stage') { const n = +v; o.fl = o.fl || {}; ['work', 'sup', 'sent', 'got', 'zp', 'closed'].forEach((f, i) => { o.fl[f] = n >= i + 4; }); o.stage = DB.stageOf(o.fl); }
     else if (k === 'inst' || k === 'claim') o[k] = v === 'да';
     else if (k === 'sum' || k === 'paid' || k === 'cost' || k === 'instCost') o[k] = numv(v);
+    else if (k === 'debt') o.paid = Math.max(0, (+o.sum || 0) - numv(v));
+    else if (k === 'profit') o.cost = Math.max(0, (+o.sum || 0) - (o.instCost != null ? +o.instCost || 0 : (o.inst ? Math.round((+o.sum || 0) * 0.12) : 0)) - numv(v));
+    else if (k === 'items') o.itemsTxt = v;
     else { o[k] = v; if (k === 'cat' || k === 'sup') o.title = (o.cat || '') + (o.sup ? ' · ' + o.sup : ''); }
     DB.commit(o); if (k === 'name' || k === 'phone') DB.derive();
   }
@@ -246,7 +259,7 @@
   A.render = function () { const r = r0.apply(this, arguments); const t = document.querySelector('.tscroll'); if (t) t.scrollTop = TPOS == null || TPOS === 'end' ? t.scrollHeight : TPOS; return r; };
   const TE = () => S.tedit || {};
   function cell(o, c) {
-    const x = ED[c.k], ok = canEdit(o, c), ed = ok && TE().id === o.id && TE().k === c.k; let base = (c.r ? 'r num' : '') + (c.wide ? ' tw' : '');
+    const x = edOf(c) || {}, ok = canEdit(o, c), ed = ok && TE().id === o.id && TE().k === c.k; let base = (c.r ? 'r num' : '') + (c.wide ? ' tw' : '');
     const debt = Math.max(0, (+o.sum || 0) - (+o.paid || 0)) > 0 && !closed(o), red = debt && (c.k === 'debt' || (c.k === 'sum' && tcols().indexOf('debt') < 0)) ? ' cdbt' : '';
     base += red;
     if (!ok) return '<td class="' + base + '" title="' + (c.wide ? e(c.f(o)) : '') + '">' + e(c.f(o)) + '</td>';
@@ -255,6 +268,7 @@
     let inner;
     if (x.ed === 'bool') inner = '<select class="in tf"' + at + '><option' + (raw === 'нет' ? ' selected' : '') + '>нет</option><option' + (raw === 'да' ? ' selected' : '') + '>да</option></select>';
     else if (x.ed === 'sel') { const cur = c.k === 'stage' ? (o.ph ? D.STAGES[o.stage] && PHST.find(p => p === o.status) : String(o.stage)) : raw; inner = '<select class="in tf"' + at + '>' + optsOf(o, c).map(v => '<option value="' + e(v[0]) + '"' + (String(v[0]) === String(c.k === 'stage' ? (o.ph ? o.status : o.stage) : raw) ? ' selected' : '') + '>' + e(v[1]) + '</option>').join('') + '</select>'; }
+    else if (x.ed === 'list') inner = '<input class="in tf" list="dl-' + c.k + '" value="' + e(raw) + '"' + at + '><datalist id="dl-' + c.k + '">' + optsOf(o, c).map(v => '<option value="' + e(v[0]) + '">').join('') + '</datalist>';
     else if (x.ed === 'date') inner = '<input class="in tf" type="date" value="' + e(raw) + '"' + at + '>';
     else inner = '<input class="in tf" value="' + e(x.ed === 'num' ? raw : raw) + '"' + at + '>';
     return '<td class="' + base + ' tedit">' + inner + '</td>';
