@@ -134,12 +134,13 @@
   /* просчёт = пока нет договора и предоплаты (черновик, КП отправлено) */
   const isDraftSt = st => !st || st === 'Черновик' || st === 'КП отправлено';
   function fromPhone(r) {
-    const ic = r.install === false || r.region ? { sum: 0, lines: [] } : DB.instCalc(r.cart), icSet = r.instCost !== undefined && r.instCost !== '' && r.instCost != null;
+    const noInst = r.install === false || r.region || (r.priced && !(+r.delivery > 0)); /* сумма доставки и установки 0 = монтажа нет (и для старых записей) */
+    const ic = noInst ? { sum: 0, lines: [] } : DB.instCalc(r.cart), icSet = r.instCost !== undefined && r.instCost !== '' && r.instCost != null;
     const items = r.items || [], goods = items.reduce((a, i) => a + (+i.price || 0), 0), prof = items.reduce((a, i) => a + (+i.profit || 0), 0);
     const sum = Math.max(0, goods + (r.priced ? 0 : (+r.delivery || 0)) - (+r.disc || 0)), cat = (it0 => it0 ? (/алюм/i.test(it0.mat || '') ? 'Горизонтальные' : /дерев|бамбук/i.test(it0.mat || it0.title || '') ? 'Дерево' : it0.mat === 'Вертикальные' ? 'Вертикальные' : it0.prod === 'rolo' ? 'Рулонные' : 'Разное') : 'Разное')(items.filter(i => !i.kind).sort((x, y) => (+y.price || 0) - (+x.price || 0))[0]); /* категория заказа по самой дорогой позиции */
     const sups = {}; items.forEach(i => { if (i.sup) sups[i.sup] = 1; });
     const o = { id: 'ph' + r.uid, no: r.no ? String(r.no) : 'Просчёт', cnote: r.cnote || '', draft: isDraftSt(r.status), rawNo: r.no ? String(r.no) : '', uid: r.uid, ph: true, pre: r.pre, preU: r.preU, term: r.term, meas: !!r.meas, _p2: r.phone2 || '', _e: r.email || '', sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: r.src || '', factory: r.factory || '',
-      inst: !!r.install, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: icSet ? +r.instCost : ic.sum, instAuto: ic.sum, instLines: ic.lines, instSet: icSet,
+      inst: !!r.install && !noInst, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: icSet ? +r.instCost : ic.sum, instAuto: ic.sum, instLines: ic.lines, instSet: icSet,
       created: (r.created || '').slice(0, 10), due: r.due || '', tk: r.tk != null ? r.tk : (r.note || ''), review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: !!r.claim, legacy: false, archived: !!r.archived,
       _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '', items, disc: +r.disc || 0, delivery: +r.delivery || 0, priced: !!r.priced, hasCart: !!(r.cart && r.cart.cart), supSent: !!r.supSent,
       needCost: Object.keys(items.filter(i => i.kind === 'custom' && !i.costOk && !(+i.cost > 0)).reduce((a, i) => { a[i.title || 'Услуга'] = 1; return a; }, {})) };    const ov = r.ov || {}; Object.keys(ov).forEach(k => { o[k] = ov[k]; }); /* ручные правки ячеек таблицы заказов поверх расчёта */
