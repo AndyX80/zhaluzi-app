@@ -298,7 +298,7 @@
     const E = window.Eng; if (!E || !E.ready) return '<div class="card ccart"><h2>Корзина</h2>' + noPrices() + '</div>';
     const C = JC().C, FF = JC().compute(), items = C.cart, hide = !S.showCost;
     let prof = 0; items.forEach((it, i) => { const c = FF.calcs[i]; if (c.ok) prof += c.profit * it.qty; });
-    const netProf = prof - FF.discAmt, cost = FF.goodsSum - prof, pct = C.discMode !== 'rub';
+    const shipCost = FF.ships.reduce((x, v, i) => x + (v || 0) * (+C.cart[i].qty || 1), 0), cost = FF.goodsSum - prof + shipCost, netProf = FF.netTotal - cost, /* закуп включает доставку производителя; монтаж и услуги в клиентской цене — выручка */ pct = C.discMode !== 'rub';
     const row = (it, i) => {
       const c = FF.calcs[i], nm = it.kind ? kindName(it, c) : { title: (it.prod === 'rolo' ? roloName(it, c) : itemName(it, c)).title, sub: mainSub(it, c) + (c.ok && c.termDays ? ' · срок ' + c.termDays + ' дн' : '') }, lineUnit = c.ok ? FF.lineSum[i] / it.qty : 0;
       const dw = JC().driveWarn(it), warn = (dw ? '<div class="cwarn">' + e(dw) + '</div>' : '') + (it.prod === 'rolo' && !c.ok ? '<div class="cwarn">' + e(c.msg || 'Нет цены') + '</div>' : c.ok && c.warn && c.warn.length ? '<div class="cwarn">' + (c.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + e(c.warn.join('; ')) + '</div>' : '');
