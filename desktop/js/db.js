@@ -102,11 +102,11 @@
     const o = Object.assign({}, r); o.id = 'o' + String(r.uid).slice(1); o._n = r.name; o._p = r.phone; delete o.name; delete o.phone; delete o.sat; delete o.upd; delete o.status; delete o.legacy;
     o.uid = r.uid; o.legacy = true; o.archived = !!r.archived; return o;
   }
-  /* расценки на монтаж (оплата монтажнику) по типам: редактируются в Настройках, хранятся на компьютере */
+  /* расценки на монтаж (оплата монтажнику) по типам: редактируются в Справочниках, хранятся на компьютере */
   DB.IRATES = [
     ['rolo_mini', 'Рулонки и зебра: MINI, UNI, ROLLA', 500, 'за шт'], ['rolo_mg', 'Рулонки и зебра: MG, MGS', 1500, 'за шт'], ['rolo_bnt', 'Рулонки и зебра: Бентин (BNT, кассеты)', 3000, 'за шт'], ['rolo_roof', 'Рулонки: Руф', 1500, 'за шт'],
-    ['vzh', 'Вертикальные жалюзи', 500, 'за 1 п.м ширины'], ['vzh_gr', 'Вертикальные жалюзи с грувером', 1000, 'за 1 п.м ширины'],
-    ['gj25', 'ГЖ 25 и 16 мм, дерево 25 мм (классические)', 500, 'за шт'], ['gj25s', 'ГЖ 25 и 16 мм со струной', 1000, 'за шт'], ['gj_cas', 'Кассетные ГЖ 16/25 (Венус)', 1000, 'за шт'], ['gj50', 'ГЖ 50 мм, дерево 50 мм', 3000, 'за шт'],
+    ['vzh', 'Вертикальные жалюзи', 500, 'за 1 п.м ширины'], ['vzh_gr', 'Вертикальные жалюзи с грувером (вместо обычной)', 1000, 'за 1 п.м ширины'],
+    ['w25', 'Дерево 25 мм (ГЖ)', 1200, 'за шт'], ['gj50', 'Дерево 50 мм (ГЖ)', 3000, 'за шт'], ['gj25', 'ГЖ алюминий 25 и 16 мм (классические)', 500, 'за шт'], ['gj_cas', 'Кассетные ГЖ 16/25 (Венус)', 1000, 'за шт'], ['gj_str', 'Струна (боковая фиксация), доплата', 500, 'за шт'],
     ['pl', 'Плиссе обычные', 1000, 'за шт'], ['pl_a', 'Плиссе малые с автоматикой', 2000, 'за шт'], ['pl_max', 'Плиссе Макс', 3000, 'за шт'], ['pl_max_a', 'Плиссе Макс с автоматикой', 5000, 'за шт'],
     ['rim', 'Римские шторы', 3000, 'за шт'], ['rim_a', 'Римские шторы с автоматикой', 5000, 'за шт'], ['mir', 'Мираж', 3000, 'за шт'], ['mir_a', 'Мираж с автоматикой', 5000, 'за шт']];
   const irGet = () => { try { return JSON.parse(lsGet('jald_irates') || '{}') || {}; } catch (e) { return {}; } };
@@ -119,10 +119,14 @@
     const add = (name, rate, n, per) => { const v = Math.round(rate * n); sum += v; lines.push(name + ': ' + (per ? n.toFixed(2).replace(/\.?0+$/, '') + ' м × ' : n + ' × ') + rate + ' = ' + v); };
     cart.forEach(it => { if (it.kind) return; const q = +it.qty || 1;
       if (it.prod === 'rolo') {
-        if (it.mat === 'Вертикальные') add('ВЖ', DB.irate('vzh'), (+it.w || 0) / 1000 * q, 1);
+        if (it.mat === 'Вертикальные') { const gr = it.flags && it.flags['Грувер']; add(gr ? 'ВЖ с грувером' : 'ВЖ', DB.irate(gr ? 'vzh_gr' : 'vzh'), (+it.w || 0) / 1000 * q, 1); }
         else { const sy = String(it.sys || ''), k = /^(Z-)?(MINI|UNI|ROLLA)/.test(sy) ? 'rolo_mini' : /^(MG|Z-MGS)/.test(sy) ? 'rolo_mg' : 'rolo_bnt'; add(DB.IRATES.find(x => x[0] === k)[1].replace(/^Рулонки и зебра: /, ''), DB.irate(k), q); }
-      } else if (+it.lam === 50) add('ГЖ/дерево 50 мм', DB.irate('gj50'), q);
-      else if (+it.lam === 25) add('ГЖ/дерево 25 мм', DB.irate('gj25'), q);
+      } else {
+        const al = /алюм/i.test(String(it.mat || ''));
+        if (+it.lam === 50) add('Дерево 50 мм', DB.irate('gj50'), q);
+        else if (+it.lam === 25) al ? add('ГЖ алюминий 25 мм', DB.irate('gj25'), q) : add('Дерево 25 мм', DB.irate('w25'), q);
+        if (it.fix === 'Струна' && (+it.lam === 25 || +it.lam === 50)) add('Струна (доплата)', DB.irate('gj_str'), q);
+      }
     });
     return { sum, lines };
   };

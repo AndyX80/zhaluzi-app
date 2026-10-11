@@ -65,7 +65,7 @@
         (sh['Верт_опции'] || []).slice(1).forEach(o => {
           if (!o[0] || (o[5] && String(o[5]).split(',').map(x => x.trim()).indexOf(t) < 0)) return;
           if (o[1] === 'флаг' && !num(o[4], 0) && !String(o[3] || '')) return;
-          const nm = String(o[0]); og.order.push(nm);
+          const nm = /^декоративный карниз$/i.test(String(o[0]).trim()) ? 'Грувер' : String(o[0]); og.order.push(nm);
           og.groups[nm] = { name: nm, type: 'flag', ord: og.order.length, items: [{ value: nm, usd: num(o[4], 0), unit: String(o[3] || ''), def: false }], i: og.order.length };
         });
       });
