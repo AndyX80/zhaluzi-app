@@ -40,7 +40,7 @@
     });
     if (has2) sh2.slice(1).forEach(r => {
       if (!r[0] || !r[3]) return;
-      const sec = r[0], usd = Number(r[5]) || 0, cur = r[6] === '₽' ? 1 : rate, K = Number(r[7]) || 1.65, cost = Math.round(usd * (1 - dis) * cur), price = ceil100(cost * K);
+      const sec = r[0], usd = Number(r[5]) || 0, cur = r[6] === '₽' ? 1 : rate, K = Number(r[7]) || 1.65, cost = Math.round(r[6] === '₽' ? usd : usd * (1 - dis) * cur) /* рублёвая цена — фиксированный закуп без скидки */, price = ceil100(cost * K);
       const nm = String(r[3]).trim(), kind = sec === 'Моторизация' ? 'drive' : 'remote', sub = String(r[4] || '').trim();
       const pk = kind === 'remote' && /^(Пульт|Радиовыключатель|Выключатель)/.test(nm) && !/Только для/.test(sub);
       add('Amigo', kind, { key: nm, name: nm.replace(/^Комплект электрики Amigo /, 'Комплект '), sub, cost, price, lam: Number(r[8]) || 0, line: '', sec, t: r[1] || '', grp: r[2] || '', pk, hid: false });
