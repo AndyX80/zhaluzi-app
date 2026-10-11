@@ -24,7 +24,7 @@
   function setSheets(sheets) {
     AUTO = {};
     const add = (sup, kind, o) => ((AUTO[sup] = AUTO[sup] || { drive: [], remote: [] })[kind]).push(o);
-    const am = ((sheets['Автоматика параметры'] || []).find(r => r[0] === 'Amigo')) || [], rate = Number(am[1]) || 1, dis = Number(am[2]) || 0;
+    const am = ((sheets['Автоматика параметры'] || []).find(r => r[0] === 'Amigo')) || [], rate = Number(am[1]) || Number(((sheets['Параметры'] || []).find(r => r[0] === 'курс_usd') || [])[1]) || 85, dis = am.length ? Number(am[2]) || 0 : 0.28;
     const sh2 = sheets['Автоматика_Амиго'], has2 = !!(sh2 && sh2.length > 1);
     const sh = sheets['Автоматика'];
     if (sh && sh.length > 1) sh.slice(1).forEach(r => {
