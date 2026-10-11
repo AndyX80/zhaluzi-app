@@ -5,12 +5,13 @@
   'use strict';
   const ceilTo = (x, s) => Math.ceil(x / s - 1e-9) * s;
   const SUP = 'Amigo';
-  let P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {}, VP = {}, VT = {};
+  let P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {}, VP = {}, VT = {}, GT = {}, GP = {};
+  const numC = (v, d) => v === '' || v == null || isNaN(Number(String(v).replace(',', '.'))) ? d : Number(String(v).replace(',', '.'));
 
   const unitOf = u => (u === 'м_шир' || u === 'м_выс' || u === 'м_шов' || u === 'м_цепь') ? u : 'изд';
 
   function setSheets(sh) {
-    ready = false; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {}; VP = {}; VT = {};
+    ready = false; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {}; VP = {}; VT = {}; GT = {}; GP = {};
     if (!sh || !sh['Рулонки_системы'] || !sh['Рулонки_параметры']) return;
     sh['Рулонки_параметры'].slice(1).forEach(r => { if (r[0]) P[r[0]] = r[1]; });
     const par = sh['Параметры'] || []; par.forEach(r => { if (r[0] === 'курс_usd') FX = Number(r[1]) || FX; });
@@ -84,6 +85,27 @@
         if (!b) Object.keys(ser).forEach(k => { const o = ser[k]; if (o.vt === t && (ye(nm) === ye(o.name) || ye(nm).indexOf(ye(o.name) + ' ') === 0) && (!b || o.name.length > b.name.length)) b = o; });
         if (!b) return;
         const v = String(r[8] || 'png'), f = { z: false, m: 'vert', vt: t, key: String(r[0]), name: String(r[2]), ser: b.name, cat: b.cat, usd: b.usd, line: b.line, dens: b.dens, roll: 0, prodW: 0, stock: r[6] === '' || r[6] == null ? null : Number(r[6]), qty: r[7] === '' || r[7] == null ? null : Number(r[7]), img: v.charAt(0) === '/' ? v : '/storage-new/materials/' + (VP['фото_папка'] || 'vertical') + '/' + String(r[0]) + '.' + v.replace(/^\./, ''), maxs: '', wgrp: '', wet: '', coll: '' };
+        FAB.push(f); FAB_BY[f.key] = f;
+      });
+    }
+    /* горизонтальные алюминиевые жалюзи Амиго: листы «ГЖА_типы», «ГЖА_ленты», «ГЖА_опции», «ГЖА_параметры» */
+    if (sh['ГЖА_типы'] && sh['ГЖА_ленты']) {
+      (sh['ГЖА_параметры'] || []).slice(1).forEach(r => { if (r[0]) GP[String(r[0])] = numC(r[1], 0); });
+      sh['ГЖА_типы'].slice(1).forEach(r => {
+        if (!r[0]) return;
+        const t = String(r[0]); GT[t] = { wmin: numC(r[2], 0), wmax: numC(r[3], 0), hmin: numC(r[4], 0), hmax: numC(r[5], 0), amax: numC(r[6], 0) };
+        SYS.push({ code: 'A-' + t, name: String(r[1] || t), group: 'Горизонтальные алюминиевые', grid: '', term: numC(r[9], 1), mk: numC(r[7], 2), profit: numC(r[8], 1000), note: '', model: 'gja', vt: t });
+        const og = OPT['A-' + t] = { order: [], groups: {} };
+        (sh['ГЖА_опции'] || []).slice(1).forEach(o => {
+          if (!o[0] || (o[5] && String(o[5]).split(',').map(x => x.trim()).indexOf(t) < 0)) return;
+          const nm = String(o[0]).trim(), ch = String(o[1]) === 'выбор';
+          let g = og.groups[nm]; if (!g) { g = og.groups[nm] = { name: nm, type: ch ? 'choice' : 'flag', ord: og.order.length + 1, items: [], i: og.order.length }; og.order.push(nm); }
+          g.items.push({ value: ch ? String(o[2]) : nm, usd: numC(o[3], 0), unit: String(o[4] || ''), def: ch && !g.items.length });
+        });
+      });
+      sh['ГЖА_ленты'].slice(1).forEach(r => {
+        const t = String(r[0]); if (!r[1] || !GT[t]) return;
+        const f = { z: false, m: 'gja', vt: t, key: 'A|' + t + '|' + r[1], name: String(r[2] || r[1]), ser: (SYS.find(x => x.code === 'A-' + t) || {}).name || t, cat: '', usd: numC(r[3], 0), perf: /^да/i.test(String(r[4] || '')), roll: 0, prodW: 0, stock: r[6] === '' || r[6] == null ? null : Number(r[6]), qty: r[7] === '' || r[7] == null ? null : numC(r[7], null), img: String(r[5] || ''), maxs: '', wgrp: '', wet: '', coll: '' };
         FAB.push(f); FAB_BY[f.key] = f;
       });
     }
@@ -273,12 +295,41 @@
     return out;
   }
 
+  /* горизонтальные алюминиевые жалюзи: цена ленты за кв. м (минимум 1 м²), скидка Амиго из «ГЖА_параметры», опции из «ГЖА_опции» */
+  function calcGja(it, s, f, W, H, out) {
+    const T = GT[s.vt];
+    if (!f) { out.needFab = true; out.msg = 'Выберите ленту'; return out; }
+    if (!(W > 0 && H > 0)) { out.msg = 'Введите размеры'; return out; }
+    const w = W / 10, h = H / 10, bad = m => { out.msg = m; out.warn.hard = true; return out; };
+    if (T.wmin && w < T.wmin) return bad('ширина меньше минимальной (' + T.wmin + ' см)');
+    if (T.wmax && w > T.wmax) return bad('ширина больше максимальной (' + T.wmax + ' см)');
+    if (T.hmin && h < T.hmin) return bad('высота меньше минимальной (' + T.hmin + ' см)');
+    if (T.hmax && h > T.hmax) return bad('высота больше максимальной (' + T.hmax + ' см)');
+    const area = W * H / 1e6;
+    if (T.amax && area > T.amax + 1e-9) return bad('площадь больше максимальной (' + T.amax + ' м²)');
+    const minA = GP['мин_площадь_м2'] || 1, calcA = Math.max(area, minA), step = GP['округление'] || 100;
+    const disc = GP['скидка'] != null ? GP['скидка'] : 0.4, k = (1 - disc) * FX;
+    const baseUsd = calcA * f.usd, o = opts(it), optUsd = {};
+    groupsOf(s.code).forEach(g => {
+      const pick = g.type === 'flag' ? (o.flags[g.name] ? g.items[0] : null) : g.items.find(x => x.value === o.sel[g.name]);
+      if (!pick || !pick.usd) return;
+      optUsd[g.type === 'flag' ? g.name : pick.value] = /кв/.test(pick.unit) ? pick.usd * calcA : pick.usd;
+    });
+    const base = Math.round(baseUsd * k), optCost = {}, optP = {};
+    let cost = base;
+    Object.keys(optUsd).forEach(n => { optCost[n] = Math.round(optUsd[n] * k); optP[n] = Math.ceil(optUsd[n] * k * s.mk / step - 1e-9) * step; cost += optCost[n]; });
+    const baseRetail = ceilTo(base * s.mk, step), addSum = Object.keys(optP).reduce((a, n) => a + optP[n], 0), unit = baseRetail + addSum;
+    Object.assign(out, { ok: true, unit, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, areaNote: 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : ''), usd: baseUsd });
+    return out;
+  }
+
   function calc(it) {
     const out = { ok: false, warn: [], msg: '' };
     if (!ready) { out.msg = 'Цены на рулонки не загружены (листы «Рулонки_…» в таблице)'; return out; }
     const s = sysOf(it.sys), f = fabOf(it.fab), W = Number(it.w) || 0, H = Number(it.h) || 0;
     if (!s) { out.msg = 'Выберите систему'; return out; }
     if (s.model === 'vert') return calcVert(it, s, f, W, H, out);
+    if (s.model === 'gja') return calcGja(it, s, f, W, H, out);
     if (!f) { out.needFab = true; out.msg = 'Выберите ткань'; return out; }
     if (!(W > 0 && H > 0)) { out.msg = 'Введите размеры'; return out; }
     const fit = tubeFit(it);
@@ -332,6 +383,12 @@
       if (g.type === 'flag') { if (o.flags[g.name] && !(it.vf && /^(металлическая фурнитура|прозрачная комплектация)$/.test(g.name.toLowerCase()))) parts.push(g.name.toLowerCase()); return; }
       const d = g.items.find(x => x.def) || g.items[0]; if (o.sel[g.name] !== d.value) parts.push(g.name.toLowerCase() + ': ' + o.sel[g.name].toLowerCase());
     });
+    if (s && s.model === 'gja') {
+      const v = it.vf || {}, ln = v.len || (Number(it.h) > 0 ? Math.round(Number(it.h) * 0.75) : 0), a = [];
+      if (v.side) a.push('управление ' + (v.side === 'R' ? 'правое' : 'левое'));
+      if (ln) a.push('длина упр. ' + ln + ' мм');
+      return { title: 'Алюминиевые жалюзи ' + s.name, sub: (f ? 'лента ' + f.name : 'лента не выбрана') + (a.length ? ' · ' + a.join(', ') : '') + (parts.length ? ' · ' + parts.join(', ') : '') };
+    }
     const fc = o.sel['Цвет фурнитуры'];
     return { title: s && s.model === 'vert' ? 'Вертикальные жалюзи ' + s.name.toLowerCase() : (s && s.model === 'zebra' ? 'Штора зебра' : 'Рулонная штора') + (s ? ' ' + s.name : ''), sub: s && s.model === 'vert' ? (f ? f.name + ' · ' : '') + 'ламель 89 мм' + vfTxt(it) + (parts.length ? ' · ' + parts.join(', ') : '') : (f ? 'ткань ' + f.name : 'ткань не выбрана') + (fc ? ' · фурнитура ' + fc.toLowerCase() : '') + ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева') + (parts.length ? ' · ' + parts.join(', ') : '') };
   }
