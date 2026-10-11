@@ -193,6 +193,7 @@
   function normRolo() {
     const J = RJ(), sy = J.systems(RM()); if (!sy.some(x => x.code === R.sys)) R.sys = sy.length ? sy[0].code : '';
     { const fb = R.fab && J.fabOf(R.fab), sv = J.sysOf(R.sys); if (R.fab && (!fb || (fb.m || (fb.z ? 'zebra' : 'rolo')) !== RM() || (VG() && sv && fb.vt !== sv.vt))) R.fab = ''; }
+    if (R.g) { const sv = J.sysOf(R.sys), RZ = 'Разведенное управление'; R.tch = R.tch || {}; if (!R.tch[RZ] && sv && sv.vt !== '50') R.flags = Object.assign({}, R.flags, { [RZ]: +R.w > 0 && +R.w < 435 }); } /* до 435 мм по умолчанию разведённое, пока не тронули вручную */
     const o = J.opts(roloItem()); R.sel = o.sel; R.flags = o.flags;
     const r = J.calc(roloItem()); if (r.tubeSel) R.sel['Труба'] = r.tubeSel;
     return { it: roloItem(), r, groups: J.groups(R.sys) };
@@ -416,19 +417,19 @@
       else if (cur.matches && cur.matches('[data-a=cauto]') && !F.autoOpen) { F.autoOpen = true; rr(); }
     }, 0);
   });
-  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo' || v === 'zebra' || v === 'vert' || v === 'gja') { const m = v === 'zebra' || v === 'vert' || v === 'rolo' || v === 'gja' ? v : ''; if (m) { if (RM() !== m) { R.sys = ''; R.fab = ''; R.sel = {}; R.flags = {}; R.vf = null; } R.z = m === 'zebra'; R.v = m === 'vert'; R.g = m === 'gja'; } F.mode = m ? 'rolo' : v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); if ((m === 'zebra' && !RJ().systems(true).length) || (m === 'vert' && !RJ().systems('vert').length) || (m === 'gja' && !RJ().systems('gja').length)) A.act.cprices(); } };
+  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo' || v === 'zebra' || v === 'vert' || v === 'gja') { const m = v === 'zebra' || v === 'vert' || v === 'rolo' || v === 'gja' ? v : ''; if (m) { if (RM() !== m) { R.sys = ''; R.fab = ''; R.sel = {}; R.flags = {}; R.vf = null; R.tch = {}; } R.z = m === 'zebra'; R.v = m === 'vert'; R.g = m === 'gja'; } F.mode = m ? 'rolo' : v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); if ((m === 'zebra' && !RJ().systems(true).length) || (m === 'vert' && !RJ().systems('vert').length) || (m === 'gja' && !RJ().systems('gja').length)) A.act.cprices(); } };
   A.fld.ctype = v => { const p = String(v).split('|'); F.mat = p[0]; F.lam = +p[1]; F.color = ''; F.colOpen = false; rr(); };
   /* при смене поставщика тип, управление, фиксация и опции сохраняются, если он их поддерживает (иначе norm подставит допустимое) */
   A.fld.csup = v => { F.sup = v; F.colOpen = false; F.auto = { drive: '', remote: '' }; rr(); };
   A.fld.cau = (v, el) => { F.auto = Object.assign({ drive: '', remote: '' }, F.auto, { [el.dataset.k]: v }); rr(); };
   A.fld.cfix = v => { F.fix = v; rr(); };
-  A.fld.rsys = v => { R.sys = v; R.sel = {}; R.flags = {}; R.tubeLock = false; rr(); };
+  A.fld.rsys = v => { R.sys = v; R.sel = {}; R.flags = {}; R.tch = {}; R.tubeLock = false; rr(); };
   A.fld.rf = (v, el) => { const k = el.dataset.k; R[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
   A.fld.vf = (v, el) => { R.vf = Object.assign(VF0(), R.vf || {}); R.vf[el.dataset.k] = v; rr(); };
   A.act.rf = el => { R[el.dataset.k] = el.dataset.v; rr(); };
   A.fld.ropt = (v, el) => { R.sel[el.dataset.k] = v; if (el.dataset.k === 'Труба') R.tubeLock = true; rr(); };
   A.act.rphoto = () => { R.photo = !R.photo; rr(); };
-  A.act.rflag = el => { R.flags[el.dataset.v] = !R.flags[el.dataset.v]; rr(); };
+  A.act.rflag = el => { R.flags[el.dataset.v] = !R.flags[el.dataset.v]; (R.tch = R.tch || {})[el.dataset.v] = true; rr(); };
   A.act.rqty = el => { R.qty = Math.max(1, Math.min(99, (+R.qty || 1) + (+el.dataset.d))); rr(); };
   A.act.cqty = el => { F.qty = Math.max(1, Math.min(99, (+F.qty || 1) + (+el.dataset.d))); rr(); };
   A.act.cdraft = () => {
@@ -486,7 +487,7 @@
     rr(); A.toast('Новый расчёт: корзина и поля очищены');
   };
   A.act.cocancel = () => { if (O.req) O.kept = true; O.req = false; O.open = false; rr(); };
-  const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), g: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'gja'), sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', vf: it.vf ? Object.assign(VF0(), it.vf) : null, sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
+  const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), g: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'gja'), sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', vf: it.vf ? Object.assign(VF0(), it.vf) : null, sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), tch: { 'Разведенное управление': true }, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
     F.mode = 'blinds'; Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), auto: Object.assign({ drive: '', remote: '' }, it.auto), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
   const cuSync = () => { document.querySelectorAll('.cuadd [data-k]').forEach(el => { const k = el.dataset.k; if (k !== 'title' && document.activeElement !== el) el.value = CU[k]; }); };
   A.fld.cuf = (v, el) => {
@@ -531,7 +532,7 @@
       const own = R.own !== '' && !isNaN(+R.own) && +R.own >= 0 ? Math.round(+R.own) : '';
       const item = Object.assign(roloItem(), { qty: Math.max(1, +R.qty || 1), own, note: R.note, sel: Object.assign({}, R.sel), flags: Object.assign({}, R.flags) });
       if (R.edit >= 0) JC().replaceItem(R.edit, item); else JC().addItem(item);
-      Object.assign(R, { qty: 1, own: '', note: '', edit: -1 }); A.toast('Добавлено в корзину'); rr(); return;
+      Object.assign(R, { qty: 1, own: '', note: '', edit: -1, tch: {} }); A.toast('Добавлено в корзину'); rr(); return;
     }
     const n = norm(); if (!n.r.ok) { A.toast(n.r.needColor ? 'Выбери цвет' : (n.r.msg || 'Введи размеры')); return; }
     const own = F.own !== '' && !isNaN(+F.own) && +F.own >= 0 ? Math.round(+F.own) : '';
