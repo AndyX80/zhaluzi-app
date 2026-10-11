@@ -316,7 +316,7 @@
       '<div class="cdisc"><label title="Со знаком минус — наценка">Скидка</label><div class="seg"><button class="' + (pct ? 'on' : '') + '" data-a="cdm" data-v="pct">%</button><button class="' + (!pct ? 'on' : '') + '" data-a="cdm" data-v="rub">₽</button></div><input class="ul num" type="number" style="width:72px" value="' + (C.disc || '') + '" data-c="cdisc" placeholder="0" title="Скидка; значение со знаком минус = наценка"' + (FF.fixed ? ' disabled' : '') + '><label title="Итоговая стоимость заказа, заданная вручную. Главнее скидки">Итог, ₽</label><input class="ul num" type="number" style="width:110px' + (FF.fixed ? ';font-weight:700' : '') + '" value="' + (C.fixTotal || '') + '" data-c="cfixt" placeholder="свой итог" title="Впиши итоговую сумму заказа: она станет главной, скидка отключится"></div></div>' + (FF.fixed ? '<div class="fixwarn"><svg width="18" height="16" viewBox="0 0 18 16" aria-hidden="true"><path d="M9 1.2 17 14.8H1z" fill="none" stroke="#d9381e" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 6v4.2" stroke="#d9381e" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="12.3" r="1" fill="#d9381e"/></svg><span>Стоимость задана менеджером, не расчётная: по прайсу ' + m(FF.total) + ', в заказ идёт ' + m(FF.netTotal) + ' (' + (FF.discAmt > 0 ? 'ниже расчёта на ' : 'выше расчёта на ') + m(Math.abs(FF.discAmt)) + ')</span></div>' : '') +
       '<div class="sumbar" style="grid-template-columns:repeat(' + (hide ? 2 : 4) + ',1fr)"><div><small>Сумма без скидки</small><b>' + m(FF.total) + '</b></div><div><small>Итого' + (FF.discAmt ? (FF.discAmt > 0 ? ' (скидка −' : ' (наценка +') + m(Math.abs(FF.discAmt)) + ')' : '') + '</small><b style="color:var(--acc)">' + m(FF.netTotal) + '</b></div>' +
       (hide ? '' : '<div><small>Закуп (оценка)</small><b>' + m(Math.max(0, cost)) + '</b></div><div><small>Прибыль</small><b' + (netProf < 0 ? ' style="color:var(--bad)"' : '') + '>' + m(netProf) + '</b></div>') + '</div>' +
-      '<div class="cacts"><button class="btn pri" data-a="cord">' + (C.editNo ? 'Сохранить в ' + eno() : 'Оформить заказ') + '</button><button class="btn" data-a="cdraft">Сохранить как просчёт</button>' + (C.editNo && (rec0 => rec0 && (rec0.status === 'Черновик' || rec0.status === 'КП отправлено'))(DB.byKey(C.editNo)) ? '<button class="btn" data-a="ctoorder">Перевести в заказ</button>' : '') + '<button class="btn" data-a="cclear">Без сохранения</button></div></div></div>' +
+      '<div class="cacts"><button class="btn pri" data-a="cord">' + (C.editNo ? 'Сохранить в ' + eno() : 'Оформить заказ') + '</button><button class="btn" data-a="creq" title="Клиент, телефон, адрес, предоплата, срок: заполни и вернись в расчёт">Реквизиты заказчика</button><button class="btn" data-a="cdraft">Сохранить как просчёт</button>' + (C.editNo && (rec0 => rec0 && (rec0.status === 'Черновик' || rec0.status === 'КП отправлено'))(DB.byKey(C.editNo)) ? '<button class="btn" data-a="ctoorder">Перевести в заказ</button>' : '') + '<button class="btn" data-a="cclear">Без сохранения</button></div></div></div>' +
       (O.open ? checkout() : '') + (DR.open ? draftModal() : '');
   }
   /* форма «Сохранить как просчёт»: ФИО, телефон, примечание и фото (всё необязательно), чтобы потом узнать расчёт */
@@ -338,7 +338,7 @@
   /* оформление: окно по центру экрана, три шага: клиент, условия, документы и отправка */
   A.calcO = () => O;
   const eno = () => { const r = DB.byKey(JC().C.editNo); return r && r.no ? 'заказ № ' + r.no : 'просчёт'; }, cap = t => e(t.charAt(0).toUpperCase() + t.slice(1));
-  const resetO = () => { Object.assign(O, O0(), { inst: !JC().C.region, term: termDefault() }); };
+  const resetO = () => { Object.assign(O, O0(), { inst: !JC().C.region, term: termDefault(), kept: false, req: false }); };
   const STEPS = ['Клиент', 'Условия', 'Документы'];
   function checkout() {
     const C = JC().C, q = O.q.trim().toLowerCase(), D = A.D, edit = !!C.editNo && !O.fresh, st = edit ? 1 : O.step, svc = !C.region && (+C.service || 0) > 0; const smOn = O.selfMeas == null ? !(svc || (!C.region && O.inst)) : !!O.selfMeas;
@@ -363,11 +363,11 @@
       b = '<div class="mdocs"><button class="btn" data-a="cdoc" data-fn="kpHtml">КП</button><button class="btn" data-a="cdoc" data-fn="kpVarHtml">КП три варианта</button><button class="btn" data-a="codoc" data-fn="zamernikHtml">Замерник</button><button class="btn" data-a="codoc" data-fn="dogovorHtml">Договор</button></div>' +
         '<div class="fld" style="margin-top:18px"><label>Отправить клиенту КП</label><div class="chs"><button class="btn" data-a="csend" data-ch="wa">WhatsApp</button><button class="btn" data-a="csend" data-ch="tg">Telegram</button><button class="btn" data-a="csend" data-ch="mail">Почта</button></div></div>';
     }
-    return '<div class="mback" data-a="cocancel"></div><div class="modal"><div class="mhead"><h2>' + (C.editNo && !O.fresh ? cap(eno()) : 'Оформление заказа') + '</h2><span class="sp"></span><button class="ib" data-a="cocancel" title="Закрыть">' + A.icon('close', 18) + '</button></div>' +
-      (edit ? '' : '<div class="mtabs">' + STEPS.map((t, i) => '<button class="' + (st === i ? 'on' : '') + '" data-a="costep" data-v="' + i + '">' + (i + 1) + '. ' + t + '</button>').join('') + '</div>') +
+    return '<div class="mback" data-a="cocancel"></div><div class="modal"><div class="mhead"><h2>' + (C.editNo && !O.fresh ? cap(eno()) : O.req ? 'Реквизиты заказчика' : 'Оформление заказа') + '</h2><span class="sp"></span><button class="ib" data-a="cocancel" title="Закрыть">' + A.icon('close', 18) + '</button></div>' +
+      (edit ? '' : '<div class="mtabs">' + STEPS.slice(0, O.req ? 2 : 3).map((t, i) => '<button class="' + (st === i ? 'on' : '') + '" data-a="costep" data-v="' + i + '">' + (i + 1) + '. ' + t + '</button>').join('') + '</div>') +
       '<div class="mbody">' + b + '</div>' +
       '<div class="mfoot"><button class="btn" data-a="cocancel">Отмена</button><span class="sp"></span>' + (!edit && st > 0 ? '<button class="btn" data-a="costep" data-v="' + (st - 1) + '">Назад</button>' : '') +
-      (!edit && st < 2 ? '<button class="btn pri" data-a="conext">Далее</button>' : '<button class="btn pri" data-a="cosave">Сохранить заказ</button>') + '</div></div>';
+      (O.req ? (!edit && st < 1 ? '<button class="btn pri" data-a="conext">Далее</button>' : '<button class="btn pri" data-a="coreq">Сохранить и вернуться в расчёт</button>') : !edit && st < 2 ? '<button class="btn pri" data-a="conext">Далее</button>' : '<button class="btn pri" data-a="cosave">Сохранить заказ</button>') + '</div></div>';
   }
 
   A.module('calc', {
@@ -469,6 +469,10 @@
   A.act.cdel = el => { const C = JC().C; C.cart.splice(+el.dataset.i, 1); JC().save(); rr(); };
   A.act.cclear = () => { JC().clear(); resetO(); rr(); };
   /* «Новый расчёт»: корзина, скидка, итог, клиент и поля изделия — всё в ноль; выбранные модель и поставщик остаются */
+  /* окно реквизитов заказчика отдельно от оформления: данные остаются в форме, вернуться в расчёт можно в любой момент */
+  A.act.creq = () => { const C = JC().C; if (!C.editNo && !O.kept) resetO(); O.req = true; O.step = 0; O.open = true; rr(); };
+  A.act.coreq = () => { O.kept = true; O.req = false; O.open = false; rr(); A.toast('Реквизиты сохранены, можно продолжать расчёт'); };
+  A.act['new-order'] = () => { A.open('calc'); setTimeout(() => { A.act.cnew(); A.act.creq(); }, 0); };
   A.act.cnew = () => {
     JC().clear(); resetO();
     Object.assign(F, { color: '', colOpen: false, cq: '', w: '', h: '', qty: 1, ctrl: 'TR', fix: '', opts: {}, auto: { drive: '', remote: '' }, own: '', note: '', edit: -1 });
@@ -476,7 +480,7 @@
     Object.assign(CU, { title: '', price: '', sum: '', qty: 1, cost: '', drv: 'price' }); Object.assign(DR, { open: false, name: '', phone: '', note: '', files: [] });
     rr(); A.toast('Новый расчёт: корзина и поля очищены');
   };
-  A.act.cocancel = () => { O.open = false; rr(); };
+  A.act.cocancel = () => { if (O.req) O.kept = true; O.req = false; O.open = false; rr(); };
   const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', vf: it.vf ? Object.assign(VF0(), it.vf) : null, sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
     F.mode = 'blinds'; Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), auto: Object.assign({ drive: '', remote: '' }, it.auto), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
   const cuSync = () => { document.querySelectorAll('.cuadd [data-k]').forEach(el => { const k = el.dataset.k; if (k !== 'title' && document.activeElement !== el) el.value = CU[k]; }); };
@@ -583,8 +587,8 @@
   A.act.cord = () => {
     const C = JC().C; if (!C.cart.length) { A.toast('Корзина пуста'); return; }
     if (!O.open) {
-      if (!C.editNo) resetO();
-      O.open = true; rr(); return;
+      if (!C.editNo && !O.kept) resetO();
+      O.open = true; O.req = false; rr(); return;
     }
     A.act.cosave();
   };
