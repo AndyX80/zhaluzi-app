@@ -303,8 +303,17 @@
       sC.cart.forEach((it, i) => { if (!F.calcs[i].ok) return;
         for (let q = 0; q < it.qty; q++, k++) items[k].pv = vs.map(x => (x.F.calcs[i].ok ? (x.F.calcs[i].ownPrice ? x.F.calcs[i].unit : ceil100(x.F.calcs[i].unit + x.F.ships[i] + x.F.adds[i])) : null)); });
     } catch (e) { vars = null; }
+    /* наценка (отрицательная скидка) видна только в калькуляторе: в документах она растворяется в ценах изделий */
+    const M = F.discAmt < 0 ? -F.discAmt : 0;
+    if (M && items.length) {
+      const base = items.reduce((x, y) => x + y.price, 0), ratio = base ? 1 + M / base : 1; let left = M;
+      items.forEach(x => { const add = Math.round(x.price * M / base); x.price += add; x.profit = (x.profit || 0) + add; left -= add; });
+      if (left) { const big = items.reduce((b, x) => (x.price > b.price ? x : b), items[0]); big.price += left; big.profit = (big.profit || 0) + left; }
+      if (vars) vars.forEach(v => { v.total = Math.round(v.total * ratio); });
+      items.forEach(x => { if (x.pv) x.pv = x.pv.map(v => (v == null ? null : Math.round(v * ratio))); });
+    }
     if (F.svcLeft) items.push({ kind: 'custom', title: 'Доставка и установка', price: F.svcLeft, profit: F.svcLeft, cost: 0, costOk: true, ci: -1, pv: (vars || []).map(() => F.svcLeft) });
-    return { items, priced: true, delivery: F.S, disc: F.discAmt, needDog: sC.needDog, vars };
+    return { items, priced: true, delivery: F.S, disc: Math.max(0, F.discAmt), needDog: sC.needDog, vars };
   }
 
   let mounted = null, TAB = 'items';
