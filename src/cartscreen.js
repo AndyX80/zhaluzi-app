@@ -23,15 +23,27 @@
   let AUTO = null;
   function setSheets(sheets) {
     AUTO = {};
+    const add = (sup, kind, o) => ((AUTO[sup] = AUTO[sup] || { drive: [], remote: [] })[kind]).push(o);
+    const am = ((sheets['Автоматика параметры'] || []).find(r => r[0] === 'Amigo')) || [], rate = Number(am[1]) || 1, dis = Number(am[2]) || 0;
+    const sh2 = sheets['Автоматика_Амиго'], has2 = !!(sh2 && sh2.length > 1);
     const sh = sheets['Автоматика'];
-    if (!sh || sh.length < 2) return;
-    sh.slice(1).forEach(r => {
+    if (sh && sh.length > 1) sh.slice(1).forEach(r => {
       if (!r[0] || !r[2]) return;
       const sup = r[0], kind = r[1] === 'Привод' ? 'drive' : 'remote';
       const text = (r[2] || '') + ' ' + (r[3] || ''), m = /(25|50) мм/.exec(text);
       const line = sup === 'РДО' ? (/ WS| WSE| WSR/.test(' ' + text) ? 'ws' : (/\bD\b|DM35|DV24|DC3/.test(text) ? 'd' : '')) : '';
       const price = r[6] || ceil100((r[4] || 0) * (r[5] || 1));
-      ((AUTO[sup] = AUTO[sup] || { drive: [], remote: [] })[kind]).push({ key: r[2], name: r[2], sub: r[3] || '', cost: r[4] || 0, price, lam: m ? +m[1] : 0, line });
+      const nm = r[2] || '', sw = /^Выключатель/.test(nm) && !/радио/i.test(nm);
+      const grp = kind !== 'drive' ? '' : /провод|фазн|без радиоприём| WT /i.test(text) ? 'Проводные' : /аккумулятор|АКБ/i.test(text) ? 'Радио + АКБ' : 'Радио';
+      /* старые строки Амиго замещены полным списком из листа «Автоматика_Амиго»: остаются только для старых просчётов */
+      add(sup, kind, { key: nm, name: nm, sub: r[3] || '', cost: r[4] || 0, price, lam: m ? +m[1] : 0, line, sec: kind === 'drive' ? 'Моторизация' : sw ? 'Разное' : 'Радиопередатчики', t: 'Горизонтальные', grp, pk: kind !== 'drive', hid: has2 && sup === 'Amigo' });
+    });
+    if (has2) sh2.slice(1).forEach(r => {
+      if (!r[0] || !r[3]) return;
+      const sec = r[0], usd = Number(r[5]) || 0, cur = r[6] === '₽' ? 1 : rate, K = Number(r[7]) || 1.65, cost = Math.round(usd * (1 - dis) * cur), price = ceil100(cost * K);
+      const nm = String(r[3]).trim(), kind = sec === 'Моторизация' ? 'drive' : 'remote', sub = String(r[4] || '').trim();
+      const pk = kind === 'remote' && /^(Пульт|Радиовыключатель|Выключатель)/.test(nm) && !/Только для/.test(sub);
+      add('Amigo', kind, { key: nm, name: nm.replace(/^Комплект электрики Amigo /, 'Комплект '), sub, cost, price, lam: Number(r[8]) || 0, line: '', sec, t: r[1] || '', grp: r[2] || '', pk, hid: false });
     });
   }
   const autoOf = it => { const A = AUTO && AUTO[it.sup]; const f = A ? A[it.kind].find(x => x.key === it.key) : null; return f ? { f, price: f.price } : null; };
@@ -338,6 +350,6 @@
 
   const setRegion = on => { C.region = !!on; save(); rerender(); };
   window.JalCart = { instSugg, withAuto, autoTxt, driveWarn, save, rerender, setRegion, RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
-    autoList: (sup, kind) => (AUTO && AUTO[sup] ? AUTO[sup][kind] : null), autoQty, autoStep, hasAuto: sup => !!(AUTO && AUTO[sup]),
+    autoList: (sup, kind) => (AUTO && AUTO[sup] ? AUTO[sup][kind] : null), autoAll: () => { const o = []; if (AUTO) Object.keys(AUTO).forEach(sup => ['drive', 'remote'].forEach(k => AUTO[sup][k].forEach(f => { if (!f.hid) o.push(Object.assign({ sup, kind: k }, f)); }))); return o; }, autoQty, autoStep, hasAuto: sup => !!(AUTO && AUTO[sup]),
     counts: () => ({ drive: C.cart.filter(x => x.kind === 'drive').reduce((a, x) => a + x.qty, 0), remote: C.cart.filter(x => x.kind === 'remote').reduce((a, x) => a + x.qty, 0) }) };
 })();

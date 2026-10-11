@@ -32,7 +32,7 @@
     const ctrlKeys = chain ? ['L', 'R'] : (splitOnly ? ['TL', 'TR'] : cs.CTRL_ORDER[lam]);
     const fixNames = cs.availFixes(s.sup, lam), fix = fixNames.indexOf(s.fix) >= 0 ? s.fix : '';
     const cur = { sup: s.sup, lam, mat, color, ctrl, fix, w: s.w, h: s.h, opts };
-    const al = k => (JC().autoList(s.sup, k) || []).filter(f => !f.lam || f.lam === lam), au = s.auto || {}, auto = { drive: al('drive').some(f => f.key === au.drive) ? au.drive : '', remote: al('remote').some(f => f.key === au.remote) ? au.remote : '' };
+    const al = k => (JC().autoList(s.sup, k) || []).filter(f => !f.hid && (k === 'drive' ? f.t === 'Горизонтальные' : f.pk) && (!f.lam || f.lam === lam)), au = s.auto || {}, auto = { drive: al('drive').some(f => f.key === au.drive) ? au.drive : '', remote: al('remote').some(f => f.key === au.remote) ? au.remote : '' };
     const r = JC().withAuto({ sup: s.sup, auto }, cs.calcItem(cur, colList));
     return { auto, autoDrive: al('drive'), autoRemote: al('remote'), lamOk, lam, matOk, mat, prodKey, colList, color, optNames, opts, chain, ctrl, ctrlKeys, fixNames, fix, cur, r, selCol: colList.find(c => c.key === color) };
   }
@@ -51,7 +51,7 @@
   const COLLN = () => CS().COLL_ALL;
   function autoPanel(noClose) {
     const J = JC(), cs = CS();
-    const rows = kind => (J.autoList(F.sup, kind) || []).map(f => { const q = J.autoQty(F.sup, kind, f.key);
+    const rows = kind => (J.autoList(F.sup, kind) || []).filter(f => !f.hid && (kind === 'drive' ? f.t === 'Горизонтальные' : f.pk)).map(f => { const q = J.autoQty(F.sup, kind, f.key);
       return '<div class="row" style="padding:8px 10px;border-radius:10px;border:1.5px solid ' + (q ? 'var(--acc)' : 'var(--line,#ddd)') + ';background:' + (q ? 'var(--acc-s)' : 'transparent') + '"><div style="flex:1;min-width:0"><b>' + e(f.name) + '</b>' + (f.sub ? '<div class="mut" style="font-size:12px">' + e(f.sub) + '</div>' : '') + '</div>' +
         '<div class="num b" style="white-space:nowrap">' + m(f.price) + '</div><div class="row" style="gap:4px"><button class="btn sm" data-a="cast" data-kind="' + kind + '" data-key="' + e(f.key) + '" data-d="-1">−</button><b class="num" style="min-width:22px;text-align:center">' + q + '</b><button class="btn sm" data-a="cast" data-kind="' + kind + '" data-key="' + e(f.key) + '" data-d="1">+</button></div></div>'; }).join('');
     const cnt = J.counts();
@@ -102,13 +102,32 @@
   }
   const formEmpty = () => '<div class="card cform"><h2>Новое изделие</h2><div class="fgrid">' + modelRow() + '</div></div>';
   const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + (F.mode ? '' : '<option value="" selected disabled>Выберите модель</option>') + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (F.mode && x[0] === (F.mode === 'rolo' ? RM() : F.mode) ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
-  /* категория «Автоматика»: приводы и пульты отдельными позициями корзины, по поставщикам */
+  /* категория «Автоматика»: Моторизация (по типам изделий и видам) → Радиопередатчики → Источники питания → Разное */
+  const ASEC = ['Моторизация', 'Радиопередатчики', 'Источники питания', 'Разное'], ATYPES = ['Рулонные шторы', 'Мираж', 'Roof', 'Вертикальные', 'Горизонтальные', 'Венус (кассетные ГЖ)', 'Плиссе', 'Римские'];
+  const ATLBL = { 'Горизонтальные': 'Горизонтальные (дерево, алюминий)' }, AGRP = ['Проводные', 'Радио', 'Радио + АКБ'];
+  const txGrp = n => /^Пульт/.test(n) ? 'Пульты' : /выключатель/i.test(n) ? 'Радиовыключатели' : /приемник|приёмник/i.test(n) ? 'Радиоприёмники' : /Датчик/.test(n) ? 'Датчики' : 'Прочее';
   function formAuto() {
-    const cs = CS();
+    const J = JC(), cs = CS(), all = J.autoAll();
+    const sec = ASEC.indexOf(F.asec) >= 0 ? F.asec : 'Моторизация', inSec = all.filter(f => f.sec === sec);
+    const types = sec === 'Моторизация' ? ATYPES.filter(t => inSec.some(f => f.t === t)) : [], typ = types.indexOf(F.at) >= 0 ? F.at : types[0] || '';
+    const list = inSec.filter(f => sec !== 'Моторизация' || f.t === typ), sups = SUPS.filter(x => list.some(f => f.sup === x)), sup = sups.indexOf(F.asup) >= 0 ? F.asup : sups[0] || '';
+    const mine = list.filter(f => f.sup === sup), grpOf = f => sec === 'Моторизация' ? f.grp || 'Радио' : sec === 'Радиопередатчики' ? txGrp(f.name) : '';
+    const names = []; mine.forEach(f => { const g = grpOf(f); if (names.indexOf(g) < 0) names.push(g); });
+    if (sec === 'Моторизация') names.sort((a, b) => AGRP.indexOf(a) - AGRP.indexOf(b));
+    const row = f => { const q = J.autoQty(f.sup, f.kind, f.key), at = ' data-kind="' + f.kind + '" data-key="' + e(f.key) + '" data-sup="' + e(f.sup) + '"';
+      return '<div class="row" style="padding:8px 10px;border-radius:10px;border:1.5px solid ' + (q ? 'var(--acc)' : 'var(--line,#ddd)') + ';background:' + (q ? 'var(--acc-s)' : 'transparent') + '"><div style="flex:1;min-width:0"><b>' + e(f.name) + '</b>' + (f.sub ? '<div class="mut" style="font-size:12px">' + e(f.sub) + '</div>' : '') + '</div>' +
+        '<div class="num b" style="white-space:nowrap">' + m(f.price) + '</div><div class="row" style="gap:4px"><button class="btn sm" data-a="cast"' + at + ' data-d="-1">−</button><b class="num" style="min-width:22px;text-align:center">' + q + '</b><button class="btn sm" data-a="cast"' + at + ' data-d="1">+</button></div></div>'; };
+    const opt = (v, cur, lbl) => '<option value="' + e(v) + '"' + (v === cur ? ' selected' : '') + '>' + e(lbl || v) + '</option>';
+    const cnt = J.counts();
     return '<div class="card cform"><div class="ftop"><h2>Автоматика отдельно</h2></div><div class="fbody"><div class="mut sm" style="margin-bottom:8px">Нужно, чтобы дозаказать привод или пульт отдельно. Если автоматика нужна к жалюзи, выбери её прямо в форме изделия: она войдёт в цену жалюзи.</div>' +
-      '<div class="fgrid">' + modelRow() + '<div class="fld"><label>Поставщик</label><select class="ul" data-c="csup">' + SUPS.map(x => '<option value="' + x + '"' + (F.sup === x ? ' selected' : '') + '>' + e(cs.COLL_ALL[x] + ' (' + ru(x) + ')') + '</option>').join('') + '</select></div></div>' +
-      '<div style="margin-top:12px">' + autoPanel(true) + '</div></div></div>';
+      '<div class="fgrid fcol">' + modelRow() + '<div class="fld"><label>Раздел</label><select class="ul" data-c="asec">' + ASEC.map(x => opt(x, sec)).join('') + '</select></div>' +
+      (types.length ? '<div class="fld"><label>Тип изделия</label><select class="ul" data-c="atype">' + types.map(x => opt(x, typ, ATLBL[x])).join('') + '</select></div>' : '') +
+      (sups.length > 1 ? '<div class="fld"><label>Поставщик</label><select class="ul" data-c="asup">' + sups.map(x => opt(x, sup, cs.COLL_ALL[x] + ' (' + ru(x) + ')')).join('') + '</select></div>' : '') + '</div>' +
+      '<div class="row" style="margin:12px 0 4px"><b>' + e(sec + (typ ? ' · ' + (ATLBL[typ] || typ) : '') + (sup ? ' · ' + cs.COLL_ALL[sup] + ' (' + ru(sup) + ')' : '')) + '</b><span class="sp"></span><span class="mut sm">в корзине: приводов ' + cnt.drive + ', пультов и прочего ' + cnt.remote + '</span></div>' +
+      (mine.length ? names.map(g => (g ? '<h3 style="margin:12px 0 6px">' + e(g) + '</h3>' : '') + '<div class="stack" style="gap:6px">' + mine.filter(f => grpOf(f) === g).map(row).join('') + '</div>').join('') : '<div class="empty" style="padding:24px">В этом разделе нет позиций.</div>') +
+      (sec === 'Моторизация' ? '<div class="mut" style="font-size:12px;margin-top:12px">К приводу нужен пульт или выключатель: добавь их из разделов «Радиопередатчики» и «Разное». Привод и пульт берутся у одного поставщика.</div>' : '') + '</div></div>';
   }
+  A.fld.asec = v => { F.asec = v; rr(); }; A.fld.atype = v => { F.at = v; rr(); }; A.fld.asup = v => { F.asup = v; rr(); };
   const autoPanelBody = () => { const h = autoPanel(); return h.replace(/^<div class="card">/, '<div>').replace(/<h2>Автоматика<\/h2>/, ''); };
   function form0() {
     const cs = CS(), n = norm(), r = n.r, s = F, showProfit = !!S.showCost;
