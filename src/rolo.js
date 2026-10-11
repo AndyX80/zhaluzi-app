@@ -309,15 +309,17 @@
     if (T.amax && area > T.amax + 1e-9) return bad('площадь больше максимальной (' + T.amax + ' м²)');
     const minA = GP['мин_площадь_м2'] || 1, calcA = Math.max(area, minA), step = GP['округление'] || 100;
     const disc = GP['скидка'] != null ? GP['скидка'] : 0.4, k = (1 - disc) * FX;
-    const baseUsd = calcA * f.usd, o = opts(it), optUsd = {};
+    const baseUsd = calcA * f.usd, o = opts(it), optUsd = {}, optRub = {};
     groupsOf(s.code).forEach(g => {
       const pick = g.type === 'flag' ? (o.flags[g.name] ? g.items[0] : null) : g.items.find(x => x.value === o.sel[g.name]);
       if (!pick || !pick.usd) return;
-      optUsd[g.type === 'flag' ? g.name : pick.value] = /кв/.test(pick.unit) ? pick.usd * calcA : pick.usd;
+      const lb = g.type === 'flag' ? g.name : pick.value;
+      if (/^руб/.test(pick.unit)) optRub[lb] = pick.usd; else optUsd[lb] = /кв/.test(pick.unit) ? pick.usd * calcA : pick.usd;
     });
     const base = Math.round(baseUsd * k), optCost = {}, optP = {};
     let cost = base;
     Object.keys(optUsd).forEach(n => { optCost[n] = Math.round(optUsd[n] * k); optP[n] = Math.ceil(optUsd[n] * k * s.mk / step - 1e-9) * step; cost += optCost[n]; });
+    Object.keys(optRub).forEach(n => { optCost[n] = 0; optP[n] = optRub[n]; }); /* опции в рублях: фиксированная цена в рознице */
     const baseRetail = ceilTo(base * s.mk, step), addSum = Object.keys(optP).reduce((a, n) => a + optP[n], 0), unit = baseRetail + addSum;
     Object.assign(out, { ok: true, unit, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, areaNote: 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : ''), usd: baseUsd });
     return out;
