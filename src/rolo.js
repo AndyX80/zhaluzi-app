@@ -5,19 +5,19 @@
   'use strict';
   const ceilTo = (x, s) => Math.ceil(x / s - 1e-9) * s;
   const SUP = 'Amigo';
-  let RED = null, P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {}, VP = {}, VT = {}, GT = {}, GP = {};
+  let RED = null, P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {}, VP = {}, VT = {}, GT = {}, GP = {}, WIN = [], WIN_BY = {}, NOROOF = {};
   const numC = (v, d) => v === '' || v == null || isNaN(Number(String(v).replace(',', '.'))) ? d : Number(String(v).replace(',', '.'));
 
   const unitOf = u => (u === 'м_шир' || u === 'м_выс' || u === 'м_шов' || u === 'м_цепь') ? u : 'изд';
 
   function setSheets(sh) {
-    ready = false; RED = null; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {}; VP = {}; VT = {}; GT = {}; GP = {};
+    ready = false; RED = null; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {}; VP = {}; VT = {}; GT = {}; GP = {}; WIN = []; WIN_BY = {}; NOROOF = {};
     if (!sh || !sh['Рулонки_системы'] || !sh['Рулонки_параметры']) return;
     sh['Рулонки_параметры'].slice(1).forEach(r => { if (r[0]) P[r[0]] = r[1]; });
     const par = sh['Параметры'] || []; par.forEach(r => { if (r[0] === 'курс_usd') FX = Number(r[1]) || FX; });
     sh['Рулонки_системы'].slice(1).forEach(r => {
       if (!r[0]) return;
-      SYS.push({ code: String(r[0]), name: String(r[1] || r[0]), group: String(r[2] || ''), grid: String(r[3] || ''), term: Number(r[4]) || 1, mk: r[5] === '' || r[5] == null ? 2 : Number(r[5]) || 2, profit: r[6] === '' || r[6] == null ? 1000 : Number(r[6]) || 0, note: String(r[7] || ''), model: /зебр/i.test(String(r[8] || '')) ? 'zebra' : 'rolo' });
+      SYS.push({ code: String(r[0]), name: String(r[1] || r[0]), group: String(r[2] || ''), grid: String(r[3] || ''), term: Number(r[4]) || 1, mk: r[5] === '' || r[5] == null ? 2 : Number(r[5]) || 2, profit: r[6] === '' || r[6] == null ? 1000 : Number(r[6]) || 0, note: String(r[7] || ''), model: /зебр/i.test(String(r[8] || '')) ? 'zebra' : /roof/i.test(String(r[8] || '')) ? 'roof' : 'rolo' });
     });
     SYS.forEach(s => {
       if (GRID[s.grid] || !sh[s.grid]) return;
@@ -54,6 +54,15 @@
       nal.slice(1).forEach(r => { if (r[ix('Продукт')] !== 'Рулонные шторы' && r[ix('Продукт')] !== 'Зебра') return; const f = FAB_BY[String(r[ix('Артикул')])]; if (!f) return;
         const st = L[r[ix('Статус')]]; if (st !== undefined) f.stock = st; const q = r[ix('Остаток_м')]; if (q !== '' && q != null) f.qty = Number(q); });
     }
+    /* Roof: мансардные окна (производитель, серия, модель, размер штор и цены по категориям ткани 1–5, $) и ткани, непригодные для Roof */
+    (sh['Roof_окна'] || []).slice(1).forEach(r => {
+      if (!r[0] || !r[1]) return;
+      const o = { id: String(r[0]), man: String(r[1]), ser: String(r[2] || ''), mod: String(r[3] || '').trim(), w: numC(r[4], 0), h: numC(r[5], 0), p: [6, 7, 8, 9, 10].map(i => numC(r[i], 0)) };
+      if (o.w && o.h && o.p[0] > 0) { WIN.push(o); WIN_BY[o.id] = o; }
+    });
+    const noRoof = {}; (sh['Roof_ткани_нет'] || []).slice(1).forEach(r => { if (r[0]) noRoof[String(r[0]).trim().toUpperCase()] = 1; });
+    (sh['Рулонки_ткани'] || []).slice(1).forEach(r => { if (r[0] && noRoof[String(r[0]).trim().toUpperCase()]) String(r[1] || '').split(/\s+/).forEach(c => { if (c) NOROOF[c] = 1; }); });
+    FAB.forEach(f => { if (!f.m && !f.z && NOROOF[f.ser]) f.roof = 'нет'; });
     /* вертикальные жалюзи: листы «Верт_типы», «Верт_серии», «Верт_опции», «Верт_параметры», «Верт_ткани_цвета» */
     if (sh['Верт_типы'] && sh['Верт_серии']) {
       (sh['Верт_параметры'] || []).slice(1).forEach(r => { if (r[0]) VP[r[0]] = String(r[1]).replace(',', '.'); });
@@ -172,6 +181,9 @@
     if (!(usd > 0)) return { err: 'В прайсе нет цены на такой размер' };
     return { usd, w: g.widths[ci], h: row.h };
   }
+
+  /* категория ткани → колонка цен Roof (1–5); E в таблицах Roof нет, считается как 1 */
+  const roofIdx = f => { const c = String(f && f.cat || '').trim().toUpperCase(), n = /^[EЕ]$/.test(c) ? numC(P['roof_категория_E'], 1) : parseInt(c, 10); return n >= 1 && n <= 5 ? n - 1 : -1; };
 
   /* максимальная высота (м), на которую смотается ткань в этой системе с выбранной трубой и кронштейном; null = нет данных в таблице */
   function wind(it) {
@@ -370,16 +382,29 @@
   function calc(it) {
     const out = { ok: false, warn: [], msg: '' };
     if (!ready) { out.msg = 'Цены на рулонки не загружены (листы «Рулонки_…» в таблице)'; return out; }
-    const s = sysOf(it.sys), f = fabOf(it.fab), W = Number(it.w) || 0, H = Number(it.h) || 0;
+    const s = sysOf(it.sys), f = fabOf(it.fab); let W = Number(it.w) || 0, H = Number(it.h) || 0;
     if (!s) { out.msg = 'Выберите систему'; return out; }
     if (s.model === 'vert') return calcVert(it, s, f, W, H, out);
     if (s.model === 'gja') return calcGja(it, s, f, W, H, out);
-    if (!f) { out.needFab = true; out.msg = 'Выберите ткань'; return out; }
-    if (!(W > 0 && H > 0)) { out.msg = 'Введите размеры'; return out; }
-    const fit = tubeFit(it);
-    if (fit && fit.auto) { it = Object.assign({}, it, { sel: Object.assign({}, it.sel, { 'Труба': fit.to }) }); out.tubeAuto = fit.to !== fit.from ? { from: fit.from, to: fit.to } : null; out.tubeSel = fit.to; }
-    const L = lookup(s.code, f.cat, W, H);
-    if (L.err) { out.msg = L.err; if (L.hard) out.warn.hard = true; return out; }
+    const roof = s.model === 'roof';
+    if (roof && !WIN_BY[it.rw]) { out.needWin = true; out.msg = 'Выберите производителя и модель окна'; return out; }
+    if (!f) { out.needFab = true; out.msg = roof && s.code === 'ROOF-DN' ? 'Выберите первую ткань' : 'Выберите ткань'; return out; }
+    let L, fit = null, win = null, f2 = null;
+    if (roof) { /* Roof: размер штор задаёт модель окна, цена из таблицы по категории ткани; день-ночь: две ткани минус вычет за высоту */
+      win = WIN_BY[it.rw]; W = win.w; H = win.h; it = Object.assign({}, it, { w: W, h: H });
+      const dn = s.code === 'ROOF-DN'; f2 = dn ? fabOf(it.fab2) : null;
+      if (dn && !f2) { out.needFab = true; out.msg = 'Выберите вторую ткань'; return out; }
+      const i1 = roofIdx(f), i2 = dn ? roofIdx(f2) : 0;
+      if (i1 < 0 || i2 < 0) { out.msg = 'Для этой ткани нет категории цены'; return out; }
+      const ded = numC(P['roof_день_ночь_вычет_usd_м'], 14.12);
+      L = { usd: win.p[i1] + (dn ? win.p[i2] - ded * H / 1000 : 0), w: W / 1000, h: H / 1000 };
+    } else {
+      if (!(W > 0 && H > 0)) { out.msg = 'Введите размеры'; return out; }
+      fit = tubeFit(it);
+      if (fit && fit.auto) { it = Object.assign({}, it, { sel: Object.assign({}, it.sel, { 'Труба': fit.to }) }); out.tubeAuto = fit.to !== fit.from ? { from: fit.from, to: fit.to } : null; out.tubeSel = fit.to; }
+      L = lookup(s.code, f.cat, W, H);
+      if (L.err) { out.msg = L.err; if (L.hard) out.warn.hard = true; return out; }
+    }
     const disc = P['скидка_рулонки'] != null ? Number(P['скидка_рулонки']) : 0.4, k = (1 - disc) * FX;
     const coef = s.mk, step = Number(P['округление']) || 100;
     const base = Math.round(L.usd * k);
@@ -396,6 +421,7 @@
     const costOpt = Math.round(optUsd * k), profit0 = s.profit;
     const baseRetail = ceilTo(base * s.mk, step), exact = base * coef + optUsd * k * coef;
     const unit = ceilTo(exact, step), addSum = unit - baseRetail, cost = base + costOpt;
+    if (!roof) {
     const wd = wind(it); out.wind = wd;
     if (wd && wd.max < 6 && H / 1000 > wd.max + 1e-9) out.warn.push('ткань не смотается: для этой системы и ткани максимум ' + Math.floor(wd.max * 100) + ' см, при ' + Math.round(H / 10) + ' см останется висеть около ' + Math.round(H / 10 - wd.max * 100) + ' см');
     {
@@ -405,7 +431,8 @@
     }
     const pw = f.prodW || (f.roll ? f.roll - 10 : 0);
     if (pw && W / 10 > pw && !(o.flags['Сварка ткани'])) out.warn.push('ширина больше рабочей ширины ткани (' + pw + ' см): нужна сварка ткани');
-    Object.assign(out, { ok: true, unit, exact, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: profit0, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, gridW: L.w, gridH: L.h, usd: L.usd });
+    }
+    Object.assign(out, { ok: true, unit, exact, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: profit0, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, gridW: L.w, gridH: L.h, usd: L.usd, win, fab2: f2, areaNote: roof ? 'Окно ' + win.man + ' ' + win.mod + ': штора ' + W + '×' + H + ' мм, категория ткани ' + (f2 ? f.cat + ' + ' + f2.cat : f.cat) + (/^[EЕ]$/i.test(String(f.cat).trim()) ? ' (E считаем как 1)' : '') : undefined });
     return out;
   }
 
@@ -433,14 +460,19 @@
       if (ln) a.push('длина упр. ' + ln + ' мм');
       return { title: 'Алюминиевые жалюзи ' + s.name, sub: (f ? 'лента ' + f.name : 'лента не выбрана') + (a.length ? ' · ' + a.join(', ') : '') + (parts.length ? ' · ' + parts.join(', ') : '') };
     }
+    if (s && s.model === 'roof') {
+      const w = WIN_BY[it.rw], f2 = fabOf(it.fab2), dn = s.code === 'ROOF-DN';
+      return { title: 'Рулонная штора Roof' + (dn ? ' день-ночь' : ''), sub: [w ? 'окно: ' + w.man + ' ' + w.mod : 'окно не выбрано', f ? 'ткань ' + f.name : 'ткань не выбрана', dn ? (f2 ? 'ткань 2: ' + f2.name : 'вторая ткань не выбрана') : ''].concat(parts).filter(Boolean).join(' · ') };
+    }
     const fc = o.sel['Цвет фурнитуры'];
     return { title: s && s.model === 'vert' ? 'Вертикальные жалюзи ' + s.name.toLowerCase() : (s && s.model === 'zebra' ? 'Штора зебра' : 'Рулонная штора') + (s ? ' ' + s.name : ''), sub: s && s.model === 'vert' ? (f ? f.name + ' · ' : '') + 'ламель 89 мм' + vfTxt(it) + (parts.length ? ' · ' + parts.join(', ') : '') : (f ? 'ткань ' + f.name : 'ткань не выбрана') + (fc ? ' · фурнитура ' + fc.toLowerCase() : '') + ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева') + (parts.length ? ' · ' + parts.join(', ') : '') };
   }
 
   window.JalRolo = {
-    SUP, setSheets, ready: () => ready, systems: z => z == null ? SYS : SYS.filter(x => x.model === (typeof z === 'string' ? z : z ? 'zebra' : 'rolo')), sysOf, fabrics: z => z == null ? FAB : FAB.filter(x => (x.m || (x.z ? 'zebra' : 'rolo')) === (typeof z === 'string' ? z : z ? 'zebra' : 'rolo')), fabOf, groups: groupsOf, opts, calc, venusReducer, describe, wind, windReady: () => Object.keys(WIND).length > 0 && Object.keys(WINDZ).length > 0,
+    SUP, setSheets, ready: () => ready, systems: z => z == null ? SYS : SYS.filter(x => x.model === (typeof z === 'string' ? z : z ? 'zebra' : 'rolo')), sysOf, fabrics: z => z === 'roof' ? FAB.filter(x => !x.m && !x.z && x.roof !== 'нет') : z == null ? FAB : FAB.filter(x => (x.m || (x.z ? 'zebra' : 'rolo')) === (typeof z === 'string' ? z : z ? 'zebra' : 'rolo')), fabOf, groups: groupsOf, opts, calc, venusReducer, describe, wind, windReady: () => Object.keys(WIND).length > 0 && Object.keys(WINDZ).length > 0,
     termFor: it => { const s = sysOf(it.sys); return s ? s.term + (Number(P['срок_добавка_дн']) || 5) : 0; },
     photoUrl: f => (f && f.img ? String(P['фото_адрес'] || 'https://customizer.amigo.ru').replace(/\/$/, '') + f.img : ''),
+    roofMans: () => WIN.map(x => x.man).filter((m, i, a) => a.indexOf(m) === i), roofWins: man => WIN.filter(x => !man || x.man === man), winOf: id => WIN_BY[id] || null,
     param: k => P[k]
   };
 })();
