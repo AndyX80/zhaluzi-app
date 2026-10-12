@@ -130,7 +130,7 @@
     if (!res.ok) return { ok: false, msg: res.msg, opts: {}, warn: [] };
     const lim = LM.sizeLimits({ sup: cur.sup, mat: cur.mat, lam: cur.lam, w: W, h: H, opts: cur.opts, ctrl: cur.ctrl, fix: cur.fix }, col, col && col.serRaw);
     const warn = lim.map(x => x.t); warn.hard = lim.some(x => x.hard);
-    return { ok: true, base: res.base, unit: res.price, addSum: res.price - res.base, profit: res.profit, optP: res.opts, warn, col };
+    return { ok: true, base: res.base, unit: res.price, exact: res.exact, cost: res.cost, addSum: res.price - res.base, profit: res.profit, optP: res.opts, warn, col };
   }
 
   /* Расчёт позиции корзины: it = { sup, mat, lam, color, ctrl, fix, opts, w, h } (поставщик по-макетному: Amigo, Foroom). */

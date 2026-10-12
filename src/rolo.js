@@ -290,8 +290,8 @@
     const base = Math.round(baseUsd * k), optCost = {}, optP = {};
     let cost = base;
     Object.keys(optUsd).forEach(n => { optCost[n] = Math.round(optUsd[n] * k); optP[n] = Math.ceil(optUsd[n] * k * s.mk / step - 1e-9) * step; cost += optCost[n]; });
-    const baseRetail = ceilTo(base * s.mk, step), addSum = Object.keys(optP).reduce((a, n) => a + optP[n], 0), unit = baseRetail + addSum;
-    Object.assign(out, { ok: true, unit, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, areaNote: corn ? 'Карниз в сборе: ' + (W / 1000).toFixed(2) + ' м' : 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : '') + (flag('Наклонные') ? ' · наклонные: введите большие ширину и высоту' : '') + (disc >= 0.55 ? ' · скидка Амиго 55% (Лайн)' : ''), usd: baseUsd });
+    const baseRetail = ceilTo(base * s.mk, step), exact = base * s.mk + Object.keys(optUsd).reduce((a, n) => a + optUsd[n] * k * s.mk, 0), unit = ceilTo(exact, step), addSum = unit - baseRetail; /* округление до сотни один раз в конце */
+    Object.assign(out, { ok: true, unit, exact, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, areaNote: corn ? 'Карниз в сборе: ' + (W / 1000).toFixed(2) + ' м' : 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : '') + (flag('Наклонные') ? ' · наклонные: введите большие ширину и высоту' : '') + (disc >= 0.55 ? ' · скидка Амиго 55% (Лайн)' : ''), usd: baseUsd });
     return out;
   }
 
@@ -320,8 +320,8 @@
     let cost = base;
     Object.keys(optUsd).forEach(n => { optCost[n] = Math.round(optUsd[n] * k); optP[n] = Math.ceil(optUsd[n] * k * s.mk / step - 1e-9) * step; cost += optCost[n]; });
     Object.keys(optRub).forEach(n => { optCost[n] = 0; optP[n] = optRub[n]; }); /* опции в рублях: фиксированная цена в рознице */
-    const baseRetail = ceilTo(base * s.mk, step), addSum = Object.keys(optP).reduce((a, n) => a + optP[n], 0), unit = baseRetail + addSum;
-    Object.assign(out, { ok: true, unit, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, areaNote: 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : ''), usd: baseUsd });
+    const baseRetail = ceilTo(base * s.mk, step), exact = base * s.mk + Object.keys(optUsd).reduce((a, n) => a + optUsd[n] * k * s.mk, 0) + Object.keys(optRub || {}).reduce((a, n) => a + optRub[n], 0), unit = ceilTo(exact, step), addSum = unit - baseRetail; /* округление до сотни один раз в конце */
+    Object.assign(out, { ok: true, unit, exact, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, areaNote: 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : ''), usd: baseUsd });
     return out;
   }
 
@@ -352,8 +352,8 @@
       optCost[label] = Math.round(usd * k); optP[label] = Math.ceil(usd * k * coef / step - 1e-9) * step;
     });
     const costOpt = Math.round(optUsd * k), profit0 = s.profit;
-    const baseRetail = ceilTo(base * s.mk, step), addSum = Object.keys(optP).reduce((a, n) => a + optP[n], 0);
-    const unit = baseRetail + addSum, cost = base + costOpt;
+    const baseRetail = ceilTo(base * s.mk, step), exact = base * coef + optUsd * k * coef;
+    const unit = ceilTo(exact, step), addSum = unit - baseRetail, cost = base + costOpt;
     const wd = wind(it); out.wind = wd;
     if (wd && wd.max < 6 && H / 1000 > wd.max + 1e-9) out.warn.push('ткань не смотается: для этой системы и ткани максимум ' + Math.floor(wd.max * 100) + ' см, при ' + Math.round(H / 10) + ' см останется висеть около ' + Math.round(H / 10 - wd.max * 100) + ' см');
     {
@@ -363,7 +363,7 @@
     }
     const pw = f.prodW || (f.roll ? f.roll - 10 : 0);
     if (pw && W / 10 > pw && !(o.flags['Сварка ткани'])) out.warn.push('ширина больше рабочей ширины ткани (' + pw + ' см): нужна сварка ткани');
-    Object.assign(out, { ok: true, unit, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: profit0, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, gridW: L.w, gridH: L.h, usd: L.usd });
+    Object.assign(out, { ok: true, unit, exact, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: profit0, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, gridW: L.w, gridH: L.h, usd: L.usd });
     return out;
   }
 

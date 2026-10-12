@@ -62,7 +62,7 @@
   function withAuto(it, r) {
     const pk = autoPick(it); if (!r || !r.ok || !pk.length) return r;
     const add = pk.reduce((a, x) => a + x.f.price, 0), cost = pk.reduce((a, x) => a + x.f.cost, 0);
-    return Object.assign({}, r, { unit: r.unit + add, profit: (r.profit || 0) + add - cost, cost: (r.cost || 0) + cost, addSum: (r.addSum || 0) + add, autoAdd: add });
+    return Object.assign({}, r, { unit: r.unit + add, exact: (r.exact != null ? r.exact : r.unit) + add, profit: (r.profit || 0) + add - cost, cost: (r.cost || 0) + cost, addSum: (r.addSum || 0) + add, autoAdd: add });
   }
   /* предел размеров привода (по таблице РДО, принято для всех поставщиков) */
   function driveWarn(it) {
@@ -88,6 +88,8 @@
     if (it.prod === 'rolo') return window.JalRolo ? window.JalRolo.calc(it) : { ok: false, warn: [] };
     return window.JalCalcScreen.calcRow(it);
   }
+  /* цена позиции до округления: до сотни округляем один раз, после добавления доставки производителя и доли монтажа */
+  const ux = c => (c.exact != null ? c.exact : c.unit);
   function spread(rows, S) {
     const out = rows.map(() => 0), idx = rows.map((r, i) => (r.ok ? i : -1)).filter(i => i >= 0);
     if (!S || !idx.length) return out;
@@ -108,7 +110,7 @@
     const ships = s.cart.map(() => 0), bySup = {};
     s.cart.forEach((it, i) => { const sp = ov ? ov.sups[i] : it.sup; if (!reg && !it.kind && calcs[i].ok && !calcs[i].ownPrice && !FREE_SHIP[sp]) (bySup[sp] = bySup[sp] || []).push(i); });
     Object.keys(bySup).forEach(k => { const ix = bySup[k], part = spread(ix.map(i => ({ ok: true, qty: s.cart[i].qty })), Number(RATES.ship) || 0); ix.forEach((i, j) => { ships[i] = part[j]; }); });
-    const lineSum = s.cart.map((it, i) => (calcs[i].ok ? (calcs[i].ownPrice || it.kind === 'custom' ? calcs[i].unit : ceil100(calcs[i].unit + ships[i] + adds[i])) * it.qty : 0));
+    const lineSum = s.cart.map((it, i) => (calcs[i].ok ? (calcs[i].ownPrice || it.kind === 'custom' ? calcs[i].unit : ceil100(ux(calcs[i]) + ships[i] + adds[i])) * it.qty : 0));
     /* доставка и установка некуда разложить (все строки со своей ценой или свои товары): идёт отдельной суммой, чтобы не пропадала */
     const svcLeft = S && !s.cart.some((it, i) => calcs[i].ok && it.kind !== 'custom' && !calcs[i].ownPrice) ? S : 0;
     const total = lineSum.reduce((x, y) => x + y, 0) + svcLeft;
@@ -299,7 +301,7 @@
     const sC = st || C, F = compute(sC), items = [];
     sC.cart.forEach((it, i) => {
       const c = F.calcs[i]; if (!c.ok) return;
-      const price = c.ownPrice || it.kind === 'custom' ? c.unit : ceil100(c.unit + F.ships[i] + F.adds[i]);
+      const price = c.ownPrice || it.kind === 'custom' ? c.unit : ceil100(ux(c) + F.ships[i] + F.adds[i]);
       /* прибыль позиции = цена в заказе минус закуп минус доставка производителя: надбавка за доставку/монтаж и округление до 100 — не закуп */
       const pr = c.ownPrice || it.kind === 'custom' ? 0 : price - c.unit - F.ships[i], pf = c.profit + pr;
       for (let k = 0; k < it.qty; k++) {
@@ -316,7 +318,7 @@
       const vs = variants(sC); vars = vs.map(x => ({ name: x.v.name, about: x.v.about, best: !!x.v.best, miss: x.miss, total: x.F.total }));
       let k = 0;
       sC.cart.forEach((it, i) => { if (!F.calcs[i].ok) return;
-        for (let q = 0; q < it.qty; q++, k++) items[k].pv = vs.map(x => (x.F.calcs[i].ok ? (x.F.calcs[i].ownPrice ? x.F.calcs[i].unit : ceil100(x.F.calcs[i].unit + x.F.ships[i] + x.F.adds[i])) : null)); });
+        for (let q = 0; q < it.qty; q++, k++) items[k].pv = vs.map(x => (x.F.calcs[i].ok ? (x.F.calcs[i].ownPrice ? x.F.calcs[i].unit : ceil100(ux(x.F.calcs[i]) + x.F.ships[i] + x.F.adds[i])) : null)); });
     } catch (e) { vars = null; }
     /* наценка (отрицательная скидка) видна только в калькуляторе: в документах она растворяется в ценах изделий */
     const M = F.fixed ? -F.discAmt : F.discAmt < 0 ? -F.discAmt : 0;

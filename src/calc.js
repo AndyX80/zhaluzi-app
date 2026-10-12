@@ -98,10 +98,10 @@
     if (wh && whM === undefined) return fail('нет оптовой наценки (лист «Опт»)');
     const dlv = 0; /* доставка от поставщика считается в корзине: 1500 ₽ на партию производителя */
     const profitM2 = P.x[prod] + s['Доп_к_X'];
-    const base = wh ? ceilTo(zak * (1 + whM), par['округление'])
-      : ceilTo(zak + dlv + profitM2 * Math.max(S, par['мин_площадь_прибыли']), par['округление']);
-    const pr = base - zak - dlv;
-    let totalOpts = 0, optProfit = 0;
+    /* округление до сотни делается один раз, в самом конце, от суммы без промежуточных округлений */
+    const baseExact = wh ? zak * (1 + whM) : zak + dlv + profitM2 * Math.max(S, par['мин_площадь_прибыли']);
+    const base = ceilTo(baseExact, par['округление']);
+    let totalOpts = 0, optExact = 0, optCost = 0;
     const optPrices = {};
     const want = (fix ? [fix] : []).concat(opts, sides ? ['Боковины валанса'] : []);
     for (const name of want) {
@@ -122,12 +122,13 @@
           : op['Единица'] === 'шт' ? rnd(zr * sides)
           : rnd(zr * Math.max(S, par['мин_площадь_опций']));
       }
-      optPrices[name] = ceilTo(wh ? zo * (1 + whM) : zo * s['Коэф_опций'], par['округление']);
-      totalOpts += optPrices[name];
-      optProfit += optPrices[name] - zo;
+      const ex = wh ? zo * (1 + whM) : zo * s['Коэф_опций'];
+      optPrices[name] = ceilTo(ex, par['округление']);
+      totalOpts += optPrices[name]; optExact += ex; optCost += zo;
     }
-    return { ok: true, zakup: zak, base: base, opts: optPrices, price: base + totalOpts,
-      profit: pr + optProfit, msg: msgs.join('; ') };
+    const exact = baseExact + optExact, price = ceilTo(exact, par['округление']);
+    return { ok: true, zakup: zak, base: base, opts: optPrices, price, exact, cost: zak + optCost,
+      profit: price - zak - dlv - optCost, msg: msgs.join('; ') };
   }
 
   const api = { ceilTo, rnd, makePrice, calc, lookup };
