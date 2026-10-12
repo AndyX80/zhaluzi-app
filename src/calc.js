@@ -94,6 +94,9 @@
     } else {
       throw new Error('поставщик? ' + sup);
     }
+    /* Интерьер 25 мм с цепочкой шире 1,4 м: наценка на изготовление 20% */
+    const wideK = (sup === 'Интерьер' && lam === 25 && W > 140 && opts.some(n => /^Цепочка/.test(n))) ? 1.2 : 1;
+    if (wideK !== 1) { zak = rnd(zak * wideK); msgs.push('наценка поставщика 20% (цепочка, ширина больше 1,4 м)'); }
     const whM = wh ? P.opt[sup + '|' + prod] : undefined;
     if (wh && whM === undefined) return fail('нет оптовой наценки (лист «Опт»)');
     const dlv = 0; /* доставка от поставщика считается в корзине: 1500 ₽ на партию производителя */
@@ -105,7 +108,7 @@
     const optPrices = {};
     const want = (fix ? [fix] : []).concat(opts, sides ? ['Боковины валанса'] : []);
     for (const name of want) {
-      const op = P.opts.find(r => r['Опция'] === name && r['Поставщик'] === sup);
+      const op = P.opts.find(r => r['Опция'] === name && r['Поставщик'] === sup && (!r['Только_ламель'] || r['Только_ламель'] === lam));
       const none = !op || (op['Закуп'] === null && op['Единица'] !== 'табл') ||
         (op['Только_ламель'] && op['Только_ламель'] !== lam);
       if (none) { msgs.push('опция «' + name + '» нет у поставщика'); continue; }
@@ -122,6 +125,7 @@
           : op['Единица'] === 'шт' ? rnd(zr * sides)
           : rnd(zr * Math.max(S, par['мин_площадь_опций']));
       }
+      zo = rnd(zo * wideK);
       const ex = wh ? zo * (1 + whM) : zo * s['Коэф_опций'];
       optPrices[name] = ceilTo(ex, par['округление']);
       totalOpts += optPrices[name]; optExact += ex; optCost += zo;

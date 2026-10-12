@@ -27,9 +27,9 @@
     const prodKey = mat + ' ' + lam, colList = cs.colorsFor(s.sup, prodKey);
     const color = colList.some(c => c.key === s.color) ? s.color : '';
     const optNames = cs.availOpts(s.sup, lam), opts = {}; optNames.forEach(n => { if (s.opts[n]) opts[n] = true; });
-    const chain = !!(opts['Цепочка'] || opts['Цепочка металлическая']), splitOnly = s.sup === 'РДО' && lam === 50;
+    const chain = !!(opts['Цепочка'] || opts['Цепочка металлическая'] || opts['Цепочка металлическая цветная']), splitOnly = s.sup === 'РДО' && lam === 50;
     const ctrl = chain ? (s.ctrl === 'R' || s.ctrl === 'TL' ? 'R' : 'L') : (splitOnly ? (s.ctrl === 'TL' ? 'TL' : 'TR') : (cs.CTRL_NAMES[s.ctrl] ? s.ctrl : 'TR'));
-    const chainMet = !!opts['Цепочка металлическая'], chainCols = chain ? (chainMet ? ['Серебро'] : ['Белая', 'Антрацит', 'Прозрачная белая', 'Прозрачная коричневая']) : [], chainCol = chain ? (chainCols.indexOf(s.chainCol) >= 0 ? s.chainCol : chainCols[0]) : '';
+    const chainCol9 = ['Античная бронза', 'Белая', 'Латунь', 'Матовое золото', 'Медь', 'Розовое золото', 'Серый никель', 'Сталь (нержавеющая)', 'Черный никель'], chainMet = !!opts['Цепочка металлическая'], chainCols = chain ? (opts['Цепочка металлическая цветная'] ? chainCol9 : chainMet ? ['Серебро'] : lam === 25 ? ['Белая', 'Антрацит', 'Бежевая', 'Коричневая', 'Серая', 'Черная', 'Прозрачная белая', 'Прозрачная коричневая'] : ['Белая', 'Антрацит', 'Прозрачная белая', 'Прозрачная коричневая']) : [], chainCol = chain ? (chainCols.indexOf(s.chainCol) >= 0 ? s.chainCol : chainCols[0]) : '';
     const ctrlKeys = chain ? ['L', 'R'] : (splitOnly ? ['TL', 'TR'] : cs.CTRL_ORDER[lam]);
     const fixNames = cs.availFixes(s.sup, lam), fix = fixNames.indexOf(s.fix) >= 0 ? s.fix : '';
     const cur = { sup: s.sup, lam, mat, color, ctrl, fix, w: s.w, h: s.h, opts };
@@ -264,7 +264,7 @@
   function itemName(it, c) {
     const extra = Object.keys(it.opts || {}).filter(k => it.opts[k]).map(k => (k === 'Цепочка' || k === 'Цепочка металлическая') && it.chainCol ? k + ' (' + it.chainCol.toLowerCase() + ')' : k); if (it.fix) extra.push(CS().FIXLBL[it.fix] || it.fix);
     const col = c.col ? c.col.name : '';
-    const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая']));
+    const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая'] || it.opts['Цепочка металлическая цветная']));
     return { title: CS().COLL_ALL[it.sup] + ' (' + ru(it.sup) + ')', sub: it.mat + ' ' + it.lam + (col ? ' · ' + col : '') + ' · ' + (chain ? CHAIN_TXT : CTRL_TXT)[it.ctrl || 'L'] + (extra.length ? ' · ' + extra.join(', ').toLowerCase() : '') };
   }
 
@@ -283,7 +283,7 @@
       d.push(['Система', sy ? sy.name : '—'], [it.mat === 'ГЖ алюминий' ? 'Лента' : it.mat === 'Вертикальные' ? 'Материал' : 'Ткань', fb ? fb.name : '—'], ['Размеры', it.w + '×' + it.h + ' мм'], ['Площадь', sizeM2(it)]);
       String(ds.sub || '').split(' · ').filter(Boolean).forEach(t => { const k = t.indexOf(':'); d.push(k > 0 ? [t.slice(0, k)[0].toUpperCase() + t.slice(1, k), t.slice(k + 1).trim()] : ['', t]); });
     } else {
-      const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая'])), opts = Object.keys(it.opts || {}).filter(k => it.opts[k]);
+      const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая'] || it.opts['Цепочка металлическая цветная'])), opts = Object.keys(it.opts || {}).filter(k => it.opts[k]);
       d.push(['Материал', it.mat + ' ' + it.lam + ' мм'], ['Цвет', c.col ? c.col.name : '—'], ['Размеры', it.w + '×' + it.h + ' мм'], ['Площадь', sizeM2(it)],
         ['Управление', (chain ? CHAIN_TXT : CTRL_TXT)[it.ctrl || 'L']], ['Нижняя фиксация', it.fix ? (cs.FIXLBL[it.fix] || it.fix) : 'Нет'], ['Опции', opts.length ? opts.join(', ') : 'Нет']);
       const a = it.auto || {}, al = (k, key) => ((JC().autoList(it.sup, k) || []).find(f => f.key === key) || {}).name;
@@ -459,7 +459,7 @@
   };
   A.act.cf = el => { const k = el.dataset.k, v = el.dataset.v; F[k] = k === 'lam' ? +v : v; if (k === 'sup') F.colOpen = false; rr(); };
   A.fld.cf = (v, el) => { const k = el.dataset.k; F[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
-  A.act.copt = el => { const v = el.dataset.v, on = !F.opts[v]; F.opts[v] = on; if (on && v === 'Цепочка') delete F.opts['Цепочка металлическая']; if (on && v === 'Цепочка металлическая') delete F.opts['Цепочка']; if (!F.opts['Цепочка'] && !F.opts['Цепочка металлическая']) F.chainCol = ''; rr(); };
+  A.act.copt = el => { const v = el.dataset.v, on = !F.opts[v]; F.opts[v] = on; if (on && /^Цепочка/.test(v)) ['Цепочка', 'Цепочка металлическая', 'Цепочка металлическая цветная'].forEach(k => { if (k !== v) delete F.opts[k]; }); if (!F.opts['Цепочка'] && !F.opts['Цепочка металлическая'] && !F.opts['Цепочка металлическая цветная']) F.chainCol = ''; rr(); };
   A.act.cchc = el => { F.chainCol = el.dataset.v; rr(); };
   A.act.ccol = () => { F.colOpen = !F.colOpen; F.cq = ''; rr(); };
   A.act.ccolpick = el => { if (F.mode === 'rolo') R.fab = el.dataset.v; else F.color = el.dataset.v; F.colOpen = false; F.cq = ''; rr(); };

@@ -191,7 +191,7 @@
       const extra = Object.keys(it.opts || {}).filter(n => it.opts[n]);
       if (it.fix) extra.push(it.fix === 'Ниж. фиксация' ? 'Уголки' : it.fix);
       const colName = c.col ? (it.sup === 'Foroom' ? c.col.name + ' (' + c.col.ser.split(' · ')[0] + ')' : c.col.name) : '';
-      const isChain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая']));
+      const isChain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая'] || it.opts['Цепочка металлическая цветная']));
       const w1 = (c.warn && c.warn.length ? (c.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + c.warn.join('; ') : '') + driveNote(it);
       return mkRow(it, i, { title: it.sup, sub: it.mat + ' ' + it.lam + (colName ? ' · ' + colName.toLowerCase() : '') + ' · ' + (isChain ? CTRL_TXT_CHAIN : CTRL_TXT)[it.ctrl || 'L'] + (extra.length ? ' · ' + extra.join(', ').toLowerCase() : ''),
         size: it.w + '×' + it.h, sum: c.ok ? fmt(lineSum[i]) : '—', warn: w1, warnStyle: redWarn(!!w1),

@@ -109,7 +109,7 @@
 
   function availOpts(sup, lam) {
     return P.opts.filter(o => o['Группа'] === 'опция' && o['Поставщик'] === eng(sup) && o['Опция'] !== 'Боковины валанса' &&
-      (o['Закуп'] !== null || o['Единица'] === 'табл') && (!o['Только_ламель'] || o['Только_ламель'] === lam)).map(o => o['Опция']);
+      (o['Закуп'] !== null || o['Единица'] === 'табл') && (!o['Только_ламель'] || o['Только_ламель'] === lam)).map(o => o['Опция']).filter((n, i, a) => a.indexOf(n) === i);
   }
   function availFixes(sup, lam) {
     return P.opts.filter(o => o['Группа'] === 'фиксация' && o['Поставщик'] === eng(sup) && o['Закуп'] !== null &&
@@ -155,7 +155,7 @@
     const color = colList.some(c => c.key === s.color) ? s.color : '';
     const optNames = availOpts(s.sup, lam);
     const opts0 = {}; optNames.forEach(n => { if (s.opts[n]) opts0[n] = true; });
-    const chain = !!(opts0['Цепочка'] || opts0['Цепочка металлическая']);
+    const chain = !!(opts0['Цепочка'] || opts0['Цепочка металлическая'] || opts0['Цепочка металлическая цветная']);
     const splitOnly = s.sup === 'РДО' && lam === 50;
     const ctrl = chain ? (s.ctrl === 'R' || s.ctrl === 'TL' ? 'R' : 'L') : (splitOnly ? (s.ctrl === 'TL' ? 'TL' : 'TR') : (CTRL_NAMES[s.ctrl] ? s.ctrl : 'TR'));
     const fixNames = availFixes(s.sup, lam);

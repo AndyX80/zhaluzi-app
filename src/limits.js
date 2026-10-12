@@ -23,7 +23,7 @@ const INT_GRID = {
 };
 
 function intLimits(it) {
-  const key = it.mat + ' ' + it.lam + '|' + (it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая']) ? 'chain' : 'rope');
+  const key = it.mat + ' ' + it.lam + '|' + (it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая'] || it.opts['Цепочка металлическая цветная']) ? 'chain' : 'rope');
   const G = INT_GRID[key] || INT_GRID[it.mat + ' ' + it.lam + '|rope'];
   if (!G) return [];
   const wc = (Number(it.w) || 0) / 10, hc = (Number(it.h) || 0) / 10;
@@ -55,7 +55,7 @@ const uyutH = (lam, chain, wc) => {
 // Ограничения размеров по поставщикам: список { hard, t }. hard = изготовить нельзя, иначе без гарантии.
 function sizeLimits(it, col, ser) {
   const W = Number(it.w) || 0, H = Number(it.h) || 0, S = W * H / 1e6, wc = W / 10, hc = H / 10;
-  const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая']));
+  const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая'] || it.opts['Цепочка металлическая цветная']));
   const apart = it.ctrl === 'TL' || it.ctrl === 'TR';
   const out = [];
   const add = (hard, t) => out.push({ hard, t });
