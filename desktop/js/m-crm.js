@@ -6,7 +6,9 @@
   const MF = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
   const days = iso => iso ? Math.floor((Date.now() - new Date(iso + 'T12:00:00').getTime()) / 864e5) : 0;
   const live = o => !o.archived && !o.lost;
+  const everyone = () => D.orders.concat(D.calcs || []);
   const lead = o => o.ph && o.stage < 3 && live(o);
+  const leads = () => (D.calcs || []).filter(lead);
   function range() {
     const d = new Date(), y = d.getFullYear(), mo = d.getMonth(), p = S.fper || 'month';
     if (p === 'quarter') { const q = Math.floor(mo / 3); return [isoD(new Date(y, q * 3, 1)), isoD(new Date(y, q * 3 + 3, 0)), (q + 1) + ' квартал']; }
@@ -24,17 +26,18 @@
   }
   /* пересчёт воронки за период: сколько заказов дошло до каждого этапа */
   function funnel(from, to) {
-    const os = D.orders.filter(o => !o.archived && o.created >= from && o.created <= to);
+    const os = everyone().filter(o => !o.archived && o.created >= from && o.created <= to);
     const reach = D.STAGES.map((s, i) => os.filter(o => o.stage >= i && !(o.lost && o.stage < 3)).length);
     // потерянные тоже были в начале воронки
     const lost = os.filter(o => o.lost);
     return { os, reach, lost };
   }
-  const alerts = () => D.orders.filter(lead).map(o => {
+  const alerts = () => leads().map(o => {
     const age = days(o.created), norm = o.stage === 0 ? C.normReply : C.normKp;
     return age > norm ? { o, age, over: age - norm, kind: o.stage === 0 ? 'Нет ответа на заявку' : 'КП без ответа' } : null;
   }).filter(Boolean).sort((a, b) => b.over - a.over);
 
+  A.crm = { C, range, funnel, funnelView: f => funnelView(f), alerts, planFact, leads, MF, isoD, days };
   A.crmHome = () => {
     if (!D.real) return '';
     const p = planFact(), f = funnel(range()[0], range()[1]), al = alerts();
@@ -70,7 +73,7 @@
   function kanbanView() {
     const cols = [[0, 'Заявка / просчёт'], [2, 'КП отправлено']];
     return '<div class="kan" style="grid-auto-columns:minmax(260px,1fr)">' + cols.map(c => {
-      const os = D.orders.filter(o => lead(o) && (c[0] === 0 ? o.stage < 2 : o.stage === 2));
+      const os = leads().filter(o => (c[0] === 0 ? o.stage < 2 : o.stage === 2));
       return '<div class="kcol"><h3><span>' + c[1] + '</span><span>' + os.length + '</span></h3>' + os.map(o => {
         const age = days(o.created), over = age > (o.stage === 0 ? C.normReply : C.normKp);
         return '<div class="kc"><div data-a="opn" data-id="order:' + o.id + '"><b>' + e(cname(o)) + '</b><div class="mut sm">' + e(o.title) + '</div><div class="row"><b class="num">' + m(o.sum) + '</b><div class="sp"></div><span class="pill ' + (over ? 'bad' : 'gray') + '">' + age + ' дн.</span></div></div><div style="margin-top:6px">' + lostSel(o) + '</div></div>';
@@ -78,7 +81,7 @@
     }).join('') + '</div>';
   }
   function tableView() {
-    const os = D.orders.filter(lead).sort((a, b) => a.created < b.created ? -1 : 1);
+    const os = leads().sort((a, b) => a.created < b.created ? -1 : 1);
     return os.length ? '<table class="tbl"><thead><tr><th>Клиент</th><th>Этап</th><th>Сумма</th><th>Дней</th><th>Источник</th><th></th></tr></thead><tbody>' + os.map(o => '<tr><td data-a="opn" data-id="order:' + o.id + '" style="cursor:pointer">' + e(cname(o)) + '</td><td>' + pill(o) + '</td><td class="num">' + m(o.sum) + '</td><td>' + days(o.created) + '</td><td>' + e(o.src || '—') + '</td><td>' + lostSel(o) + '</td></tr>').join('') + '</tbody></table>' : '<p class="mut">Открытых просчётов нет.</p>';
   }
   const seg = (arr, cur, act, key) => '<div class="seg">' + arr.map(p => '<button class="' + (cur === p[0] ? 'on' : '') + '" data-a="' + act + '" data-' + key + '="' + p[0] + '">' + p[1] + '</button>').join('') + '</div>';

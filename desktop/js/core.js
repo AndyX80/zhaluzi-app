@@ -6,6 +6,7 @@
     table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/>',
     coin: '<circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.5-.8-1.5-1.2-2.8-1.2-1.6 0-2.8.8-2.8 2 0 3 5.6 1.3 5.6 4.2 0 1.2-1.2 2-2.8 2-1.3 0-2.4-.5-2.9-1.4M12 6.5V8m0 8v1.5"/>',
     edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>', copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/>',
+    dash: '<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/>',
     funnel: '<path d="M3 4h18l-7 8.5V20l-4-2v-5.5z"/>',
     home: '<path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/>',
     clients: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6M16 5.5a3 3 0 010 5.8M18 14.5c2 .7 3 2.6 3 5.5"/>',
@@ -46,7 +47,7 @@
     { id: 'money', name: 'Деньги', hint: 'Приходы, расходы, долги' },
     { id: 'analytics', name: 'Аналитика', hint: 'Цифры и графики' }
   ];
-  const NAV = [['home', 'Рабочий стол'], ['clients', 'Клиенты'], ['orders', 'Заказы'], ['funnel', 'Воронка'], ['calc', 'Расчёт'], ['calendar', 'Календарь'], ['money', 'Деньги'], ['analytics', 'Аналитика'], ['docs', 'Документы'], ['refs', 'Справочники'], ['settings', 'Настройки']];
+  const NAV = [['home', 'Рабочий стол'], ['clients', 'Клиенты'], ['orders', 'Заказы'], ['funnel', 'Воронка'], ['calc', 'Расчёт'], ['calendar', 'Календарь'], ['money', 'Деньги'], ['analytics', 'Аналитика'], ['dash', 'Дашборды'], ['docs', 'Документы'], ['refs', 'Справочники'], ['settings', 'Настройки']];
 
   const S = Object.assign({
     tabs: [{ id: 'home' }], active: 'home', theme: 'auto', skin: 'prism', collapsed: false,
