@@ -155,7 +155,7 @@
     const color = colList.some(c => c.key === s.color) ? s.color : '';
     const optNames = availOpts(s.sup, lam);
     const opts0 = {}; optNames.forEach(n => { if (s.opts[n]) opts0[n] = true; });
-    const chain = !!opts0['Цепочка'];
+    const chain = !!(opts0['Цепочка'] || opts0['Цепочка металлическая']);
     const splitOnly = s.sup === 'РДО' && lam === 50;
     const ctrl = chain ? (s.ctrl === 'R' || s.ctrl === 'TL' ? 'R' : 'L') : (splitOnly ? (s.ctrl === 'TL' ? 'TL' : 'TR') : (CTRL_NAMES[s.ctrl] ? s.ctrl : 'TR'));
     const fixNames = availFixes(s.sup, lam);

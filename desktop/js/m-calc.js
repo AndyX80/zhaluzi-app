@@ -27,14 +27,15 @@
     const prodKey = mat + ' ' + lam, colList = cs.colorsFor(s.sup, prodKey);
     const color = colList.some(c => c.key === s.color) ? s.color : '';
     const optNames = cs.availOpts(s.sup, lam), opts = {}; optNames.forEach(n => { if (s.opts[n]) opts[n] = true; });
-    const chain = !!opts['Цепочка'], splitOnly = s.sup === 'РДО' && lam === 50;
+    const chain = !!(opts['Цепочка'] || opts['Цепочка металлическая']), splitOnly = s.sup === 'РДО' && lam === 50;
     const ctrl = chain ? (s.ctrl === 'R' || s.ctrl === 'TL' ? 'R' : 'L') : (splitOnly ? (s.ctrl === 'TL' ? 'TL' : 'TR') : (cs.CTRL_NAMES[s.ctrl] ? s.ctrl : 'TR'));
+    const chainMet = !!opts['Цепочка металлическая'], chainCols = chain ? (chainMet ? ['Серебро'] : ['Белая', 'Антрацит', 'Прозрачная белая', 'Прозрачная коричневая']) : [], chainCol = chain ? (chainCols.indexOf(s.chainCol) >= 0 ? s.chainCol : chainCols[0]) : '';
     const ctrlKeys = chain ? ['L', 'R'] : (splitOnly ? ['TL', 'TR'] : cs.CTRL_ORDER[lam]);
     const fixNames = cs.availFixes(s.sup, lam), fix = fixNames.indexOf(s.fix) >= 0 ? s.fix : '';
     const cur = { sup: s.sup, lam, mat, color, ctrl, fix, w: s.w, h: s.h, opts };
     const al = k => (JC().autoList(s.sup, k) || []).filter(f => !f.hid && (k === 'drive' ? f.t === 'Горизонтальные' : f.pk) && (!f.lam || f.lam === lam)), au = s.auto || {}, auto = { drive: al('drive').some(f => f.key === au.drive) ? au.drive : '', remote: al('remote').some(f => f.key === au.remote) ? au.remote : '' };
     const r = JC().withAuto({ sup: s.sup, auto }, cs.calcItem(cur, colList));
-    return { auto, autoDrive: al('drive'), autoRemote: al('remote'), lamOk, lam, matOk, mat, prodKey, colList, color, optNames, opts, chain, ctrl, ctrlKeys, fixNames, fix, cur, r, selCol: colList.find(c => c.key === color) };
+    return { auto, autoDrive: al('drive'), autoRemote: al('remote'), lamOk, lam, matOk, mat, prodKey, colList, color, optNames, opts, chain, chainCols, chainCol, ctrl, ctrlKeys, fixNames, fix, cur, r, selCol: colList.find(c => c.key === color) };
   }
   const seg = (items, on, act, key) => '<div class="seg">' + items.map(v => '<button class="' + (on === v[0] ? 'on' : '') + '" data-a="' + act + '" data-k="' + key + '" data-v="' + e(v[0]) + '">' + e(v[1]) + '</button>').join('') + '</div>';
 
@@ -154,7 +155,7 @@
       return c + '</div>'; })() : '<div class="fld"></div>';
     const ICW = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M6 12h12M9 9l-3 3 3 3M15 9l3 3-3 3"/></svg>';
     const ICH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9l3-3 3 3M9 15l3 3 3-3"/></svg>';
-    const ORD = ['Тесьма', 'Цепочка', 'Окраска'], optSorted = n.optNames.slice().sort((x, y) => (ORD.indexOf(x) < 0 ? 9 : ORD.indexOf(x)) - (ORD.indexOf(y) < 0 ? 9 : ORD.indexOf(y)));
+    const ORD = ['Тесьма', 'Цепочка', 'Цепочка металлическая', 'Окраска'], optSorted = n.optNames.slice().sort((x, y) => (ORD.indexOf(x) < 0 ? 9 : ORD.indexOf(x)) - (ORD.indexOf(y) < 0 ? 9 : ORD.indexOf(y)));
     const cnt = JC().counts(), nAuto = cnt.drive + cnt.remote;
     /* одна колонка: модель, коллекция, тип, цвет, размер — Tab идёт строго по порядку */
     h += '<div class="fgrid fcol">' + modelRow() + '<div class="fld"><label>Коллекция</label><select class="ul" data-c="csup">' + SUPS.map(x => '<option value="' + x + '"' + (s.sup === x ? ' selected' : '') + '>' + e(cs.COLL_ALL[x] + ' (' + ru(x) + ')') + '</option>').join('') + '</select></div>' +
@@ -162,6 +163,7 @@
     h += '<div class="fld sz"><label>Размер, мм</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(s.w) + '" data-c="cf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(s.h) + '" data-c="cf" data-k="h"></span></div></div>';
     h += '<div class="fld"><label>Управление' + (n.chain ? ' (цепочка)' : '') + '</label><div class="ctrls">' + n.ctrlKeys.map(k => '<button class="ctr ' + (n.ctrl === k ? 'on' : '') + '" data-a="cf" data-k="ctrl" data-v="' + k + '" title="' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[k]) + '">' + ctrlSvg(n.lam, k, n.chain, 52) + '<span>' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[k]) + '</span></button>').join('') + '</div></div>';
     if (optSorted.length) h += '<div class="fld"><label>Опции</label><div class="ochips">' + optSorted.map(o => '<button class="oc ' + (n.opts[o] ? 'on' : '') + '" data-a="copt" data-v="' + e(o) + '">' + e(o) + (r.ok && n.opts[o] && r.optP[o] ? ' +' + fmt(r.optP[o]) : '') + '</button>').join('') + '</div></div>';
+    if (n.chainCols.length > 1 || (n.chain && n.chainCols.length)) h += '<div class="fld"><label>Цвет цепочки</label><div class="ochips">' + n.chainCols.map(c => '<button class="oc ' + (n.chainCol === c ? 'on' : '') + '" data-a="cchc" data-v="' + e(c) + '">' + e(c) + '</button>').join('') + '</div></div>';
     if (n.fixNames.length) h += '<div class="fld fixf"><label>Нижняя фиксация</label><select class="ul" data-c="cfix"><option value="">Без фиксации</option>' + n.fixNames.map(f => '<option value="' + e(f) + '"' + (n.fix === f ? ' selected' : '') + '>' + e((cs.FIXLBL[f] || f) + (r.ok && n.fix === f && r.optP[f] !== undefined ? ' +' + fmt(r.optP[f]) + ' ₽' : '')) + '</option>').join('') + '</select></div>';
     if (JC().hasAuto(s.sup) && (n.autoDrive.length || n.autoRemote.length)) {
       const opt = (list, cur) => '<option value="">Нет</option>' + list.map(f => '<option value="' + e(f.key) + '"' + (cur === f.key ? ' selected' : '') + '>' + e(f.name + ' +' + fmt(f.price) + ' ₽') + '</option>').join('');
@@ -260,9 +262,9 @@
   }
 
   function itemName(it, c) {
-    const extra = Object.keys(it.opts || {}).filter(k => it.opts[k]); if (it.fix) extra.push(CS().FIXLBL[it.fix] || it.fix);
+    const extra = Object.keys(it.opts || {}).filter(k => it.opts[k]).map(k => (k === 'Цепочка' || k === 'Цепочка металлическая') && it.chainCol ? k + ' (' + it.chainCol.toLowerCase() + ')' : k); if (it.fix) extra.push(CS().FIXLBL[it.fix] || it.fix);
     const col = c.col ? c.col.name : '';
-    const chain = !!(it.opts && it.opts['Цепочка']);
+    const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая']));
     return { title: CS().COLL_ALL[it.sup] + ' (' + ru(it.sup) + ')', sub: it.mat + ' ' + it.lam + (col ? ' · ' + col : '') + ' · ' + (chain ? CHAIN_TXT : CTRL_TXT)[it.ctrl || 'L'] + (extra.length ? ' · ' + extra.join(', ').toLowerCase() : '') };
   }
 
@@ -281,7 +283,7 @@
       d.push(['Система', sy ? sy.name : '—'], [it.mat === 'ГЖ алюминий' ? 'Лента' : it.mat === 'Вертикальные' ? 'Материал' : 'Ткань', fb ? fb.name : '—'], ['Размеры', it.w + '×' + it.h + ' мм'], ['Площадь', sizeM2(it)]);
       String(ds.sub || '').split(' · ').filter(Boolean).forEach(t => { const k = t.indexOf(':'); d.push(k > 0 ? [t.slice(0, k)[0].toUpperCase() + t.slice(1, k), t.slice(k + 1).trim()] : ['', t]); });
     } else {
-      const chain = !!(it.opts && it.opts['Цепочка']), opts = Object.keys(it.opts || {}).filter(k => it.opts[k]);
+      const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая'])), opts = Object.keys(it.opts || {}).filter(k => it.opts[k]);
       d.push(['Материал', it.mat + ' ' + it.lam + ' мм'], ['Цвет', c.col ? c.col.name : '—'], ['Размеры', it.w + '×' + it.h + ' мм'], ['Площадь', sizeM2(it)],
         ['Управление', (chain ? CHAIN_TXT : CTRL_TXT)[it.ctrl || 'L']], ['Нижняя фиксация', it.fix ? (cs.FIXLBL[it.fix] || it.fix) : 'Нет'], ['Опции', opts.length ? opts.join(', ') : 'Нет']);
       const a = it.auto || {}, al = (k, key) => ((JC().autoList(it.sup, k) || []).find(f => f.key === key) || {}).name;
@@ -457,7 +459,8 @@
   };
   A.act.cf = el => { const k = el.dataset.k, v = el.dataset.v; F[k] = k === 'lam' ? +v : v; if (k === 'sup') F.colOpen = false; rr(); };
   A.fld.cf = (v, el) => { const k = el.dataset.k; F[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
-  A.act.copt = el => { F.opts[el.dataset.v] = !F.opts[el.dataset.v]; rr(); };
+  A.act.copt = el => { const v = el.dataset.v, on = !F.opts[v]; F.opts[v] = on; if (on && v === 'Цепочка') delete F.opts['Цепочка металлическая']; if (on && v === 'Цепочка металлическая') delete F.opts['Цепочка']; if (!F.opts['Цепочка'] && !F.opts['Цепочка металлическая']) F.chainCol = ''; rr(); };
+  A.act.cchc = el => { F.chainCol = el.dataset.v; rr(); };
   A.act.ccol = () => { F.colOpen = !F.colOpen; F.cq = ''; rr(); };
   A.act.ccolpick = el => { if (F.mode === 'rolo') R.fab = el.dataset.v; else F.color = el.dataset.v; F.colOpen = false; F.cq = ''; rr(); };
   document.addEventListener('input', ev => { if (ev.target.id === 'ccolq' && ev.target.value !== F.cq) A.fld.ccolq(ev.target.value); });
@@ -481,14 +484,14 @@
   A.act['new-order'] = () => { A.open('calc'); setTimeout(() => { A.act.cnew(); A.act.creq(); }, 0); };
   A.act.cnew = () => {
     JC().clear(); resetO();
-    Object.assign(F, { color: '', colOpen: false, cq: '', w: '', h: '', qty: 1, ctrl: 'TR', fix: '', opts: {}, auto: { drive: '', remote: '' }, own: '', note: '', edit: -1 });
+    Object.assign(F, { color: '', colOpen: false, cq: '', w: '', h: '', qty: 1, ctrl: 'TR', fix: '', opts: {}, chainCol: '', auto: { drive: '', remote: '' }, own: '', note: '', edit: -1 });
     Object.assign(R, { fab: '', fq: '', w: '', h: '', qty: 1, vf: null, sel: {}, flags: {}, own: '', note: '', edit: -1 });
     Object.assign(CU, { title: '', price: '', sum: '', qty: 1, cost: '', drv: 'price' }); Object.assign(DR, { open: false, name: '', phone: '', note: '', files: [] });
     rr(); A.toast('Новый расчёт: корзина и поля очищены');
   };
   A.act.cocancel = () => { if (O.req) O.kept = true; O.req = false; O.open = false; rr(); };
   const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), g: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'gja'), sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', vf: it.vf ? Object.assign(VF0(), it.vf) : null, sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), tch: { 'Разведенное управление': true }, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
-    F.mode = 'blinds'; Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', opts: Object.assign({}, it.opts), auto: Object.assign({ drive: '', remote: '' }, it.auto), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
+    F.mode = 'blinds'; Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '', chainCol: it.chainCol || '', opts: Object.assign({}, it.opts), auto: Object.assign({ drive: '', remote: '' }, it.auto), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
   const cuSync = () => { document.querySelectorAll('.cuadd [data-k]').forEach(el => { const k = el.dataset.k; if (k !== 'title' && document.activeElement !== el) el.value = CU[k]; }); };
   A.fld.cuf = (v, el) => {
     const k = el.dataset.k;
@@ -536,7 +539,7 @@
     }
     const n = norm(); if (!n.r.ok) { A.toast(n.r.needColor ? 'Выбери цвет' : (n.r.msg || 'Введи размеры')); return; }
     const own = F.own !== '' && !isNaN(+F.own) && +F.own >= 0 ? Math.round(+F.own) : '';
-    const item = { sup: F.sup, lam: n.lam, mat: n.mat, color: n.color, ctrl: n.ctrl, fix: n.fix, opts: Object.assign({}, n.opts), auto: n.auto.drive || n.auto.remote ? Object.assign({}, n.auto) : undefined, w: +F.w, h: +F.h, qty: Math.max(1, +F.qty || 1), own, note: F.note };
+    const item = { chainCol: n.chainCol || undefined, sup: F.sup, lam: n.lam, mat: n.mat, color: n.color, ctrl: n.ctrl, fix: n.fix, opts: Object.assign({}, n.opts), auto: n.auto.drive || n.auto.remote ? Object.assign({}, n.auto) : undefined, w: +F.w, h: +F.h, qty: Math.max(1, +F.qty || 1), own, note: F.note };
     if (F.edit >= 0) JC().replaceItem(F.edit, item); else JC().addItem(item);
     Object.assign(F, { qty: 1, own: '', note: '', edit: -1, auto: { drive: '', remote: '' } }); A.toast('Добавлено в корзину'); rr();
   };
