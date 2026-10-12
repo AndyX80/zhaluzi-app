@@ -299,11 +299,13 @@
   };
 
   /* ===== правая часть: корзина, итог, действия ===== */
+  /* последняя строка заказа: доставка от производителей (1500 за партию, Уют и Форум бесплатно), можно править */
+  const shipRow = (FF, C) => !C.region && (FF.shipAuto || FF.ship) ? '<tr class="shiprow"><td></td><td><b>Доставка от производителя</b><div class="mut sm">' + (C.shipFix !== '' && C.shipFix != null && FF.ship !== FF.shipAuto ? 'по правилу: ' + m(FF.shipAuto) + ' · изменено вручную' : '1500 ₽ за партию каждого производителя (без Уюта и Форума)') + '</div></td><td class="r">1</td><td class="r"><input class="ul num cp" value="' + (FF.ship || 0) + '" data-c="cship"></td><td class="r num b">' + m(FF.ship) + '</td><td></td></tr>' : '';
   function cart() {
     const E = window.Eng; if (!E || !E.ready) return '<div class="card ccart"><h2>Корзина</h2>' + noPrices() + '</div>';
     const C = JC().C, FF = JC().compute(), items = C.cart, hide = !S.showCost;
     let prof = 0; items.forEach((it, i) => { const c = FF.calcs[i]; if (c.ok) prof += c.profit * it.qty; });
-    const shipCost = FF.ships.reduce((x, v, i) => x + (v || 0) * (+C.cart[i].qty || 1), 0), cost = FF.goodsSum - prof + shipCost, netProf = FF.netTotal - cost, /* закуп включает доставку производителя; монтаж и услуги в клиентской цене — выручка */ pct = C.discMode !== 'rub';
+    const shipCost = FF.shipAuto || 0, cost = FF.goodsSum - prof + shipCost, netProf = FF.netTotal - cost, /* закуп включает доставку производителя; монтаж и услуги в клиентской цене — выручка */ pct = C.discMode !== 'rub';
     const row = (it, i) => {
       const c = FF.calcs[i], nm = it.kind ? kindName(it, c) : { title: (it.prod === 'rolo' ? roloName(it, c) : itemName(it, c)).title, sub: mainSub(it, c) + (c.ok && c.termDays ? ' · срок ' + c.termDays + ' дн' : '') }, lineUnit = c.ok ? FF.lineSum[i] / it.qty : 0;
       const dw = JC().driveWarn(it), warn = (dw ? '<div class="cwarn">' + e(dw) + '</div>' : '') + (it.prod === 'rolo' && !c.ok ? '<div class="cwarn">' + e(c.msg || 'Нет цены') + '</div>' : c.ok && c.warn && c.warn.length ? '<div class="cwarn">' + (c.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + e(c.warn.join('; ')) + '</div>' : '');
@@ -318,7 +320,7 @@
     return '<div class="card ccart"><div class="ctop"><h2>Корзина</h2><span class="pill">' + items.length + ' поз.</span><span class="sp"></span>' +
       '<div class="seg" title="СПб: розница с доставкой и монтажом. Регионы: опт без доставки и монтажа"><button class="' + (!C.region ? 'on' : '') + '" data-a="creg" data-v="0">СПб</button><button class="' + (C.region ? 'on' : '') + '" data-a="creg" data-v="1">Регионы</button></div>' +
       '</div>' +
-      '<div class="clist sc">' + (items.length ? '<table class="tbl cartline"><thead><tr><th>№</th><th>Изделие</th><th class="r">Шт</th><th class="r">Цена за шт</th><th class="r">Сумма</th><th></th></tr></thead><tbody>' + items.map(row).join('') + '</tbody></table>' :
+      '<div class="clist sc">' + (items.length ? '<table class="tbl cartline"><thead><tr><th>№</th><th>Изделие</th><th class="r">Шт</th><th class="r">Цена за шт</th><th class="r">Сумма</th><th></th></tr></thead><tbody>' + items.map(row).join('') + shipRow(FF, C) + '</tbody></table>' :
         '') + (FF.svcLeft ? '<div class="cwarn" style="color:var(--mut);margin:8px 0">Доставка и установка: +' + m(FF.svcLeft) + '</div>' : '') + autoErrors(FF).map(t => '<div class="callout bad" style="margin:8px 0;font-size:13px">' + e(t) + '</div>').join('') + '</div>' +
       customRow() +
       '<div class="cfoot"><div class="cline">' +
@@ -478,6 +480,7 @@
   A.act.creg = el => { JC().setRegion(el.dataset.v === '1'); rr(); };
   A.act.chide = () => { S.showCost = !S.showCost; A.save(); rr(); };
   A.act.cdm = el => { JC().C.discMode = el.dataset.v; JC().save(); rr(); };
+  A.fld.cship = v => { const C = JC().C, t = String(v).replace(/\s/g, ''); C.shipFix = t === '' ? '' : Math.max(0, Math.round(+t || 0)); JC().save(); rr(); };
   A.fld.cfixt = v => { const C = JC().C; C.fixTotal = Math.max(0, Math.round(+String(v).replace(/\s/g, '') || 0)) || ''; JC().save(); rr(); };
   A.fld.cdisc = v => { const C = JC().C; C.disc = (+v || 0) || ''; JC().save(); rr(); };
   A.act.cservsug = el => { JC().C.service = +el.dataset.v || 0; JC().save(); rr(); };

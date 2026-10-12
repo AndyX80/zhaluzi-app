@@ -66,7 +66,7 @@
     const g = [], idx = {};
     (o.items || []).forEach((i, ix) => {
       const nm = i.kind || i.prod ? (i.title || 'Услуга') : [i.sup, i.mat, i.lam ? i.lam + ' мм' : '', i.o && i.o.color].filter(Boolean).join(', ');
-      const sz = i.W && !i.prod ? Math.round(i.W * 10) + '×' + Math.round(i.H * 10) : '', cu = i.kind === 'custom', k = nm + '|' + sz + '|' + i.price + '|' + i.ci + (cu ? '|' + i.cost + '|' + !!i.costOk : '');
+      const sz = i.W && !i.prod ? Math.round(i.W * 10) + '×' + Math.round(i.H * 10) : '', cu = i.kind === 'custom' && !i.ship, k = nm + '|' + sz + '|' + i.price + '|' + i.ci + (cu ? '|' + i.cost + '|' + !!i.costOk : '');
       if (idx[k] == null) { idx[k] = g.length; g.push({ ci: i.ci, nm, sz, price: +i.price || 0, n: 0, ix: [], cu, cost: i.cost, ok: !!i.costOk, sub: i.o ? [(i.o.opts || []).join(', '), i.o.fix || ''].filter(Boolean).join(' · ') : '' }); }
       g[idx[k]].n++; g[idx[k]].ix.push(ix);
     });
