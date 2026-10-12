@@ -103,3 +103,76 @@
 :root[data-skin=glass] .view.v-calc,:root[data-skin=dock] .view.v-calc{padding-bottom:10px}
 :root[data-skin=dock] .view.v-calc{padding-bottom:96px}
 :root[data-skin=glass]{--fb:#8f93a8}:root[data-skin=glass][data-theme=dark]{--fb:#6c7194}:root[data-skin=dock]{--fb:#8199b8}:root[data-skin=dock][data-theme=dark]{--fb:#4d6a96}
+
+/* ---------- ПРИЗМА (по презентации Prism): холодный фон, угловые скобки на карточках, спектр бирюза → маджента → жёлтый ---------- */
+:root[data-skin=prism]{--fnt:"Inter","SF Pro Display",system-ui,"Segoe UI",Roboto,sans-serif;--mono:"JetBrains Mono","SF Mono",ui-monospace,Consolas,monospace;
+--pop:#fff;--bg:#eef2f8;--bgx:linear-gradient(180deg,#f3f6fb,#e8edf5);--panel:#fff;--panel2:#f4f7fb;--ink:#0c1424;--mut:#5b6b82;--line:#e0e7f1;
+--acc:#0a8fb0;--acc-i:#fff;--acc-s:rgba(10,143,176,.1);--ok:#1b8a4b;--ok-s:#e0f4e8;--warn:#a86400;--warn-s:#fcefd0;--bad:#d6245f;--bad-s:#fde6ee;--info:#6d4bd8;--info-s:#ece7fb;--gray-s:#e8edf5;
+--side:#fff;--side-i:#0c1424;--side-m:#5b6b82;--sh:0 1px 2px rgba(15,30,60,.05),0 12px 32px rgba(20,40,80,.07);--br:rgba(10,143,176,.45);--bar:linear-gradient(180deg,#27a9ca,#a8dbe9);--bari:linear-gradient(90deg,#27a9ca,#0a8fb0);
+--spec:linear-gradient(90deg,#22b8d6,#e11d74 55%,#f2b705)}
+:root[data-skin=prism][data-theme=dark]{--pop:#0d1836;--bg:#050a18;--bgx:radial-gradient(60% 40% at 50% -5%,rgba(46,230,207,.09) 0,transparent 70%),linear-gradient(180deg,#060c1c,#040815);--panel:#0a1430;--panel2:#0f1b3c;--ink:#e8f0ff;--mut:#7f93b8;--line:#16264b;
+--acc:#2ee6cf;--acc-i:#031a1a;--acc-s:rgba(46,230,207,.13);--ok:#34d399;--ok-s:rgba(52,211,153,.14);--warn:#f5c518;--warn-s:rgba(245,197,24,.14);--bad:#ff5c93;--bad-s:rgba(255,92,147,.14);--info:#a78bfa;--info-s:rgba(167,139,250,.16);--gray-s:rgba(120,150,230,.12);
+--side:#070e22;--side-i:#e8f0ff;--side-m:#7f93b8;--sh:0 0 0 1px rgba(46,230,207,.03) inset,0 18px 44px rgba(0,0,0,.45);--br:rgba(46,230,207,.6);--bar:linear-gradient(180deg,#2ee6cf,#0b4a57);--bari:linear-gradient(90deg,#0b6d77,#2ee6cf);
+--spec:linear-gradient(90deg,#2ee6cf,#f0399d 55%,#f2e20f)}
+:root[data-skin=prism] body{font-family:var(--fnt);background:var(--bg);background-image:var(--bgx);background-attachment:fixed;letter-spacing:-.005em}
+:root[data-skin=prism] input,:root[data-skin=prism] select,:root[data-skin=prism] textarea{font-family:inherit}
+/* карточки с угловыми скобками */
+:root[data-skin=prism] .card,:root[data-skin=prism] .kpi{border-radius:14px;position:relative;
+background-image:linear-gradient(var(--br),var(--br)),linear-gradient(var(--br),var(--br)),linear-gradient(var(--br),var(--br)),linear-gradient(var(--br),var(--br)),linear-gradient(var(--br),var(--br)),linear-gradient(var(--br),var(--br)),linear-gradient(var(--br),var(--br)),linear-gradient(var(--br),var(--br));
+background-repeat:no-repeat;background-size:10px 1.5px,1.5px 10px,10px 1.5px,1.5px 10px,10px 1.5px,1.5px 10px,10px 1.5px,1.5px 10px;
+background-position:left 6px top 6px,left 6px top 6px,right 6px top 6px,right 6px top 6px,left 6px bottom 6px,left 6px bottom 6px,right 6px bottom 6px,right 6px bottom 6px}
+:root[data-skin=prism][data-theme=dark] .card,:root[data-skin=prism][data-theme=dark] .kpi{background-color:var(--panel);border-color:#14244a}
+:root[data-skin=prism] .card.p0{background-image:none}
+:root[data-skin=prism] .card{padding:18px 20px}
+:root[data-skin=prism] .kpi{padding:16px 20px}
+:root[data-skin=prism] .kpi b{font-size:30px;font-weight:600;letter-spacing:-.03em;display:block;line-height:1.2}
+:root[data-skin=prism] .kpi i{margin-left:0}
+:root[data-skin=prism] h1{font-size:26px;font-weight:700;letter-spacing:-.03em}
+:root[data-skin=prism] h2{font-size:15px;font-weight:600}
+:root[data-skin=prism] h3,:root[data-skin=prism] .kpi small,:root[data-skin=prism] .field label,:root[data-skin=prism] .fld>label,:root[data-skin=prism] .sumbar small,:root[data-skin=prism] .mode-l{font-family:var(--mono);font-weight:500;letter-spacing:0;font-size:11.5px}
+:root[data-skin=prism] .tbl th{background:transparent;font-family:var(--mono);font-weight:500;font-size:11.5px}
+:root[data-skin=prism] .num,:root[data-skin=prism] .kpi b,:root[data-skin=prism] .fprice .big{font-variant-numeric:tabular-nums}
+/* шапка, меню, вкладки */
+:root[data-skin=prism] .top{background:var(--panel);border-bottom:1px solid var(--line);position:relative}
+:root[data-skin=prism] .top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--spec);opacity:.7}
+:root[data-skin=prism] .brand b{font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+:root[data-skin=prism] .side{background:var(--side);border-right:1px solid var(--line)}
+:root[data-skin=prism] .ni{border-radius:10px;color:var(--side-m);transition:background .2s,color .2s}
+:root[data-skin=prism] .ni:hover{background:var(--gray-s);color:var(--side-i)}
+:root[data-skin=prism] .ni.on{background:var(--acc-s);color:var(--acc);box-shadow:inset 0 0 0 1px var(--br);font-weight:600}
+:root[data-skin=prism] .tabs{background:transparent}
+:root[data-skin=prism] .tab{border-radius:10px 10px 0 0}
+:root[data-skin=prism] .tab.on{background:var(--panel);box-shadow:inset 0 2px 0 var(--acc)}
+:root[data-skin=prism] .bar{background:var(--panel)}
+:root[data-skin=prism] .ver{color:var(--mut)}
+/* кнопки и переключатели */
+:root[data-skin=prism] .btn{border-radius:10px;font-weight:600;transition:transform .15s,box-shadow .2s,border-color .2s}
+:root[data-skin=prism] .btn:hover{border-color:var(--acc)}
+:root[data-skin=prism] .btn.pri{border-color:transparent;background:var(--acc);color:var(--acc-i)}
+:root[data-skin=prism][data-theme=dark] .btn.pri{box-shadow:0 0 18px rgba(46,230,207,.28)}
+:root[data-skin=prism] .btn.on{background:var(--acc-s);border-color:var(--acc);color:var(--acc)}
+:root[data-skin=prism] .seg{border-radius:10px;background:var(--gray-s)}
+:root[data-skin=prism] .seg button{border-radius:8px}
+:root[data-skin=prism] .seg button.on{background:var(--acc);color:var(--acc-i);font-weight:700;box-shadow:none}
+:root[data-skin=prism] .chip,:root[data-skin=prism] .mode{border-radius:10px}
+:root[data-skin=prism] .pill{font-family:var(--mono);font-weight:500;font-size:11.5px}
+:root[data-skin=prism] .search input{border-radius:10px;background:var(--panel2)}
+:root[data-skin=prism] .in:focus,:root[data-skin=prism] .search input:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-s)}
+:root[data-skin=prism] .itabs button.on,:root[data-skin=prism] .itabs .on{border-bottom-color:var(--acc);color:var(--acc)}
+:root[data-skin=prism] .callout{border-radius:12px}
+:root[data-skin=prism] .toast{border-radius:10px}
+:root[data-skin=prism] .pop,:root[data-skin=prism] .colpop{border-radius:12px}
+/* графики */
+:root[data-skin=prism] .bars span{background:var(--bar);border-radius:6px 6px 2px 2px}
+:root[data-skin=prism] .hb div{border-radius:99px}
+:root[data-skin=prism] .hb div i{background:var(--bari);border-radius:99px}
+:root[data-skin=prism] .oc.on,:root[data-skin=prism] .opt.on,:root[data-skin=prism] .ctr.on{border-color:var(--acc);color:var(--acc)}
+:root[data-skin=prism] ::-webkit-scrollbar{width:10px;height:10px}:root[data-skin=prism] ::-webkit-scrollbar-thumb{background:var(--gray-s);border-radius:99px;border:2px solid transparent;background-clip:padding-box}:root[data-skin=prism] ::-webkit-scrollbar-thumb:hover{background:var(--line);background-clip:padding-box}
+/* движение: сканер при загрузке, появление панелей, круговой переход тем */
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-old(root){z-index:1}::view-transition-new(root){z-index:2}
+@keyframes prism-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes prism-scan{from{top:-4px;opacity:1}90%{opacity:1}to{top:100%;opacity:0}}
+:root.boot[data-skin=prism] .view .card,:root.boot[data-skin=prism] .view .kpi{animation:prism-in .6s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--d,0s)}
+#scanline{position:fixed;left:0;right:0;top:-4px;height:3px;z-index:80;pointer-events:none;background:var(--spec);box-shadow:0 0 22px 4px rgba(46,230,207,.45);animation:prism-scan 1.1s cubic-bezier(.4,0,.2,1) forwards}
+@media(prefers-reduced-motion:reduce){#scanline{display:none}:root.boot[data-skin=prism] .view .card,:root.boot[data-skin=prism] .view .kpi{animation:none}}

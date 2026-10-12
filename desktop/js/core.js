@@ -48,10 +48,11 @@
   const NAV = [['home', 'Рабочий стол'], ['clients', 'Клиенты'], ['orders', 'Заказы'], ['calc', 'Расчёт'], ['calendar', 'Календарь'], ['money', 'Деньги'], ['analytics', 'Аналитика'], ['docs', 'Документы'], ['refs', 'Справочники'], ['settings', 'Настройки']];
 
   const S = Object.assign({
-    tabs: [{ id: 'home' }], active: 'home', theme: 'auto', skin: 'glass', collapsed: false,
+    tabs: [{ id: 'home' }], active: 'home', theme: 'auto', skin: 'prism', collapsed: false,
     ordersView: 'list', ordersFilter: 'all', selOrder: 'o3', orderTab: 'main', selClient: 'c1', clientTab: 'main',
     cart: [], region: false, hideProfit: false, disc: 0, refOpen: true, period: 'month', moneyF: 'all', refTab: 'sup', setTab: 'view'
   }, (function () { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } })());
+  if (S.skinV !== 3) { S.skin = 'prism'; S.skinV = 3; S.theme = 'dark'; }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
   const App = { S, D, icon, esc, money, ICONS, WS, NAV, save, mods: {}, act: {}, fld: {} };
@@ -169,7 +170,23 @@
     if (S.active === id) S.active = S.tabs[Math.max(0, i - 1)].id; save(); App.render();
   };
   App.act.collapse = () => { S.collapsed = !S.collapsed; save(); renderSide(); };
-  App.act.theme = () => { S.theme = S.theme === 'light' ? 'dark' : S.theme === 'dark' ? 'auto' : 'light'; save(); App.render(); App.toast('Тема: ' + ({ light: 'светлая', dark: 'тёмная', auto: 'как в системе' })[S.theme]); };
+  let lx = innerWidth - 120, ly = 30; document.addEventListener('pointerdown', e => { lx = e.clientX; ly = e.clientY; }, true);
+  const reduced = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* смена темы: светлая раскрывается кругом от места нажатия (где поддерживается) */
+  App.themeSwap = fn => {
+    if (!document.startViewTransition || reduced()) return fn();
+    const r = Math.hypot(Math.max(lx, innerWidth - lx), Math.max(ly, innerHeight - ly));
+    try { const t = document.startViewTransition(fn); t.ready.then(() => document.documentElement.animate({ clipPath: ['circle(0px at ' + lx + 'px ' + ly + 'px)', 'circle(' + r + 'px at ' + lx + 'px ' + ly + 'px)'] }, { duration: 650, easing: 'cubic-bezier(.6,0,.2,1)', pseudoElement: '::view-transition-new(root)' })).catch(() => {}); } catch (e) { fn(); }
+  };
+  /* первая загрузка: линия-сканер проходит сверху вниз, панели появляются под ней */
+  App.boot = () => {
+    if ((S.skin || '') !== 'prism' || reduced()) return;
+    const h = document.documentElement, v = document.getElementById('view'); if (!v) return;
+    const H = innerHeight || 900; v.querySelectorAll('.card,.kpi').forEach(c => { c.style.setProperty('--d', Math.max(0, c.getBoundingClientRect().top / H * 0.9).toFixed(2) + 's'); });
+    const sc = document.createElement('div'); sc.id = 'scanline'; document.body.appendChild(sc); h.classList.add('boot');
+    setTimeout(() => { h.classList.remove('boot'); sc.remove(); v.querySelectorAll('.card,.kpi').forEach(c => c.style.removeProperty('--d')); }, 2000);
+  };
+  App.act.theme = () => { const nx = S.theme === 'light' ? 'dark' : S.theme === 'dark' ? 'auto' : 'light'; App.themeSwap(() => { S.theme = nx; save(); App.render(); }); App.toast('Тема: ' + ({ light: 'светлая', dark: 'тёмная', auto: 'как в системе' })[nx]); };
   App.act.bell = (el, e) => { e.stopPropagation(); const at = App.attention ? App.attention().slice(0, 5) : []; popAt(el, '<div class="ph">Напоминания</div>' + (at.length ? at.map(x => '<button class="pm" data-a="opn" data-id="' + x[0] + '"><b>' + esc(x[2]) + '</b></button>').join('') : '<div class="pi">Пока всё спокойно</div>'), 'right'); };
   App.act.modes = (el, e) => { e.stopPropagation(); popAt(el, '<div class="ph">Режим работы</div>' + WS.map((w, i) => '<button class="pm" data-a="nav" data-id="' + w.id + '"><b>' + w.name + '</b><small>' + w.hint + '</small><kbd>Alt+' + (i + 1) + '</kbd></button>').join('') + '<div class="pf">Режим меняет раскладку под задачу. Данные, выбранный клиент и заказ остаются.</div>'); };
   App.act['new-order'] = () => App.open('calc');
@@ -207,7 +224,7 @@
     const mod = S.tabs.filter(t => t.id.indexOf(':') < 0)[0] || { id: 'home' };
     S.tabs = [mod].concat(S.tabs.filter(t => t.id.indexOf(':') > 0));
     if (!S.tabs.some(t => t.id === S.active)) S.active = mod.id;
-    App.render();
+    App.render(); setTimeout(App.boot, 0);
   };
   window.App = App;
 })();
