@@ -62,7 +62,7 @@
   /* сторона выхода провода: нужна у проводных и радио-приводов, у приводов с АКБ провода нет */
   const isAkb = f => /аккумулятор|АКБ/i.test((f.name || '') + ' ' + (f.sub || '') + ' ' + (f.grp || ''));
   function wireInfo(it) {
-    const A = AUTO && AUTO[it.sup]; if (!A || it.prod) return null;
+    const A = AUTO && AUTO[it.sup]; if (!A || (it.prod && it.prod !== 'rolo')) return null;
     if (it.kind === 'drive') { const f = A.drive.find(x => x.key === it.key); return f && !isAkb(f) ? { set: it.wire || '' } : null; }
     if (it.kind || !(it.auto && it.auto.drive)) return null;
     const f = A.drive.find(x => x.key === it.auto.drive); return f && !isAkb(f) ? { set: it.auto.wire || '' } : null;
@@ -84,7 +84,7 @@
 
   /* ---------- расчёт строки ---------- */
   function calcRow(it) {
-    const r0 = calcRow0(it); return it.kind || it.prod === 'rolo' ? r0 : withAuto(it, r0);
+    const r0 = calcRow0(it); return it.kind ? r0 : withAuto(it, r0);
   }
   function calcRow0(it) {
     if (it.kind === 'custom') {

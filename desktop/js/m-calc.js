@@ -12,7 +12,7 @@
   const O0 = () => ({ open: false, step: 0, fresh: false, sent: false, dog: false, q: '', ct: 'fiz', name: '', phone: '', phone2: '', comment: '', email: '', addr: '', company: '', inn: '', ogrn: '', uaddr: '', repr: '', bank: '', innMsg: '', innOk: true, innBusy: false, inst: true, note: '', pre: '100', preU: '%', term: '12', instPay: '', selfMeas: null });
   const O = { open: false, step: 0, fresh: false, sent: false, dog: false, q: '', ct: 'fiz', name: '', phone: '', phone2: '', comment: '', email: '', addr: '', company: '', inn: '', ogrn: '', uaddr: '', repr: '', bank: '', innMsg: '', innOk: true, innBusy: false, inst: true, note: '', pre: '100', preU: '%', term: '12', instPay: '', selfMeas: null };
   const F = { mode: '', sup: 'Amigo', lam: 50, mat: 'Дерево', color: '', colOpen: false, cq: '', w: '', h: '', qty: 1, ctrl: '', fix: '', opts: {}, auto: { drive: '', remote: '' }, own: '', note: '', edit: -1 };
-  const R = { z: false, sys: 'UNI-2', fab: '', fq: '', w: '', h: '', qty: 1, ctrl: '', vf: null, sel: {}, flags: {}, own: '', note: '', edit: -1 };
+  const R = { z: false, sys: 'UNI-2', fab: '', fq: '', w: '', h: '', qty: 1, ctrl: '', vf: null, sel: {}, flags: {}, auto: { drive: '', remote: '', wire: '' }, own: '', note: '', edit: -1 };
   const VF0 = () => ({ side: '', len: '', chain: 'Пластиковая', ceil: 'Обычный', ctype: 'К управлению', wall: '7,5 см' });
   const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const CS = () => window.JalCalcScreen, JC = () => window.JalCart;
@@ -193,13 +193,23 @@
   const RJ = () => window.JalRolo;
   const VG = () => R.v || R.g;
   const RM = () => R.g ? 'gja' : R.v ? 'vert' : R.z ? 'zebra' : 'rolo';
-  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.g ? 'ГЖ алюминий' : R.v ? 'Вертикальные' : R.z ? 'Зебра' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, w: +R.w || 0, h: +R.h || 0, ctrl: VG() ? (R.vf && R.vf.side === 'R' ? 'R' : R.vf && R.vf.side === 'L' ? 'L' : '') : R.ctrl, vf: VG() ? Object.assign(VF0(), R.vf) : undefined, sel: R.sel, flags: R.v ? Object.assign({}, R.flags, { 'Металлическая фурнитура': !!R.vf && R.vf.chain === 'Металл', 'Прозрачная комплектация': !!R.vf && R.vf.chain === 'Прозрачная' }) : R.flags, tubeLock: !!R.tubeLock });
+  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.g ? 'ГЖ алюминий' : R.v ? 'Вертикальные' : R.z ? 'Зебра' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, w: +R.w || 0, h: +R.h || 0, ctrl: VG() ? (R.vf && R.vf.side === 'R' ? 'R' : R.vf && R.vf.side === 'L' ? 'L' : '') : R.ctrl, vf: VG() ? Object.assign(VF0(), R.vf) : undefined, sel: R.sel, flags: R.v ? Object.assign({}, R.flags, { 'Металлическая фурнитура': !!R.vf && R.vf.chain === 'Металл', 'Прозрачная комплектация': !!R.vf && R.vf.chain === 'Прозрачная' }) : R.flags, tubeLock: !!R.tubeLock, auto: (R.auto && (R.auto.drive || R.auto.remote)) ? { drive: R.auto.drive || '', remote: R.auto.remote || '', wire: R.auto.wire || '' } : undefined });
+  /* автоматика Амиго под текущую систему: привод и пульт входят в цену изделия (правило: есть привод под этот тип, значит автоматика в расчёте) */
+  const rAuto = () => {
+    const J = JC(), sv = RJ().sysOf(R.sys) || {}, none = { drive: [], remote: [] }; if (!J.hasAuto('Amigo')) return none;
+    let t = '', lam = 0;
+    if (R.g) { if (/^V/.test(sv.vt || '')) t = 'Венус (кассетные ГЖ)'; else { t = 'Горизонтальные'; lam = +sv.vt === 50 ? 50 : 25; } } else if (R.v) t = 'Вертикальные';
+    if (!t) return none;
+    const L = k => (J.autoList('Amigo', k) || []).filter(f => !f.hid);
+    return { drive: L('drive').filter(f => f.t === t && (!lam || !f.lam || f.lam === lam)), remote: L('remote').filter(f => f.pk) };
+  };
   function normRolo() {
     const J = RJ(), sy = J.systems(RM()); if (!sy.some(x => x.code === R.sys)) R.sys = sy.length ? sy[0].code : '';
     { const fb = R.fab && J.fabOf(R.fab), sv = J.sysOf(R.sys); if (R.fab && (!fb || (fb.m || (fb.z ? 'zebra' : 'rolo')) !== RM() || (VG() && sv && fb.vt !== sv.vt))) R.fab = ''; }
     if (R.g) { const vf = R.vf = Object.assign(VF0(), R.vf || {}), ck = vf.ck || (vf.side && R.flags && R.flags['Разведенное управление'] ? (vf.side === 'R' ? 'TR' : 'TL') : vf.side || ''); vf.ck = ck; vf.side = ck === 'L' || ck === 'TL' ? 'L' : ck ? 'R' : ''; const sv = J.sysOf(R.sys), razv = ck === 'TL' || ck === 'TR'; R.flags = Object.assign({}, R.flags, { 'Разведенное управление': razv, 'Совмещенное управление': !!ck && !razv && !!sv && sv.vt === '50' }); }
     const o = J.opts(roloItem()); R.sel = o.sel; R.flags = o.flags;
-    const r = J.calc(roloItem()); if (r.tubeSel) R.sel['Труба'] = r.tubeSel;
+    { const al = rAuto(), a = R.auto = Object.assign({ drive: '', remote: '', wire: '' }, R.auto); if (a.drive && !al.drive.some(f => f.key === a.drive)) a.drive = ''; if (a.remote && !al.remote.some(f => f.key === a.remote)) a.remote = ''; if (!a.drive || !JC().wireInfo({ sup: 'Amigo', auto: { drive: a.drive } })) a.wire = ''; }
+    const r = JC().withAuto(roloItem(), J.calc(roloItem())); if (r.tubeSel) R.sel['Труба'] = r.tubeSel;
     return { it: roloItem(), r, groups: J.groups(R.sys) };
   }
   const roloName = (it, c) => { const d = RJ() ? RJ().describe(it, c) : { title: 'Рулонная штора', sub: '' }; return { title: d.title + ' (Амиго)', sub: it.w + '×' + it.h + ' мм · ' + d.sub + (c.ok && c.termDays ? ' · срок ' + c.termDays + ' дн' : '') }; };
@@ -241,6 +251,13 @@
     const choice = n.groups.filter(g => g.type === 'choice' && g.items.length > 1), flags = n.groups.filter(g => g.type === 'flag' && !(R.v && /^(Металлическая фурнитура|Прозрачная комплектация)$/.test(g.name)) && !(R.g && /^(Разведенное|Совмещенное) управление$/.test(g.name)));
     if (choice.length) h += '<div class="fgrid ropts">' + choice.map(g => '<div class="fld"><label>' + e(g.name) + '</label><select class="ul" data-c="ropt" data-k="' + e(g.name) + '">' + g.items.map(x => '<option value="' + e(x.value) + '"' + (R.sel[g.name] === x.value ? ' selected' : '') + '>' + e(x.value + (R.sel[g.name] === x.value ? '' : delta(g, x.value))) + '</option>').join('') + '</select>' + (g.name === 'Плитки' ? '<small class="mut" style="display:block;margin-top:4px;line-height:1.35">Плитка подкладочная для штапика менее 20 мм (толщина 4 мм):<br>штапик 16–20 мм — 1 пара<br>12–16 мм — 2 пары<br>8–12 мм — 3 пары<br>4–8 мм — 4 пары<br>0–4 мм — 5 пар</small>' : '') + '</div>').join('') + '</div>';
     if (flags.length) h += '<div class="fld"><label>Дополнительно</label><div class="ochips">' + flags.map(g => { const fo = g.name === 'Редуктор и цепь-петля' && RJ().venusReducer(R.sys, +R.w || 0, +R.h || 0), on = R.flags[g.name] || fo; return '<button class="oc ' + (on ? 'on' : '') + '" data-a="rflag" data-v="' + e(g.name) + '"' + (fo ? ' title="В этом размере Венус делается только с редуктором"' : '') + '>' + e(g.name) + (r.ok && on && r.optP[g.name] ? ' +' + fmt(r.optP[g.name]) : (on ? '' : delta(g))) + '</button>'; }).join('') + '</div></div>';
+    { const al = rAuto();
+      if (al.drive.length || al.remote.length) {
+        const opt = (list, cur) => '<option value="">Нет</option>' + list.map(f => '<option value="' + e(f.key) + '"' + (cur === f.key ? ' selected' : '') + '>' + e(f.name + ' +' + fmt(f.price) + ' ₽') + '</option>').join('');
+        h += '<div class="fgrid">' + (al.drive.length ? '<div class="fld"><label>Электропривод</label><select class="ul" data-c="rau" data-k="drive">' + opt(al.drive, R.auto.drive) + '</select></div>' : '') +
+          (al.remote.length ? '<div class="fld"><label>Пульт / выключатель</label><select class="ul" data-c="rau" data-k="remote">' + opt(al.remote, R.auto.remote) + '</select></div>' : '') + '</div>';
+        if (R.auto.drive && JC().wireInfo({ sup: 'Amigo', auto: { drive: R.auto.drive } })) h += '<div class="fld"><label>Провод привода выходит</label><div class="seg">' + [['L', 'слева'], ['R', 'справа']].map(k => '<button class="' + (R.auto.wire === k[0] ? 'on' : '') + '" data-a="rwire" data-v="' + k[0] + '">' + k[1] + '</button>').join('') + '</div></div>';
+      } }
     let st = '';
     if (!VG() && !J.windReady() && !F.windTried) { F.windTried = true; setTimeout(() => A.act.cprices(), 0); }
     const wd = f && !VG() ? J.wind(it) : null;
@@ -286,6 +303,7 @@
       const J = RJ(), sy = J && J.sysOf(it.sys), fb = J && J.fabOf(it.fab), ds = J ? J.describe(it, c) : { sub: '' };
       d.push(['Система', sy ? sy.name : '—'], [it.mat === 'ГЖ алюминий' ? 'Лента' : it.mat === 'Вертикальные' ? 'Материал' : 'Ткань', fb ? fb.name : '—'], ['Размеры', it.w + '×' + it.h + ' мм'], ['Площадь', sizeM2(it)]);
       String(ds.sub || '').split(' · ').filter(t => t && !(fb && fb.name && t.indexOf(':') < 0 && t.toLowerCase().indexOf(String(fb.name).toLowerCase()) >= 0)).forEach(t => { const k = t.indexOf(':'); d.push(k > 0 ? [t.slice(0, k)[0].toUpperCase() + t.slice(1, k), t.slice(k + 1).trim()] : ['', t]); });
+      if (it.auto && (it.auto.drive || it.auto.remote)) { const al = k => ((JC().autoList('Amigo', k) || []).find(f => f.key === it.auto[k]) || {}).name; d.push(['Электропривод', it.auto.drive ? (al('drive') || it.auto.drive) + (it.auto.wire ? ' (провод ' + (it.auto.wire === 'R' ? 'справа' : 'слева') + ')' : '') : 'Нет'], ['Пульт / выключатель', it.auto.remote ? (al('remote') || it.auto.remote) : 'Нет']); }
     } else {
       const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая'] || it.opts['Цепочка металлическая цветная'])), opts = Object.keys(it.opts || {}).filter(k => it.opts[k]);
       d.push(['Материал', it.mat + ' ' + it.lam + ' мм'], ['Цвет', c.col ? c.col.name : '—'], ['Размеры', it.w + '×' + it.h + ' мм'], ['Площадь', sizeM2(it)],
@@ -431,6 +449,8 @@
   A.fld.csup = v => { F.sup = v; F.colOpen = false; F.auto = { drive: '', remote: '' }; rr(); };
   A.act.cwire = el => { F.auto = Object.assign({ drive: '', remote: '' }, F.auto, { wire: el.dataset.v }); rr(); };
   A.act.cwirec = el => { JC().setWireAt(+el.dataset.i, el.dataset.v); rr(); };
+  A.fld.rau = (v, el) => { R.auto = Object.assign({ drive: '', remote: '', wire: '' }, R.auto, { [el.dataset.k]: v }); rr(); };
+  A.act.rwire = el => { R.auto = Object.assign({ drive: '', remote: '', wire: '' }, R.auto, { wire: el.dataset.v }); rr(); };
   A.fld.cau = (v, el) => { F.auto = Object.assign({ drive: '', remote: '' }, F.auto, { [el.dataset.k]: v }); rr(); };
   A.fld.cfix = v => { F.fix = v; rr(); };
   A.fld.rsys = v => { R.sys = v; R.sel = {}; R.flags = {}; R.tch = {}; R.tubeLock = false; rr(); };
@@ -502,7 +522,7 @@
     rr(); A.toast('Новый расчёт: корзина и поля очищены');
   };
   A.act.cocancel = () => { if (O.req) O.kept = true; O.req = false; O.open = false; rr(); };
-  const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), g: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'gja'), sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', vf: it.vf ? Object.assign(VF0(), it.vf) : null, sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), tch: { 'Разведенное управление': true }, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
+  const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), g: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'gja'), sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', vf: it.vf ? Object.assign(VF0(), it.vf) : null, sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), auto: Object.assign({ drive: '', remote: '', wire: '' }, it.auto), tch: { 'Разведенное управление': true }, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
     F.mode = 'blinds'; Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || '', fix: it.fix || '', chainCol: it.chainCol || '', opts: Object.assign({}, it.opts), auto: Object.assign({ drive: '', remote: '' }, it.auto), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
   const cuSync = () => { document.querySelectorAll('.cuadd [data-k]').forEach(el => { const k = el.dataset.k; if (k !== 'title' && document.activeElement !== el) el.value = CU[k]; }); };
   A.fld.cuf = (v, el) => {
@@ -545,10 +565,11 @@
     if (F.mode === 'rolo') {
       const n = normRolo(); if (!n.r.ok) { A.toast(n.r.msg || 'Заполните форму'); return; }
       if (VG() ? !(R.vf && R.vf.side) : !R.ctrl) { A.toast('Выбери сторону управления'); return; }
+      if (R.auto && R.auto.drive && JC().wireInfo({ sup: 'Amigo', auto: { drive: R.auto.drive } }) && !R.auto.wire) { A.toast('Выбери, с какой стороны выходит провод привода'); return; }
       const own = R.own !== '' && !isNaN(+R.own) && +R.own >= 0 ? Math.round(+R.own) : '';
       const item = Object.assign(roloItem(), { qty: Math.max(1, +R.qty || 1), own, note: R.note, sel: Object.assign({}, R.sel), flags: Object.assign({}, R.flags) });
       if (R.edit >= 0) JC().replaceItem(R.edit, item); else JC().addItem(item);
-      Object.assign(R, { qty: 1, own: '', note: '', edit: -1, tch: {} }); A.toast('Добавлено в корзину'); rr(); return;
+      Object.assign(R, { qty: 1, own: '', note: '', edit: -1, tch: {}, auto: { drive: '', remote: '', wire: '' } }); A.toast('Добавлено в корзину'); rr(); return;
     }
     const n = norm(); if (!n.r.ok) { A.toast(n.r.needColor ? 'Выбери цвет' : (n.r.msg || 'Введи размеры')); return; }
     if (!n.ctrl && !n.auto.drive) { A.toast('Выбери сторону управления'); return; }
