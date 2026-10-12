@@ -50,6 +50,8 @@
     plan: { n: 'План и факт', w: 4, h: 4, o: {}, f: [] },
     attn: { n: 'Требует внимания', w: 6, h: 6, o: { n: 8 }, f: [['n', 'Сколько', [[5, '5'], [8, '8'], [12, '12'], [20, '20']]]] },
     leads: { n: 'Просроченные ответы', w: 6, h: 5, o: {}, f: [] },
+    cash: { n: 'Прогноз денег 30/60/90', w: 6, h: 6, o: {}, f: [] },
+    aging: { n: 'Возраст долгов', w: 4, h: 5, o: {}, f: [] },
     debtors: { n: 'Должники', w: 5, h: 6, o: { n: 8 }, f: [['n', 'Сколько', [[5, '5'], [8, '8'], [12, '12'], [20, '20']]]] }
   };
   const title = it => {
@@ -97,6 +99,13 @@
       if (!A.crm) return ''; const p = A.crm.planFact(), C = A.crm.C;
       return '<div class="row" style="align-items:baseline;gap:8px"><b class="num" style="font-size:24px">' + m(p.s.rev) + '</b><span class="mut">из</span><input class="in" style="width:120px" type="number" step="50000" value="' + C.plan + '" data-c="cplan"></div><div class="hb" style="grid-template-columns:1fr 44px"><div style="height:14px"><i style="width:' + Math.min(100, p.pc) + '%"></i></div><b class="r">' + p.pc + '%</b></div><p class="mut sm">День ' + p.day + ' из ' + p.dim + '. Прогноз по темпу: ' + m(p.fc) + (C.plan ? ' (' + Math.round(p.fc / C.plan * 100) + '%)' : '') + '</p>';
     }
+    if (it.t === 'cash') return cashView();
+    if (it.t === 'aging') {
+      const B = [['до недели', 0, 7], ['1–2 недели', 8, 14], ['2–4 недели', 15, 30], ['больше месяца', 31, 9999]], T0 = Date.now(), by = B.map(() => 0);
+      D.orders.filter(x => !x.archived && DB.debt(x) > 0).forEach(x => { const a = Math.floor((T0 - new Date(x.created + 'T12:00:00')) / 864e5); B.forEach((b, i) => { if (a >= b[1] && a <= b[2]) by[i] += DB.debt(x); }); });
+      const mx = Math.max.apply(null, by.concat([1]));
+      return B.map((b, i) => '<div class="hb" style="grid-template-columns:100px 1fr minmax(70px,auto)"><span>' + b[0] + '</span><div><i style="width:' + by[i] / mx * 100 + '%;' + (i === 3 ? 'background:var(--bad)' : '') + '"></i></div><b class="r num">' + m(by[i]) + '</b></div>').join('');
+    }
     if (it.t === 'attn') { const at = A.attention().slice(0, +o.n || 8); return at.length ? '<div class="stack" style="gap:6px">' + at.map(a => '<div class="callout ' + (a[1] === 'bad' ? 'bad' : a[1] === 'info' ? 'info' : '') + ' row" style="cursor:pointer" data-a="opn" data-id="' + a[0] + '">' + A.icon(a[1] === 'info' ? 'info' : 'warn', 16) + '<span>' + e(a[2]) + '</span></div>').join('') + '</div>' : '<p class="mut">Всё в порядке</p>'; }
     if (it.t === 'leads') { const al = A.crm ? A.crm.alerts() : []; return al.length ? '<div class="stack" style="gap:6px">' + al.slice(0, 12).map(a => '<div class="callout bad row" style="cursor:pointer" data-a="opn" data-id="order:' + a.o.id + '">' + A.icon('warn', 16) + '<span>' + e(a.kind) + ': ' + e((A.client(a.o.client) || {}).name || '') + ', ' + a.age + ' дн.</span></div>').join('') + '</div>' : '<p class="mut">Просрочек нет</p>'; }
     if (it.t === 'debtors') {
@@ -104,6 +113,20 @@
       return os.length ? '<table class="tbl"><tbody>' + os.map(x => '<tr style="cursor:pointer" data-a="opn" data-id="order:' + x.id + '"><td>№ ' + x.no + '</td><td>' + e((A.client(x.client) || {}).name || '') + '</td><td class="r num">' + m(DB.debt(x)) + '</td></tr>').join('') + '</tbody></table>' : '<p class="mut">Долгов нет</p>';
     }
     return '';
+  }
+
+  /* прогноз денег: когда придут доплаты клиентов и когда надо платить поставщикам и монтажникам (даты ориентировочные: срок изготовления, иначе неделя) */
+  function cashView() {
+    const now = new Date(), t0 = isoD(now), at = (o, add) => { const d = o.due && o.due >= t0 ? new Date(o.due + 'T12:00:00') : new Date(now.getTime() + 7 * 864e5); d.setDate(d.getDate() + add); return Math.max(0, Math.floor((d - now) / 864e5)); };
+    const B = [[0, 30, '30 дней'], [31, 60, '31–60'], [61, 90, '61–90']], inn = [0, 0, 0], out = [0, 0, 0], put = (arr, day, v) => { B.forEach((b, i) => { if (day >= b[0] && day <= b[1]) arr[i] += v; }); };
+    D.orders.filter(o => !o.archived && !(o.fl && o.fl.closed)).forEach(o => {
+      const debt = DB.debt(o); if (debt > 0) put(inn, at(o, 0), debt);
+      if (o.fl) { if (!o.fl.sup && o.cost > 0) put(out, 0, o.cost); if (o.inst && !o.fl.zp && o.instCost > 0) put(out, at(o, 3), o.instCost); }
+    });
+    let bal = 0; const net = inn.map((v, i) => { bal += v - out[i]; return bal; }), mx = Math.max.apply(null, inn.concat(out).concat([1]));
+    return '<table class="tbl"><thead><tr><th></th>' + B.map(b => '<th class="r">' + b[2] + '</th>').join('') + '</tr></thead><tbody><tr><td>Придёт от клиентов</td>' + inn.map(v => '<td class="r num">' + m(v) + '</td>').join('') + '</tr><tr><td>Надо заплатить</td>' + out.map(v => '<td class="r num">' + m(v) + '</td>').join('') + '</tr><tr><td><b>Накопленно</b></td>' + net.map(v => '<td class="r num" style="color:var(--' + (v >= 0 ? 'ok' : 'bad') + ',inherit)"><b>' + m(v) + '</b></td>').join('') + '</tr></tbody></table>' +
+      '<div class="dw-cols" style="height:110px;margin-top:10px">' + B.map((b, i) => '<div><span style="height:' + Math.max(2, inn[i] / mx * 100) + '%"></span><u>приход</u></div><div><span style="height:' + Math.max(2, out[i] / mx * 100) + '%;background:var(--bad)"></span><u>расход</u></div>').join('') + '</div>' +
+      '<p class="mut sm" style="margin:6px 0 0">Ориентировочно: сроки по дате изготовления (иначе через неделю). Закуп и зарплаты считаются по Excel-заказам, остатки на счетах не учтены.</p>';
   }
 
   /* раскладка */
@@ -116,7 +139,7 @@
   const mk = (t, x, y, w, h, o, extra) => Object.assign({ id: 'w' + Math.random().toString(36).slice(2, 8), t, x, y, w: w || T[t].w, h: h || T[t].h, o: Object.assign({}, T[t].o, o || {}) }, extra || {});
   function defaults() {
     const a = [mk('kpi', 0, 0, 3, 2, { m: 'rev' }), mk('kpi', 3, 0, 3, 2, { m: 'prof' }), mk('kpi', 6, 0, 3, 2, { m: 'count' }), mk('kpi', 9, 0, 3, 2, { m: 'avg' }), mk('plan', 0, 2, 4, 4), mk('funnel', 4, 2, 8, 6), mk('cols', 0, 8, 6, 5, { m: 'rev' }), mk('bars', 6, 8, 3, 5, { d: 'src', m: 'count' }), mk('pie', 9, 8, 3, 5, { d: 'sup' }), mk('table', 0, 13, 12, 6, { d: 'cat' })];
-    const b = [mk('kpi', 0, 0, 3, 2, { m: 'debt', p: 'all' }), mk('kpi', 3, 0, 3, 2, { m: 'supdebt' }), mk('kpi', 6, 0, 3, 2, { m: 'instdebt' }), mk('kpi', 9, 0, 3, 2, { m: 'prof' }), mk('debtors', 0, 2, 5, 6), mk('cols', 5, 2, 7, 6, { m: 'prof' }), mk('attn', 0, 8, 12, 6)];
+    const b = [mk('kpi', 0, 0, 3, 2, { m: 'debt', p: 'all' }), mk('kpi', 3, 0, 3, 2, { m: 'supdebt' }), mk('kpi', 6, 0, 3, 2, { m: 'instdebt' }), mk('kpi', 9, 0, 3, 2, { m: 'prof' }), mk('debtors', 0, 2, 5, 6), mk('cols', 5, 2, 7, 6, { m: 'prof' }), mk('cash', 0, 8, 6, 7), mk('aging', 6, 8, 6, 5), mk('attn', 0, 15, 12, 6)];
     return [{ id: 's1', name: 'Продажи', items: a }, { id: 's2', name: 'Деньги', items: b }];
   }
   const Z = () => { if (!S.dash || !S.dash.screens || !S.dash.screens.length) S.dash = { cur: 's1', edit: false, screens: defaults() }; const d = S.dash; if (!d.screens.some(s => s.id === d.cur)) d.cur = d.screens[0].id; return d; };
