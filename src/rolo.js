@@ -5,13 +5,13 @@
   'use strict';
   const ceilTo = (x, s) => Math.ceil(x / s - 1e-9) * s;
   const SUP = 'Amigo';
-  let P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {}, VP = {}, VT = {}, GT = {}, GP = {};
+  let RED = null, P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {}, VP = {}, VT = {}, GT = {}, GP = {};
   const numC = (v, d) => v === '' || v == null || isNaN(Number(String(v).replace(',', '.'))) ? d : Number(String(v).replace(',', '.'));
 
   const unitOf = u => (u === 'м_шир' || u === 'м_выс' || u === 'м_шов' || u === 'м_цепь') ? u : 'изд';
 
   function setSheets(sh) {
-    ready = false; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {}; VP = {}; VT = {}; GT = {}; GP = {};
+    ready = false; RED = null; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {}; VP = {}; VT = {}; GT = {}; GP = {};
     if (!sh || !sh['Рулонки_системы'] || !sh['Рулонки_параметры']) return;
     sh['Рулонки_параметры'].slice(1).forEach(r => { if (r[0]) P[r[0]] = r[1]; });
     const par = sh['Параметры'] || []; par.forEach(r => { if (r[0] === 'курс_usd') FX = Number(r[1]) || FX; });
@@ -116,6 +116,9 @@
         FAB.push(f); FAB_BY[f.key] = f;
       });
       /* Венус: те же ленты, что у обычных 16/25 мм; категория цены из «Венус_категории» (нет в списке = в Венус не поставляется) */
+      if (sh['Венус_редуктор'] && sh['Венус_редуктор'].length > 1) { /* клетки сетки, где Венус делается только с редуктором и цепью-петлёй (тёмно-серые в прайсе) */
+        const rr = sh['Венус_редуктор']; RED = { widths: rr[0].slice(1).map(Number), rows: rr.slice(1).filter(q => q[0] !== '' && q[0] != null).map(q => ({ h: Number(q[0]), v: q.slice(1).map(x => /^[рp]/i.test(String(x || '').trim())) })).sort((a, b) => a.h - b.h) };
+      }
       const VC = {}; (sh['Венус_категории'] || []).slice(1).forEach(q => { if (q[1] !== '' && q[1] != null) VC[String(q[0]) + '|' + String(q[1])] = String(q[2]); });
       Object.keys(GT).forEach(t => {
         if (!GT[t].grid || !GT[t].base) return;
@@ -314,6 +317,13 @@
     return out;
   }
 
+  /* Венус: изделие этого размера делается только с редуктором и цепью-петлёй (клетка сетки тёмно-серая в прайсе) */
+  function venusReducer(code, wMm, hMm) {
+    const s = sysOf(code), T = s && s.model === 'gja' && GT[s.vt]; if (!T || !T.grid || !RED) return false;
+    const w = wMm / 1000, h = hMm / 1000, ci = RED.widths.findIndex(x => x >= w - 1e-9), row = RED.rows.find(r => r.h >= h - 1e-9);
+    return !!(row && ci >= 0 && row.v[ci]);
+  }
+
   /* горизонтальные алюминиевые жалюзи: цена ленты за кв. м (минимум 1 м²), скидка Амиго из «ГЖА_параметры», опции из «ГЖА_опции» */
   function calcGja(it, s, f, W, H, out) {
     const T = GT[s.vt];
@@ -336,7 +346,12 @@
       const nsW = GP['венус_без_стопора_шир_см'] || 0, nsU = GP['венус_без_стопора_usd'] || 0;
       if (nsW && w < nsW - 1e-9 && nsU) { baseUsd -= nsU; gridNote += ' · без стопора (ширина < ' + nsW + ' см)'; }
     }
-    const o = opts(it), optUsd = {}, optRub = {};
+    const o = opts(it), optUsd = {}, optRub = {}, notes = [], redName = 'Редуктор и цепь-петля';
+    if (T.grid) {
+      if (venusReducer(s.code, W, H)) { o.flags[redName] = true; notes.push('Изделие этого размера изготавливается только с редуктором и цепью-петлёй (добавлено в цену)'); }
+      else if (gridNote.indexOf('без стопора') >= 0) notes.push('Изделие шириной менее ' + (GP['венус_без_стопора_шир_см'] || 43.5) + ' см изготавливается без стопора');
+      if (o.flags[redName] && !notes.some(x => /редуктор/.test(x))) notes.push('Изделие с редуктором и цепью-петлёй');
+    }
     groupsOf(s.code).forEach(g => {
       const pick = g.type === 'flag' ? (o.flags[g.name] ? g.items[0] : null) : g.items.find(x => x.value === o.sel[g.name]);
       if (!pick || !pick.usd) return;
@@ -348,7 +363,7 @@
     Object.keys(optUsd).forEach(n => { optCost[n] = Math.round(optUsd[n] * k); optP[n] = Math.ceil(optUsd[n] * k * s.mk / step - 1e-9) * step; cost += optCost[n]; });
     Object.keys(optRub).forEach(n => { optCost[n] = 0; optP[n] = optRub[n]; }); /* опции в рублях: фиксированная цена в рознице */
     const baseRetail = ceilTo(base * s.mk, step), exact = base * s.mk + Object.keys(optUsd).reduce((a, n) => a + optUsd[n] * k * s.mk, 0) + Object.keys(optRub || {}).reduce((a, n) => a + optRub[n], 0), unit = ceilTo(exact, step), addSum = unit - baseRetail; /* округление до сотни один раз в конце */
-    Object.assign(out, { ok: true, unit, exact, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, areaNote: T.grid ? gridNote : 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : ''), usd: baseUsd });
+    Object.assign(out, { ok: true, unit, exact, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, notes, areaNote: T.grid ? gridNote : 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : ''), usd: baseUsd });
     return out;
   }
 
@@ -423,7 +438,7 @@
   }
 
   window.JalRolo = {
-    SUP, setSheets, ready: () => ready, systems: z => z == null ? SYS : SYS.filter(x => x.model === (typeof z === 'string' ? z : z ? 'zebra' : 'rolo')), sysOf, fabrics: z => z == null ? FAB : FAB.filter(x => (x.m || (x.z ? 'zebra' : 'rolo')) === (typeof z === 'string' ? z : z ? 'zebra' : 'rolo')), fabOf, groups: groupsOf, opts, calc, describe, wind, windReady: () => Object.keys(WIND).length > 0 && Object.keys(WINDZ).length > 0,
+    SUP, setSheets, ready: () => ready, systems: z => z == null ? SYS : SYS.filter(x => x.model === (typeof z === 'string' ? z : z ? 'zebra' : 'rolo')), sysOf, fabrics: z => z == null ? FAB : FAB.filter(x => (x.m || (x.z ? 'zebra' : 'rolo')) === (typeof z === 'string' ? z : z ? 'zebra' : 'rolo')), fabOf, groups: groupsOf, opts, calc, venusReducer, describe, wind, windReady: () => Object.keys(WIND).length > 0 && Object.keys(WINDZ).length > 0,
     termFor: it => { const s = sysOf(it.sys); return s ? s.term + (Number(P['срок_добавка_дн']) || 5) : 0; },
     photoUrl: f => (f && f.img ? String(P['фото_адрес'] || 'https://customizer.amigo.ru').replace(/\/$/, '') + f.img : ''),
     param: k => P[k]
