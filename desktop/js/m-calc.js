@@ -94,7 +94,7 @@
     let sl = ''; for (let i = 0; i < rows; i++) sl += '<rect x="5" y="' + (6 + i * (bh - 8) / rows) + '" width="' + (bw - 10) + '" height="' + ((bh - 8) / rows - 1.2) + '" rx="1" fill="' + c + '"/>';
     return '<svg class="pic" viewBox="0 0 ' + bw + ' ' + bh + '"><rect x=".5" y=".5" width="' + (bw - 1) + '" height="' + (bh - 1) + '" rx="3" fill="var(--panel2)" stroke="var(--line)"/><rect x="3" y="3" width="' + (bw - 6) + '" height="3" rx="1.5" fill="#6f6a63"/>' + sl + '</svg>';
   }
-  const MODELS = [['rolo', 'Рулонные шторы'], ['zebra', 'Зебра'], ['gja', 'Горизонтальные алюминиевые'], ['blinds', 'Горизонтальные деревянные'], ['vert', 'Вертикальные жалюзи'], ['', 'Плиссе (скоро)', 1], ['', 'Римские шторы (скоро)', 1], ['auto', 'Автоматика']];
+  const MODELS = [['rolo', 'РШ'], ['zebra', 'Зебра'], ['gja', 'ГЖ'], ['blinds', 'Дерево'], ['vert', 'ВЖ'], ['', 'Плиссе', 1], ['', 'Римки', 1], ['auto', 'Автоматика']];
   const noPrices = () => '<div class="empty" style="padding:28px">Цены не загружены.<br><small>Укажите ссылку на скрипт цен и нажмите «Синхронизировать» в Настройках, раздел «Данные».</small></div>';
   function form() {
     const E = window.Eng;
@@ -226,7 +226,7 @@
     h += '<div class="fld sz"><label>Размер, мм</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(R.w) + '" data-c="rf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(R.h) + '" data-c="rf" data-k="h"></span></div></div>';
     if (R.g) {
       const vf = R.vf = Object.assign(VF0(), R.vf || {});
-      const gl = +(RJ().sysOf(R.sys) || {}).vt === 50 ? 50 : 25, gk = CS().CTRL_ORDER[gl];
+      const gl = +(RJ().sysOf(R.sys) || {}).vt === 50 ? 50 : 25, gk = CS().CTRL_ORDER[gl].filter(k => !/^V/.test((RJ().sysOf(R.sys) || {}).vt || '') || k === 'L' || k === 'R'); /* Венус: только слева/справа */
       h += '<div class="fld"><label>Управление</label><div class="ctrls">' + gk.map(k => '<button class="ctr ' + (vf.ck === k ? 'on' : '') + '" data-a="gck" data-v="' + k + '" title="' + e(CTRL_TXT[k]) + '">' + ctrlSvg(gl, k, false, 52) + '<span>' + e(CTRL_TXT[k]) + '</span></button>').join('') + '</div></div>' +
         '<div class="fgrid"><div class="fld"><label>Длина управления, мм</label><input class="ul num" type="number" min="0" data-c="vf" data-k="len" value="' + e(vf.len !== '' && vf.len != null ? vf.len : (+R.h ? Math.round(+R.h * 0.75) : '')) + '"></div></div>';
     } else if (R.v) {

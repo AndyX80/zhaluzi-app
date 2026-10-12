@@ -93,8 +93,15 @@
       (sh['ГЖА_параметры'] || []).slice(1).forEach(r => { if (r[0]) GP[String(r[0])] = numC(r[1], 0); });
       sh['ГЖА_типы'].slice(1).forEach(r => {
         if (!r[0]) return;
-        const t = String(r[0]); GT[t] = { wmin: numC(r[2], 0), wmax: numC(r[3], 0), hmin: numC(r[4], 0), hmax: numC(r[5], 0), amax: numC(r[6], 0) };
-        SYS.push({ code: 'A-' + t, name: String(r[1] || t), group: 'Горизонтальные алюминиевые', grid: '', term: numC(r[9], 1), mk: numC(r[7], 2), profit: numC(r[8], 1000), note: '', model: 'gja', vt: t });
+        const t = String(r[0]); GT[t] = { wmin: numC(r[2], 0), wmax: numC(r[3], 0), hmin: numC(r[4], 0), hmax: numC(r[5], 0), amax: numC(r[6], 0), grid: String(r[10] || ''), base: String(r[11] || '') };
+        const gnm = GT[t].grid;
+        if (gnm && sh[gnm] && !GRID[gnm]) { /* кассетные (Венус): цена за изделие из сетки «Кат | Высота | ширины…» */
+          const rows = sh[gnm], widths = rows[0].slice(2).map(Number), cats = {};
+          rows.slice(1).forEach(q => { if (q[0] === '' || q[0] == null) return; const k = String(q[0]); (cats[k] = cats[k] || []).push({ h: Number(q[1]), v: q.slice(2).map(Number) }); });
+          Object.keys(cats).forEach(k => cats[k].sort((a, b) => a.h - b.h));
+          GRID[gnm] = { widths, cats };
+        }
+        SYS.push({ code: 'A-' + t, name: String(r[1] || t), group: 'Горизонтальные алюминиевые', grid: gnm, term: numC(r[9], 1), mk: numC(r[7], 2), profit: numC(r[8], 1000), note: '', model: 'gja', vt: t });
         const og = OPT['A-' + t] = { order: [], groups: {} };
         (sh['ГЖА_опции'] || []).slice(1).forEach(o => {
           if (!o[0] || (o[5] && String(o[5]).split(/[,;.\s]+/).map(x => x.trim()).indexOf(t) < 0)) return;
@@ -107,6 +114,17 @@
         const t = String(r[0]); if (!r[1] || !GT[t]) return;
         const f = { z: false, m: 'gja', vt: t, key: 'A|' + t + '|' + r[1], name: String(r[2] || r[1]), ser: (SYS.find(x => x.code === 'A-' + t) || {}).name || t, cat: '', usd: numC(r[3], 0), perf: /^да/i.test(String(r[4] || '')), roll: 0, prodW: 0, stock: r[6] === '' || r[6] == null ? null : Number(r[6]), qty: r[7] === '' || r[7] == null ? null : numC(r[7], null), img: String(r[5] || ''), maxs: '', wgrp: '', wet: '', coll: '' };
         FAB.push(f); FAB_BY[f.key] = f;
+      });
+      /* Венус: те же ленты, что у обычных 16/25 мм; категория цены из «Венус_категории» (нет в списке = в Венус не поставляется) */
+      const VC = {}; (sh['Венус_категории'] || []).slice(1).forEach(q => { if (q[1] !== '' && q[1] != null) VC[String(q[0]) + '|' + String(q[1])] = String(q[2]); });
+      Object.keys(GT).forEach(t => {
+        if (!GT[t].grid || !GT[t].base) return;
+        const sn = (SYS.find(x => x.code === 'A-' + t) || {}).name || t;
+        FAB.filter(b => b.m === 'gja' && b.vt === GT[t].base).slice().forEach(b => {
+          const code = b.key.split('|')[2], cat = VC[GT[t].base + '|' + code]; if (!cat) return;
+          const f = Object.assign({}, b, { vt: t, key: 'A|' + t + '|' + code, ser: sn, cat: GT[t].base + '|' + cat, usd: 0 });
+          FAB.push(f); FAB_BY[f.key] = f;
+        });
       });
     }
     /* серия, у которой выгружены цвета, в списке не дублируется общей строкой (в FAB_BY она остаётся для старых просчётов) */
@@ -308,21 +326,29 @@
     if (T.hmax && h > T.hmax) return bad('высота больше максимальной (' + T.hmax + ' см)');
     const area = W * H / 1e6;
     if (T.amax && area > T.amax + 1e-9) return bad('площадь больше максимальной (' + T.amax + ' м²)');
-    const minA = GP['мин_площадь_м2'] || 1, calcA = Math.max(area, minA), step = GP['округление'] || 100;
+    const minA = GP['мин_площадь_м2'] || 1, calcA = T.grid ? area : Math.max(area, minA), step = GP['округление'] || 100;
     const disc = GP['скидка'] != null ? GP['скидка'] : 0.4, k = (1 - disc) * FX;
-    const baseUsd = calcA * f.usd, o = opts(it), optUsd = {}, optRub = {};
+    let baseUsd = calcA * f.usd, gridNote = '', gridUsd = 0;
+    if (T.grid) { /* Венус: цена за изделие из сетки, размеры округляются вверх до шага сетки */
+      const L = lookup(s.code, f.cat, W, H);
+      if (L.err) { out.msg = L.err; if (L.hard) out.warn.hard = true; return out; }
+      gridUsd = baseUsd = L.usd; gridNote = 'Считаем по сетке ' + Math.round(L.w * 1000) + '×' + Math.round(L.h * 1000) + ' мм';
+      const nsW = GP['венус_без_стопора_шир_см'] || 0, nsU = GP['венус_без_стопора_usd'] || 0;
+      if (nsW && w < nsW - 1e-9 && nsU) { baseUsd -= nsU; gridNote += ' · без стопора (ширина < ' + nsW + ' см)'; }
+    }
+    const o = opts(it), optUsd = {}, optRub = {};
     groupsOf(s.code).forEach(g => {
       const pick = g.type === 'flag' ? (o.flags[g.name] ? g.items[0] : null) : g.items.find(x => x.value === o.sel[g.name]);
       if (!pick || !pick.usd) return;
       const lb = g.type === 'flag' ? g.name : pick.value;
-      if (/^руб/.test(pick.unit)) optRub[lb] = pick.usd; else optUsd[lb] = /кв/.test(pick.unit) ? pick.usd * calcA : pick.usd;
+      if (/^руб/.test(pick.unit)) optRub[lb] = pick.usd; else optUsd[lb] = /^%/.test(pick.unit) ? pick.usd / 100 * (gridUsd || baseUsd) : /кв/.test(pick.unit) ? pick.usd * calcA : pick.usd;
     });
     const base = Math.round(baseUsd * k), optCost = {}, optP = {};
     let cost = base;
     Object.keys(optUsd).forEach(n => { optCost[n] = Math.round(optUsd[n] * k); optP[n] = Math.ceil(optUsd[n] * k * s.mk / step - 1e-9) * step; cost += optCost[n]; });
     Object.keys(optRub).forEach(n => { optCost[n] = 0; optP[n] = optRub[n]; }); /* опции в рублях: фиксированная цена в рознице */
     const baseRetail = ceilTo(base * s.mk, step), exact = base * s.mk + Object.keys(optUsd).reduce((a, n) => a + optUsd[n] * k * s.mk, 0) + Object.keys(optRub || {}).reduce((a, n) => a + optRub[n], 0), unit = ceilTo(exact, step), addSum = unit - baseRetail; /* округление до сотни один раз в конце */
-    Object.assign(out, { ok: true, unit, exact, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, areaNote: 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : ''), usd: baseUsd });
+    Object.assign(out, { ok: true, unit, exact, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, areaNote: T.grid ? gridNote : 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : ''), usd: baseUsd });
     return out;
   }
 
