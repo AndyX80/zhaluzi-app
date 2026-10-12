@@ -107,7 +107,7 @@
           if (!o[0] || (o[5] && String(o[5]).split(/[,;.\s]+/).map(x => x.trim()).indexOf(t) < 0)) return;
           const nm = String(o[0]).trim(), ch = String(o[1]) === 'выбор';
           let g = og.groups[nm]; if (!g) { g = og.groups[nm] = { name: nm, type: ch ? 'choice' : 'flag', ord: og.order.length + 1, items: [], i: og.order.length }; og.order.push(nm); }
-          g.items.push({ value: ch ? String(o[2]) : nm, usd: numC(o[3], 0), unit: String(o[4] || ''), def: ch && !g.items.length });
+          g.items.push({ value: ch ? String(o[2]) : nm, usd: numC(o[3], 0), unit: String(o[4] || ''), def: ch && (/^да/i.test(String(o[6] || '')) || (!g.items.length && !(sh['ГЖА_опции'] || []).some(q => q[0] === o[0] && /^да/i.test(String(q[6] || ''))))) });
         });
       });
       sh['ГЖА_ленты'].slice(1).forEach(r => {
