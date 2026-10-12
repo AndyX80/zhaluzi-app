@@ -135,7 +135,7 @@
     const hasCol = {}, typCol = {}; FAB.forEach(f => { if (f.m === 'vert' && f.key.indexOf('V|') !== 0) { hasCol[f.vt + '|' + f.ser] = 1; typCol[f.vt] = 1; } });
     FAB.forEach(f => { if (f.m === 'vert' && f.key.indexOf('V|') === 0 && (hasCol[f.vt + '|' + f.ser] || typCol[f.vt])) f.gone = true; });
     FAB = FAB.filter(f => !f.gone);
-    const pin = f => (f.m === 'gja' && f.vt === '25' && /^0225 /.test(f.name) ? 1 : 0); /* ГЖ 25: «0225 Белый глянец» первой в списке */
+    const pin = f => (f.m === 'gja' && (f.vt === '25' || f.vt === 'V25') && /^0225 /.test(f.name) ? 1 : 0); /* ГЖ 25: «0225 Белый глянец» первой в списке */
     FAB.sort((a, b) => pin(b) - pin(a) || a.name.localeCompare(b.name, 'ru'));
     /* максимальные высоты намотки ткани по системе (таблицы Амиго «максимальных намоток»), м */
     [['Рул_намотка', WIND], ['Зебра_намотка', WINDZ]].forEach(([nm, dst]) => {
