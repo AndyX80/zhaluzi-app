@@ -284,7 +284,7 @@
     if (it.prod === 'rolo') {
       const J = RJ(), sy = J && J.sysOf(it.sys), fb = J && J.fabOf(it.fab), ds = J ? J.describe(it, c) : { sub: '' };
       d.push(['Система', sy ? sy.name : '—'], [it.mat === 'ГЖ алюминий' ? 'Лента' : it.mat === 'Вертикальные' ? 'Материал' : 'Ткань', fb ? fb.name : '—'], ['Размеры', it.w + '×' + it.h + ' мм'], ['Площадь', sizeM2(it)]);
-      String(ds.sub || '').split(' · ').filter(Boolean).forEach(t => { const k = t.indexOf(':'); d.push(k > 0 ? [t.slice(0, k)[0].toUpperCase() + t.slice(1, k), t.slice(k + 1).trim()] : ['', t]); });
+      String(ds.sub || '').split(' · ').filter(t => t && !(fb && fb.name && t.indexOf(':') < 0 && t.toLowerCase().indexOf(String(fb.name).toLowerCase()) >= 0)).forEach(t => { const k = t.indexOf(':'); d.push(k > 0 ? [t.slice(0, k)[0].toUpperCase() + t.slice(1, k), t.slice(k + 1).trim()] : ['', t]); });
     } else {
       const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая'] || it.opts['Цепочка металлическая цветная'])), opts = Object.keys(it.opts || {}).filter(k => it.opts[k]);
       d.push(['Материал', it.mat + ' ' + it.lam + ' мм'], ['Цвет', c.col ? c.col.name : '—'], ['Размеры', it.w + '×' + it.h + ' мм'], ['Площадь', sizeM2(it)],
