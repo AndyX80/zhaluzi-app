@@ -95,7 +95,8 @@
       const par = P.par, k = (1 - par['скидка_амиго']) * par['курс_usd'];
       return P.amigo.filter(r => r['Продукт'] === prod).map(r => {
         const ser = r['Серия'] || '', nm = String(r['Цвет']).replace(/\s*\([^)]*\)\s*$/, '');
-        return { key: r['Цвет'], name: nm, serRaw: ser, ser: ser ? (ser === 'липа' || ser === 'павловния' ? ser : 'серия ' + ser) : '', rate: rnd(r['Цена_usd_м2'] * k) };
+        const coll = ser === 'пластик' ? (/\(([^)]*)\)\s*$/.exec(String(r['Цвет'])) || [])[1] : ''; /* пластик: в скобках коллекция (Классик, Модерно), у «Березы» её нет */
+        return { key: r['Цвет'], name: nm, serRaw: ser, ser: coll ? 'серия ' + coll : ser ? (ser === 'липа' || ser === 'павловния' || ser === 'пластик' ? ser : 'серия ' + ser) : '', rate: rnd(r['Цена_usd_м2'] * k) };
       });
     }
     if (sup === 'Foroom' && prod.slice(-2) === '50') {
