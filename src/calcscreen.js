@@ -24,7 +24,7 @@
   const rnd = x => Math.floor(x + 0.5);
 
   const S = { mode: 'blinds', q: '', w: '', h: '', sup: 'Amigo', lam: 50, mat: 'Дерево', qty: 1, color: '', colorOpen: false,
-    ctrl: 'TR', fix: '', opts: {}, supOpen: false, justAdded: false, recent: [], editIdx: -1 };
+    ctrl: '', fix: '', opts: {}, supOpen: false, justAdded: false, recent: [], editIdx: -1 };
   try { S.recent = JSON.parse(localStorage.getItem('jal_recent') || '[]'); } catch (e) {}
   let P = null, mounted = null;
   let STOCK = { rdo: D.RDO_STOCK, int: D.INT_STOCK, fo: D.FOROOM_STOCK, am: {} };
@@ -139,7 +139,7 @@
     return calcItem(cur, colorsFor(it.sup, it.mat + ' ' + it.lam));
   }
   function edit(it, idx) {
-    Object.assign(S, { mode: 'blinds', sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || 'TR', fix: it.fix || '',
+    Object.assign(S, { mode: 'blinds', sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || '', fix: it.fix || '',
       opts: Object.assign({}, it.opts), w: it.w, h: it.h, qty: it.qty || 1, editIdx: idx, fromCopy: idx < 0, justAdded: false, supOpen: false });
   }
   function editAuto(sup) { Object.assign(S, { mode: 'auto', sup, editIdx: -1, justAdded: false }); }
@@ -157,7 +157,7 @@
     const opts0 = {}; optNames.forEach(n => { if (s.opts[n]) opts0[n] = true; });
     const chain = !!(opts0['Цепочка'] || opts0['Цепочка металлическая'] || opts0['Цепочка металлическая цветная']);
     const splitOnly = s.sup === 'РДО' && lam === 50;
-    const ctrl = chain ? (s.ctrl === 'R' || s.ctrl === 'TL' ? 'R' : 'L') : (splitOnly ? (s.ctrl === 'TL' ? 'TL' : 'TR') : (CTRL_NAMES[s.ctrl] ? s.ctrl : 'TR'));
+    const ctrl = chain ? (s.ctrl === 'R' || s.ctrl === 'TL' ? 'R' : (s.ctrl === 'L' || s.ctrl === 'TR' ? 'L' : '')) : (splitOnly ? (s.ctrl === 'TL' || s.ctrl === 'TR' ? s.ctrl : '') : (CTRL_NAMES[s.ctrl] ? s.ctrl : ''));
     const fixNames = availFixes(s.sup, lam);
     const fix = fixNames.indexOf(s.fix) >= 0 ? s.fix : '';
     const cur = { sup: s.sup, lam, mat, color, ctrl, fix, w: s.w, h: s.h, opts: opts0 };
@@ -170,7 +170,7 @@
       : 'flex: 1 1 0; height: 40px; border: 0; border-radius: 11px; background: transparent; color: var(--m1); font-size: 14px; font-weight: 600; padding: 0 2px';
     const set = p => { Object.assign(S, p); render(); };
     const chg = p => set(Object.assign({ justAdded: false }, p));
-    const pickSup = n => chg({ sup: n, lam: 50, mat: 'Дерево', color: '', ctrl: 'TR', fix: '', opts: {}, supOpen: false });
+    const pickSup = n => chg({ sup: n, lam: 50, mat: 'Дерево', color: '', ctrl: '', fix: '', opts: {}, supOpen: false });
 
     const supTiles = SUPS.map((n, i) => ({ name: n, coll: COLL[n], on: s.sup === n ? 'true' : 'false', pick: () => pickSup(n),
       style: 'min-height: 78px; border: 0; border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; text-align: left; ' + (i === 4 ? 'grid-column: span 2; ' : '') +
@@ -230,7 +230,7 @@
       w: s.w, h: s.h,
       setW: e => chg({ w: e.target.value }), setH: e => chg({ h: e.target.value }),
       showLam: lamOk.length > 1,
-      lams: lamOk.map(l => ({ name: l + ' мм', style: seg(lam === l), pick: () => chg({ lam: l, ctrl: l === 25 ? 'R' : 'TR' }) })),
+      lams: lamOk.map(l => ({ name: l + ' мм', style: seg(lam === l), pick: () => chg({ lam: l, ctrl: '' }) })),
       mats: matOk.map(m => ({ name: m, style: seg(mat === m), pick: () => chg({ mat: m }) })),
       hasColors: colList.length > 0,
       colorBtnStyle: 'min-height: 48px; border-radius: 14px; border: 1.5px solid ' + (selCol || !colList.length ? 'var(--line)' : 'var(--ac)') + '; background: var(--card); color: var(--ink); display: flex; align-items: center; gap: 10px; padding: 3px 12px 3px 14px; text-align: left',
@@ -286,6 +286,7 @@
       addStyle: 'height: 48px; padding: 0 22px; border: 0; border-radius: 24px; background: var(--ac); color: #FFFFFF; font-size: 16px; font-weight: 800; display: flex; align-items: center; justify-content: center; opacity: ' + (r.ok ? '1' : '0.45'),
       addToCart: () => {
         if (!r.ok || !App) return;
+        if (!ctrl) { (App.toast || window.alert.bind(window))('Выбери сторону управления'); return; }
         const item = { sup: s.sup, lam, mat, color, ctrl, fix, opts: Object.assign({}, opts0), w: +s.w, h: +s.h, qty: s.qty };
         if (s.editIdx >= 0) { JC.replaceItem(s.editIdx, item); set({ editIdx: -1, qty: 1 }); App.tab('cart'); }
         else { if (!s.fromCopy) JC.C.service = 0; JC.addItem(item); set({ qty: 1, justAdded: true, fromCopy: false }); }
