@@ -58,7 +58,17 @@
 
   /* автоматика, выбранная прямо в изделии (it.auto = { drive, remote }): входит в цену жалюзи, отдельной строкой не показывается */
   const autoPick = it => { const A = AUTO && AUTO[it.sup], a = it.auto || {}; if (!A || it.kind) return []; return ['drive', 'remote'].map(k => { const f = a[k] && A[k].find(x => x.key === a[k]); return f ? { kind: k, f } : null; }).filter(Boolean); };
-  const autoTxt = it => autoPick(it).map(x => (x.kind === 'drive' ? 'электропривод ' : 'пульт ') + x.f.name).join(', ');
+  const autoTxt = it => autoPick(it).map(x => (x.kind === 'drive' ? 'электропривод ' : 'пульт ') + x.f.name + (x.kind === 'drive' && it.auto.wire ? ' (провод ' + (it.auto.wire === 'R' ? 'справа' : 'слева') + ')' : '')).join(', ');
+  /* сторона выхода провода: нужна у проводных и радио-приводов, у приводов с АКБ провода нет */
+  const isAkb = f => /аккумулятор|АКБ/i.test((f.name || '') + ' ' + (f.sub || '') + ' ' + (f.grp || ''));
+  function wireInfo(it) {
+    const A = AUTO && AUTO[it.sup]; if (!A || it.prod) return null;
+    if (it.kind === 'drive') { const f = A.drive.find(x => x.key === it.key); return f && !isAkb(f) ? { set: it.wire || '' } : null; }
+    if (it.kind || !(it.auto && it.auto.drive)) return null;
+    const f = A.drive.find(x => x.key === it.auto.drive); return f && !isAkb(f) ? { set: it.auto.wire || '' } : null;
+  }
+  const wireMissing = () => C.cart.map((it, i) => { const w = wireInfo(it); return w && !w.set ? i + 1 : 0; }).filter(Boolean);
+  function setWireAt(i, side) { const it = C.cart[i]; if (!it) return; C.cart[i] = it.kind === 'drive' ? Object.assign({}, it, { wire: side }) : Object.assign({}, it, { auto: Object.assign({}, it.auto, { wire: side }) }); save(); }
   function withAuto(it, r) {
     const pk = autoPick(it); if (!r || !r.ok || !pk.length) return r;
     const add = pk.reduce((a, x) => a + x.f.price, 0), cost = pk.reduce((a, x) => a + x.f.cost, 0);
@@ -353,7 +363,7 @@
   function clear() { C.editNo = null; C.cart = []; C.service = 0; C.pvz = ''; C.disc = ''; C.fixTotal = ''; save(); }
 
   const setRegion = on => { C.region = !!on; save(); rerender(); };
-  window.JalCart = { instSugg, withAuto, autoTxt, driveWarn, save, rerender, setRegion, RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
+  window.JalCart = { wireInfo, wireMissing, setWireAt, isAkb, instSugg, withAuto, autoTxt, driveWarn, save, rerender, setRegion, RATES, MINP, saveCfg, C, snapshot, restore, setSheets, render, addItem, replaceItem, clear, count: () => C.cart.length, toOrder, compute,
     autoList: (sup, kind) => (AUTO && AUTO[sup] ? AUTO[sup][kind] : null), autoAll: () => { const o = []; if (AUTO) Object.keys(AUTO).forEach(sup => ['drive', 'remote'].forEach(k => AUTO[sup][k].forEach(f => { if (!f.hid) o.push(Object.assign({ sup, kind: k }, f)); }))); return o; }, autoQty, autoStep, hasAuto: sup => !!(AUTO && AUTO[sup]),
     counts: () => ({ drive: C.cart.filter(x => x.kind === 'drive').reduce((a, x) => a + x.qty, 0), remote: C.cart.filter(x => x.kind === 'remote').reduce((a, x) => a + x.qty, 0) }) };
 })();

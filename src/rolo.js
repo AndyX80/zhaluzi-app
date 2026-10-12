@@ -64,7 +64,7 @@
         SYS.push({ code: 'V-' + t, name: String(r[1] || t), group: 'Вертикальные', grid: '', term: num(r[9], 1), mk: num(r[7], 2), profit: num(r[8], 1000), note: '', model: 'vert', vt: t });
         const og = OPT['V-' + t] = { order: [], groups: {} };
         (sh['Верт_опции'] || []).slice(1).forEach(o => {
-          if (!o[0] || (o[5] && String(o[5]).split(',').map(x => x.trim()).indexOf(t) < 0)) return;
+          if (!o[0] || (o[5] && String(o[5]).split(/[,;.\s]+/).map(x => x.trim()).indexOf(t) < 0)) return;
           if (o[1] === 'флаг' && !num(o[4], 0) && !String(o[3] || '')) return;
           const nm = /^декоративный карниз$/i.test(String(o[0]).trim()) ? 'Грувер' : String(o[0]); og.order.push(nm);
           og.groups[nm] = { name: nm, type: 'flag', ord: og.order.length, items: [{ value: nm, usd: num(o[4], 0), unit: String(o[3] || ''), def: false }], i: og.order.length };
@@ -97,7 +97,7 @@
         SYS.push({ code: 'A-' + t, name: String(r[1] || t), group: 'Горизонтальные алюминиевые', grid: '', term: numC(r[9], 1), mk: numC(r[7], 2), profit: numC(r[8], 1000), note: '', model: 'gja', vt: t });
         const og = OPT['A-' + t] = { order: [], groups: {} };
         (sh['ГЖА_опции'] || []).slice(1).forEach(o => {
-          if (!o[0] || (o[5] && String(o[5]).split(',').map(x => x.trim()).indexOf(t) < 0)) return;
+          if (!o[0] || (o[5] && String(o[5]).split(/[,;.\s]+/).map(x => x.trim()).indexOf(t) < 0)) return;
           const nm = String(o[0]).trim(), ch = String(o[1]) === 'выбор';
           let g = og.groups[nm]; if (!g) { g = og.groups[nm] = { name: nm, type: ch ? 'choice' : 'flag', ord: og.order.length + 1, items: [], i: og.order.length }; og.order.push(nm); }
           g.items.push({ value: ch ? String(o[2]) : nm, usd: numC(o[3], 0), unit: String(o[4] || ''), def: ch && !g.items.length });
@@ -387,7 +387,7 @@
     });
     if (s && s.model === 'gja') {
       const v = it.vf || {}, ln = v.len || (Number(it.h) > 0 ? Math.round(Number(it.h) * 0.75) : 0), a = [];
-      if (v.side) a.push('управление ' + (v.side === 'R' ? 'правое' : 'левое'));
+      if (v.ck) a.push(({ L: 'подъём и поворот слева', R: 'подъём и поворот справа', TL: 'поворот слева, подъём справа', TR: 'поворот справа, подъём слева' })[v.ck]); else if (v.side) a.push('управление ' + (v.side === 'R' ? 'правое' : 'левое'));
       if (ln) a.push('длина упр. ' + ln + ' мм');
       return { title: 'Алюминиевые жалюзи ' + s.name, sub: (f ? 'лента ' + f.name : 'лента не выбрана') + (a.length ? ' · ' + a.join(', ') : '') + (parts.length ? ' · ' + parts.join(', ') : '') };
     }
