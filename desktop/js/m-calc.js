@@ -94,7 +94,7 @@
     let sl = ''; for (let i = 0; i < rows; i++) sl += '<rect x="5" y="' + (6 + i * (bh - 8) / rows) + '" width="' + (bw - 10) + '" height="' + ((bh - 8) / rows - 1.2) + '" rx="1" fill="' + c + '"/>';
     return '<svg class="pic" viewBox="0 0 ' + bw + ' ' + bh + '"><rect x=".5" y=".5" width="' + (bw - 1) + '" height="' + (bh - 1) + '" rx="3" fill="var(--panel2)" stroke="var(--line)"/><rect x="3" y="3" width="' + (bw - 6) + '" height="3" rx="1.5" fill="#6f6a63"/>' + sl + '</svg>';
   }
-  const MODELS = [['rolo', 'РШ'], ['zebra', 'Зебра'], ['roof', 'Roof'], ['gja', 'ГЖ'], ['blinds', 'Дерево'], ['vert', 'ВЖ'], ['', 'Плиссе', 1], ['', 'Римки', 1], ['auto', 'Автоматика']];
+  const MODELS = [['rolo', 'РШ'], ['zebra', 'Зебра'], ['gja', 'ГЖ'], ['blinds', 'Дерево'], ['vert', 'ВЖ'], ['', 'Плиссе', 1], ['', 'Римки', 1], ['auto', 'Автоматика']];
   const noPrices = () => '<div class="empty" style="padding:28px">Цены не загружены.<br><small>Укажите ссылку на скрипт цен и нажмите «Синхронизировать» в Настройках, раздел «Данные».</small></div>';
   function form() {
     const E = window.Eng;
@@ -103,7 +103,7 @@
     return F.mode === 'rolo' ? formRolo() : F.mode === 'blinds' ? form0() : F.mode === 'auto' ? formAuto() : formEmpty();
   }
   const formEmpty = () => '<div class="card cform"><h2>Новое изделие</h2><div class="fgrid">' + modelRow() + '</div></div>';
-  const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + (F.mode ? '' : '<option value="" selected disabled>Выберите модель</option>') + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (F.mode && x[0] === (F.mode === 'rolo' ? RM() : F.mode) ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
+  const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + (F.mode ? '' : '<option value="" selected disabled>Выберите модель</option>') + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (F.mode && x[0] === (F.mode === 'rolo' ? RMM() : F.mode) ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
   /* категория «Автоматика»: Моторизация (по типам изделий и видам) → Радиопередатчики → Источники питания → Разное */
   const ASEC = ['Моторизация', 'Радиопередатчики', 'Источники питания', 'Разное'], GSUB = ['ГЖ алюминий 16/25', 'ГЖ 50', 'Дерево', 'Венус'], ATYPES = ['Рулонные шторы', 'ГЖ', 'Вертикальные', 'Плиссе', 'Мираж', 'Римские'];
   const ATLBL = { 'ГЖ': 'Горизонтальные жалюзи', 'ГЖ алюминий 16/25': 'ГЖ алюминий 16/25 мм', 'ГЖ 50': 'ГЖ 50 мм', 'Дерево': 'Дерево и бамбук (все поставщики)', 'Венус': 'Венус (кассетные ГЖ)', 'Рулонные шторы': 'Рулонные шторы и зебра' }, AGRP = ['Проводные', 'Радио', 'Радио + АКБ'];
@@ -192,6 +192,7 @@
   /* ===== рулонные шторы Амиго: система, ткань, размер, управление, опции по группам ===== */
   const RJ = () => window.JalRolo;
   const VG = () => R.v || R.g;
+  const RMM = () => R.rf ? 'rolo' : RM();
   const RM = () => R.rf ? 'roof' : R.g ? 'gja' : R.v ? 'vert' : R.z ? 'zebra' : 'rolo';
   const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.g ? 'ГЖ алюминий' : R.v ? 'Вертикальные' : R.z ? 'Зебра' : R.rf ? 'Рулонные шторы Roof' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, rw: R.rf ? R.rw || undefined : undefined, fab2: R.rf && R.sys === 'ROOF-DN' ? R.fab2 || undefined : undefined, w: +R.w || 0, h: +R.h || 0, ctrl: R.rf ? '' : VG() ? (R.vf && R.vf.side === 'R' ? 'R' : R.vf && R.vf.side === 'L' ? 'L' : '') : R.ctrl, vf: VG() ? Object.assign(VF0(), R.vf) : undefined, sel: R.sel, flags: R.v ? Object.assign({}, R.flags, { 'Металлическая фурнитура': !!R.vf && R.vf.chain === 'Металл', 'Прозрачная комплектация': !!R.vf && R.vf.chain === 'Прозрачная' }) : R.flags, tubeLock: !!R.tubeLock, auto: (R.auto && (R.auto.drive || R.auto.remote)) ? { drive: R.auto.drive || '', remote: R.auto.remote || '', wire: R.auto.wire || '' } : undefined });
   /* автоматика Амиго под текущую систему: привод и пульт входят в цену изделия (правило: есть привод под этот тип, значит автоматика в расчёте) */
@@ -208,8 +209,9 @@
     const L = k => (J.autoList('Amigo', k) || []).filter(f => !f.hid);
     return { drive: L('drive').filter(f => f.t === t && (!lam || !f.lam || f.lam === lam) && (!nm || nm.test(f.name))), remote: L('remote').filter(f => f.pk) };
   };
+  const sysAll = J => (R.g || R.v || R.z) ? J.systems(RM()) : J.systems('rolo').concat(J.systems('roof'));
   function normRolo() {
-    const J = RJ(), sy = J.systems(RM()); if (!sy.some(x => x.code === R.sys)) R.sys = sy.length ? sy[0].code : '';
+    const J = RJ(); if (!R.g && !R.v && !R.z) R.rf = /^ROOF/.test(R.sys); const sy = sysAll(J); if (!sy.some(x => x.code === R.sys)) R.sys = sy.length ? sy[0].code : '';
     { const fb = R.fab && J.fabOf(R.fab), sv = J.sysOf(R.sys); if (R.fab && (!fb || (fb.m || (fb.z ? 'zebra' : 'rolo')) !== (R.rf ? 'rolo' : RM()) || (VG() && sv && fb.vt !== sv.vt) || (R.rf && fb.roof === 'нет'))) R.fab = ''; }
     if (R.rf) { /* Roof: размер штор берётся из выбранной модели окна */
       const mans = J.roofMans(); if (mans.indexOf(R.rm) < 0) R.rm = mans[0] || '';
@@ -232,7 +234,7 @@
     let f = J.fabOf(R.fab); if (f && f.gone) { R.fab = ''; f = null; } const q = (F.cq || '').trim().toLowerCase();
     const sObj = J.sysOf(R.sys), isCorn = !!(sObj && sObj.vt === 'карниз');
     const shown = J.fabrics(RM()).filter(x => (!VG() || !sObj || x.vt === sObj.vt) && (!q || (x.name + ' ' + x.ser + ' ' + x.cat).toLowerCase().indexOf(q) >= 0));
-    const sy = J.systems(RM()), grpNames = sy.map(x => x.group).filter((g, i, a) => a.indexOf(g) === i);
+    const sy = sysAll(J), grpNames = sy.map(x => x.group).filter((g, i, a) => a.indexOf(g) === i);
     const ICW = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M6 12h12M9 9l-3 3 3 3M15 9l3 3-3 3"/></svg>';
     const ICH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9l3-3 3 3M9 15l3 3 3-3"/></svg>';
     /* прибавка в рознице за вариант опции: считаем тем же расчётом с подставленным значением */
@@ -473,7 +475,7 @@
       else if (cur.matches && cur.matches('[data-a=cauto]') && !F.autoOpen) { F.autoOpen = true; rr(); }
     }, 0);
   });
-  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo' || v === 'zebra' || v === 'vert' || v === 'gja' || v === 'roof') { const m = v === 'zebra' || v === 'vert' || v === 'rolo' || v === 'gja' || v === 'roof' ? v : ''; if (m) { if (RM() !== m) { R.sys = ''; R.fab = ''; R.sel = {}; R.flags = {}; R.vf = null; R.tch = {}; } R.z = m === 'zebra'; R.v = m === 'vert'; R.g = m === 'gja'; R.rf = m === 'roof'; } F.mode = m ? 'rolo' : v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); if ((m === 'zebra' && !RJ().systems(true).length) || (m === 'vert' && !RJ().systems('vert').length) || (m === 'gja' && !RJ().systems('gja').length) || (m === 'roof' && !RJ().systems('roof').length)) A.act.cprices(); } };
+  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo' || v === 'zebra' || v === 'vert' || v === 'gja' || v === 'roof') { const m = v === 'zebra' || v === 'vert' || v === 'rolo' || v === 'gja' || v === 'roof' ? v : ''; if (m) { if (RMM() !== m) { R.sys = ''; R.fab = ''; R.sel = {}; R.flags = {}; R.vf = null; R.tch = {}; } R.z = m === 'zebra'; R.v = m === 'vert'; R.g = m === 'gja'; R.rf = m === 'roof'; } F.mode = m ? 'rolo' : v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); if ((m === 'zebra' && !RJ().systems(true).length) || (m === 'vert' && !RJ().systems('vert').length) || (m === 'gja' && !RJ().systems('gja').length) || (m === 'roof' && !RJ().systems('roof').length)) A.act.cprices(); } };
   A.fld.ctype = v => { const p = String(v).split('|'); F.mat = p[0]; F.lam = +p[1]; F.color = ''; F.colOpen = false; rr(); };
   /* при смене поставщика тип, управление, фиксация и опции сохраняются, если он их поддерживает (иначе norm подставит допустимое) */
   A.fld.csup = v => { F.sup = v; F.colOpen = false; F.auto = { drive: '', remote: '' }; rr(); };
@@ -484,7 +486,7 @@
   A.fld.cau = (v, el) => { F.auto = Object.assign({ drive: '', remote: '' }, F.auto, { [el.dataset.k]: v }); rr(); };
   A.fld.cfix = v => { F.fix = v; rr(); };
   A.fld.rrm = v => { R.rm = v; R.rw = ''; F.colOpen = false; F.cq = ''; rr(); };
-  A.fld.rsys = v => { R.sys = v; R.sel = {}; R.flags = {}; R.tch = {}; R.tubeLock = false; rr(); };
+  A.fld.rsys = v => { R.sys = v; if (!R.g && !R.v && !R.z) R.rf = /^ROOF/.test(v); R.sel = {}; R.flags = {}; R.tch = {}; R.tubeLock = false; rr(); };
   A.fld.rf = (v, el) => { const k = el.dataset.k; R[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
   A.fld.vf = (v, el) => { R.vf = Object.assign(VF0(), R.vf || {}); R.vf[el.dataset.k] = v; rr(); };
   A.act.rf = el => { R[el.dataset.k] = el.dataset.v; rr(); };
