@@ -122,7 +122,7 @@
       if (it.prod === 'rolo') {
         if (it.mat === 'ГЖ алюминий') { const a50 = /50/.test(String(it.sys || '')), vn = /^A-V/.test(String(it.sys || '')); if (vn) add('Кассетные ГЖ (Венус)', DB.irate('gj_cas'), q); else add(a50 ? 'ГЖ алюминий 50 мм' : 'ГЖ алюминий ' + (/16/.test(String(it.sys || '')) ? 16 : 25) + ' мм', DB.irate(a50 ? 'gj50' : 'gj25'), q); if ((it.flags && it.flags['Струна']) || (it.sel && it.sel['Фиксация'] === 'Боковая фиксация')) add('Боковая фиксация (доплата)', DB.irate('gj_str'), q); }
         else if (it.mat === 'Вертикальные') { const gr = it.flags && it.flags['Грувер']; add(gr ? 'ВЖ с грувером' : 'ВЖ', DB.irate(gr ? 'vzh_gr' : 'vzh'), (+it.w || 0) / 1000 * q, 1); }
-        else { const sy = String(it.sys || ''), k = /^ROOF/.test(sy) ? (it.auto && it.auto.drive ? 'rolo_roof_a' : 'rolo_roof') : /^(Z-)?(MINI|UNI|ROLLA)/.test(sy) ? 'rolo_mini' : /^(MG|Z-MGS)/.test(sy) ? 'rolo_mg' : 'rolo_bnt'; add(DB.IRATES.find(x => x[0] === k)[1].replace(/^Рулонки и зебра: /, '').replace(/^Рулонки: /, ''), DB.irate(k), q); }
+        else { const sy = String(it.sys || ''), au = !!(it.auto && it.auto.drive), k = it.mat === 'Римские шторы' ? (au ? 'rim_a' : 'rim') : it.mat === 'Мираж' ? (au ? 'mir_a' : 'mir') : /^ROOF/.test(sy) ? (it.auto && it.auto.drive ? 'rolo_roof_a' : 'rolo_roof') : /^(Z-)?(MINI|UNI|ROLLA)/.test(sy) ? 'rolo_mini' : /^(MG|Z-MGS)/.test(sy) ? 'rolo_mg' : 'rolo_bnt'; add(DB.IRATES.find(x => x[0] === k)[1].replace(/^Рулонки и зебра: /, '').replace(/^Рулонки: /, ''), DB.irate(k), q); }
       } else {
         const al = /алюм/i.test(String(it.mat || ''));
         if (+it.lam === 50) add('Дерево 50 мм', DB.irate('gj50'), q);

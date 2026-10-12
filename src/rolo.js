@@ -17,7 +17,7 @@
     const par = sh['Параметры'] || []; par.forEach(r => { if (r[0] === 'курс_usd') FX = Number(r[1]) || FX; });
     sh['Рулонки_системы'].slice(1).forEach(r => {
       if (!r[0]) return;
-      SYS.push({ code: String(r[0]), name: String(r[1] || r[0]), group: String(r[2] || ''), grid: String(r[3] || ''), term: Number(r[4]) || 1, mk: r[5] === '' || r[5] == null ? 2 : Number(r[5]) || 2, profit: r[6] === '' || r[6] == null ? 1000 : Number(r[6]) || 0, note: String(r[7] || ''), model: /зебр/i.test(String(r[8] || '')) ? 'zebra' : /roof/i.test(String(r[8] || '')) ? 'roof' : 'rolo' });
+      SYS.push({ code: String(r[0]), name: String(r[1] || r[0]), group: String(r[2] || ''), grid: String(r[3] || ''), term: Number(r[4]) || 1, mk: r[5] === '' || r[5] == null ? 2 : Number(r[5]) || 2, profit: r[6] === '' || r[6] == null ? 1000 : Number(r[6]) || 0, note: String(r[7] || ''), model: /зебр/i.test(String(r[8] || '')) ? 'zebra' : /roof/i.test(String(r[8] || '')) ? 'roof' : /мираж/i.test(String(r[8] || '')) ? 'mirage' : /римск/i.test(String(r[8] || '')) ? 'roman' : 'rolo' });
     });
     SYS.forEach(s => {
       if (GRID[s.grid] || !sh[s.grid]) return;
@@ -36,10 +36,10 @@
     const SER = {};
     (sh['Рулонки_ткани'] || []).slice(1).forEach(r => { if (r[1]) SER[String(r[1])] = { maxs: String(r[4] || ''), dens: Number(r[5]) || 0, wgrp: String(r[6] || ''), wet: String(r[7] || ''), coll: String(r[8] || ''), roll: Number(r[3]) || 0 }; });
     /* список тканей с цветами (выгрузка из кабинета Амиго: один на все системы); иначе только серии */
-    const colorRows = (sh['Рулонки_ткани_цвета'] || []).slice(1).map(r => ({ r, z: false })).concat((sh['Зебра_ткани_цвета'] || []).slice(1).map(r => ({ r, z: true })));
+    const colorRows = (sh['Рулонки_ткани_цвета'] || []).slice(1).map(r => ({ r, z: false })).concat((sh['Зебра_ткани_цвета'] || []).slice(1).map(r => ({ r, z: true }))).concat((sh['Мираж_ткани_цвета'] || []).slice(1).map(r => ({ r, z: false, m: 'mirage' }))).concat((sh['Римки_ткани_цвета'] || []).slice(1).map(r => ({ r, z: false, m: 'roman' })));
     colorRows.forEach(o => {
       const r = o.r; if (!r[0]) return;
-      const sr = SER[String(r[1])] || {}, f = Object.assign({ maxs: '', dens: 0, wgrp: '', wet: '', coll: '' }, sr, { z: o.z, key: String(r[0]), name: String(r[2]), ser: String(r[1] || ''), cat: String(r[4]), roll: Number(r[3]) || sr.roll || 0, prodW: Number(r[5]) || 0, stock: r[6] === '' || r[6] == null ? null : Number(r[6]), qty: r[7] === '' || r[7] == null ? null : Number(r[7]), img: (v => !v && !o.z ? '' : (v = v || 'png').charAt(0) === '/' ? v : '/storage-new/materials/' + (o.z ? 'zebra' : 'rollers') + '/' + String(r[0]) + '.' + v.replace(/^\./, ''))(String(r[8] || '')) });
+      const sr = SER[String(r[1])] || {}, f = Object.assign({ maxs: '', dens: 0, wgrp: '', wet: '', coll: '' }, sr, { z: o.z, m: o.m, msz: o.m === 'roman' ? [...String(r[9] || '').matchAll(/(\d+)\s*[xх×]\s*(\d+)/gi)].map(q => [+q[1], +q[2]]) : [], key: String(r[0]), name: String(r[2]), ser: String(r[1] || ''), cat: String(r[4]), roll: Number(r[3]) || sr.roll || 0, prodW: Number(r[5]) || 0, stock: r[6] === '' || r[6] == null ? null : Number(r[6]), qty: r[7] === '' || r[7] == null ? null : Number(r[7]), img: (v => (!v && !o.z) || (o.m && !v) ? '' : (v = v || 'png').charAt(0) === '/' ? v : '/storage-new/materials/' + (o.z ? 'zebra' : 'rollers') + '/' + String(r[0]) + '.' + v.replace(/^\./, ''))(String(r[8] || '')) });
       FAB.push(f); FAB_BY[f.key] = f;
     });
     if (!FAB.length) (sh['Рулонки_ткани'] || []).slice(1).forEach(r => {
@@ -386,7 +386,7 @@
     if (!s) { out.msg = 'Выберите систему'; return out; }
     if (s.model === 'vert') return calcVert(it, s, f, W, H, out);
     if (s.model === 'gja') return calcGja(it, s, f, W, H, out);
-    const roof = s.model === 'roof';
+    const roof = s.model === 'roof', mr = s.model === 'mirage' || s.model === 'roman';
     if (roof && !WIN_BY[it.rw]) { out.needWin = true; out.msg = 'Выберите производителя и модель окна'; return out; }
     if (!f) { out.needFab = true; out.msg = roof && s.code === 'ROOF-DN' ? 'Выберите первую ткань' : 'Выберите ткань'; return out; }
     let L, fit = null, win = null, f2 = null;
@@ -400,7 +400,7 @@
       L = { usd: win.p[i1] + (dn ? win.p[i2] - ded * H / 1000 : 0), w: W / 1000, h: H / 1000 };
     } else {
       if (!(W > 0 && H > 0)) { out.msg = 'Введите размеры'; return out; }
-      fit = tubeFit(it);
+      fit = mr ? null : tubeFit(it);
       if (fit && fit.auto) { it = Object.assign({}, it, { sel: Object.assign({}, it.sel, { 'Труба': fit.to }) }); out.tubeAuto = fit.to !== fit.from ? { from: fit.from, to: fit.to } : null; out.tubeSel = fit.to; }
       L = lookup(s.code, f.cat, W, H);
       if (L.err) { out.msg = L.err; if (L.hard) out.warn.hard = true; return out; }
@@ -421,7 +421,8 @@
     const costOpt = Math.round(optUsd * k), profit0 = s.profit;
     const baseRetail = ceilTo(base * s.mk, step), exact = base * coef + optUsd * k * coef;
     const unit = ceilTo(exact, step), addSum = unit - baseRetail, cost = base + costOpt;
-    if (!roof) {
+    if (mr && s.model === 'roman' && f.msz && f.msz.length && !f.msz.some(q => W / 10 <= q[0] + 1e-9 && H / 10 <= q[1] + 1e-9)) out.warn.push('размер больше допустимого для этой ткани: ' + f.msz.map(q => q[0] + '×' + q[1] + ' см').join(' или '));
+    if (!roof && !mr) {
     const wd = wind(it); out.wind = wd;
     if (wd && wd.max < 6 && H / 1000 > wd.max + 1e-9) out.warn.push('ткань не смотается: для этой системы и ткани максимум ' + Math.floor(wd.max * 100) + ' см, при ' + Math.round(H / 10) + ' см останется висеть около ' + Math.round(H / 10 - wd.max * 100) + ' см');
     {
@@ -463,6 +464,9 @@
     if (s && s.model === 'roof') {
       const w = WIN_BY[it.rw], f2 = fabOf(it.fab2), dn = s.code === 'ROOF-DN';
       return { title: 'Рулонная штора Roof' + (dn ? ' день-ночь' : ''), sub: [w ? 'окно: ' + w.man + ' ' + w.mod : 'окно не выбрано', f ? 'ткань ' + f.name : 'ткань не выбрана', dn ? (f2 ? 'ткань 2: ' + f2.name : 'вторая ткань не выбрана') : ''].concat(parts).filter(Boolean).join(' · ') };
+    }
+    if (s && (s.model === 'mirage' || s.model === 'roman')) {
+      const oo = parts.slice(); return { title: s.model === 'mirage' ? 'Рулонная штора Мираж' : 'Римская штора', sub: [f ? 'ткань ' + f.name : 'ткань не выбрана', 'цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева')].concat(oo).join(' · ') };
     }
     const fc = o.sel['Цвет фурнитуры'];
     return { title: s && s.model === 'vert' ? 'Вертикальные жалюзи ' + s.name.toLowerCase() : (s && s.model === 'zebra' ? 'Штора зебра' : 'Рулонная штора') + (s ? ' ' + s.name : ''), sub: s && s.model === 'vert' ? (f ? f.name + ' · ' : '') + 'ламель 89 мм' + vfTxt(it) + (parts.length ? ' · ' + parts.join(', ') : '') : (f ? 'ткань ' + f.name : 'ткань не выбрана') + (fc ? ' · фурнитура ' + fc.toLowerCase() : '') + ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева') + (parts.length ? ' · ' + parts.join(', ') : '') };
