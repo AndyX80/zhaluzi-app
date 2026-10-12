@@ -96,9 +96,9 @@
     const lines = gs.map((g, i) => ({ name: (i + 1) + '. ' + (g.it.title || ('ГЖ ' + g.it.lam + ' ' + (SUP[g.it.sup] || g.it.sup) + (colorOf(g.it) ? ', ' + lc(colorOf(g.it)) : '') + ', ' + sizeTxt(g.it))), qty: String(g.qty), price: fmt(g.price), sum: fmt(g.price * g.qty) }));
     if (+order.disc) lines.push({ name: +order.disc > 0 ? 'Скидка' : 'Наценка', qty: '', price: '', sum: (+order.disc > 0 ? '−' : '+') + fmt(Math.abs(+order.disc)) });
     const total = D().orderTotal(order);
-    const cellOf = (g, i) => { if (!g) return { n: String(i + 1), w: '', h: '', thin: '', thick: '', opt: '', box: '#888888', bw: '0.8', dash: '2 2' };
+    const cellOf = (g, i) => { if (!g) return { n: String(i + 1), w: '', h: '', thin: '', thick: '', opt: '', qty: '', box: '#888888', bw: '0.8', dash: '2 2' };
       const it = g.it, d = (DRAW[it.lam] || DRAW[50])[it.ctrl] || (DRAW[it.lam] || DRAW[50]).TR, opt = (it.o.fix ? '+' + lc(it.o.fix).replace('ниж. фиксация', 'ниж. фиксация') : '');
-      return { n: String(i + 1), w: String(Math.round(it.W * 10)), h: String(Math.round(it.H * 10)), thin: d[0], thick: d[1], opt, box: '#111111', bw: '1.4', dash: '' }; };
+      return { n: String(i + 1), w: String(Math.round(it.W * 10)), h: String(Math.round(it.H * 10)), thin: d[0], thick: d[1], opt, qty: g.qty > 1 ? g.qty + ' шт' : '', box: '#111111', bw: '1.4', dash: '' }; };
     const SK_FIRST = 12, SK_CONT = 12, ROWS_P1 = 4, ROWS_PAGE = 30, pages = [];
     const cellsFor = (from, cnt) => { const a = []; for (let i = from; i < from + cnt; i++) a.push(cellOf(bl[i], i)); return a; };
     const single = bl.length <= SK_FIRST && lines.length <= ROWS_P1;

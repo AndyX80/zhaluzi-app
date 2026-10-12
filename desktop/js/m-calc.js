@@ -199,9 +199,13 @@
     const J = JC(), sv = RJ().sysOf(R.sys) || {}, none = { drive: [], remote: [] }; if (!J.hasAuto('Amigo')) return none;
     let t = '', lam = 0;
     if (R.g) { if (/^V/.test(sv.vt || '')) t = 'Венус (кассетные ГЖ)'; else { t = 'Горизонтальные'; lam = +sv.vt === 50 ? 50 : 25; } } else if (R.v) t = 'Вертикальные';
-    if (!t) return none;
+    let nm = null;
+    if (!R.g && !R.v) { /* рулонные и зебра: комплект по системе, у Бентина по трубе (43 → Benthin 43 и 44) */
+      t = 'Рулонные шторы'; const c = String(sv.code || '').replace(/^Z-/, ''), tube = (String(R.sel && R.sel['Труба'] || '').match(/\d+/) || [''])[0];
+      if (/^MINI/.test(c)) nm = /руло MINI/; else if (/^(UNI|ROLLA)/.test(c)) nm = /руло UNI/; else if (/^(BNT|K-)/.test(c) && tube) nm = new RegExp('Benthin (' + tube + (tube === '43' ? '|44' : '') + ')\\b'); else return none;
+    }
     const L = k => (J.autoList('Amigo', k) || []).filter(f => !f.hid);
-    return { drive: L('drive').filter(f => f.t === t && (!lam || !f.lam || f.lam === lam)), remote: L('remote').filter(f => f.pk) };
+    return { drive: L('drive').filter(f => f.t === t && (!lam || !f.lam || f.lam === lam) && (!nm || nm.test(f.name))), remote: L('remote').filter(f => f.pk) };
   };
   function normRolo() {
     const J = RJ(), sy = J.systems(RM()); if (!sy.some(x => x.code === R.sys)) R.sys = sy.length ? sy[0].code : '';

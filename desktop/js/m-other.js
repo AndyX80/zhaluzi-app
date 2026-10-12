@@ -36,6 +36,7 @@
       '<div class="stack" style="gap:8px;margin-top:10px"><label class="btn">Загрузить Excel (.xlsm)<input type="file" accept=".xlsm,.xlsx" data-file="xls" hidden></label>' +
       '<div class="field"><label>Ссылка на скрипт (та же, что «Цены» на телефоне)</label><input id="scr" value="' + e(DB.scriptUrl()) + '" placeholder="https://script.google.com/…?key=…" data-file="url"></div>' +
       '<div class="row" style="gap:8px"><button class="btn" data-a="phsync">Синхронизировать с телефоном</button><button class="btn sm" data-a="phfull" title="Отправить и получить всё заново, если что-то не сошлось">Полная сверка</button></div><p class="mut">' + (+localStorage.getItem('jald_ph_at') ? 'Последняя синхронизация: ' + new Date(+localStorage.getItem('jald_ph_at')).toLocaleString('ru-RU') : 'Заказы с телефона подтянутся из общей базы на Google Диске.') + '</p>' +
+      '<div class="card" style="padding:12px;margin:6px 0"><b>Полная копия для хранения на диске</b><p class="mut sm" style="margin:4px 0 8px">Один zip: все данные и настройки программы, код сайта и инструкция, как поднять всё на другом сервере.' + (JalBackup.at() ? ' Последняя копия: ' + new Date(JalBackup.at()).toLocaleString('ru-RU') + '.' : ' Копий ещё не делали.') + '</p><div class="row" style="gap:8px"><button class="btn pri" data-a="bkfull">Скачать полную копию (данные + код сайта)</button><label class="btn">Восстановить из полной копии<input type="file" accept=".json" data-file="bkrest" hidden></label></div></div>' +
       (real ? '<button class="btn" data-a="dbexp">Скачать копию базы (файл)</button>' : '') +
       '<label class="btn">Загрузить копию базы<input type="file" accept=".json" data-file="json" hidden></label>' +
       (real ? '<button class="btn" data-a="dbclr">Удалить базу и вернуть демо</button>' : '') +
@@ -65,6 +66,7 @@
   document.addEventListener('change', ev => {
     const f = ev.target && ev.target.dataset && ev.target.dataset.file, file = ev.target && ev.target.files && ev.target.files[0]; if (!f || !file) return;
     if (f === 'xls') DB.readFile(file).then(d => { const n = DB.importExcel(d); A.toast('Загружено из Excel: ' + d.orders.length + ' заказов, новых или изменённых ' + n); setTimeout(() => location.reload(), 600); }).catch(x => A.toast('Ошибка: ' + x.message));
+    else if (f === 'bkrest') { const r = new FileReader(); r.onload = () => { try { if (JalBackup.restore(r.result)) { A.toast('Восстановлено, перезагружаю…'); setTimeout(() => location.reload(), 600); } else A.toast('Это не файл jal-data.json из полной копии'); } catch (x) { A.toast('Ошибка: ' + x.message); } }; r.readAsText(file); }
     else { const r = new FileReader(); r.onload = () => { try { DB.importJson(r.result); location.reload(); } catch (x) { A.toast('Ошибка: ' + x.message); } }; r.readAsText(file); }
   });
   A.act.sreset = () => { try { localStorage.removeItem('jald_state_v1'); } catch (x) {} location.reload(); };
