@@ -50,7 +50,7 @@
       orders.push({ id: 'o' + no + (seen[no] > 1 ? '-' + seen[no] : ''), no: String(no), name: str(g(r, 'фио')), phone: phoneFmt(g(r, 'телефон')), src: norm(SRC, g(r, 'источник')), factory: str(g(r, 'заводской номер')),
         cat, sup, inst: yes(g(r, 'установка')), zone: reg ? 'Регионы' : 'СПб', sum: num(g(r, 'стоимость')), paid: num(g(r, 'предоплата')) + num(g(r, 'доплата')), cost: num(g(r, 'закуп')), instCost: num(g(r, 'стоимость установки')),
         created: iso(g(r, 'дата')), due: iso(g(r, 'дата изготов-ления') != null ? g(r, 'дата изготов-ления') : g(r, 'дата изготовления')), tk: str(g(r, 'примечания')), review: str(g(r, 'отзыв')),
-        fl, stage: STAGE_OF(fl), title: cat + (sup ? ' · ' + sup : ''), yur: y || null, claim: false, legacy: true });
+        fl, stage: STAGE_OF(fl), title: cat + (sup ? ' · ' + sup : ''), yur: y || null, claim: false, lost: '', legacy: true });
     });
     /* операции */
     const ops = []; const dr = rowsOf(wb, 'Доход-расход');
@@ -142,7 +142,7 @@
     const sups = {}; items.forEach(i => { if (i.sup) sups[i.sup] = 1; });
     const o = { id: 'ph' + r.uid, no: r.no ? String(r.no) : 'Просчёт', cnote: r.cnote || '', draft: isDraftSt(r.status), rawNo: r.no ? String(r.no) : '', uid: r.uid, ph: true, pre: r.pre, preU: r.preU, term: r.term, meas: !!r.meas, _p2: r.phone2 || '', _e: r.email || '', sup: Object.keys(sups).join(', '), cat, title: items.length ? items.length + ' поз.' : 'Заказ с телефона', src: r.src || '', factory: r.factory || '',
       inst: !!r.install && !noInst, zone: r.region ? 'Регионы' : 'СПб', sum, paid: r.status === 'Оплачен' ? sum : 0, cost: Math.max(0, goods - prof), instCost: icSet ? +r.instCost : ic.sum, instAuto: ic.sum, instLines: ic.lines, instSet: icSet,
-      created: (r.created || '').slice(0, 10), due: r.due || '', tk: r.tk != null ? r.tk : (r.note || ''), review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: !!r.claim, legacy: false, archived: !!r.archived,
+      created: (r.created || '').slice(0, 10), due: r.due || '', tk: r.tk != null ? r.tk : (r.note || ''), review: '', stage: STAGE_PH[r.status] != null ? STAGE_PH[r.status] : 2, status: r.status, claim: !!r.claim, lost: r.lost || '', legacy: false, archived: !!r.archived,
       _n: r.company || r.name || 'Без имени', _p: r.phone || '', _a: r.addr || '', items, disc: +r.disc || 0, delivery: +r.delivery || 0, priced: !!r.priced, hasCart: !!(r.cart && r.cart.cart), supSent: !!r.supSent,
       needCost: Object.keys(items.filter(i => i.kind === 'custom' && !i.costOk && !(+i.cost > 0)).reduce((a, i) => { a[i.title || 'Услуга'] = 1; return a; }, {})) };    const ov = r.ov || {}; Object.keys(ov).forEach(k => { o[k] = ov[k]; }); /* ручные правки ячеек таблицы заказов поверх расчёта */
     return o;

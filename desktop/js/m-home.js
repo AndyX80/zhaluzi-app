@@ -44,6 +44,7 @@
         '<div class="kpi"><small>Заказов в работе</small><b>' + open.length + '</b><i> ' + (real ? 'не закрыты' : 'из ' + D.orders.length + ' в демо') + '</i></div>' +
         '<div class="kpi"><small>Долги клиентов</small><b>' + m(debt) + '</b><i> ' + (real ? 'по всем заказам' : 'по подписанным договорам') + '</i></div>' +
         '<div class="kpi"><small>Прибыль за месяц</small><b>' + m(real ? ms.prof : 58400) + '</b><i>' + (real ? ' по заказам месяца' : ' октябрь, на 08.10') + '</i></div></div>' +
+        (A.crmHome ? A.crmHome() : '') +
         '<div class="card"><h2>Требует внимания</h2><div class="stack" style="gap:8px">' + (attn.length ? attn.map(a =>
           '<div class="callout ' + (a[1] === 'bad' ? 'bad' : a[1] === 'info' ? 'info' : '') + ' row" style="cursor:pointer" data-a="opn" data-id="' + a[0] + '">' + A.icon(a[1] === 'info' ? 'info' : 'warn', 18) + '<span>' + e(a[2]) + '</span></div>').join('') : '<div class="mut">Всё в порядке</div>') + '</div></div>' +
         '<div class="g2">' +
