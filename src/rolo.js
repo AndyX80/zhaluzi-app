@@ -8,7 +8,7 @@
   let RED = null, P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {}, VP = {}, VT = {}, GT = {}, GP = {}, WIN = [], WIN_BY = {}, NOROOF = {}, PLM = {}, PLP = {}, PLS = {};
   const numC = (v, d) => v === '' || v == null || isNaN(Number(String(v).replace(',', '.'))) ? d : Number(String(v).replace(',', '.'));
 
-  const PLT = [{ id: 'midi', sys: 'MIDI', kinds: ['плиссе 20'], label: 'MIDI · плиссе 20 мм' }, { id: 'midig', sys: 'MIDI', kinds: ['гофре 25'], gofre: true, label: 'MIDI · гофре 25 мм' }, { id: 'maxi', sys: 'MAXI', kinds: ['плиссе 32'], label: 'MAXI · плиссе 32 мм' }, { id: 'maxig', sys: 'MAXI', kinds: ['гофре 45'], gofre: true, label: 'MAXI · гофре 45 мм' }, { id: 'mini', sys: 'MINI', kinds: ['плиссе 20'], label: 'MINI · плиссе 15/20 мм' }];
+  const PLT = [{ id: 'mini', sys: 'MINI', kinds: ['плиссе 20'], label: 'MINI · плиссе 15/20 мм' }, { id: 'midi', sys: 'MIDI', kinds: ['плиссе 20'], label: 'MIDI · плиссе 20 мм' }, { id: 'maxi', sys: 'MAXI', kinds: ['плиссе 32'], label: 'MAXI · плиссе 32 мм' }, { id: 'midig', sys: 'MIDI', kinds: ['гофре 25'], gofre: true, label: 'MIDI · гофре 25 мм' }, { id: 'maxig', sys: 'MAXI', kinds: ['гофре 45'], gofre: true, label: 'MAXI · гофре 45 мм' }];
   const unitOf = u => (u === 'м_шир' || u === 'м_выс' || u === 'м_шов' || u === 'м_цепь') ? u : 'изд';
 
   function setSheets(sh) {
