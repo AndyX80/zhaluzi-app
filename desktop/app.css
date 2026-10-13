@@ -317,3 +317,7 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--acc)!importa
 .cfoot{gap:5px}.cline{gap:6px 12px}.cline .cdisc{gap:6px}.cdisc .ul,.cline .ul{font-size:13px}
 .sumbar{padding:6px 12px;gap:8px}.sumbar b{font-size:16px}
 .cacts .btn,.cacts .btn.big{height:32px}
+/* длинные названия в списках: привод и пульт на всю ширину, шрифт меньше, на узких экранах не режутся */
+.cform .fgrid:has(select[data-c=rau]){grid-template-columns:1fr}
+.cform select[data-c=rau],.cform select[data-c=ropt]{font-size:12.5px;text-overflow:ellipsis}
+@media(max-width:1500px){.cform select.ul{font-size:13px}}
