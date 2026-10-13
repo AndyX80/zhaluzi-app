@@ -94,13 +94,13 @@
     let sl = ''; for (let i = 0; i < rows; i++) sl += '<rect x="5" y="' + (6 + i * (bh - 8) / rows) + '" width="' + (bw - 10) + '" height="' + ((bh - 8) / rows - 1.2) + '" rx="1" fill="' + c + '"/>';
     return '<svg class="pic" viewBox="0 0 ' + bw + ' ' + bh + '"><rect x=".5" y=".5" width="' + (bw - 1) + '" height="' + (bh - 1) + '" rx="3" fill="var(--panel2)" stroke="var(--line)"/><rect x="3" y="3" width="' + (bw - 6) + '" height="3" rx="1.5" fill="#6f6a63"/>' + sl + '</svg>';
   }
-  const MODELS = [['rolo', 'РШ'], ['zebra', 'Зебра'], ['gja', 'ГЖ'], ['blinds', 'Дерево'], ['vert', 'ВЖ'], ['', 'Плиссе', 1], ['roman', 'Римки'], ['mirage', 'Мираж'], ['auto', 'Автоматика']];
+  const MODELS = [['rolo', 'РШ'], ['zebra', 'Зебра'], ['gja', 'ГЖ'], ['blinds', 'Дерево'], ['vert', 'ВЖ'], ['plisse', 'Плиссе'], ['roman', 'Римки'], ['mirage', 'Мираж'], ['auto', 'Автоматика']];
   const noPrices = () => '<div class="empty" style="padding:28px">Цены не загружены.<br><small>Укажите ссылку на скрипт цен и нажмите «Синхронизировать» в Настройках, раздел «Данные».</small></div>';
   function form() {
     const E = window.Eng;
     if (!E || E.err && !E.ready) return '<div class="card"><div class="callout bad">' + e(E ? E.err : 'Движок расчёта не загрузился') + '</div></div>';
     if (!E.ready) return '<div class="card"><h2>Новое изделие</h2>' + noPrices() + '</div>';
-    return F.mode === 'rolo' ? formRolo() : F.mode === 'blinds' ? form0() : F.mode === 'auto' ? formAuto() : formEmpty();
+    return F.mode === 'rolo' ? (R.mr === 'plisse' ? formPl() : formRolo()) : F.mode === 'blinds' ? form0() : F.mode === 'auto' ? formAuto() : formEmpty();
   }
   const formEmpty = () => '<div class="card cform"><h2>Новое изделие</h2><div class="fgrid">' + modelRow() + '</div></div>';
   const modelRow = () => '<div class="fld"><label>Модель</label><select class="ul" data-c="cmodel">' + (F.mode ? '' : '<option value="" selected disabled>Выберите модель</option>') + MODELS.map(x => '<option value="' + x[0] + '"' + (x[2] ? ' disabled' : '') + (F.mode && x[0] === (F.mode === 'rolo' ? RMM() : F.mode) ? ' selected' : '') + '>' + e(x[1]) + '</option>').join('') + '</select></div>';
@@ -194,13 +194,20 @@
   const VG = () => R.v || R.g;
   const RMM = () => R.rf ? 'rolo' : RM();
   const RM = () => R.mr ? R.mr : R.rf ? 'roof' : R.g ? 'gja' : R.v ? 'vert' : R.z ? 'zebra' : 'rolo';
-  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.g ? 'ГЖ алюминий' : R.v ? 'Вертикальные' : R.z ? 'Зебра' : R.mr === 'roman' ? 'Римские шторы' : R.mr === 'mirage' ? 'Мираж' : R.rf ? 'Рулонные шторы Roof' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, rw: R.rf ? R.rw || undefined : undefined, fab2: R.rf && R.sys === 'ROOF-DN' ? R.fab2 || undefined : undefined, w: +R.w || 0, h: +R.h || 0, ctrl: R.rf ? '' : VG() ? (R.vf && R.vf.side === 'R' ? 'R' : R.vf && R.vf.side === 'L' ? 'L' : '') : R.ctrl, vf: VG() ? Object.assign(VF0(), R.vf) : undefined, sel: R.sel, flags: R.v ? Object.assign({}, R.flags, { 'Металлическая фурнитура': !!R.vf && R.vf.chain === 'Металл', 'Прозрачная комплектация': !!R.vf && R.vf.chain === 'Прозрачная' }) : R.flags, tubeLock: !!R.tubeLock, auto: (R.auto && (R.auto.drive || R.auto.remote)) ? { drive: R.auto.drive || '', remote: R.auto.remote || '', wire: R.auto.wire || '' } : undefined });
+  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.g ? 'ГЖ алюминий' : R.v ? 'Вертикальные' : R.z ? 'Зебра' : R.mr === 'roman' ? 'Римские шторы' : R.mr === 'mirage' ? 'Мираж' : R.mr === 'plisse' ? 'Плиссе' : R.rf ? 'Рулонные шторы Roof' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, rw: R.rf ? R.rw || undefined : undefined, fab2: (R.rf && R.sys === 'ROOF-DN') || (R.mr === 'plisse' && plNeed2()) ? R.fab2 || undefined : undefined, w: +R.w || 0, h: +R.h || 0, ctrl: R.rf ? '' : VG() ? (R.vf && R.vf.side === 'R' ? 'R' : R.vf && R.vf.side === 'L' ? 'L' : '') : R.ctrl, vf: VG() || R.mr === 'plisse' ? Object.assign(VF0(), R.vf) : undefined, sel: R.sel, flags: R.v ? Object.assign({}, R.flags, { 'Металлическая фурнитура': !!R.vf && R.vf.chain === 'Металл', 'Прозрачная комплектация': !!R.vf && R.vf.chain === 'Прозрачная' }) : R.flags, tubeLock: !!R.tubeLock, auto: (R.auto && (R.auto.drive || R.auto.remote)) ? { drive: R.auto.drive || '', remote: R.auto.remote || '', wire: R.auto.wire || '' } : undefined });
   /* автоматика Амиго под текущую систему: привод и пульт входят в цену изделия (правило: есть привод под этот тип, значит автоматика в расчёте) */
   const rAuto = () => {
     const J = JC(), sv = RJ().sysOf(R.sys) || {}, none = { drive: [], remote: [] }; if (!J.hasAuto('Amigo')) return none;
     let t = '', lam = 0;
     if (R.g) { if (/^V/.test(sv.vt || '')) t = 'Венус (кассетные ГЖ)'; else { t = 'Горизонтальные'; lam = +sv.vt === 50 ? 50 : 25; } } else if (R.v) t = 'Вертикальные';
     let nm = null;
+    if (R.mr === 'plisse') { /* привод только у электро-моделей; комплект по серии модели */
+      const pm = plM(); if (!pm || !pm.el) return none; const c = pm.code, pats = [];
+      if (/^P[13]9\d\d$/.test(c)) pats.push('P19xx\\/P39xx'); if (/^P[13]9[12]\d$/.test(c)) pats.push('Px91x\\/Px92x'); if (/^P89/.test(c)) pats.push('P89xx|\\/89xx');
+      const re = new RegExp('для (' + pats.join('|') + ')'); if (!pats.length) return none;
+      const L = k => (J.autoList('Amigo', k) || []).filter(f => !f.hid);
+      return { drive: L('drive').filter(f => f.t === 'Плиссе' && re.test(f.name)), remote: L('remote').filter(f => f.pk) };
+    }
     if (R.mr) { t = R.mr === 'roman' ? 'Римские' : 'Мираж'; nm = false; }
     else if (R.rf) { if (sv.code !== 'ROOF') return none; t = 'Roof'; }
     else if (!R.g && !R.v) { /* рулонные и зебра: комплект по системе, у Бентина по трубе (43 → Benthin 43 и 44) */
@@ -304,6 +311,13 @@
     if (r.ok) st += '<div class="fnote"><b>Срок:</b> ' + r.termDays + ' дней</div>';
     if (own && r.ok && showProfit && unit < r.cost) st += '<div class="fnote bad">Ниже закупа: убыток ' + m((r.cost - unit) * qty) + ' на позицию.</div>';
     h += '</div>';
+    h += rFoot(J, r, f, st, qty, own, unit, showProfit);
+    return h;
+  }
+
+  /* нижняя часть формы изделия: фото, заметки, цена, «В корзину» (общая для рулонок и плиссе) */
+  function rFoot(J, r, f, st, qty, own, unit, showProfit) {
+    let h = '';
     const ph = J.photoUrl(f);
     h += '<div class="ffoot">' + (ph ? '<button class="rph" data-a="rphoto" title="Увеличить фото ткани"><img src="' + e(ph) + '" alt="" onerror="this.parentNode.style.display=\'none\'"></button>' : '') + '<div class="fright"><div class="fnotes">' + st + '</div><div class="frow">' + '<button class="coin ' + (showProfit ? 'on' : '') + '" data-a="chide" title="' + (showProfit ? 'Закуп и прибыль показаны' : 'Показать закуп и прибыль') + '">' + A.icon('coin', 22) + '</button>' +
       '<div class="fld"><label>Количество</label><div class="qst"><button data-a="rqty" data-d="-1">−</button><input class="num" type="number" min="1" max="99" value="' + qty + '" data-c="rf" data-k="qty"><button data-a="rqty" data-d="1">+</button></div></div>' +
@@ -314,6 +328,93 @@
       (R.photo && ph ? '<div class="rphbig" data-a="rphoto"><img src="' + e(ph) + '" alt=""><div class="mut">' + e(f.name) + (f.qty !== null ? ' · на складе ' + fmt(f.qty) + ' м' : '') + '</div></div>' : '');
     return h;
   }
+  /* ===== плиссе Амиго: тип → модель (схема и справка) → ткань → размер → управление → опции ===== */
+  const plM = () => RJ() && RJ().pl ? RJ().pl.M(R.sys) : null;
+  const plCtl = () => { const m = plM(); return !!m && (m.ctl === 'шнур' || m.ctl === 'цепь'); };
+  const plNeed2 = () => { const m = plM(); return !!m && m.n === 2; };
+  const PLCTL = { 'ручка': 'ручка на подвижном карнизе', 'шнур': 'шнур', 'цепь': 'цепь', 'электро': 'электропривод', 'неподвижная': 'неподвижная, без управления', 'пружина': 'пружинный механизм' };
+  const c2 = x => String(x).replace('.', ',');
+  const plShort = m => [PLCTL[m.ctl] || m.ctl, m.mv > 1 ? 'подвижных ' + m.mv : '', m.n === 2 ? 'день-ночь' : '', m.form === 'сложная' ? 'непрямоугольная' : ''].filter(Boolean).join(', ');
+  /* справка только по выбранной модели: всё, что нужно знать об особенностях этой модели */
+  function plHelp(m, showCost) {
+    const J = RJ(), grp = J.pl.groups('PL-' + m.code), row = (k, v) => v ? '<div class="plh-r"><span>' + e(k) + '</span><div>' + v + '</div></div>' : '';
+    const brk = grp.find(g => g.name === 'Кронштейн'), others = grp.filter(g => g.name !== 'Кронштейн' && g.name !== 'Лицевая сторона');
+    const ps = J.pl.P('скидка', 0.4), fxk = 0;
+    let size = '';
+    if (m.wmax || m.hmax) {
+      size = '<div>ширина ' + c2(m.wmin) + '–' + c2(m.wmax) + ' м' + (m.wusil && m.wusil > m.wmax ? ' (с усиленным профилем до ' + c2(m.wusil) + ' м)' : '') + '</div><div>высота ' + c2(m.hmin) + '–' + c2(m.hmax) + ' м' + (m.hbo ? ', для блэкаута до ' + c2(m.hbo) + ' м' : '') + '</div>' + (m.amax ? '<div>площадь до ' + c2(m.amax) + ' м²</div>' : '');
+      const rs = String(m.rule || '').split(';').map(x => x.split(':').map(Number)).filter(x => x.length === 2 && !isNaN(x[0]) && !isNaN(x[1])).sort((a, b) => a[0] - b[0]);
+      if (rs.length) size += '<div>' + rs.map(x => 'при ширине до ' + c2(x[0]) + ' м высота до ' + c2(x[1]) + ' м').join('; ') + '</div>';
+    } else size = '<div class="mut">В брошюре для этой модели размеры не указаны</div>';
+    const form = m.form === 'сложная' ? 'непрямоугольная' + (m.pct ? ' (цена по сетке +' + m.pct + '%)' : '') + ', цена считается по габаритам; с тканью гофре доплата' : 'прямоугольная';
+    return '<div class="plhelp"><h3>' + e(m.code) + ': справка по модели</h3>' +
+      row('Система', e(m.sys + (m.ser ? ', серия ' + m.ser : ''))) + row('Управление', e(PLCTL[m.ctl] || m.ctl)) + row('Полотен', m.n === 2 ? '2, день-ночь (цена = ткань 1 + ткань 2)' : '1') +
+      row('Подвижных карнизов', m.mv ? String(m.mv) : '') + row('Форма', e(form)) + row('Ткани', m.fab === 'плиссе' ? 'только плиссе' : 'плиссе и гофре') + row('Установка на окно с наклоном', m.tilt && m.tilt !== '—' ? e(m.tilt) : '') +
+      row('Размеры', size) + row('Кронштейны', brk ? brk.items.map(x => e(x.value) + (x.usd ? ' <span class="mut">(доплата)</span>' : '')).join('<br>') : '<span class="mut">по брошюре кронштейн не выбирается</span>') +
+      row('Доступные опции', others.length ? others.map(g => e(g.name)).join(', ') : '<span class="mut">нет</span>') + row('Наценка модели (закуп)', showCost && m.nat ? c2(m.nat) + ' $' : '') +
+      row('Примечание', m.note ? e(m.note) : '') + (m.check ? '<div class="plh-n">Данные по этой модели в брошюре неполные или приблизительные: перед запуском в производство сверьте с поставщиком.</div>' : '') + '</div>';
+  }
+  function normPl() {
+    const J = RJ(), PL = J.pl, ts = PL.types();
+    if (!ts.some(t => t.id === R.pt)) R.pt = ts.length ? ts[0].id : '';
+    const ms = PL.models(R.pt); if (R.sys && !ms.some(x => 'PL-' + x.code === R.sys)) R.sys = '';
+    const fl = PL.fabrics(R.pt); if (R.fab && !fl.some(x => x.key === R.fab)) R.fab = ''; if (R.fab2 && (!plNeed2() || !fl.some(x => x.key === R.fab2))) R.fab2 = '';
+    const m = plM(), o = R.sys ? J.opts(roloItem()) : { sel: {}, flags: {} }; R.sel = o.sel; R.flags = o.flags;
+    { const al = rAuto(), a = R.auto = Object.assign({ drive: '', remote: '', wire: '' }, R.auto); if (a.drive && !al.drive.some(f => f.key === a.drive)) a.drive = ''; if (a.remote && !al.remote.some(f => f.key === a.remote)) a.remote = ''; if (!a.drive || !JC().wireInfo({ sup: 'Amigo', auto: { drive: a.drive } })) a.wire = ''; }
+    const r = R.sys ? JC().withAuto(roloItem(), J.calc(roloItem())) : { ok: false, warn: [], msg: 'Выберите модель' };
+    return { it: roloItem(), r, groups: R.sys ? J.groups(R.sys) : [], m, ts, ms, fl };
+  }
+  function formPl() {
+    if (!RJ() || !RJ().pl || !RJ().pl.types().length) return '<div class="card cform"><div class="ftop"><h2>Плиссе</h2></div><div class="fbody"><div class="empty" style="padding:28px">Цены на плиссе не загружены.<br><small>Нажмите «Синхронизировать» в Настройках, раздел «Данные».</small></div></div></div>';
+    const J = RJ(), showProfit = !!S.showCost, n = normPl(), r = n.r, pm = n.m, qty = Math.max(1, +R.qty || 1);
+    const own = R.own !== '' && !isNaN(+R.own) && +R.own >= 0, unit = own ? Math.round(+R.own) : (r.ok ? r.unit : 0), q = (F.cq || '').trim().toLowerCase();
+    const f = J.fabOf(R.fab), f2 = J.fabOf(R.fab2), shown = n.fl.filter(x => !q || (x.name + ' ' + x.ser + ' ' + x.cat).toLowerCase().indexOf(q) >= 0);
+    const ICW = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M6 12h12M9 9l-3 3 3 3M15 9l3 3-3 3"/></svg>';
+    const ICH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9l3-3 3 3M9 15l3 3 3-3"/></svg>';
+    const delta = (g, val) => { if (!r.ok) return ''; const t = roloItem(); t.sel = Object.assign({}, R.sel); t.flags = Object.assign({}, R.flags);
+      if (g.type === 'flag') t.flags[g.name] = !R.flags[g.name]; else t.sel[g.name] = val;
+      const r2 = J.calc(t); if (!r2.ok) return ''; const d = r2.unit - r.unit; return d ? (d > 0 ? ' +' : ' −') + fmt(Math.abs(d)) + ' ₽' : ''; };
+    const fabBtn = (cur, key, lab) => '<div class="fld colf"><label>' + lab + '</label><button class="ul sel fabsel" data-a="ccol" data-v="' + key + '">' + (cur ? (cur.stock !== null ? '<i class="sd" style="background:' + DOT[cur.stock] + '"></i>' : '') + '<span class="fabtx"><b>' + e(cur.name) + '</b><span class="mut sm">категория ' + e(cur.cat) + ' · серия ' + e(cur.ser) + '</span></span>' : '<span class="ph">Выберите ткань</span>') + '</button>' +
+      (F.colOpen === (key === 'fab' ? true : key) ? '<div class="colpop"><input class="in" data-c="ccolq" placeholder="Поиск ткани (название, серия, категория)" value="' + e(F.cq) + '" id="ccolq"><div class="colist sc">' + (shown.length ? shown.map(x => '<button class="coli ' + (x.key === (key === 'fab' ? R.fab : R.fab2) ? 'on' : '') + '" data-a="ccolpick" data-v="' + e(x.key) + '">' + (J.photoUrl(x) ? '<img class="fth" loading="lazy" alt="" src="' + e(J.photoUrl(x)) + '" onerror="this.style.display=\'none\'">' : '') + (x.stock !== null ? '<i class="sd" style="background:' + DOT[x.stock] + '"></i>' : '') + '<span><b>' + e(x.name) + '</b> <span class="mut sm">серия ' + e(x.ser) + '</span></span><span class="sp"></span><span class="pill">кат. ' + e(x.cat) + '</span></button>').join('') : '<div class="mut" style="padding:10px">Ничего не найдено</div>') + '</div></div>' : '') + '</div>';
+    let h = '<div class="card cform"><div class="ftop"><h2>' + (R.edit >= 0 ? 'Плиссе, позиция ' + (R.edit + 1) : 'Новое плиссе') + '</h2><span class="sp"></span>' + (R.edit >= 0 ? '<button class="btn sm" data-a="cedcancel">Отменить правку</button>' : '') + '</div><div class="fbody rbody">';
+    /* тип (система и вид ткани) → модель: выбор модели обязателен, она задаёт размеры, кронштейны, опции и наценку */
+    const sers = []; n.ms.forEach(x => { if (sers.indexOf(x.ser) < 0) sers.push(x.ser); });
+    const modelSel = '<div class="fld"><label>Модель плиссе</label><select class="ul" data-c="plm">' + (R.sys ? '' : '<option value="" selected disabled>Выберите модель</option>') + sers.map(sr => { const t = J.pl.S(sr); return '<optgroup label="' + e(t ? t.title : 'серия ' + sr) + '">' + n.ms.filter(x => x.ser === sr).sort((a, b) => a.code.localeCompare(b.code)).map(x => '<option value="' + e(x.code) + '"' + (R.sys === 'PL-' + x.code ? ' selected' : '') + '>' + e(x.code + ' — ' + plShort(x)) + '</option>').join('') + '</optgroup>'; }).join('') + '</select></div>';
+    h += '<div class="fgrid">' + modelRow() + '<div class="fld"><label>Тип</label><select class="ul" data-c="plt">' + n.ts.map(t => '<option value="' + t.id + '"' + (t.id === R.pt ? ' selected' : '') + '>' + e(t.label) + '</option>').join('') + '</select></div>' + modelSel + '</div>';
+    if (pm) {
+      h += '<div class="plhead"><div class="plpic"><img src="img/plisse/' + e(pm.code) + '.png" alt="Схема ' + e(pm.code) + '" onerror="this.parentNode.style.display=\'none\'"></div><div class="pltx"><b>' + e(pm.code) + '</b><span class="mut">' + e(plShort(pm)) + '</span><span class="mut sm">' + e(pm.sys + (pm.ser ? ' · серия ' + pm.ser : '')) + '</span><button class="btn sm" data-a="plhelp">' + (R.plhelp ? 'Скрыть справку' : 'Справка по модели') + '</button></div></div>';
+      if (R.plhelp) h += plHelp(pm, showProfit);
+    }
+    if (pm) {
+      h += '<div class="fgrid">' + fabBtn(f, 'fab', pm.n === 2 ? 'Ткань 1 (верх)' : 'Ткань') + (pm.n === 2 ? fabBtn(f2, 'fab2', 'Ткань 2 (низ)') : '') + '</div>';
+      h += '<div class="fld sz"><label>Размер, мм' + (pm.form === 'сложная' ? ' (габарит: макс. ширина и высота)' : '') + '</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(R.w) + '" data-c="rf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(R.h) + '" data-c="rf" data-k="h"></span></div></div>';
+      if (plCtl()) h += '<div class="fgrid"><div class="fld"><label>Сторона управления (' + e(pm.ctl) + ')</label><div class="seg">' + [['L', 'слева'], ['R', 'справа']].map(k => '<button class="' + (R.ctrl === k[0] ? 'on' : '') + '" data-a="rf" data-k="ctrl" data-v="' + k[0] + '">' + k[1] + '</button>').join('') + '</div></div>' +
+        '<div class="fld"><label>Длина управления, мм</label><input class="ul num" type="number" min="0" data-c="vf" data-k="len" value="' + e(R.vf && R.vf.len !== '' && R.vf.len != null ? R.vf.len : (+R.h ? Math.round(+R.h * 0.75) : '')) + '"></div></div>';
+      const choice = n.groups.filter(g => g.type === 'choice' && g.items.length > 1), flags = n.groups.filter(g => g.type === 'flag');
+      if (choice.length) h += '<div class="fgrid ropts">' + choice.map(g => '<div class="fld"><label>' + e(g.name) + '</label><select class="ul" data-c="ropt" data-k="' + e(g.name) + '">' + g.items.map(x => '<option value="' + e(x.value) + '"' + (R.sel[g.name] === x.value ? ' selected' : '') + '>' + e(x.value + (R.sel[g.name] === x.value ? '' : delta(g, x.value))) + '</option>').join('') + '</select></div>').join('') + '</div>';
+      if (flags.length) h += '<div class="fld"><label>Дополнительно</label><div class="ochips">' + flags.map(g => { const on = R.flags[g.name]; return '<button class="oc ' + (on ? 'on' : '') + '" data-a="rflag" data-v="' + e(g.name) + '">' + e(g.name) + (r.ok && on && r.optP[g.name] ? ' +' + fmt(r.optP[g.name]) : (on ? '' : delta(g))) + '</button>'; }).join('') + '</div></div>';
+      { const al = rAuto();
+        if (al.drive.length || al.remote.length) {
+          const opt = (list, cur) => '<option value="">' + (list === al.drive ? 'Выберите комплект' : 'Нет') + '</option>' + list.map(f => '<option value="' + e(f.key) + '"' + (cur === f.key ? ' selected' : '') + '>' + e(f.name + ' +' + fmt(f.price) + ' ₽') + '</option>').join('');
+          h += '<div class="fgrid">' + (al.drive.length ? '<div class="fld"><label>Электропривод (входит в цену)</label><select class="ul" data-c="rau" data-k="drive">' + opt(al.drive, R.auto.drive) + '</select></div>' : '') +
+            (al.remote.length ? '<div class="fld"><label>Пульт / выключатель</label><select class="ul" data-c="rau" data-k="remote">' + opt(al.remote, R.auto.remote) + '</select></div>' : '') + '</div>';
+          if (R.auto.drive && JC().wireInfo({ sup: 'Amigo', auto: { drive: R.auto.drive } })) h += '<div class="fld"><label>Провод привода выходит</label><div class="seg">' + [['L', 'слева'], ['R', 'справа']].map(k => '<button class="' + (R.auto.wire === k[0] ? 'on' : '') + '" data-a="rwire" data-v="' + k[0] + '">' + k[1] + '</button>').join('') + '</div></div>';
+        } }
+    }
+    let st = '';
+    if (pm && pm.el && !R.auto.drive) st += '<div class="fnote bad"><b>Электропривод:</b> у электро-модели он входит в цену, выбери комплект</div>';
+    if (pm && +R.w > 0 && +R.h > 0 && f && (pm.n !== 2 || f2)) st += '<div class="fnote ' + (r.ok && !r.warn.length ? 'ok' : 'bad') + '">' + (!r.ok ? e(r.msg) : r.warn.length ? '<b>' + (r.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + '</b>' + e(r.warn.join('; ')) : e(r.areaNote || 'Размеры в пределах прайса')) + '</div>';
+    if (pm && pm.check) st += '<div class="fnote">Данные по модели ' + e(pm.code) + ' неполные: размеры и комплектация приблизительные, смотри «Справку по модели»</div>';
+    [f, f2].forEach(x => { if (x && x.stock !== null && x.stock < 2) st += '<div class="fnote"><i class="sd" style="background:' + DOT[x.stock] + '"></i> ' + e(x.name.replace(/,.*$/, '')) + ': ' + e(STOCK_TXT[x.stock]) + (x.arrival ? ', приход ' + e(x.arrival) : '') + '</div>'; });
+    if (r.ok && r.termDays) st += '<div class="fnote"><b>Срок:</b> ' + r.termDays + ' дней</div>';
+    if (own && r.ok && showProfit && unit < r.cost) st += '<div class="fnote bad">Ниже закупа: убыток ' + m((r.cost - unit) * qty) + ' на позицию.</div>';
+    h += '</div>' + rFoot(J, r, f, st, qty, own, unit, showProfit);
+    return h;
+  }
+  A.fld.plt = v => { R.pt = v; R.sys = ''; R.fab = ''; R.fab2 = ''; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; F.colOpen = false; F.cq = ''; rr(); };
+  A.fld.plm = v => { R.sys = 'PL-' + v; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; R.ctrl = ''; R.fab2 = ''; F.colOpen = false; rr(); };
+  A.act.plhelp = () => { R.plhelp = !R.plhelp; rr(); };
+
 
   function itemName(it, c) {
     const extra = Object.keys(it.opts || {}).filter(k => it.opts[k]).map(k => (k === 'Цепочка' || k === 'Цепочка металлическая') && it.chainCol ? k + ' (' + it.chainCol.toLowerCase() + ')' : k); if (it.fix) extra.push(CS().FIXLBL[it.fix] || it.fix);
@@ -476,7 +577,7 @@
       else if (cur.matches && cur.matches('[data-a=cauto]') && !F.autoOpen) { F.autoOpen = true; rr(); }
     }, 0);
   });
-  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo' || v === 'zebra' || v === 'vert' || v === 'gja' || v === 'roof' || v === 'roman' || v === 'mirage') { const m = v === 'zebra' || v === 'vert' || v === 'rolo' || v === 'gja' || v === 'roof' || v === 'roman' || v === 'mirage' ? v : ''; if (m) { if (RMM() !== m) { R.sys = ''; R.fab = ''; R.sel = {}; R.flags = {}; R.vf = null; R.tch = {}; } R.z = m === 'zebra'; R.v = m === 'vert'; R.g = m === 'gja'; R.rf = m === 'roof'; R.mr = m === 'roman' || m === 'mirage' ? m : ''; } F.mode = m ? 'rolo' : v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); if ((m === 'zebra' && !RJ().systems(true).length) || (m === 'vert' && !RJ().systems('vert').length) || (m === 'gja' && !RJ().systems('gja').length) || (m === 'roof' && !RJ().systems('roof').length) || ((m === 'roman' || m === 'mirage') && !RJ().systems(m).length)) A.act.cprices(); } };
+  A.fld.cmodel = v => { if (v === 'auto' || v === 'blinds' || v === 'rolo' || v === 'zebra' || v === 'vert' || v === 'gja' || v === 'roof' || v === 'roman' || v === 'mirage' || v === 'plisse') { const m = v === 'zebra' || v === 'vert' || v === 'rolo' || v === 'gja' || v === 'roof' || v === 'roman' || v === 'mirage' || v === 'plisse' ? v : ''; if (m) { if (RMM() !== m) { R.sys = ''; R.fab = ''; R.sel = {}; R.flags = {}; R.vf = null; R.tch = {}; } R.z = m === 'zebra'; R.v = m === 'vert'; R.g = m === 'gja'; R.rf = m === 'roof'; R.mr = m === 'roman' || m === 'mirage' || m === 'plisse' ? m : ''; } F.mode = m ? 'rolo' : v; F.colOpen = false; F.autoOpen = false; F.cq = ''; rr(); if ((m === 'zebra' && !RJ().systems(true).length) || (m === 'vert' && !RJ().systems('vert').length) || (m === 'gja' && !RJ().systems('gja').length) || (m === 'roof' && !RJ().systems('roof').length) || ((m === 'roman' || m === 'mirage' || m === 'plisse') && !RJ().systems(m).length)) A.act.cprices(); } };
   A.fld.ctype = v => { const p = String(v).split('|'); F.mat = p[0]; F.lam = +p[1]; F.color = ''; F.colOpen = false; rr(); };
   /* при смене поставщика тип, управление, фиксация и опции сохраняются, если он их поддерживает (иначе norm подставит допустимое) */
   A.fld.csup = v => { F.sup = v; F.colOpen = false; F.auto = { drive: '', remote: '' }; rr(); };
@@ -556,7 +657,7 @@
     rr(); A.toast('Новый расчёт: корзина и поля очищены');
   };
   A.act.cocancel = () => { if (O.req) O.kept = true; O.req = false; O.open = false; rr(); };
-  const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), g: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'gja'), rf: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'roof'), mr: (m => m === 'roman' || m === 'mirage' ? m : '')(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model), rw: it.rw || '', rm: (RJ() && RJ().winOf(it.rw) || {}).man || R.rm, fab2: it.fab2 || '', sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', vf: it.vf ? Object.assign(VF0(), it.vf) : null, sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), auto: Object.assign({ drive: '', remote: '', wire: '' }, it.auto), tch: { 'Разведенное управление': true }, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
+  const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), g: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'gja'), rf: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'roof'), pt: (RJ() && RJ().pl && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'plisse') ? RJ().pl.typeOf(it.sys, it.fab) : '', plhelp: false, mr: (m => m === 'roman' || m === 'mirage' || m === 'plisse' ? m : '')(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model), rw: it.rw || '', rm: (RJ() && RJ().winOf(it.rw) || {}).man || R.rm, fab2: it.fab2 || '', sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', vf: it.vf ? Object.assign(VF0(), it.vf) : null, sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), auto: Object.assign({ drive: '', remote: '', wire: '' }, it.auto), tch: { 'Разведенное управление': true }, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
     F.mode = 'blinds'; Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || '', fix: it.fix || '', chainCol: it.chainCol || '', opts: Object.assign({}, it.opts), auto: Object.assign({ drive: '', remote: '' }, it.auto), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
   const cuSync = () => { document.querySelectorAll('.cuadd [data-k]').forEach(el => { const k = el.dataset.k; if (k !== 'title' && document.activeElement !== el) el.value = CU[k]; }); };
   A.fld.cuf = (v, el) => {
@@ -597,8 +698,10 @@
   A.act.cedcancel = () => { F.edit = -1; R.edit = -1; rr(); };
   A.act.cadd = () => {
     if (F.mode === 'rolo') {
-      const n = normRolo(); if (!n.r.ok) { A.toast(n.r.msg || 'Заполните форму'); return; }
-      if (!R.rf && (VG() ? !(R.vf && R.vf.side) : !R.ctrl)) { A.toast('Выбери сторону управления'); return; }
+      const pl = R.mr === 'plisse', n = pl ? normPl() : normRolo(); if (!n.r.ok) { A.toast(n.r.msg || 'Заполните форму'); return; }
+      if (pl && n.m && n.m.el && !R.auto.drive) { A.toast('У электро-модели выбери комплект привода'); return; }
+      if (pl && plCtl() && !R.ctrl) { A.toast('Выбери сторону управления'); return; }
+      if (!pl && !R.rf && (VG() ? !(R.vf && R.vf.side) : !R.ctrl)) { A.toast('Выбери сторону управления'); return; }
       if (R.auto && R.auto.drive && JC().wireInfo({ sup: 'Amigo', auto: { drive: R.auto.drive } }) && !R.auto.wire) { A.toast('Выбери, с какой стороны выходит провод привода'); return; }
       const own = R.own !== '' && !isNaN(+R.own) && +R.own >= 0 ? Math.round(+R.own) : '';
       const item = Object.assign(roloItem(), { qty: Math.max(1, +R.qty || 1), own, note: R.note, sel: Object.assign({}, R.sel), flags: Object.assign({}, R.flags) });
