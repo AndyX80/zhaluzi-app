@@ -312,3 +312,8 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--acc)!importa
 .cacts{display:flex;flex-wrap:nowrap;gap:6px}.cacts .btn,.cacts .btn.big{flex:1 1 auto;height:36px;padding:0 8px;font-size:13px;white-space:nowrap;justify-content:center}
 .cacts{padding-right:46px}.cacts .btn,.cacts .btn.big{padding:0 6px;font-size:12.5px;min-width:0}
 #askbtn{right:14px;bottom:14px;width:40px;height:40px}
+/* корзина: нижняя часть компактнее, больше места под позиции */
+.cuadd{padding:4px 8px!important;margin-bottom:4px!important}
+.cfoot{gap:5px}.cline{gap:6px 12px}.cline .cdisc{gap:6px}.cdisc .ul,.cline .ul{font-size:13px}
+.sumbar{padding:6px 12px;gap:8px}.sumbar b{font-size:16px}
+.cacts .btn,.cacts .btn.big{height:32px}
