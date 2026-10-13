@@ -333,6 +333,7 @@
   const plCtl = () => { const m = plM(); return !!m && (m.ctl === 'шнур' || m.ctl === 'цепь'); };
   const plNeed2 = () => { const m = plM(); return !!m && m.n === 2; };
   const PLCTL = { 'ручка': 'ручка на подвижном карнизе', 'шнур': 'шнур', 'цепь': 'цепь', 'электро': 'электропривод', 'неподвижная': 'неподвижная, без управления', 'пружина': 'пружинный механизм' };
+  const PLGT = { 'ручка': 'Ручка на подвижном карнизе', 'шнур': 'Шнур', 'цепь': 'Цепочка', 'электро': 'Электропривод', 'пружина': 'Пружинный механизм', 'неподвижная': 'Неподвижные, без управления' };
   const c2 = x => String(x).replace('.', ',');
   const plShort = m => [PLCTL[m.ctl] || m.ctl, m.mv > 1 ? 'подвижных ' + m.mv : '', m.n === 2 ? 'день-ночь' : '', m.form === 'сложная' ? 'непрямоугольная' : ''].filter(Boolean).join(', ');
   /* справка только по выбранной модели: всё, что нужно знать об особенностях этой модели */
@@ -378,11 +379,14 @@
       (F.colOpen === (key === 'fab' ? true : key) ? '<div class="colpop"><input class="in" data-c="ccolq" placeholder="Поиск ткани (название, серия, категория)" value="' + e(F.cq) + '" id="ccolq"><div class="colist sc">' + (shown.length ? shown.map(x => '<button class="coli ' + (x.key === (key === 'fab' ? R.fab : R.fab2) ? 'on' : '') + '" data-a="ccolpick" data-v="' + e(x.key) + '">' + (J.photoUrl(x) ? '<img class="fth" loading="lazy" alt="" src="' + e(J.photoUrl(x)) + '" onerror="this.style.display=\'none\'">' : '') + (x.stock !== null ? '<i class="sd" style="background:' + DOT[x.stock] + '"></i>' : '') + '<span><b>' + e(x.name) + '</b> <span class="mut sm">серия ' + e(x.ser) + '</span></span><span class="sp"></span><span class="pill">кат. ' + e(x.cat) + '</span></button>').join('') : '<div class="mut" style="padding:10px">Ничего не найдено</div>') + '</div></div>' : '') + '</div>';
     let h = '<div class="card cform"><div class="ftop"><h2>' + (R.edit >= 0 ? 'Плиссе, позиция ' + (R.edit + 1) : 'Новое плиссе') + '</h2><span class="sp"></span>' + (R.edit >= 0 ? '<button class="btn sm" data-a="cedcancel">Отменить правку</button>' : '') + '</div><div class="fbody rbody">';
     /* тип (система и вид ткани) → модель: выбор модели обязателен, она задаёт размеры, кронштейны, опции и наценку */
-    const sers = []; n.ms.forEach(x => { if (sers.indexOf(x.ser) < 0) sers.push(x.ser); });
-    const modelSel = '<div class="fld"><label>Модель плиссе</label><select class="ul" data-c="plm">' + (R.sys ? '' : '<option value="" selected disabled>Выберите модель</option>') + sers.map(sr => { const t = J.pl.S(sr); return '<optgroup label="' + e(t ? t.title : 'серия ' + sr) + '">' + n.ms.filter(x => x.ser === sr).sort((a, b) => a.code.localeCompare(b.code)).map(x => '<option value="' + e(x.code) + '"' + (R.sys === 'PL-' + x.code ? ' selected' : '') + '>' + e(x.code + ' — ' + plShort(x)) + '</option>').join('') + '</optgroup>'; }).join('') + '</select></div>';
-    h += '<div class="fgrid">' + modelRow() + '<div class="fld"><label>Тип</label><select class="ul" data-c="plt">' + n.ts.map(t => '<option value="' + t.id + '"' + (t.id === R.pt ? ' selected' : '') + '>' + e(t.label) + '</option>').join('') + '</select></div>' + modelSel + '</div>';
+    h += '<div class="fgrid">' + modelRow() + '<div class="fld"><label>Тип</label><select class="ul" data-c="plt">' + n.ts.map(t => '<option value="' + t.id + '"' + (t.id === R.pt ? ' selected' : '') + '>' + e(t.label) + '</option>').join('') + '</select></div></div>';
+    /* выбор модели плиткой: группы по способу управления, на плитке эскиз и артикул, клик сразу ставит нужную модель */
+    if (!pm || R.plgrid) {
+      const CO = ['ручка', 'шнур', 'цепь', 'электро', 'пружина', 'неподвижная'], cs = CO.filter(c => n.ms.some(x => x.ctl === c)).concat(n.ms.map(x => x.ctl).filter((c, i, a) => CO.indexOf(c) < 0 && a.indexOf(c) === i));
+      h += '<div class="fld"><label>Модель плиссе: выбери способ управления и эскиз</label><div class="plgrid">' + cs.map(c => '<div class="plgrp"><div class="plgt">' + e(PLGT[c] || c) + '</div><div class="pltiles">' + n.ms.filter(x => x.ctl === c).sort((a, b) => a.code.localeCompare(b.code)).map(x => '<button class="pltile ' + (R.sys === 'PL-' + x.code ? 'on' : '') + '" data-a="plpick" data-v="' + e(x.code) + '" title="' + e(x.code + ': ' + plShort(x)) + '"><img loading="lazy" src="img/plisse/' + e(x.code) + '.png" alt="" onerror="this.style.visibility=\'hidden\'"><b>' + e(x.code) + '</b><span class="mut sm">' + e([x.mv > 1 ? x.mv + ' подвижных' : '', x.n === 2 ? 'день-ночь' : '', x.form === 'сложная' ? 'не прямоуг.' : ''].filter(Boolean).join(', ')) + '</span></button>').join('') + '</div></div>').join('') + '</div></div>';
+    }
     if (pm) {
-      h += '<div class="plhead"><div class="plpic"><img src="img/plisse/' + e(pm.code) + '.png" alt="Схема ' + e(pm.code) + '" onerror="this.parentNode.style.display=\'none\'"></div><div class="pltx"><b>' + e(pm.code) + '</b><span class="mut">' + e(plShort(pm)) + '</span><span class="mut sm">' + e(pm.sys + (pm.ser ? ' · серия ' + pm.ser : '')) + '</span><button class="btn sm" data-a="plhelp">' + (R.plhelp ? 'Скрыть справку' : 'Справка по модели') + '</button></div></div>';
+      h += '<div class="plhead"><div class="plpic"><img src="img/plisse/' + e(pm.code) + '.png" alt="Схема ' + e(pm.code) + '" onerror="this.parentNode.style.display=\'none\'"></div><div class="pltx"><b>' + e(pm.code) + '</b><span class="mut">' + e(plShort(pm)) + '</span><span class="mut sm">' + e(pm.sys + (pm.ser ? ' · серия ' + pm.ser : '')) + '</span><span class="plbtns"><button class="btn sm" data-a="plgrid">' + (R.plgrid ? 'Скрыть список моделей' : 'Сменить модель') + '</button><button class="btn sm" data-a="plhelp">' + (R.plhelp ? 'Скрыть справку' : 'Справка по модели') + '</button></span></div></div>';
       if (R.plhelp) h += plHelp(pm, showProfit);
     }
     if (pm) {
@@ -411,8 +415,10 @@
     h += '</div>' + rFoot(J, r, f, st, qty, own, unit, showProfit);
     return h;
   }
-  A.fld.plt = v => { R.pt = v; R.sys = ''; R.fab = ''; R.fab2 = ''; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; F.colOpen = false; F.cq = ''; rr(); };
+  A.fld.plt = v => { R.pt = v; R.sys = ''; R.plgrid = false; R.fab = ''; R.fab2 = ''; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; F.colOpen = false; F.cq = ''; rr(); };
   A.fld.plm = v => { R.sys = 'PL-' + v; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; R.ctrl = ''; R.fab2 = ''; F.colOpen = false; rr(); };
+  A.act.plpick = el => { R.sys = 'PL-' + el.dataset.v; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; R.ctrl = ''; R.fab2 = ''; R.plgrid = false; F.colOpen = false; rr(); };
+  A.act.plgrid = () => { R.plgrid = !R.plgrid; rr(); };
   A.act.plhelp = () => { R.plhelp = !R.plhelp; rr(); };
 
 
