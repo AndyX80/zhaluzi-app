@@ -306,3 +306,9 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--acc)!importa
 .pltile img{width:100%;height:84px;object-fit:contain;background:#fff;border-radius:6px}
 .pltile:hover{border-color:var(--acc,#2dd4bf)}.pltile.on{border-color:var(--acc,#2dd4bf);box-shadow:0 0 0 2px var(--acc,#2dd4bf) inset}
 .plbtns{display:flex;gap:8px;flex-wrap:wrap}
+/* плиссе: компактнее; кнопки корзины в одну линию */
+.plhead{padding:8px 10px;gap:12px}.plpic{width:120px}.pltx{flex:1}
+.cform .plhead .rph{width:110px;height:110px;margin-left:auto;border-radius:10px}
+.cacts{display:flex;flex-wrap:nowrap;gap:6px}.cacts .btn,.cacts .btn.big{flex:1 1 auto;height:36px;padding:0 8px;font-size:13px;white-space:nowrap;justify-content:center}
+.cacts{padding-right:46px}.cacts .btn,.cacts .btn.big{padding:0 6px;font-size:12.5px;min-width:0}
+#askbtn{right:14px;bottom:14px;width:40px;height:40px}

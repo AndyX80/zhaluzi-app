@@ -316,10 +316,10 @@
   }
 
   /* нижняя часть формы изделия: фото, заметки, цена, «В корзину» (общая для рулонок и плиссе) */
-  function rFoot(J, r, f, st, qty, own, unit, showProfit) {
+  function rFoot(J, r, f, st, qty, own, unit, showProfit, nph) {
     let h = '';
     const ph = J.photoUrl(f);
-    h += '<div class="ffoot">' + (ph ? '<button class="rph" data-a="rphoto" title="Увеличить фото ткани"><img src="' + e(ph) + '" alt="" onerror="this.parentNode.style.display=\'none\'"></button>' : '') + '<div class="fright"><div class="fnotes">' + st + '</div><div class="frow">' + '<button class="coin ' + (showProfit ? 'on' : '') + '" data-a="chide" title="' + (showProfit ? 'Закуп и прибыль показаны' : 'Показать закуп и прибыль') + '">' + A.icon('coin', 22) + '</button>' +
+    h += '<div class="ffoot">' + (ph && !nph ? '<button class="rph" data-a="rphoto" title="Увеличить фото ткани"><img src="' + e(ph) + '" alt="" onerror="this.parentNode.style.display=\'none\'"></button>' : '') + '<div class="fright"><div class="fnotes">' + st + '</div><div class="frow">' + '<button class="coin ' + (showProfit ? 'on' : '') + '" data-a="chide" title="' + (showProfit ? 'Закуп и прибыль показаны' : 'Показать закуп и прибыль') + '">' + A.icon('coin', 22) + '</button>' +
       '<div class="fld"><label>Количество</label><div class="qst"><button data-a="rqty" data-d="-1">−</button><input class="num" type="number" min="1" max="99" value="' + qty + '" data-c="rf" data-k="qty"><button data-a="rqty" data-d="1">+</button></div></div>' +
       '<div class="fprice"><div class="fown"><label>Своя цена за шт</label><input class="ul num" value="' + e(R.own) + '" data-c="rf" data-k="own" placeholder="' + (r.ok ? Math.round(r.unit) : '') + '"></div>' +
       '<small class="mut">' + (r.ok ? (qty > 1 ? fmt(unit) + ' ₽ × ' + qty + ' шт' : 'изделие ' + fmt(r.base) + ' + доп. ' + fmt(r.addSum)) : '') + (own ? ' · своя цена' : '') + '</small>' +
@@ -386,12 +386,12 @@
       h += '<div class="fld"><label>Модель плиссе: выбери способ управления и эскиз</label><div class="plgrid">' + cs.map(c => '<div class="plgrp"><div class="plgt">' + e(PLGT[c] || c) + '</div><div class="pltiles">' + n.ms.filter(x => x.ctl === c).sort((a, b) => a.code.localeCompare(b.code)).map(x => '<button class="pltile ' + (R.sys === 'PL-' + x.code ? 'on' : '') + '" data-a="plpick" data-v="' + e(x.code) + '" title="' + e(x.code + ': ' + plShort(x)) + '"><img loading="lazy" src="img/plisse/' + e(x.code) + '.png" alt="" onerror="this.style.visibility=\'hidden\'"><b>' + e(x.code) + '</b></button>').join('') + '</div></div>').join('') + '</div></div>';
     }
     if (pm) {
-      h += '<div class="plhead"><div class="plpic"><img src="img/plisse/' + e(pm.code) + '.png" alt="Схема ' + e(pm.code) + '" onerror="this.parentNode.style.display=\'none\'"></div><div class="pltx"><b>' + e(pm.code) + '</b><span class="mut">' + e(plShort(pm)) + '</span><span class="mut sm">' + e(pm.sys + (pm.ser ? ' · серия ' + pm.ser : '')) + '</span><span class="plbtns"><button class="btn sm" data-a="plgrid">' + (R.plgrid ? 'Скрыть список моделей' : 'Сменить модель') + '</button><button class="btn sm" data-a="plhelp">' + (R.plhelp ? 'Скрыть справку' : 'Справка по модели') + '</button></span></div></div>';
+      h += '<div class="plhead"><div class="plpic"><img src="img/plisse/' + e(pm.code) + '.png" alt="Схема ' + e(pm.code) + '" onerror="this.parentNode.style.display=\'none\'"></div><div class="pltx"><b>' + e(pm.code) + '</b><span class="mut">' + e(plShort(pm)) + '</span><span class="mut sm">' + e(pm.sys + (pm.ser ? ' · серия ' + pm.ser : '')) + '</span><span class="plbtns"><button class="btn sm" data-a="plgrid">' + (R.plgrid ? 'Скрыть список моделей' : 'Сменить модель') + '</button><button class="btn sm" data-a="plhelp">' + (R.plhelp ? 'Скрыть справку' : 'Справка по модели') + '</button></span></div>' + (J.photoUrl(f) ? '<button class="rph plph" data-a="rphoto" title="Увеличить фото ткани"><img src="' + e(J.photoUrl(f)) + '" alt="" onerror="this.parentNode.style.display=\'none\'"></button>' : '') + '</div>';
       if (R.plhelp) h += plHelp(pm, showProfit);
     }
     if (pm) {
-      h += '<div class="fgrid">' + fabBtn(f, 'fab', pm.n === 2 ? 'Ткань 1 (верх)' : 'Ткань') + (pm.n === 2 ? fabBtn(f2, 'fab2', 'Ткань 2 (низ)') : '') + '</div>';
-      h += '<div class="fld sz"><label>Размер, мм' + (pm.form === 'сложная' ? ' (габарит: макс. ширина и высота)' : '') + '</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(R.w) + '" data-c="rf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(R.h) + '" data-c="rf" data-k="h"></span></div></div>';
+      const szH = '<div class="fld sz"><label>Размер, мм' + (pm.form === 'сложная' ? ' (габарит: макс. ширина и высота)' : '') + '</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(R.w) + '" data-c="rf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(R.h) + '" data-c="rf" data-k="h"></span></div></div>';
+      h += '<div class="fgrid">' + fabBtn(f, 'fab', pm.n === 2 ? 'Ткань 1 (верх)' : 'Ткань') + (pm.n === 2 ? fabBtn(f2, 'fab2', 'Ткань 2 (низ)') : '') + (pm.n === 2 ? '' : szH) + '</div>' + (pm.n === 2 ? szH : '');
       if (plCtl()) h += '<div class="fgrid"><div class="fld"><label>Сторона управления (' + e(pm.ctl) + ')</label><div class="seg">' + [['L', 'слева'], ['R', 'справа']].map(k => '<button class="' + (R.ctrl === k[0] ? 'on' : '') + '" data-a="rf" data-k="ctrl" data-v="' + k[0] + '">' + k[1] + '</button>').join('') + '</div></div>' +
         '<div class="fld"><label>Длина управления, мм</label><input class="ul num" type="number" min="0" data-c="vf" data-k="len" value="' + e(R.vf && R.vf.len !== '' && R.vf.len != null ? R.vf.len : (+R.h ? Math.round(+R.h * 0.75) : '')) + '"></div></div>';
       const choice = n.groups.filter(g => g.type === 'choice' && g.items.length > 1), flags = n.groups.filter(g => g.type === 'flag');
@@ -412,7 +412,7 @@
     [f, f2].forEach(x => { if (x && x.stock !== null && x.stock < 2) st += '<div class="fnote"><i class="sd" style="background:' + DOT[x.stock] + '"></i> ' + e(x.name.replace(/,.*$/, '')) + ': ' + e(STOCK_TXT[x.stock]) + (x.arrival ? ', приход ' + e(x.arrival) : '') + '</div>'; });
     if (r.ok && r.termDays) st += '<div class="fnote"><b>Срок:</b> ' + r.termDays + ' дней</div>';
     if (own && r.ok && showProfit && unit < r.cost) st += '<div class="fnote bad">Ниже закупа: убыток ' + m((r.cost - unit) * qty) + ' на позицию.</div>';
-    h += '</div>' + rFoot(J, r, f, st, qty, own, unit, showProfit);
+    h += '</div>' + rFoot(J, r, f, st, qty, own, unit, showProfit, true);
     return h;
   }
   A.fld.plt = v => { R.pt = v; R.sys = ''; R.plgrid = false; R.fab = ''; R.fab2 = ''; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; F.colOpen = false; F.cq = ''; rr(); };
