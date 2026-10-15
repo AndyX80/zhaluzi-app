@@ -5,14 +5,14 @@
   'use strict';
   const ceilTo = (x, s) => Math.ceil(x / s - 1e-9) * s;
   const SUP = 'Amigo';
-  let RED = null, P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {}, VP = {}, VT = {}, GT = {}, GP = {}, WIN = [], WIN_BY = {}, NOROOF = {}, PLM = {}, PLP = {}, PLS = {};
+  let RED = null, P = {}, SYS = [], GRID = {}, OPT = {}, FAB = [], FX = 85, ready = false, FAB_BY = {}, WIND = {}, WINDZ = {}, VP = {}, VT = {}, GT = {}, GP = {}, WIN = [], WIN_BY = {}, NOROOF = {}, PLM = {}, PLP = {}, PLS = {}, PLW = [];
   const numC = (v, d) => v === '' || v == null || isNaN(Number(String(v).replace(',', '.'))) ? d : Number(String(v).replace(',', '.'));
 
   const PLT = [{ id: 'mini', sys: 'MINI', kinds: ['плиссе 20'], label: 'MINI · плиссе 15/20 мм' }, { id: 'midi', sys: 'MIDI', kinds: ['плиссе 20'], label: 'MIDI · плиссе 20 мм' }, { id: 'maxi', sys: 'MAXI', kinds: ['плиссе 32'], label: 'MAXI · плиссе 32 мм' }, { id: 'midig', sys: 'MIDI', kinds: ['гофре 25'], gofre: true, label: 'MIDI · гофре 25 мм' }, { id: 'maxig', sys: 'MAXI', kinds: ['гофре 45'], gofre: true, label: 'MAXI · гофре 45 мм' }];
   const unitOf = u => (u === 'м_шир' || u === 'м_выс' || u === 'м_шов' || u === 'м_цепь') ? u : 'изд';
 
   function setSheets(sh) {
-    ready = false; RED = null; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {}; VP = {}; VT = {}; GT = {}; GP = {}; WIN = []; WIN_BY = {}; NOROOF = {}; PLM = {}; PLP = {}; PLS = {};
+    ready = false; RED = null; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {}; VP = {}; VT = {}; GT = {}; GP = {}; WIN = []; WIN_BY = {}; NOROOF = {}; PLM = {}; PLP = {}; PLS = {}; PLW = [];
     if (!sh || !sh['Рулонки_системы'] || !sh['Рулонки_параметры']) return;
     sh['Рулонки_параметры'].slice(1).forEach(r => { if (r[0]) P[r[0]] = r[1]; });
     const par = sh['Параметры'] || []; par.forEach(r => { if (r[0] === 'курс_usd') FX = Number(r[1]) || FX; });
@@ -169,6 +169,8 @@
           g.items.push({ value: String(o[1]), usd: numC(o[3], 0), unit: String(o[4] || 'изд'), def: !!numC(o[5], 0) });
         });
       });
+      /* предупреждения из брошюры по моделям: код (через запятую или *) | текст | условие (плиссе: только для ткани плиссе, гофре: только для гофре) */
+      (sh['Плиссе_предупреждения'] || []).slice(1).forEach(r => { if (r[0] && r[1]) PLW.push({ all: String(r[0]).trim() === '*', codes: String(r[0]).split(/[,;\s]+/).filter(Boolean), text: String(r[1]), cond: String(r[2] || '').trim().toLowerCase() }); });
       (sh['Плиссе_ткани_цвета'] || []).slice(1).forEach(r => {
         if (!r[0]) return;
         const f = { z: false, m: 'plisse', vt: '', kind: String(r[3] || ''), key: 'PL|' + String(r[0]), art: String(r[0]), name: String(r[2] || r[0]), ser: String(r[1] || ''), cat: String(r[4] == null ? '' : r[4]).trim().toUpperCase().replace(/Е/g, 'E'), roll: 0, prodW: numC(r[5], 0), img: String(r[6] || ''), stock: r[7] === '' || r[7] == null ? null : numC(r[7], null), qty: r[8] === '' || r[8] == null ? null : numC(r[8], null), arrival: String(r[9] || ''), maxs: '', dens: 0, wgrp: '', wet: '', coll: '' };
@@ -401,6 +403,7 @@
       if (o.flags[redName] && !notes.some(x => /редуктор/.test(x))) notes.push('Изделие с редуктором и цепью-петлёй');
     }
     groupsOf(s.code).forEach(g => {
+      if (g.name === 'Шнур с петлями' && (isGofre(f) || isGofre(f2))) return; /* у гофре шнур с петлями уже в комплекте */
       const pick = g.type === 'flag' ? (o.flags[g.name] ? g.items[0] : null) : g.items.find(x => x.value === o.sel[g.name]);
       if (!pick || !pick.usd) return;
       const lb = g.type === 'flag' ? g.name : pick.value;
@@ -573,7 +576,8 @@
       models: tid => { const t = PLT.find(x => x.id === tid); return t ? Object.keys(PLM).map(c => PLM[c]).filter(m => m.sys === t.sys && !(t.gofre && m.fab === 'плиссе')) : []; },
       fabrics: tid => { const t = PLT.find(x => x.id === tid); return t ? FAB.filter(f => f.m === 'plisse' && t.kinds.indexOf(f.kind) >= 0) : []; },
       typeOf: (sys, fabKey) => { const m = PLM[String(sys || '').replace(/^PL-/, '')], f = FAB_BY[fabKey]; if (!m) return ''; const g = f ? isGofre(f) : false; const t = PLT.find(x => x.sys === m.sys && !!x.gofre === g) || PLT.find(x => x.sys === m.sys); return t ? t.id : ''; },
-      groups: groupsOf
+      groups: groupsOf,
+      warns: (code, fabs, flags) => { const c = String(code || '').replace(/^PL-/, ''), fl = (fabs || []).filter(Boolean), gof = fl.some(f => isGofre(f)), pl = !fl.length || fl.some(f => !isGofre(f)); return PLW.filter(w => (w.all || w.codes.indexOf(c) >= 0) && (!w.cond || (w.cond === 'плиссе' ? pl : w.cond === 'гофре' ? (gof || !fl.length) : /^нет:/.test(w.cond) ? !(flags && flags[w.cond.slice(4).trim()]) : true))).map(w => w.text); }
     }
   };
 })();

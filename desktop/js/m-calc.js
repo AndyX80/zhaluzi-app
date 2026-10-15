@@ -353,17 +353,20 @@
       row('Подвижных карнизов', m.mv ? String(m.mv) : '') + row('Форма', e(form)) + row('Ткани', m.fab === 'плиссе' ? 'только плиссе' : 'плиссе и гофре') + row('Установка на окно с наклоном', m.tilt && m.tilt !== '—' ? e(m.tilt) : '') +
       row('Размеры', size) + row('Кронштейны', brk ? brk.items.map(x => e(x.value) + (x.usd ? ' <span class="mut">(доплата)</span>' : '')).join('<br>') : '<span class="mut">по брошюре кронштейн не выбирается</span>') +
       row('Доступные опции', others.length ? others.map(g => e(g.name)).join(', ') : '<span class="mut">нет</span>') + row('Наценка модели (закуп)', showCost && m.nat ? c2(m.nat) + ' $' : '') +
-      row('Примечание', m.note ? e(m.note) : '') + (m.check ? '<div class="plh-n">Данные по этой модели в брошюре неполные или приблизительные: перед запуском в производство сверьте с поставщиком.</div>' : '') + '</div>';
+      row('Предупреждения', J.pl.warns('PL-' + m.code, [], {}).map(x => '<div>' + e(x) + '</div>').join('')) + row('Примечание', m.note ? e(m.note) : '') + (m.check ? '<div class="plh-n">Данные по этой модели в брошюре неполные или приблизительные: перед запуском в производство сверьте с поставщиком.</div>' : '') + '</div>';
   }
   function normPl() {
     const J = RJ(), PL = J.pl, ts = PL.types();
     if (!ts.some(t => t.id === R.pt)) R.pt = ts.length ? ts[0].id : '';
     const ms = PL.models(R.pt); if (R.sys && !ms.some(x => 'PL-' + x.code === R.sys)) R.sys = '';
     const fl = PL.fabrics(R.pt); if (R.fab && !fl.some(x => x.key === R.fab)) R.fab = ''; if (R.fab2 && (!plNeed2() || !fl.some(x => x.key === R.fab2))) R.fab2 = '';
-    const m = plM(), o = R.sys ? J.opts(roloItem()) : { sel: {}, flags: {} }; R.sel = o.sel; R.flags = o.flags;
+    const m = plM(), fs = [J.fabOf(R.fab), plNeed2() ? J.fabOf(R.fab2) : null].filter(Boolean), gof = fs.some(x => /гофре/i.test(x.kind || ''));
+    /* шнур с петлями: у гофре он уже в комплекте (опцию убираем), у MAXI плиссе включён по умолчанию, пока его не трогали */
+    if (m) { R.flags = Object.assign({}, R.flags); const PN = 'Шнур с петлями'; if (gof) delete R.flags[PN]; else if (m.sys === 'MAXI' && !(R.tch && R.tch[PN])) R.flags[PN] = true; }
+    const o = R.sys ? J.opts(roloItem()) : { sel: {}, flags: {} }; R.sel = o.sel; R.flags = o.flags;
     { const al = rAuto(), a = R.auto = Object.assign({ drive: '', remote: '', wire: '' }, R.auto); if (a.drive && !al.drive.some(f => f.key === a.drive)) a.drive = ''; if (a.remote && !al.remote.some(f => f.key === a.remote)) a.remote = ''; if (!a.drive || !JC().wireInfo({ sup: 'Amigo', auto: { drive: a.drive } })) a.wire = ''; }
     const r = R.sys ? JC().withAuto(roloItem(), J.calc(roloItem())) : { ok: false, warn: [], msg: 'Выберите модель' };
-    return { it: roloItem(), r, groups: R.sys ? J.groups(R.sys) : [], m, ts, ms, fl };
+    return { it: roloItem(), r, groups: R.sys ? J.groups(R.sys).filter(g => !(gof && g.name === 'Шнур с петлями')) : [], m, ts, ms, fl, warns: R.sys ? J.pl.warns(R.sys, fs, R.flags) : [] };
   }
   function formPl() {
     if (!RJ() || !RJ().pl || !RJ().pl.types().length) return '<div class="card cform"><div class="ftop"><h2>Плиссе</h2></div><div class="fbody"><div class="empty" style="padding:28px">Цены на плиссе не загружены.<br><small>Нажмите «Синхронизировать» в Настройках, раздел «Данные».</small></div></div></div>';
@@ -408,6 +411,8 @@
     let st = '';
     if (pm && pm.el && !R.auto.drive) st += '<div class="fnote bad"><b>Электропривод:</b> у электро-модели он входит в цену, выбери комплект</div>';
     if (pm && +R.w > 0 && +R.h > 0 && f && (pm.n !== 2 || f2)) st += '<div class="fnote ' + (r.ok && !r.warn.length ? 'ok' : 'bad') + '">' + (!r.ok ? e(r.msg) : r.warn.length ? '<b>' + (r.warn.hard ? 'НЕЛЬЗЯ ИЗГОТОВИТЬ: ' : 'НЕ ГАРАНТ.: ') + '</b>' + e(r.warn.join('; ')) : e(r.areaNote || 'Размеры в пределах прайса')) + '</div>';
+    n.warns.forEach(t => { st += '<div class="fnote warn"><b>Внимание:</b> ' + e(t) + '</div>'; });
+    (r.notes || []).forEach(t => { st += '<div class="fnote warn"><b>Внимание:</b> ' + e(t) + '</div>'; });
     if (pm && pm.check) st += '<div class="fnote">Данные по модели ' + e(pm.code) + ' неполные: размеры и комплектация приблизительные, смотри «Справку по модели»</div>';
     [f, f2].forEach(x => { if (x && x.stock !== null && x.stock < 2) st += '<div class="fnote"><i class="sd" style="background:' + DOT[x.stock] + '"></i> ' + e(x.name.replace(/,.*$/, '')) + ': ' + e(STOCK_TXT[x.stock]) + (x.arrival ? ', приход ' + e(x.arrival) : '') + '</div>'; });
     if (r.ok && r.termDays) st += '<div class="fnote"><b>Срок:</b> ' + r.termDays + ' дней</div>';
@@ -415,9 +420,9 @@
     h += '</div>' + rFoot(J, r, f, st, qty, own, unit, showProfit, true);
     return h;
   }
-  A.fld.plt = v => { R.pt = v; R.sys = ''; R.plgrid = false; R.fab = ''; R.fab2 = ''; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; F.colOpen = false; F.cq = ''; rr(); };
+  A.fld.plt = v => { R.tch = {}; R.pt = v; R.sys = ''; R.plgrid = false; R.fab = ''; R.fab2 = ''; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; F.colOpen = false; F.cq = ''; rr(); };
   A.fld.plm = v => { R.sys = 'PL-' + v; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; R.ctrl = ''; R.fab2 = ''; F.colOpen = false; rr(); };
-  A.act.plpick = el => { R.sys = 'PL-' + el.dataset.v; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; R.ctrl = ''; R.fab2 = ''; R.plgrid = false; F.colOpen = false; rr(); };
+  A.act.plpick = el => { R.tch = {}; R.sys = 'PL-' + el.dataset.v; R.sel = {}; R.flags = {}; R.auto = { drive: '', remote: '', wire: '' }; R.ctrl = ''; R.fab2 = ''; R.plgrid = false; F.colOpen = false; rr(); };
   A.act.plgrid = () => { R.plgrid = !R.plgrid; rr(); };
   A.act.plhelp = () => { R.plhelp = !R.plhelp; rr(); };
 
@@ -663,7 +668,7 @@
     rr(); A.toast('Новый расчёт: корзина и поля очищены');
   };
   A.act.cocancel = () => { if (O.req) O.kept = true; O.req = false; O.open = false; rr(); };
-  const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), g: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'gja'), rf: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'roof'), pt: (RJ() && RJ().pl && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'plisse') ? RJ().pl.typeOf(it.sys, it.fab) : '', plhelp: false, mr: (m => m === 'roman' || m === 'mirage' || m === 'plisse' ? m : '')(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model), rw: it.rw || '', rm: (RJ() && RJ().winOf(it.rw) || {}).man || R.rm, fab2: it.fab2 || '', sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', vf: it.vf ? Object.assign(VF0(), it.vf) : null, sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), auto: Object.assign({ drive: '', remote: '', wire: '' }, it.auto), tch: { 'Разведенное управление': true }, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
+  const load = (it, edit) => { if (it.prod === 'rolo') { Object.assign(F, { mode: 'rolo', colOpen: false, cq: '' }); Object.assign(R, { z: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'zebra'), v: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'vert'), g: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'gja'), rf: !!(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'roof'), pt: (RJ() && RJ().pl && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model === 'plisse') ? RJ().pl.typeOf(it.sys, it.fab) : '', plhelp: false, mr: (m => m === 'roman' || m === 'mirage' || m === 'plisse' ? m : '')(RJ() && RJ().sysOf(it.sys) && RJ().sysOf(it.sys).model), rw: it.rw || '', rm: (RJ() && RJ().winOf(it.rw) || {}).man || R.rm, fab2: it.fab2 || '', sys: it.sys, fab: it.fab, w: String(it.w), h: String(it.h), qty: it.qty || 1, ctrl: it.ctrl || 'L', vf: it.vf ? Object.assign(VF0(), it.vf) : null, sel: Object.assign({}, it.sel), flags: Object.assign({}, it.flags), auto: Object.assign({ drive: '', remote: '', wire: '' }, it.auto), tch: { 'Разведенное управление': true, 'Шнур с петлями': true }, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit }); rr(); return; }
     F.mode = 'blinds'; Object.assign(F, { sup: it.sup, lam: it.lam, mat: it.mat, color: it.color || '', ctrl: it.ctrl || '', fix: it.fix || '', chainCol: it.chainCol || '', opts: Object.assign({}, it.opts), auto: Object.assign({ drive: '', remote: '' }, it.auto), w: String(it.w), h: String(it.h), qty: it.qty || 1, own: it.own === '' || it.own == null ? '' : String(it.own), note: it.note || '', edit, colOpen: false }); rr(); };
   const cuSync = () => { document.querySelectorAll('.cuadd [data-k]').forEach(el => { const k = el.dataset.k; if (k !== 'title' && document.activeElement !== el) el.value = CU[k]; }); };
   A.fld.cuf = (v, el) => {

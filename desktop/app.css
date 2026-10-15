@@ -321,3 +321,4 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--acc)!importa
 .cform .fgrid:has(select[data-c=rau]){grid-template-columns:1fr}
 .cform select[data-c=rau],.cform select[data-c=ropt]{font-size:12.5px;text-overflow:ellipsis}
 @media(max-width:1500px){.cform select.ul{font-size:13px}}
+.fnote.warn{background:var(--warn-s);color:var(--warn)}
