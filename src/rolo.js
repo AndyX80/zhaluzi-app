@@ -360,10 +360,10 @@
       if (!it0.usd || /^%/.test(u) || g.name === 'Только ламели') return;
       optUsd[g.name] = /кв/.test(u) ? it0.usd * calcA : /м шир/.test(u) ? it0.usd * W / 1000 : it0.usd;
     });
-    const base = Math.round(baseUsd * k), optCost = {}, optP = {};
+    const baseX = baseUsd * k, base = Math.round(baseX), optCost = {}, optP = {};
     let cost = base;
     Object.keys(optUsd).forEach(n => { optCost[n] = Math.round(optUsd[n] * k); optP[n] = Math.ceil(optUsd[n] * k * s.mk / step - 1e-9) * step; cost += optCost[n]; });
-    const baseRetail = ceilTo(base * s.mk, step), exact = base * s.mk + Object.keys(optUsd).reduce((a, n) => a + optUsd[n] * k * s.mk, 0), unit = ceilTo(exact, step), addSum = unit - baseRetail; /* округление до сотни один раз в конце */
+    const baseRetail = ceilTo(baseX * s.mk, step), exact = baseX * s.mk + Object.keys(optUsd).reduce((a, n) => a + optUsd[n] * k * s.mk, 0), unit = ceilTo(exact, step), addSum = unit - baseRetail; /* округление до сотни один раз в конце */
     Object.assign(out, { ok: true, unit, exact, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, areaNote: corn ? 'Карниз в сборе: ' + (W / 1000).toFixed(2) + ' м' : 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : '') + (flag('Наклонные') ? ' · наклонные: введите большие ширину и высоту' : '') + (disc >= 0.55 ? ' · скидка Амиго 55% (Лайн)' : ''), usd: baseUsd });
     return out;
   }
@@ -410,11 +410,11 @@
       const lb = g.type === 'flag' ? g.name : pick.value;
       if (/^руб/.test(pick.unit)) optRub[lb] = pick.usd; else optUsd[lb] = /^%/.test(pick.unit) ? pick.usd / 100 * (gridUsd || baseUsd) : /кв/.test(pick.unit) ? pick.usd * calcA : pick.usd;
     });
-    const base = Math.round(baseUsd * k), optCost = {}, optP = {};
+    const baseX = baseUsd * k, base = Math.round(baseX), optCost = {}, optP = {};
     let cost = base;
     Object.keys(optUsd).forEach(n => { optCost[n] = Math.round(optUsd[n] * k); optP[n] = Math.ceil(optUsd[n] * k * s.mk / step - 1e-9) * step; cost += optCost[n]; });
     Object.keys(optRub).forEach(n => { optCost[n] = 0; optP[n] = optRub[n]; }); /* опции в рублях: фиксированная цена в рознице */
-    const baseRetail = ceilTo(base * s.mk, step), exact = base * s.mk + Object.keys(optUsd).reduce((a, n) => a + optUsd[n] * k * s.mk, 0) + Object.keys(optRub || {}).reduce((a, n) => a + optRub[n], 0), unit = ceilTo(exact, step), addSum = unit - baseRetail; /* округление до сотни один раз в конце */
+    const baseRetail = ceilTo(baseX * s.mk, step), exact = baseX * s.mk + Object.keys(optUsd).reduce((a, n) => a + optUsd[n] * k * s.mk, 0) + Object.keys(optRub || {}).reduce((a, n) => a + optRub[n], 0), unit = ceilTo(exact, step), addSum = unit - baseRetail; /* округление до сотни один раз в конце */
     Object.assign(out, { ok: true, unit, exact, base: baseRetail, addSum, cost, profit: unit - cost, optP, optCost, minProfit: s.profit, term: s.term, termDays: s.term + (Number(P['срок_добавка_дн']) || 5), fab: f, sys: s, notes, areaNote: T.grid ? gridNote : 'Расчётная площадь ' + calcA.toFixed(2) + ' м²' + (area < minA - 1e-9 ? ' (минимум ' + minA + ' м²)' : ''), usd: baseUsd });
     return out;
   }
@@ -444,10 +444,10 @@
       if (!pick || !pick.usd) return;
       const lb = g.type === 'flag' ? g.name : pick.value; optUsd[lb] = (optUsd[lb] || 0) + pick.usd * qtyOf(pick.unit);
     });
-    const base = Math.round(baseUsd * k), optCost = {}, optP = {};
+    const baseX = baseUsd * k, base = Math.round(baseX), optCost = {}, optP = {};
     let cost = base;
     Object.keys(optUsd).forEach(n => { optCost[n] = Math.round(optUsd[n] * k); optP[n] = Math.ceil(optUsd[n] * k * s.mk / step - 1e-9) * step; cost += optCost[n]; });
-    const baseRetail = ceilTo(base * s.mk, step), exact = base * s.mk + Object.keys(optUsd).reduce((a, n) => a + optUsd[n] * k * s.mk, 0), unit = ceilTo(exact, step), addSum = unit - baseRetail;
+    const baseRetail = ceilTo(baseX * s.mk, step), exact = baseX * s.mk + Object.keys(optUsd).reduce((a, n) => a + optUsd[n] * k * s.mk, 0), unit = ceilTo(exact, step), addSum = unit - baseRetail;
     /* размеры вне ограничений модели: предупреждение (изготовить нельзя / негарантийно), не запрет расчёта */
     const wl = (o.flags['Усиленный профиль'] && m.wusil) ? m.wusil : m.wmax, nm = x => String(x).replace('.', ',');
     if (m.wmin && w < m.wmin - 1e-9) out.warn.push('ширина меньше минимальной для ' + m.code + ' (' + nm(m.wmin) + ' м)');
@@ -495,7 +495,7 @@
     }
     const disc = P['скидка_рулонки'] != null ? Number(P['скидка_рулонки']) : 0.4, k = (1 - disc) * FX;
     const coef = s.mk, step = Number(P['округление']) || 100;
-    const base = Math.round(L.usd * k);
+    const baseX = L.usd * k, base = Math.round(baseX);
     const o = opts(it), optP = {}, optCost = {};
     let optUsd = 0, optRub = 0;
     { const tb = tubeNum(o.sel['Труба']);
@@ -515,7 +515,7 @@
       optCost[label] = Math.round(usd * k); optP[label] = Math.ceil(usd * k * coef / step - 1e-9) * step;
     });
     const costOpt = Math.round(optUsd * k), profit0 = s.profit;
-    const baseRetail = ceilTo(base * s.mk, step), exact = base * coef + optUsd * k * coef + optRub;
+    const baseRetail = ceilTo(baseX * s.mk, step), exact = baseX * coef + optUsd * k * coef + optRub;
     const unit = ceilTo(exact, step), addSum = unit - baseRetail, cost = base + costOpt;
     if (mr && s.model === 'roman' && f.msz && f.msz.length && !f.msz.some(q => W / 10 <= q[0] + 1e-9 && H / 10 <= q[1] + 1e-9)) out.warn.push('размер больше допустимого для этой ткани: ' + f.msz.map(q => q[0] + '×' + q[1] + ' см').join(' или '));
     if (!roof && !mr) {

@@ -32,18 +32,18 @@
       const sup = r[0], kind = r[1] === 'Привод' ? 'drive' : 'remote';
       const text = (r[2] || '') + ' ' + (r[3] || ''), m = /(25|50) мм/.exec(text);
       const line = sup === 'РДО' ? (/ WS| WSE| WSR/.test(' ' + text) ? 'ws' : (/\bD\b|DM35|DV24|DC3/.test(text) ? 'd' : '')) : '';
-      const price = r[6] || ceil100((r[4] || 0) * (r[5] || 1));
+      const pex = r[6] || (r[4] || 0) * (r[5] || 1), price = r[6] || ceil100(pex);
       const nm = r[2] || '', sw = /^Выключатель/.test(nm) && !/радио/i.test(nm);
       const grp = kind !== 'drive' ? '' : /провод|фазн|без радиоприём| WT /i.test(text) ? 'Проводные' : /аккумулятор|АКБ/i.test(text) ? 'Радио + АКБ' : 'Радио';
       /* старые строки Амиго замещены полным списком из листа «Автоматика_Амиго»: остаются только для старых просчётов */
-      add(sup, kind, { key: nm, name: nm, sub: r[3] || '', cost: r[4] || 0, price, lam: m ? +m[1] : 0, line, sec: kind === 'drive' ? 'Моторизация' : sw ? 'Разное' : 'Радиопередатчики', t: 'Горизонтальные', grp, pk: kind !== 'drive', hid: has2 && sup === 'Amigo' });
+      add(sup, kind, { key: nm, name: nm, sub: r[3] || '', cost: r[4] || 0, price, pex, lam: m ? +m[1] : 0, line, sec: kind === 'drive' ? 'Моторизация' : sw ? 'Разное' : 'Радиопередатчики', t: 'Горизонтальные', grp, pk: kind !== 'drive', hid: has2 && sup === 'Amigo' });
     });
     if (has2) sh2.slice(1).forEach(r => {
       if (!r[0] || !r[3]) return;
-      const sec = r[0], usd = Number(r[5]) || 0, cur = r[6] === '₽' ? 1 : rate, K = Number(r[7]) || 1.65, cost = Math.round(r[6] === '₽' ? usd : usd * (1 - dis) * cur) /* рублёвая цена — фиксированный закуп без скидки */, price = ceil100(cost * K);
+      const sec = r[0], usd = Number(r[5]) || 0, cur = r[6] === '₽' ? 1 : rate, K = Number(r[7]) || 1.65, cost0 = r[6] === '₽' ? usd : usd * (1 - dis) * cur /* рублёвая цена — фиксированный закуп без скидки */, cost = Math.round(cost0), pex = cost0 * K, price = ceil100(pex);
       const nm = String(r[3]).trim(), kind = sec === 'Моторизация' ? 'drive' : 'remote', sub = String(r[4] || '').trim();
       const pk = kind === 'remote' && /^(Пульт|Радиовыключатель|Выключатель)/.test(nm) && !/Только для/.test(sub);
-      add('Amigo', kind, { key: nm, name: nm.replace(/^Комплект электрики Amigo /, 'Комплект '), sub, cost, price, lam: Number(r[8]) || 0, line: '', sec, t: r[1] || '', grp: r[2] || '', pk, hid: /AMG/.test(nm) /* AMG — большие рулонки, аналог Бентина: не продаём */ });
+      add('Amigo', kind, { key: nm, name: nm.replace(/^Комплект электрики Amigo /, 'Комплект '), sub, cost, price, pex, lam: Number(r[8]) || 0, line: '', sec, t: r[1] || '', grp: r[2] || '', pk, hid: /AMG/.test(nm) /* AMG — большие рулонки, аналог Бентина: не продаём */ });
     });
   }
   const autoOf = it => { const A = AUTO && AUTO[it.sup]; const f = A ? A[it.kind].find(x => x.key === it.key) : null; return f ? { f, price: f.price } : null; };
@@ -71,8 +71,10 @@
   function setWireAt(i, side) { const it = C.cart[i]; if (!it) return; C.cart[i] = it.kind === 'drive' ? Object.assign({}, it, { wire: side }) : Object.assign({}, it, { auto: Object.assign({}, it.auto, { wire: side }) }); save(); }
   function withAuto(it, r) {
     const pk = autoPick(it); if (!r || !r.ok || !pk.length) return r;
-    const add = pk.reduce((a, x) => a + x.f.price, 0), cost = pk.reduce((a, x) => a + x.f.cost, 0);
-    return Object.assign({}, r, { unit: r.unit + add, exact: (r.exact != null ? r.exact : r.unit) + add, profit: (r.profit || 0) + add - cost, cost: (r.cost || 0) + cost, addSum: (r.addSum || 0) + add, autoAdd: add });
+    /* автоматика входит в цену без промежуточных округлений: до сотни округляется только итог изделия */
+    const addEx = pk.reduce((a, x) => a + (x.f.pex != null ? x.f.pex : x.f.price), 0), cost = pk.reduce((a, x) => a + x.f.cost, 0);
+    const ex = (r.exact != null ? r.exact : r.unit) + addEx, unit = ceil100(ex), add = unit - r.unit;
+    return Object.assign({}, r, { unit, exact: ex, profit: (r.profit || 0) + add - cost, cost: (r.cost || 0) + cost, addSum: (r.addSum || 0) + add, autoAdd: add });
   }
   /* предел размеров привода (по таблице РДО, принято для всех поставщиков) */
   function driveWarn(it) {
