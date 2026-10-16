@@ -322,3 +322,8 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--acc)!importa
 .cform select[data-c=rau],.cform select[data-c=ropt]{font-size:12.5px;text-overflow:ellipsis}
 @media(max-width:1500px){.cform select.ul{font-size:13px}}
 .fnote.warn{background:var(--warn-s);color:var(--warn)}
+
+/* выбранное управление и стороны: заметный цветной прямоугольник во всех формах расчёта */
+.cform .seg button.on{background:var(--acc);color:var(--acc-i);font-weight:700;box-shadow:none}
+.cform .ctr.on{box-shadow:0 0 0 1px var(--acc)}
+.oc.dis{opacity:.45;cursor:not-allowed}

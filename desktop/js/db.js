@@ -105,9 +105,9 @@
   }
   /* расценки на монтаж (оплата монтажнику) по типам: редактируются в Справочниках, хранятся на компьютере */
   DB.IRATES = [
-    ['rolo_mini', 'Рулонки и зебра: MINI, UNI, ROLLA', 500, 'за шт'], ['rolo_mg', 'Рулонки и зебра: MG, MGS', 1500, 'за шт'], ['rolo_bnt', 'Рулонки и зебра: Бентин (BNT, кассеты)', 3000, 'за шт'], ['rolo_roof', 'Рулонки: Руф', 2000, 'за шт'], ['rolo_roof_a', 'Рулонки: Руф с автоматикой', 3000, 'за шт'],
+    ['rolo_mini', 'Рулонки и зебра: MINI, UNI, ROLLA', 500, 'за шт'], ['rolo_mg', 'Рулонки и зебра: MG, MGS', 1500, 'за шт'], ['rolo_bnt', 'Рулонки и зебра: Бинтин (классика и кассеты)', 3000, 'за шт'], ['rolo_str', 'MINI и MINI зебра: струна, доплата', 300, 'за шт'], ['mg_noprof', 'MG без монтажного профиля, доплата', 500, 'за шт'], ['bnt_noprof', 'Бинтин классика без монтажного профиля, доплата (кассеты не считаются)', 1000, 'за шт'], ['rolo_roof', 'Рулонки: Руф', 2000, 'за шт'], ['rolo_roof_a', 'Рулонки: Руф с автоматикой', 3000, 'за шт'],
     ['vzh', 'ВЖ обычные', 500, 'за 1 п.м ширины'], ['vzh_gr', 'ВЖ с грувером (вместо обычной)', 1000, 'за 1 п.м ширины'],
-    ['w25', 'Дерево 25 мм (ГЖ)', 1200, 'за шт'], ['gj50', 'Дерево 50 мм (ГЖ)', 3000, 'за шт'], ['gj25', 'ГЖ алюминий 25 и 16 мм (классические)', 500, 'за шт'], ['gj_cas', 'Кассетные ГЖ 16/25 (Венус)', 1000, 'за шт'], ['gj_str', 'Струна (боковая фиксация), доплата', 500, 'за шт'],
+    ['w25', 'Дерево 25 мм (ГЖ)', 1200, 'за шт'], ['w25_a', 'Дерево 25 мм с автоматикой', 2000, 'за шт'], ['gj50', 'Дерево 50 мм (ГЖ)', 3000, 'за шт'], ['gj50_a', 'Дерево 50 мм с автоматикой', 5000, 'за шт'], ['gj25', 'ГЖ алюминий 25 и 16 мм (классические)', 500, 'за шт'], ['gj_cas', 'Кассетные ГЖ 16/25 (Венус)', 1000, 'за шт'], ['gj_str', 'Струна (боковая фиксация), доплата', 500, 'за шт'],
     ['pl', 'Плиссе обычные', 1000, 'за шт'], ['pl_a', 'Плиссе малые с автоматикой', 2000, 'за шт'], ['pl_max', 'Плиссе Макс', 3000, 'за шт'], ['pl_max_a', 'Плиссе Макс с автоматикой', 5000, 'за шт'],
     ['rim', 'Римские шторы', 3000, 'за шт'], ['rim_a', 'Римские шторы с автоматикой', 5000, 'за шт'], ['mir', 'Мираж', 3000, 'за шт'], ['mir_a', 'Мираж с автоматикой', 5000, 'за шт']];
   const irGet = () => { try { return JSON.parse(lsGet('jald_irates') || '{}') || {}; } catch (e) { return {}; } };
@@ -123,11 +123,16 @@
         if (it.mat === 'ГЖ алюминий') { const a50 = /50/.test(String(it.sys || '')), vn = /^A-V/.test(String(it.sys || '')); if (vn) add('Кассетные ГЖ (Венус)', DB.irate('gj_cas'), q); else add(a50 ? 'ГЖ алюминий 50 мм' : 'ГЖ алюминий ' + (/16/.test(String(it.sys || '')) ? 16 : 25) + ' мм', DB.irate(a50 ? 'gj50' : 'gj25'), q); if ((it.flags && it.flags['Струна']) || (it.sel && it.sel['Фиксация'] === 'Боковая фиксация')) add('Боковая фиксация (доплата)', DB.irate('gj_str'), q); }
         else if (it.mat === 'Вертикальные') { const gr = it.flags && it.flags['Грувер']; add(gr ? 'ВЖ с грувером' : 'ВЖ', DB.irate(gr ? 'vzh_gr' : 'vzh'), (+it.w || 0) / 1000 * q, 1); }
         else if (it.mat === 'Плиссе') { const pm = window.JalRolo && JalRolo.pl && JalRolo.pl.M(it.sys), mx = !!pm && pm.sys === 'MAXI', au = !!(it.auto && it.auto.drive), k = (mx ? 'pl_max' : 'pl') + (au ? '_a' : ''); add(DB.IRATES.find(x => x[0] === k)[1], DB.irate(k), q); }
-        else { const sy = String(it.sys || ''), au = !!(it.auto && it.auto.drive), k = it.mat === 'Римские шторы' ? (au ? 'rim_a' : 'rim') : it.mat === 'Мираж' ? (au ? 'mir_a' : 'mir') : /^ROOF/.test(sy) ? (it.auto && it.auto.drive ? 'rolo_roof_a' : 'rolo_roof') : /^(Z-)?(MINI|UNI|ROLLA)/.test(sy) ? 'rolo_mini' : /^(MG|Z-MGS)/.test(sy) ? 'rolo_mg' : 'rolo_bnt'; add(DB.IRATES.find(x => x[0] === k)[1].replace(/^Рулонки и зебра: /, '').replace(/^Рулонки: /, ''), DB.irate(k), q); }
+        else { const sy = String(it.sys || ''), au = !!(it.auto && it.auto.drive), k = it.mat === 'Римские шторы' ? (au ? 'rim_a' : 'rim') : it.mat === 'Мираж' ? (au ? 'mir_a' : 'mir') : /^ROOF/.test(sy) ? (it.auto && it.auto.drive ? 'rolo_roof_a' : 'rolo_roof') : /^(Z-)?(MINI|UNI|ROLLA)/.test(sy) ? 'rolo_mini' : /^(MG|Z-MGS)/.test(sy) ? 'rolo_mg' : 'rolo_bnt'; add(DB.IRATES.find(x => x[0] === k)[1].replace(/^Рулонки и зебра: /, '').replace(/^Рулонки: /, ''), DB.irate(k), q);
+          const J = window.JalRolo, fl = J && J.opts ? J.opts(it).flags : (it.flags || {}), hasProf = !!J && J.groups(sy).some(g => g.name === 'Монтажный профиль'), noProf = hasProf && !fl['Монтажный профиль'];
+          if (/^(Z-)?MINI$/.test(sy) && fl['Струна']) add('Струна (доплата)', DB.irate('rolo_str'), q);
+          if (sy === 'MG' && noProf) add('MG без монтажного профиля (доплата)', DB.irate('mg_noprof'), q);
+          if (/^(Z-)?BNT-[ML]$/.test(sy) && noProf) add('Бинтин без монтажного профиля (доплата)', DB.irate('bnt_noprof'), q); }
       } else {
         const al = /алюм/i.test(String(it.mat || ''));
-        if (+it.lam === 50) add('Дерево 50 мм', DB.irate('gj50'), q);
-        else if (+it.lam === 25) al ? add('ГЖ алюминий 25 мм', DB.irate('gj25'), q) : add('Дерево 25 мм', DB.irate('w25'), q);
+        const au = !!(it.auto && it.auto.drive);
+        if (+it.lam === 50) add(au ? 'Дерево 50 мм с автоматикой' : 'Дерево 50 мм', DB.irate(au ? 'gj50_a' : 'gj50'), q);
+        else if (+it.lam === 25) al ? add('ГЖ алюминий 25 мм', DB.irate('gj25'), q) : add(au ? 'Дерево 25 мм с автоматикой' : 'Дерево 25 мм', DB.irate(au ? 'w25_a' : 'w25'), q);
         if (it.fix === 'Струна' && (+it.lam === 25 || +it.lam === 50)) add('Струна (доплата)', DB.irate('gj_str'), q);
       }
     });

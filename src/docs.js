@@ -60,8 +60,30 @@
   const days = n => n + ' ' + plural(+n, ['календарный день', 'календарных дня', 'календарных дней']);
 
   /* доставка+установка включена в цены позиций пропорционально */
+  /* доставка от производителя в документах отдельной строкой не показывается: её сумма раскладывается на изделия пропорционально цене (кратно 100) */
+  function foldShip(order) {
+    const all = order.items || [], ships = all.filter(i => i.ship);
+    if (!ships.length) return all;
+    const base = all.filter(i => !i.ship).map(i => Object.assign({}, i, i.pv ? { pv: i.pv.slice() } : {}));
+    const spread = (vals, S) => { /* vals: массив цен (null = нет); возвращает прибавки */
+      const idx = vals.map((v, k) => (v != null && v > 0 ? k : -1)).filter(k => k >= 0), tot = idx.reduce((a, k) => a + vals[k], 0), add = vals.map(() => 0);
+      if (!idx.length || !(S > 0)) return null;
+      let left = S; idx.forEach(k => { add[k] = Math.floor(S * vals[k] / tot / 100) * 100; left -= add[k]; });
+      for (let j = 0; left > 0; j = (j + 1) % idx.length) { const st = left >= 100 ? 100 : left; add[idx[j]] += st; left -= st; }
+      return add;
+    };
+    const tg = base.map(i => (i.kind ? null : i.price)), S = ships.reduce((a, i) => a + (+i.price || 0), 0), ad = spread(tg, S);
+    if (!ad) return all;
+    base.forEach((i, k) => { i.price += ad[k]; });
+    const nv = Math.max.apply(null, ships.map(i => (i.pv ? i.pv.length : 0)));
+    for (let j = 0; j < nv; j++) {
+      const Sj = ships.reduce((a, i) => a + ((i.pv && i.pv[j]) || 0), 0), av = spread(base.map(i => (i.kind || !i.pv ? null : i.pv[j])), Sj);
+      if (av) base.forEach((i, k) => { if (i.pv && i.pv[j] != null) i.pv[j] += av[k]; });
+    }
+    return base;
+  }
   function itemsWithDelivery(order) {
-    const d = order.priced ? 0 : (+order.delivery || 0), items = order.items.map(i => ({ it: i, price: i.price }));
+    const d = order.priced ? 0 : (+order.delivery || 0), items = foldShip(order).map(i => ({ it: i, price: i.price }));
     const sum = items.reduce((a, b) => a + b.price, 0);
     if (d > 0 && sum > 0) {
       let left = d;
@@ -166,6 +188,6 @@
       '</div>';
   }
 
-  const api = { kpHtml, dogovorHtml, zamernikHtml, rublesWords, dateRu, itemName, orderTotal, itemsWithDelivery };
+  const api = { kpHtml, dogovorHtml, zamernikHtml, rublesWords, dateRu, itemName, orderTotal, itemsWithDelivery, foldShip };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.JalDocs = api;
 })(typeof self !== 'undefined' ? self : this);

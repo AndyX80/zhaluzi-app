@@ -9,7 +9,7 @@
   const numC = (v, d) => v === '' || v == null || isNaN(Number(String(v).replace(',', '.'))) ? d : Number(String(v).replace(',', '.'));
 
   const PLT = [{ id: 'mini', sys: 'MINI', kinds: ['плиссе 20'], label: 'MINI · плиссе 15/20 мм' }, { id: 'midi', sys: 'MIDI', kinds: ['плиссе 20'], label: 'MIDI · плиссе 20 мм' }, { id: 'maxi', sys: 'MAXI', kinds: ['плиссе 32'], label: 'MAXI · плиссе 32 мм' }, { id: 'midig', sys: 'MIDI', kinds: ['гофре 25'], gofre: true, label: 'MIDI · гофре 25 мм' }, { id: 'maxig', sys: 'MAXI', kinds: ['гофре 45'], gofre: true, label: 'MAXI · гофре 45 мм' }];
-  const unitOf = u => (u === 'м_шир' || u === 'м_выс' || u === 'м_шов' || u === 'м_цепь') ? u : 'изд';
+  const unitOf = u => (u === 'м_шир' || u === 'м_выс' || u === 'м_шов' || u === 'м_цепь') ? u : /^руб/.test(String(u)) ? 'руб' : 'изд';
 
   function setSheets(sh) {
     ready = false; RED = null; P = {}; SYS = []; GRID = {}; OPT = {}; FAB = []; FAB_BY = {}; WIND = {}; WINDZ = {}; VP = {}; VT = {}; GT = {}; GP = {}; WIN = []; WIN_BY = {}; NOROOF = {}; PLM = {}; PLP = {}; PLS = {}; PLW = [];
@@ -204,6 +204,7 @@
       const v = it.sel && it.sel[g.name], ok = g.items.some(x => x.value === v);
       sel[g.name] = ok ? v : (g.items.find(x => x.def) || g.items[0]).value;
     });
+    if (flags['Монтажный профиль'] && sel['Кронштейны'] === 'Металлические') delete flags['Монтажный профиль']; /* с металлическими кронштейнами монтажный профиль не ставится */
     return { sel, flags };
   }
 
@@ -342,7 +343,7 @@
     }
     const minA = num('мин_площадь_м2') || 1, calcA = Math.max(area, minA);
     const o = opts(it), step = Number(P['округление']) || Number(VP['округление']) || 100;
-    const disc = f && f.line ? (num('скидка_лайн') || 0.55) : (num('скидка_вж') || 0.5), k = (1 - disc) * FX;
+    const disc = f && f.line ? (num('скидка_лайн') || 0.55) : (s.vt === 'пластик' || s.vt === 'алюминий') ? (num('скидка_вж_пл_ал') || 0.4) : (num('скидка_вж') || 0.5), k = (1 - disc) * FX;
     const flag = n => !!o.flags[n], gi = n => { const g = groupsOf(s.code).find(x => x.name === n); return g ? g.items[0] : null; };
     const only = flag('Только ламели') ? (gi('Только ламели') || {}).usd || 0 : 0;
     const perM2 = corn ? 0 : (f.usd + only);
@@ -496,17 +497,25 @@
     const coef = s.mk, step = Number(P['округление']) || 100;
     const base = Math.round(L.usd * k);
     const o = opts(it), optP = {}, optCost = {};
-    let optUsd = 0;
+    let optUsd = 0, optRub = 0;
+    { const tb = tubeNum(o.sel['Труба']);
+      for (const g of groupsOf(s.code)) { /* редуктор и большой механизм ставятся только на свою трубу */
+        if (g.type === 'flag' || !/^(Редуктор BNT|Большой механизм)$/.test(g.name)) continue;
+        const pk = g.items.find(x => x.value === o.sel[g.name]); if (!pk || !pk.usd) continue;
+        const tubes = (String(pk.value).match(/\d+/g) || []).map(Number); if (!tubes.length || !tb || tubes.indexOf(tb) >= 0) continue;
+        out.msg = g.name + ' «' + pk.value + '»: нужна труба ' + tubes.join(' или ') + ' мм, сейчас выбрана ' + tb + '. Выберите трубу ' + tubes[0] + ' мм или уберите ' + g.name.replace(' BNT', '').toLowerCase(); out.warn.hard = true; return out;
+      } }
     groupsOf(s.code).forEach(g => {
       const pick = g.type === 'flag' ? (o.flags[g.name] ? g.items[0] : null) : g.items.find(x => x.value === o.sel[g.name]);
       if (!pick || !pick.usd) return;
+      if (pick.unit === 'руб') { const lb0 = g.type === 'flag' ? g.name : pick.value; optRub += pick.usd; optCost[lb0] = 0; optP[lb0] = pick.usd; return; } /* опция в рублях: фиксированная доплата в рознице */
       const q = pick.unit === 'м_шир' ? W / 1000 : (pick.unit === 'м_выс' || pick.unit === 'м_шов') ? H / 1000 : pick.unit === 'м_цепь' ? chainLen(H) : 1;
       const usd = pick.usd * q; optUsd += usd;
       const label = g.type === 'flag' ? g.name : pick.value;
       optCost[label] = Math.round(usd * k); optP[label] = Math.ceil(usd * k * coef / step - 1e-9) * step;
     });
     const costOpt = Math.round(optUsd * k), profit0 = s.profit;
-    const baseRetail = ceilTo(base * s.mk, step), exact = base * coef + optUsd * k * coef;
+    const baseRetail = ceilTo(base * s.mk, step), exact = base * coef + optUsd * k * coef + optRub;
     const unit = ceilTo(exact, step), addSum = unit - baseRetail, cost = base + costOpt;
     if (mr && s.model === 'roman' && f.msz && f.msz.length && !f.msz.some(q => W / 10 <= q[0] + 1e-9 && H / 10 <= q[1] + 1e-9)) out.warn.push('размер больше допустимого для этой ткани: ' + f.msz.map(q => q[0] + '×' + q[1] + ' см').join(' или '));
     if (!roof && !mr) {
@@ -561,7 +570,7 @@
       const oo = parts.slice(); return { title: s.model === 'mirage' ? 'Рулонная штора Мираж' : 'Римская штора', sub: [f ? 'ткань ' + f.name : 'ткань не выбрана', 'цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева')].concat(oo).join(' · ') };
     }
     const fc = o.sel['Цвет фурнитуры'];
-    return { title: s && s.model === 'vert' ? 'Вертикальные жалюзи ' + s.name.toLowerCase() : (s && s.model === 'zebra' ? 'Штора зебра' : 'Рулонная штора') + (s ? ' ' + s.name : ''), sub: s && s.model === 'vert' ? (f ? f.name + ' · ' : '') + 'ламель 89 мм' + vfTxt(it) + (parts.length ? ' · ' + parts.join(', ') : '') : (f ? 'ткань ' + f.name : 'ткань не выбрана') + (fc ? ' · фурнитура ' + fc.toLowerCase() : '') + ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева') + (parts.length ? ' · ' + parts.join(', ') : '') };
+    return { title: s && s.model === 'vert' ? 'Вертикальные жалюзи ' + s.name.toLowerCase() : (s && s.model === 'zebra' ? 'Штора зебра' : 'Рулонная штора') + (s ? ' ' + s.name : ''), sub: s && s.model === 'vert' ? (f ? f.name + ' · ' : '') + 'ламель 89 мм' + vfTxt(it) + (parts.length ? ' · ' + parts.join(', ') : '') : (f ? 'ткань ' + f.name : 'ткань не выбрана') + (fc ? ' · фурнитура ' + fc.toLowerCase() : '') + (s && s.code === 'UNI-2П' ? ' · управление ручкой по центру нижней планки' : ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева')) + (parts.length ? ' · ' + parts.join(', ') : '') };
   }
 
   window.JalRolo = {

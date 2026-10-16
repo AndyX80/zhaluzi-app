@@ -65,7 +65,7 @@
 
   function vmKpVar(order, sig, lower) {
     const base = vmKp(Object.assign({}, order, { items: [] }), sig), vs = order.vars || [], acc = [];
-    order.items.forEach(it => { const key = JSON.stringify([it.kind, it.title, it.sup, it.mat, it.lam, it.W, it.H, it.ctrl, it.o && it.o.color, it.o && it.o.fix, it.o && it.o.opts, it.pv]);
+    D().foldShip(order).forEach(it => { const key = JSON.stringify([it.kind, it.title, it.sup, it.mat, it.lam, it.W, it.H, it.ctrl, it.o && it.o.color, it.o && it.o.fix, it.o && it.o.opts, it.pv]);
       const f = acc.find(r => r.key === key); if (f) f.qty++; else acc.push({ key, it, pv: it.pv || vs.map(() => it.price), qty: 1 }); });
     const disc = +order.disc || 0, cell = v => 'text-align: center; font-weight: 700' + (v.best ? '; background: #FDEBDB; padding: 12px 0' : '');
     const all = acc.map((r, i) => ({ n: String(i + 1), name: r.it.title ? r.it.title : 'Горизонтальные жалюзи', spec: specKp(r.it), qty: String(r.qty), sums: vs.map((v, k) => ({ v: r.pv[k] == null ? 'нет' : rubS(r.qty * r.pv[k]), style: cell(v) })) }));

@@ -297,6 +297,11 @@
   /* Заказ для документов: цены уже с доставкой и установкой, скидка отдельной суммой. */
   /* примерная стоимость установки по ставкам (для десктопа): { sum, text } */
   function instSugg(F) {
+    /* десктоп: те же ставки, что в таблице установок (Настройки), по всем видам изделий */
+    if (window.DB && window.DB.instCalc) {
+      const r = window.DB.instCalc({ cart: C.cart }), dv = Number(RATES.delivery) || 0, sum = r.sum > 0 ? r.sum + dv : 0;
+      return { sum, text: r.lines.map(t => t.replace(/ = \d+$/, '')).concat(sum && dv ? ['доставка ' + fmt(dv) + ' (один раз)'] : []).join(' + ') };
+    }
     F = F || compute(); const cart = C.cart; let n50 = 0, n25 = 0, a50 = 0, a25 = 0;
     cart.forEach((it, i) => { const c = F.calcs[i]; if (!c) return;
       if (!it.kind && it.prod !== 'rolo') { if (it.lam === 50) n50 += it.qty; else if (it.lam === 25) n25 += it.qty; }
