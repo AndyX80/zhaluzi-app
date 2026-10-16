@@ -5,7 +5,7 @@
   const load = src => loaded[src] || (loaded[src] = new Promise((ok, bad) => { const s = document.createElement('script'); s.src = (window.JAL_ROOT || '') + src + V; s.onload = ok; s.onerror = () => { delete loaded[src]; bad(new Error('Не загрузилась библиотека ' + src + '. Нужен интернет при первом разе.')); }; document.head.appendChild(s); }));
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
   const sigs = () => ({ sign: lsGet('jal_sign'), stamp: lsGet('jal_stamp') });
-  const NAMES = { kpHtml: 'КП № {no}', kpVarHtml: 'КП № {no} (3 варианта)', zamernikHtml: 'Замерник № {no}', dogovorHtml: 'Договор № {no}' };
+  const NAMES = { kpHtml: 'КП № {no}', kpVarHtml: 'КП № {no} (3 варианта)', zamernikHtml: 'Замерник № {no}', dogovorHtml: 'Договор № {no}', aktHtml: 'Акт № {no}' };
   const baseName = (fn, o) => (NAMES[fn] || 'Документ').replace('{no}', String(o.no || '').replace(/[\\/:*?"<>|]/g, '-'));
 
   /* PDF с настоящим текстом (его можно править в редакторах PDF): КП, КП на три варианта и договор. Замерник остаётся картинкой: в нём эскизы. */
@@ -103,7 +103,7 @@
   }
 
   async function pdf(fn, order) {
-    if (fn !== 'zamernikHtml') { try { return await pdfText(fn, order); } catch (e) { console.error('PDF с текстом не вышел, делаю картинкой', e); } }
+    if (fn !== 'zamernikHtml' && fn !== 'aktHtml') { try { return await pdfText(fn, order); } catch (e) { console.error('PDF с текстом не вышел, делаю картинкой', e); } }
     return pdfImage(fn, order);
   }
   async function pdfImage(fn, order) {
@@ -171,6 +171,18 @@
       ch.push(table([['Наименование продукции', 'Кол-во', 'Стоимость', 'Общая стоимость']].concat(rows(vm.pages).map(r => [r.name, r.qty, r.price, r.sum])), [52, 12, 18, 18], true));
       ch.push(P('ИТОГО к оплате: ' + vm.total, { alignment: X.AlignmentType.RIGHT, spacing: { before: 100 } }, { bold: true }));
       ch.push(P('Оплата: ' + vm.payText + '. Предоплата: ' + vm.prepayText + '. Оставшаяся сумма: ' + vm.rest));
+    } else if (fn === 'aktHtml') {
+      if (logo) ch.push(P([logo], { alignment: X.AlignmentType.RIGHT }));
+      ch.push(P(vm.title, { alignment: X.AlignmentType.CENTER }, { bold: true, size: 26 }));
+      ch.push(P([T('Исполнитель: '), T('Индивидуальный предприниматель Хорошавин Андрей Владимирович', { bold: true })]));
+      ch.push(P([T('Заказчик: '), T(vm.customer, { bold: true })])); ch.push(P([T('Основание: '), T(vm.basis, { bold: true })]));
+      ch.push(table([['№', 'Наименование работ, услуг', 'Кол-во', 'Ед.', 'Цена', 'Сумма']].concat(rows(vm.pages).map(r => [r.n, r.name, r.qty, r.unit, r.price, r.sum])), [6, 44, 9, 7, 17, 17], true));
+      ch.push(P('Итого к оплате: ' + vm.total, { alignment: X.AlignmentType.RIGHT, spacing: { before: 120 } }, { bold: true })); ch.push(P('В том числе НДС: Без НДС', { alignment: X.AlignmentType.RIGHT }));
+      ch.push(P('Общая стоимость выполненных работ, оказанных услуг: ' + vm.words, { spacing: { before: 160 } }));
+      ch.push(P('Заказчик не имеет претензий по срокам, качеству и объему товаров и услуг.', null, { size: 16 }));
+      const colA = (t, ls, who) => [t, ...ls.map(l => l.k + ': ' + l.v), '', '_______________ / ' + who + ' /', 'М.П.'].join('\n');
+      ch.push(table([[colA('Исполнитель: ИП Хорошавин Андрей Владимирович', vm.seller, 'Хорошавин А. В.'), colA('Заказчик:', vm.buyerReq, '')]], [50, 50]));
+      if (sign || stamp) { const a = [T('Подпись и печать исполнителя:   ')]; if (sign) a.push(sign); if (stamp) a.push(stamp); ch.push(P(a, { spacing: { before: 120 } })); }
     } else if (fn === 'dogovorHtml') {
       ch.push(P(vm.title + ' № ' + vm.num, { alignment: X.AlignmentType.CENTER }, { bold: true, size: 26 }));
       ch.push(P('г. Санкт-Петербург    ' + vm.dateText));

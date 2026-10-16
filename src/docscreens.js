@@ -127,11 +127,12 @@
   /* Договор: два юридических шаблона (после правок юриста).
      Только товар (самовывоз или ТК) → «Договор купли-продажи» (Продавец); товар с установкой → «Договор поставки и монтажа» (Поставщик).
      Тип заказчика (физ / юр / ИП) и предоплата (любая сумма, полная или частичная) меняют только подстановки. */
+  const dogItem = it => it.title ? it.title : 'Горизонтальные жалюзи (' + [lc(it.mat) + ' ' + it.lam + ' мм', colorOf(it) ? '«' + colorOf(it) + '»' : '', sizeTxt(it) + ' мм'].concat((it.o.opts || []).map(o => OPT[o] != null ? OPT[o] : lc(o)).filter(Boolean)).concat(it.o.fix ? [FIX[it.o.fix] || lc(it.o.fix)] : []).concat(it.au ? [it.au] : []).filter(Boolean).join(', ') + ')';
   function vmDog(order, sig) {
     const total = D().orderTotal(order), inst = order.install !== false && +order.delivery > 0, reg = !!order.region;
     const R = inst ? 'Поставщик' : 'Продавец', Rg = inst ? 'Поставщика' : 'Продавца';
     const bt = order.buyer === 'юр' ? 'юр' : order.buyer === 'ип' ? 'ип' : 'физ';
-    const rows = rowsOf(order, it => it.title ? it.title : 'Горизонтальные жалюзи (' + [lc(it.mat) + ' ' + it.lam + ' мм', colorOf(it) ? '«' + colorOf(it) + '»' : '', sizeTxt(it) + ' мм'].concat((it.o.opts || []).map(o => OPT[o] != null ? OPT[o] : lc(o)).filter(Boolean)).concat(it.o.fix ? [FIX[it.o.fix] || lc(it.o.fix)] : []).concat(it.au ? [it.au] : []).filter(Boolean).join(', ') + ')', () => '');
+    const rows = rowsOf(order, dogItem, () => '');
     const tr = rows.map(r => ({ n: r.n, name: r.name, qty: String(r.qty), price: numZ(r.price), sum: numZ(r.qty * r.price) }));
     if (+order.disc) tr.push({ n: '', name: +order.disc > 0 ? 'Скидка' : 'Наценка', qty: '', price: '', sum: (+order.disc > 0 ? '−' : '+') + numZ(Math.abs(+order.disc)) });
     const pre = Math.max(0, Math.min(total, order.preU === '₽' ? +order.pre : Math.round(total * (+order.pre || 100) / 100))), rest = total - pre;
@@ -200,6 +201,26 @@
       buyerReq };
   }
 
+
+  /* Акт приёмки-передачи: те же позиции и цены, что в договоре (доставка и установка в цене), основание — договор */
+  function vmAkt(order, sig) {
+    const total = D().orderTotal(order), bt = order.buyer === 'юр' ? 'юр' : order.buyer === 'ип' ? 'ип' : 'физ';
+    const inst = order.install !== false && +order.delivery > 0, rep = (order.name || '').trim(), company = (order.company || '').trim();
+    const customer = bt === 'юр' ? company + (rep ? ', в лице ' + rep : '') : bt === 'ип' ? 'ИП ' + rep : rep;
+    const rows = rowsOf(order, dogItem, () => '').map(r => ({ n: r.n, name: r.name, qty: String(r.qty), unit: 'шт.', price: numZ(r.price), sum: numZ(r.qty * r.price) }));
+    if (+order.disc) rows.push({ n: '', name: +order.disc > 0 ? 'Скидка' : 'Наценка', qty: '', unit: '', price: '', sum: (+order.disc > 0 ? '−' : '+') + numZ(Math.abs(+order.disc)) });
+    const FIRST = 12, CONT = 30, LASTMAX = 8, pg = [];
+    if (rows.length <= FIRST && rows.length <= LASTMAX + 4) pg.push({ rows });
+    else { let k = 0; pg.push({ rows: rows.slice(0, FIRST) }); k = FIRST; while (k < rows.length) { pg.push({ rows: rows.slice(k, k + CONT) }); k += CONT; } if (pg[pg.length - 1].rows.length > LASTMAX) pg.push({ rows: [] }); }
+    pg.forEach((p, i) => { p.first = i === 0; p.cont = i > 0; p.last = i === pg.length - 1; });
+    const date = new Date(), dm = D().dateRu(date).replace(/ г\.$/, ''), dg = D().dateRu(new Date(order.created)).replace(/ г\.$/, '');
+    const blank = '';
+    return { pages: pg, num: order.no, title: 'АКТ № ' + order.no + ' от ' + dm, customer: customer || blank, basis: 'Договор № ' + order.no + ' от ' + dg, total: numZ(total), words: words(total) .replace(/^(.)/, c => c.toUpperCase()) + '.',
+      hasSign: !!sig.sign, signSrc: sig.sign, hasStamp: !!sig.stamp, stampSrc: sig.stamp,
+      seller: [{ k: 'ИНН', v: '575404581100' }, { k: 'Адрес', v: '197350, г. Санкт-Петербург, Комендантский пр-т, д. 63 стр. 1, кв. 232' }, { k: 'Р/с', v: '40802810002500165928' }, { k: 'К/с', v: '30101810745374525104' }, { k: 'Банк', v: 'ООО "Банк Точка" г. Москва' }, { k: 'БИК', v: '044525104' }, { k: 'Телефон', v: '8-981-764-55-45' }],
+      buyerReq: [{ k: 'ИНН', v: bt === 'физ' ? '' : (order.inn || '') }, { k: 'КПП', v: '' }, { k: 'Адрес', v: (bt === 'физ' ? order.addr : (order.uaddr || order.addr)) || '' }, { k: 'Р/с', v: '' }, { k: 'К/с', v: '' }, { k: 'Банк', v: bt === 'физ' ? '' : (order.bank || '') }, { k: 'Телефон', v: order.phone || '' }] };
+  }
+
   /* показ: имя функции из docs.js → шаблоны. Договор идёт вместе с приложением (замерный лист). */
   /* КП на три варианта: нижний блок (условия, подпись, печать) остаётся на первом листе, только если там всё помещается; иначе уходит на следующий лист */
   function pickLower(order, sig) {
@@ -229,8 +250,8 @@
   }
   const settleLower = (render, order, sig, after) => { const w = pickLower(order, sig); render(w); if (after) after(w); };
   const mounts = {};
-  const SET = { kpHtml: [['docKpRoot', 'tpl_docKp', vmKp]], kpVarHtml: [['docKpVarRoot', 'tpl_docKpVar', vmKpVar]], zamernikHtml: [['docBlankRoot', 'tpl_docBlank', vmBlank]], dogovorHtml: [['docDogRoot', 'tpl_docDog', vmDog], ['docBlankRoot', 'tpl_docBlank', vmBlank]] };
-  const ALL = ['docKpRoot', 'docKpVarRoot', 'docBlankRoot', 'docDogRoot'];
+  const SET = { kpHtml: [['docKpRoot', 'tpl_docKp', vmKp]], kpVarHtml: [['docKpVarRoot', 'tpl_docKpVar', vmKpVar]], zamernikHtml: [['docBlankRoot', 'tpl_docBlank', vmBlank]], dogovorHtml: [['docDogRoot', 'tpl_docDog', vmDog], ['docBlankRoot', 'tpl_docBlank', vmBlank]], aktHtml: [['docAktRoot', 'tpl_docAkt', vmAkt]] };
+  const ALL = ['docKpRoot', 'docKpVarRoot', 'docBlankRoot', 'docDogRoot', 'docAktRoot'];
   function fit() { const w = Math.min(window.innerWidth, 900) - 24, z = Math.min(1.6, w / 595); ALL.forEach(id => { const b = document.getElementById(id); if (b) b.style.zoom = z; }); }
   window.addEventListener('resize', fit);
   function show(fn, order, sig) {
@@ -256,5 +277,5 @@
     for (const f of fixes) await f();
     return { els: Array.from(host.querySelectorAll('div[style*="height: 842px"]')), done: () => host.remove() };
   }
-  window.JalDocScreens = { C, pagesOff, vms: { kpHtml: vmKp, kpVarHtml: vmKpVar, zamernikHtml: vmBlank, dogovorHtml: vmDog }, show, hideAll: () => ALL.forEach(id => { const b = document.getElementById(id); if (b) b.hidden = true; }) };
+  window.JalDocScreens = { C, pagesOff, vms: { kpHtml: vmKp, kpVarHtml: vmKpVar, zamernikHtml: vmBlank, dogovorHtml: vmDog, aktHtml: vmAkt }, show, hideAll: () => ALL.forEach(id => { const b = document.getElementById(id); if (b) b.hidden = true; }) };
 })();

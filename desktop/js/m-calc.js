@@ -540,7 +540,7 @@
       b = (edit ? '<div class="mut sm" style="margin-bottom:10px">Состав обновится, клиент и условия останутся как были.</div>' : '<div class="fgrid"><div class="fld"><label>Предоплата</label><div class="row" style="gap:8px"><input class="ul num" value="' + e(O.pre) + '" data-c="cof" data-k="pre"><select class="ul" style="width:64px" data-c="cof" data-k="preU"><option' + (O.preU !== '₽' ? ' selected' : '') + '>%</option><option' + (O.preU === '₽' ? ' selected' : '') + '>₽</option></select></div></div>' + fld('term', 'Срок изготовления, календарных дней') + (instOn ? '<div class="fld"><label>Оплата монтажника, ₽ <span class="mut">(необязательно)</span></label><input class="ul num" placeholder="по расценкам" value="' + e(O.instPay) + '" data-c="cof" data-k="instPay"></div>' : '') + '</div>') +
         (edit ? '' : '<div style="margin-top:14px"><button class="oc ' + (smOn ? 'on' : '') + '" data-a="cosm" title="Включено: в договоре будет, что замер делает заказчик и отвечает за размеры. Выключено: замер делает продавец, этот текст из договора убирается">Замер делает заказчик</button></div>') + '<div class="fld" style="margin-top:14px"><label>Примечания</label><textarea class="ul ta" rows="4" data-c="cof" data-k="note">' + e(O.note) + '</textarea></div>';
     } else {
-      b = '<div class="mdocs"><button class="btn" data-a="cdoc" data-fn="kpHtml">КП</button><button class="btn" data-a="cdoc" data-fn="kpVarHtml">КП три варианта</button><button class="btn" data-a="codoc" data-fn="zamernikHtml">Замерник</button><button class="btn" data-a="codoc" data-fn="dogovorHtml">Договор</button></div>' +
+      b = '<div class="mdocs"><button class="btn" data-a="cdoc" data-fn="kpHtml">КП</button><button class="btn" data-a="cdoc" data-fn="kpVarHtml">КП три варианта</button><button class="btn" data-a="codoc" data-fn="zamernikHtml">Замерник</button><button class="btn" data-a="codoc" data-fn="dogovorHtml">Договор</button><button class="btn" data-a="codoc" data-fn="aktHtml">Акт приёмки-передачи</button></div>' +
         '<div class="fld" style="margin-top:18px"><label>Отправить клиенту КП</label><div class="chs"><button class="btn" data-a="csend" data-ch="wa">WhatsApp</button><button class="btn" data-a="csend" data-ch="tg">Telegram</button><button class="btn" data-a="csend" data-ch="mail">Почта</button></div></div>';
     }
     return '<div class="mback" data-a="cocancel"></div><div class="modal"><div class="mhead"><h2>' + (C.editNo && !O.fresh ? cap(eno()) : O.req ? 'Реквизиты заказчика' : 'Оформление заказа') + '</h2><span class="sp"></span><button class="ib" data-a="cocancel" title="Закрыть">' + A.icon('close', 18) + '</button></div>' +
@@ -805,7 +805,8 @@
   /* замерник и договор строятся по сохранённому заказу: сохраняем и открываем */
   A.act.codoc = el => {
     if (!checkReady()) return;
-    const fn = el.dataset.fn, rec = persist(); if (fn === 'dogovorHtml') DB.ensureNo(rec.uid);
+    const fn = el.dataset.fn, rec = persist(); if (fn === 'dogovorHtml' || fn === 'aktHtml') DB.ensureNo(rec.uid);
+    if (fn === 'aktHtml') { A.docOpen(fn, rec.uid); return; }
     if (fn === 'dogovorHtml') { O.dog = true; DB.patchRec(rec.uid, { status: 'Договор' }); DB.addEvent(rec.uid, 'Договор', 'договор сформирован'); } else { DB.patchRec(rec.uid, { zamDone: true }); DB.addEvent(rec.uid, 'Замер', 'замерник сформирован'); }
     A.docOpen(fn, rec.uid);
   };

@@ -1,14 +1,14 @@
 /* Документы заказа в десктопе: КП, КП на три варианта, замерник, договор. Те же формы, что на телефоне (../src/docscreens.js, шаблоны ../tpl). */
 (function () {
   const A = App, e = A.esc;
-  const TPL = [['tpl_docKp', 'docKp'], ['tpl_docKpVar', 'docKpVar'], ['tpl_docBlank', 'docBlank'], ['tpl_docDog', 'docDog']];
-  const ROOTS = ['docKpRoot', 'docKpVarRoot', 'docDogRoot', 'docBlankRoot'];
-  const NAMES = { kpHtml: 'КП', kpVarHtml: 'КП: три варианта', zamernikHtml: 'Замерный лист', dogovorHtml: 'Договор' };
+  const TPL = [['tpl_docKp', 'docKp'], ['tpl_docKpVar', 'docKpVar'], ['tpl_docBlank', 'docBlank'], ['tpl_docDog', 'docDog'], ['tpl_docAkt', 'docAkt']];
+  const ROOTS = ['docKpRoot', 'docKpVarRoot', 'docDogRoot', 'docBlankRoot', 'docAktRoot'];
+  const NAMES = { kpHtml: 'КП', kpVarHtml: 'КП: три варианта', zamernikHtml: 'Замерный лист', dogovorHtml: 'Договор', aktHtml: 'Акт приёмки-передачи' };
   const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (x) { return ''; } };
   let ready = null, cur = null;
 
   /* шаблоны лежат отдельными файлами; в телефонной сборке они вшиты в index.html */
-  const load = () => ready || (ready = Promise.all(TPL.map(t => fetch('../tpl/' + t[1] + '.html?v=57').then(r => { if (!r.ok) throw new Error('нет шаблона ' + t[1]); return r.text(); }).then(h => {
+  const load = () => ready || (ready = Promise.all(TPL.map(t => fetch('../tpl/' + t[1] + '.html?v=58').then(r => { if (!r.ok) throw new Error('нет шаблона ' + t[1]); return r.text(); }).then(h => {
     const el = document.createElement('template'); el.id = t[0]; el.innerHTML = h.replace(/src="assets\//g, 'src="../assets/'); document.body.appendChild(el);
   }))).catch(x => { ready = null; throw x; }));
 
@@ -102,7 +102,7 @@
     const f = (k, label, ph) => '<div class="field"><label>' + label + '</label><input class="in" value="' + e(r[k] == null ? '' : r[k]) + '" placeholder="' + (ph || '') + '" data-c="odoc" data-k="' + k + '" data-uid="' + r.uid + '"></div>';
     const yur = r.buyer === 'юр' || r.buyer === 'ип', pay = (r.zam && r.zam.pay) || 'QR', inst = r.install !== false && +r.delivery > 0, sm = r.selfMeas != null ? !!r.selfMeas : (inst ? !r.measurer : true);
     return '<div class="row wrap" style="margin-bottom:12px"><button class="btn pri" data-a="docopen" data-fn="kpHtml" data-uid="' + r.uid + '">КП</button><button class="btn" data-a="docopen" data-fn="kpVarHtml" data-uid="' + r.uid + '">КП: три варианта</button>' +
-      '<button class="btn" data-a="docopen" data-fn="zamernikHtml" data-uid="' + r.uid + '">Замерник</button><button class="btn" data-a="docopen" data-fn="dogovorHtml" data-uid="' + r.uid + '">Договор</button></div>' +
+      '<button class="btn" data-a="docopen" data-fn="zamernikHtml" data-uid="' + r.uid + '">Замерник</button><button class="btn" data-a="docopen" data-fn="dogovorHtml" data-uid="' + r.uid + '">Договор</button><button class="btn" data-a="docopen" data-fn="aktHtml" data-uid="' + r.uid + '">Акт приёмки-передачи</button></div>' +
       '<div class="callout info" style="margin-bottom:12px">Поля ниже подставляются в документы. Изменения сразу уходят в общую базу, телефон их тоже увидит.</div>' +
       '<div class="g2"><div class="stack" style="gap:10px"><div class="field"><label>Покупатель</label><select class="in" data-c="odoc" data-k="buyer" data-uid="' + r.uid + '">' + BUY.map(b => '<option value="' + b[0] + '"' + ((r.buyer || 'физ') === b[0] ? ' selected' : '') + '>' + b[1] + '</option>').join('') + '</select></div>' +
       f('email', 'E-mail') + f('measurer', 'Замерщик', 'Хорошавин') + '<div class="field"><label>Замер</label><button class="oc ' + (sm ? 'on' : '') + '" data-a="odocsm" data-uid="' + r.uid + '">Замер делает заказчик</button></div>' + f('term', 'Срок изготовления, календарных дней', '12') +

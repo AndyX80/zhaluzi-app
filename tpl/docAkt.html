@@ -1,0 +1,43 @@
+<div style="width: 595px; background: #8E9AA6; display: flex; flex-direction: column; gap: 16px; font-family: Arial, Helvetica, sans-serif; color: #111111">
+<sc-for list="{{pages}}" as="p" hint-placeholder-count="1">
+<div style="width: 595px; height: 842px; box-sizing: border-box; background: #FFFFFF; padding: 40px 50px 24px 50px; display: flex; flex-direction: column; font-size: 9px; line-height: 1.3">
+<sc-if value="{{p.first}}">
+<div style="display: flex; justify-content: flex-end; height: 44px"><img src="assets/logo.png" alt="Жалюзи-СПБ" style="width: 84px; height: auto; display: block"></div>
+<div style="margin-top: 22px; text-align: center; font-size: 11.5px; font-weight: 700; padding-bottom: 6px; border-bottom: 1px solid #111111">{{title}}</div>
+<div style="display: flex; gap: 8px; margin-top: 14px; font-size: 9.5px"><span style="width: 66px; flex: none">Исполнитель:</span><b>Индивидуальный предприниматель Хорошавин Андрей Владимирович</b></div>
+<div style="display: flex; gap: 8px; margin-top: 10px; font-size: 9.5px"><span style="width: 66px; flex: none">Заказчик:</span><b>{{customer}}</b></div>
+<div style="display: flex; gap: 8px; margin-top: 10px; font-size: 9.5px"><span style="width: 66px; flex: none">Основание:</span><b>{{basis}}</b></div>
+<div style="height: 18px"></div>
+</sc-if>
+<sc-if value="{{p.cont}}"><div style="font-size: 8px; color: #555555; padding-bottom: 6px">{{title}} (продолжение)</div></sc-if>
+<div style="border: 0.7px solid #111111; font-size: 8.6px">
+<div style="display: grid; grid-template-columns: 22px minmax(0, 1fr) 36px 30px 62px 66px; font-weight: 400; text-align: center">
+<span style="padding: 3px">№</span><span style="padding: 3px; border-left: 0.7px solid #111111">Наименование работ, услуг</span><span style="padding: 3px; border-left: 0.7px solid #111111">Кол-во</span><span style="padding: 3px; border-left: 0.7px solid #111111">Ед.</span><span style="padding: 3px; border-left: 0.7px solid #111111">Цена</span><span style="padding: 3px; border-left: 0.7px solid #111111">Сумма</span>
+</div>
+<sc-for list="{{p.rows}}" as="r" hint-placeholder-count="3">
+<div style="display: grid; grid-template-columns: 22px minmax(0, 1fr) 36px 30px 62px 66px; border-top: 0.7px solid #111111">
+<span style="padding: 3px; text-align: center">{{r.n}}</span><span style="padding: 3px 4px; border-left: 0.7px solid #111111">{{r.name}}</span><span style="padding: 3px; text-align: center; border-left: 0.7px solid #111111">{{r.qty}}</span><span style="padding: 3px; text-align: center; border-left: 0.7px solid #111111">{{r.unit}}</span><span style="padding: 3px 4px; text-align: right; border-left: 0.7px solid #111111">{{r.price}}</span><span style="padding: 3px 4px; text-align: right; border-left: 0.7px solid #111111">{{r.sum}}</span>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{p.last}}">
+<div style="display: flex; justify-content: flex-end; gap: 28px; margin-top: 14px; font-size: 9.5px; font-weight: 700"><span>Итого к оплате:</span><span style="width: 62px; text-align: right">{{total}}</span></div>
+<div style="display: flex; justify-content: flex-end; gap: 28px; margin-top: 4px; font-size: 9px"><span>В том числе НДС:</span><span style="width: 62px; text-align: right">Без НДС</span></div>
+<div style="margin-top: 26px; padding-bottom: 6px; border-bottom: 1.4px solid #111111; font-size: 9.5px">Общая стоимость выполненных работ, оказанных услуг: {{words}}</div>
+<div style="margin-top: 14px; font-size: 7.6px">Заказчик не имеет претензий по срокам, качеству и объему товаров и услуг.</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin-top: 16px; font-size: 9.5px">
+<div style="display: flex; flex-direction: column; gap: 3px"><b style="font-size: 8.6px">Исполнитель: ИП Хорошавин Андрей Владимирович</b>
+<sc-for list="{{seller}}" as="l" hint-placeholder-count="7"><div style="display: flex; gap: 6px; min-height: 17px; align-items: flex-end"><span style="width: 44px; flex: none">{{l.k}}</span><span style="flex: 1; border-bottom: 0.7px solid #111111; font-size: 9px; padding-bottom: 1px">{{l.v}}</span></div></sc-for></div>
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 9.5px">Заказчик:</span>
+<sc-for list="{{buyerReq}}" as="l" hint-placeholder-count="7"><div style="display: flex; gap: 6px; min-height: 17px; align-items: flex-end"><span style="width: 44px; flex: none">{{l.k}}</span><span style="flex: 1; border-bottom: 0.7px solid #111111; font-size: 9px; padding-bottom: 1px">{{l.v}}</span></div></sc-for></div>
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin-top: 10px; position: relative; height: 96px; font-size: 8px">
+<div style="position: relative"><div style="position: absolute; left: 0; right: 0; top: 22px; border-bottom: 0.7px solid #111111"></div><div style="position: absolute; left: 100px; top: 8px; font-size: 9.5px">Хорошавин А. В.</div><div style="position: absolute; left: 0; top: 36px; color: #444">М.П.</div><div style="position: absolute; left: 100px; top: 36px; color: #444; font-size: 7px">расшифровка подписи</div>
+<sc-if value="{{hasSign}}"><img src="{{signSrc}}" alt="подпись" style="position: absolute; left: 20px; top: -14px; height: 40px; width: auto"></sc-if>
+<sc-if value="{{hasStamp}}"><img src="{{stampSrc}}" alt="печать" style="position: absolute; left: -6px; top: -4px; width: 127px; height: 127px; transform: rotate(-9deg); mix-blend-mode: multiply; opacity: 0.93"></sc-if></div>
+<div style="position: relative"><div style="position: absolute; left: 0; right: 0; top: 22px; border-bottom: 0.7px solid #111111"></div><div style="position: absolute; left: 0; top: 36px; color: #444">М.П.</div><div style="position: absolute; left: 100px; top: 36px; color: #444; font-size: 7px">расшифровка подписи</div></div>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
