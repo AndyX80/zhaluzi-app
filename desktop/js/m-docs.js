@@ -37,7 +37,7 @@
     let ov = document.getElementById('docov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'docov';
-      ov.innerHTML = '<div class="dtool"><b id="docttl"></b><label id="docadw" hidden style="margin-left:12px;font-size:13px">Дата акта <input id="docad" type="date" class="in" style="width:auto;display:inline-block;padding:2px 6px" data-c="aktdate"></label><span class="sp"></span><button class="btn sm" data-a="docprint">Печать</button><button class="btn sm" data-a="docpdf">Скачать PDF</button><button class="btn sm" data-a="docword">Скачать Word</button><button class="btn sm pri" data-a="docclose">Закрыть</button></div>' +
+      ov.innerHTML = '<div class="dtool"><b id="docttl"></b><label id="docadw" hidden style="margin-left:12px;font-size:13px">Дата акта <input id="docad" type="date" class="in" style="width:auto;display:inline-block;padding:2px 6px" data-c="aktdate"></label><span class="sp"></span><span class="mut sm">Отправить:</span><button class="btn sm" data-a="docsend" data-ch="wa">WhatsApp</button><button class="btn sm" data-a="docsend" data-ch="tg">Telegram</button><button class="btn sm" data-a="docsend" data-ch="max">Макс</button><button class="btn sm" data-a="docsend" data-ch="mail">Почта</button><button class="btn sm" data-a="docprint">Печать</button><button class="btn sm" data-a="docpdf">Скачать PDF</button><button class="btn sm" data-a="docword">Скачать Word</button><button class="btn sm pri" data-a="docclose">Закрыть</button></div>' +
         '<div class="dbody">' + ROOTS.map(id => '<div id="' + id + '" class="docp" hidden></div>').join('') + '</div>';
       document.body.appendChild(ov);
     }
@@ -93,6 +93,24 @@
     try { const f = await JalExport[kind](cur.fn, cur.o); JalExport.save(f); A.toast('Файл «' + f.name + '» скачан'); } catch (x) { A.toast('Ошибка: ' + (x.message || x)); }
   };
   A.act.docpdf = () => file('pdf');
+  const CHN = { wa: 'WhatsApp', tg: 'Telegram', max: 'Макс', mail: 'почта' };
+  A.act.docsend = async el => {
+    if (!cur) return; const ch = el.dataset.ch, o = cur.o, fn = cur.fn, nm = NAMES[fn];
+    if (ch === 'mail' && !String(o.email || '').trim()) { A.toast('Нет e-mail клиента: впиши его в карточке заказа, вкладка «Документы»'); return; }
+    A.toast('Готовлю ' + nm + '…');
+    try {
+      const f = await JalExport.pdf(fn, o), who = (String(o.name || '').trim().split(/\s+/)[1] || String(o.name || '').trim().split(/\s+/)[0] || 'клиент');
+      const text = 'Добрый день, ' + who + '! Отправляю документ: ' + nm + '. Жалюзи-СПБ', subj = 'Жалюзи-СПБ, ' + nm.toLowerCase();
+      if (o.uid) DB.addEvent(o.uid, 'Документ отправлен', nm + ': ' + CHN[ch]);
+      const shared = ch !== 'mail' && await JalExport.share([f], text, subj);
+      if (!shared) {
+        JalExport.save(f);
+        const d = String(o.phone || '').split(',')[0].replace(/\D/g, '').replace(/^8(?=\d{10}$)/, '7'), enc = encodeURIComponent;
+        const url = ch === 'wa' ? 'https://wa.me/' + d + '?text=' + enc(text) : ch === 'tg' ? 'https://t.me/' + (d ? '+' + d : '') : ch === 'max' ? 'https://max.ru/' : 'mailto:' + String(o.email).trim() + '?subject=' + enc(subj) + '&body=' + enc(text);
+        window.open(url, '_blank'); A.toast('Файл скачан: приложи его к сообщению (' + CHN[ch] + ')');
+      }
+    } catch (x) { A.toast('Не получилось: ' + (x && x.message || x)); }
+  };
   A.act.docword = () => file('docx');
   document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && cur) A.act.docclose(); });
 

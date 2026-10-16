@@ -541,7 +541,7 @@
         (edit ? '' : '<div style="margin-top:14px"><button class="oc ' + (smOn ? 'on' : '') + '" data-a="cosm" title="Включено: в договоре будет, что замер делает заказчик и отвечает за размеры. Выключено: замер делает продавец, этот текст из договора убирается">Замер делает заказчик</button></div>') + '<div class="fld" style="margin-top:14px"><label>Примечания</label><textarea class="ul ta" rows="4" data-c="cof" data-k="note">' + e(O.note) + '</textarea></div>';
     } else {
       b = '<div class="mdocs"><button class="btn" data-a="cdoc" data-fn="kpHtml">КП</button><button class="btn" data-a="cdoc" data-fn="kpVarHtml">КП три варианта</button><button class="btn" data-a="codoc" data-fn="zamernikHtml">Замерник</button><button class="btn" data-a="codoc" data-fn="dogovorHtml">Договор</button><button class="btn" data-a="codoc" data-fn="aktHtml">Акт приёмки-передачи</button></div>' +
-        '<div class="fld" style="margin-top:18px"><label>Отправить клиенту КП</label><div class="chs"><button class="btn" data-a="csend" data-ch="wa">WhatsApp</button><button class="btn" data-a="csend" data-ch="tg">Telegram</button><button class="btn" data-a="csend" data-ch="mail">Почта</button></div></div>';
+        '<div class="fld" style="margin-top:18px"><label>Отправить клиенту КП</label><div class="chs"><button class="btn" data-a="csend" data-ch="wa">WhatsApp</button><button class="btn" data-a="csend" data-ch="tg">Telegram</button><button class="btn" data-a="csend" data-ch="max">Макс</button><button class="btn" data-a="csend" data-ch="mail">Почта</button></div></div>';
     }
     return '<div class="mback" data-a="cocancel"></div><div class="modal"><div class="mhead"><h2>' + (C.editNo && !O.fresh ? cap(eno()) : O.req ? 'Реквизиты заказчика' : 'Оформление заказа') + '</h2><span class="sp"></span><button class="ib" data-a="cocancel" title="Закрыть">' + A.icon('close', 18) + '</button></div>' +
       (edit ? '' : '<div class="mtabs">' + STEPS.slice(0, O.req ? 2 : 3).map((t, i) => '<button class="' + (st === i ? 'on' : '') + '" data-a="costep" data-v="' + i + '">' + (i + 1) + '. ' + t + '</button>').join('') + '</div>') +
@@ -819,12 +819,12 @@
     try {
       const file = await A.docFile('kpHtml', uid), sum = m(JC().toOrder().items.reduce((a, i) => a + (+i.price || 0), 0) - (+JC().C.disc || 0));
       const nm = (O.name.trim().split(/\s+/)[1] || O.name.trim().split(/\s+/)[0] || 'клиент'), text = 'Добрый день, ' + nm + '! Отправляю коммерческое предложение на сумму ' + sum + '. Жалюзи-СПБ';
-      O.sent = true; DB.patchRec(uid, { status: O.dog ? 'Договор' : 'КП отправлено', sent: new Date().toISOString().slice(0, 10) }); DB.addEvent(uid, 'КП отправлено', ch === 'wa' ? 'WhatsApp' : ch === 'tg' ? 'Telegram' : 'почта');
+      O.sent = true; DB.patchRec(uid, { status: O.dog ? 'Договор' : 'КП отправлено', sent: new Date().toISOString().slice(0, 10) }); DB.addEvent(uid, 'КП отправлено', ch === 'wa' ? 'WhatsApp' : ch === 'tg' ? 'Telegram' : ch === 'max' ? 'Макс' : 'почта');
       const shared = ch !== 'mail' && window.JalExport && await JalExport.share([file], text, 'Жалюзи-СПБ, коммерческое предложение');
       if (!shared) {
         JalExport.save(file);
         const d = String(O.phone || '').replace(/\D/g, '').replace(/^8(?=\d{10}$)/, '7'), enc = encodeURIComponent;
-        const url = ch === 'wa' ? 'https://wa.me/' + d + '?text=' + enc(text) : ch === 'tg' ? 'https://t.me/' + (d ? '+' + d : '') : 'mailto:' + O.email.trim() + '?subject=' + enc('Жалюзи-СПБ, коммерческое предложение') + '&body=' + enc(text);
+        const url = ch === 'wa' ? 'https://wa.me/' + d + '?text=' + enc(text) : ch === 'tg' ? 'https://t.me/' + (d ? '+' + d : '') : ch === 'max' ? 'https://max.ru/' : 'mailto:' + O.email.trim() + '?subject=' + enc('Жалюзи-СПБ, коммерческое предложение') + '&body=' + enc(text);
         window.open(url, '_blank'); A.toast('КП скачан: приложи файл к сообщению');
       }
       rr();
