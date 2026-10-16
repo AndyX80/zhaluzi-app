@@ -37,7 +37,7 @@
     let ov = document.getElementById('docov');
     if (!ov) {
       ov = document.createElement('div'); ov.id = 'docov';
-      ov.innerHTML = '<div class="dtool"><b id="docttl"></b><span class="sp"></span><button class="btn sm" data-a="docprint">Печать</button><button class="btn sm" data-a="docpdf">Скачать PDF</button><button class="btn sm" data-a="docword">Скачать Word</button><button class="btn sm pri" data-a="docclose">Закрыть</button></div>' +
+      ov.innerHTML = '<div class="dtool"><b id="docttl"></b><label id="docadw" hidden style="margin-left:12px;font-size:13px">Дата акта <input id="docad" type="date" class="in" style="width:auto;display:inline-block;padding:2px 6px" data-c="aktdate"></label><span class="sp"></span><button class="btn sm" data-a="docprint">Печать</button><button class="btn sm" data-a="docpdf">Скачать PDF</button><button class="btn sm" data-a="docword">Скачать Word</button><button class="btn sm pri" data-a="docclose">Закрыть</button></div>' +
         '<div class="dbody">' + ROOTS.map(id => '<div id="' + id + '" class="docp" hidden></div>').join('') + '</div>';
       document.body.appendChild(ov);
     }
@@ -51,6 +51,7 @@
       cur = { fn, o, sig };
       const ov = overlay(); ov.hidden = false; document.getElementById('docttl').textContent = NAMES[fn] + ' № ' + (title || o.no);
       document.body.classList.add('docopen');
+      const adw = document.getElementById('docadw'); adw.hidden = fn !== 'aktHtml'; if (fn === 'aktHtml') document.getElementById('docad').value = o.aktDate || new Date().toISOString().slice(0, 10);
       JalDocScreens.show(fn, o, sig);
       if (!sig.sign || !sig.stamp) A.toast('Подписи или печати на Диске не нашёл: документ без них');
     } catch (x) { cur = null; A.toast('Документ не открылся: ' + (x && x.message || x)); try { console.error(x); } catch (y) {} }
@@ -85,6 +86,7 @@
   A.docFile = async (fn, uid) => { const r = rec(uid); if (!r) throw new Error('заказ не найден'); await Promise.all([load(), docLibs()]); await sigs(); return JalExport.pdf(fn, orderOf(r)); };
   A.act.docopen = el => open(el.dataset.fn, el.dataset.uid);
   A.act.docclose = () => { const ov = document.getElementById('docov'); if (ov) ov.hidden = true; document.body.classList.remove('docopen'); cur = null; };
+  A.fld.aktdate = v => { if (!cur || !cur.o) return; const d = v || new Date().toISOString().slice(0, 10); cur.o.aktDate = d; if (cur.o.uid) DB.patchRec(cur.o.uid, { aktDate: d }); JalDocScreens.show(cur.fn, cur.o, cur.sig); };
   A.act.docprint = () => window.print();
   const file = async kind => {
     if (!cur) return; A.toast('Собираю файл…');

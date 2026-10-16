@@ -213,7 +213,7 @@
     if (rows.length <= FIRST && rows.length <= LASTMAX + 4) pg.push({ rows });
     else { let k = 0; pg.push({ rows: rows.slice(0, FIRST) }); k = FIRST; while (k < rows.length) { pg.push({ rows: rows.slice(k, k + CONT) }); k += CONT; } if (pg[pg.length - 1].rows.length > LASTMAX) pg.push({ rows: [] }); }
     pg.forEach((p, i) => { p.first = i === 0; p.cont = i > 0; p.last = i === pg.length - 1; });
-    const date = new Date(), dm = D().dateRu(date).replace(/ г\.$/, ''), dg = D().dateRu(new Date(order.created)).replace(/ г\.$/, '');
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(order.aktDate || '') ? new Date(order.aktDate + 'T12:00:00') : new Date(), dm = D().dateRu(date).replace(/ г\.$/, ''), dg = D().dateRu(new Date(order.created)).replace(/ г\.$/, '');
     const blank = '';
     return { pages: pg, num: order.no, title: 'АКТ № ' + order.no + ' от ' + dm, customer: customer || blank, basis: 'Договор № ' + order.no + ' от ' + dg, total: numZ(total), words: words(total) .replace(/^(.)/, c => c.toUpperCase()) + '.',
       hasSign: !!sig.sign, signSrc: sig.sign, hasStamp: !!sig.stamp, stampSrc: sig.stamp,
