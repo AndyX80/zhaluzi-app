@@ -606,7 +606,7 @@
   A.fld.rf = (v, el) => { const k = el.dataset.k; R[k] = k === 'qty' ? Math.max(1, Math.min(99, +v || 1)) : v; rr(); };
   A.fld.vf = (v, el) => { R.vf = Object.assign(VF0(), R.vf || {}); R.vf[el.dataset.k] = v; rr(); };
   A.act.rf = el => { R[el.dataset.k] = el.dataset.v; rr(); };
-  A.fld.ropt = (v, el) => { R.sel[el.dataset.k] = v; if (el.dataset.k === 'Труба') R.tubeLock = true; if (el.dataset.k === 'Кронштейны' && v === 'Металлические' && R.flags['Монтажный профиль']) { R.flags['Монтажный профиль'] = false; A.toast('Монтажный профиль снят: с металлическими кронштейнами его не ставят'); } rr(); };
+  A.fld.ropt = (v, el) => { R.sel[el.dataset.k] = v; if (el.dataset.k === 'Кронштейны' && v !== 'Металлические' && R.flags['Монтажный профиль'] === false) delete R.flags['Монтажный профиль']; if (el.dataset.k === 'Труба') R.tubeLock = true; if (el.dataset.k === 'Кронштейны' && v === 'Металлические' && R.flags['Монтажный профиль']) { R.flags['Монтажный профиль'] = false; A.toast('Монтажный профиль снят: с металлическими кронштейнами его не ставят'); } rr(); };
   A.act.rphoto = () => { R.photo = !R.photo; rr(); };
   A.act.vside = el => { R.vf = Object.assign(VF0(), R.vf || {}); R.vf.side = el.dataset.v; rr(); };
   A.act.gck = el => { R.vf = Object.assign(VF0(), R.vf || {}); R.vf.ck = el.dataset.v; rr(); };

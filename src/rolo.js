@@ -200,11 +200,11 @@
   function opts(it) {
     const sel = {}, flags = {};
     groupsOf(it.sys).forEach(g => {
-      if (g.type === 'flag') { if (it.flags && it.flags[g.name]) flags[g.name] = true; return; }
+      if (g.type === 'flag') { const fv = it.flags && it.flags[g.name]; if (g.name === 'Монтажный профиль') flags[g.name] = fv === undefined ? true : !!fv; else if (fv) flags[g.name] = true; return; } /* монтажный профиль включён по умолчанию, снять можно явно */
       const v = it.sel && it.sel[g.name], ok = g.items.some(x => x.value === v);
       sel[g.name] = ok ? v : (g.items.find(x => x.def) || g.items[0]).value;
     });
-    if (flags['Монтажный профиль'] && sel['Кронштейны'] === 'Металлические') delete flags['Монтажный профиль']; /* с металлическими кронштейнами монтажный профиль не ставится */
+    if (flags['Монтажный профиль'] && sel['Кронштейны'] === 'Металлические') flags['Монтажный профиль'] = false; /* с металлическими кронштейнами монтажный профиль не ставится */
     return { sel, flags };
   }
 
