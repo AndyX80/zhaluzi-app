@@ -265,8 +265,8 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--acc)!importa
 
 .irg{display:grid;grid-template-columns:1fr 1fr;gap:2px 28px}.irr{display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid var(--line)}.irn{flex:1;min-width:0;font-size:13px;line-height:1.25}.irr .in{width:68px;flex:none;text-align:right;padding:4px 8px;height:28px}.iru{width:40px;flex:none;font-size:11px}
 @media(max-width:1100px){.irg{grid-template-columns:1fr}}
-.irg{grid-template-columns:repeat(2,max-content);justify-content:start;gap:2px 56px}.irn{flex:none;width:330px}
-@media(max-width:1100px){.irg{grid-template-columns:max-content}}
+.irg{grid-template-columns:1fr;gap:0}.irn{flex:1;min-width:0}
+@media(max-width:1100px){.irg{grid-template-columns:1fr}}
 .tbl:not(.ttab) th{position:relative}.rsz{position:absolute;right:-4px;top:0;bottom:0;width:9px;cursor:col-resize;z-index:5}.rsz:hover,.rszing .rsz{background:color-mix(in srgb,var(--acc) 45%,transparent)}
 .rszing{cursor:col-resize;user-select:none}
 .tbl.tfix{table-layout:fixed}.tbl.tfix td,.tbl.tfix th{overflow:hidden;text-overflow:ellipsis}.tbl.tfix th{white-space:normal}.tbl.tfix .tf{min-width:0;width:100%}
