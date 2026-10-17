@@ -103,7 +103,7 @@
   }
 
   async function pdf(fn, order) {
-    if (fn !== 'zamernikHtml' && fn !== 'aktHtml') { try { return await pdfText(fn, order); } catch (e) { console.error('PDF с текстом не вышел, делаю картинкой', e); } }
+    if (fn !== 'zamernikHtml' && fn !== 'aktHtml' && fn !== 'kpHtml' && fn !== 'kpVarHtml') { try { return await pdfText(fn, order); } catch (e) { console.error('PDF с текстом не вышел, делаю картинкой', e); } } /* КП, замерник и акт: PDF точно как на экране */
     return pdfImage(fn, order);
   }
   async function pdfImage(fn, order) {
