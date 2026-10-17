@@ -8,7 +8,7 @@
   let ready = null, cur = null;
 
   /* шаблоны лежат отдельными файлами; в телефонной сборке они вшиты в index.html */
-  const load = () => ready || (ready = Promise.all(TPL.map(t => fetch('../tpl/' + t[1] + '.html?v=59').then(r => { if (!r.ok) throw new Error('нет шаблона ' + t[1]); return r.text(); }).then(h => {
+  const load = () => ready || (ready = Promise.all(TPL.map(t => fetch('../tpl/' + t[1] + '.html?v=60').then(r => { if (!r.ok) throw new Error('нет шаблона ' + t[1]); return r.text(); }).then(h => {
     const el = document.createElement('template'); el.id = t[0]; el.innerHTML = h.replace(/src="assets\//g, 'src="../assets/'); document.body.appendChild(el);
   }))).catch(x => { ready = null; throw x; }));
 
