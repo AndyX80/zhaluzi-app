@@ -165,7 +165,7 @@
       ch.push(P([T('Установка: ', { bold: true }), T(vm.instYes + '   ' + vm.instNo)]));
       vm.mount.forEach(m => ch.push(P([T(m.k + ' ', { bold: true }), T(m.v)])));
       ch.push(P('Заполняется Потребителем (представителем Потребителя)', { spacing: { before: 100 } }, { bold: true }));
-      ch.push(P('Есть ли «Часы тишины» в доме? ' + vm.quietYn)); ch.push(P('Время: с ' + vm.quietFrom + ' до ' + vm.quietTo)); ch.push(P('Стадия ремонта: ' + vm.stageText));
+      ch.push(P('Есть ли «Часы тишины» в доме? ' + vm.quietYn)); ch.push(P('Время: с ' + vm.quietFrom + ' до ' + vm.quietTo)); ch.push(P('Стадия ремонта: ' + vm.stageRough + '   ' + vm.stageFine));
       ch.push(P('Эскизы изделий смотри в PDF-версии замерника.', null, { italics: true, size: 16, color: '777777' }));
       ch.push(P('ВНИМАНИЕ!!! ПРИ ИСПОЛНЕНИИ ЗАМЕРОВ ПРИСУТСТВИЕ ЗАКАЗЧИКА ОБЯЗАТЕЛЬНО!!! Жалюзи, изготовленные в соответствии с заказом, возврату не подлежат!*', { spacing: { before: 120 } }, { bold: true, size: 18 }));
       ch.push(table([['Наименование продукции', 'Кол-во', 'Стоимость', 'Общая стоимость']].concat(rows(vm.pages).map(r => [r.name, r.qty, r.price, r.sum])), [52, 12, 18, 18], true));

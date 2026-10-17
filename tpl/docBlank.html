@@ -18,7 +18,7 @@
 <div style="flex: 0 0 330px; border: 1px solid #111111; padding: 8px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 8px">
 <sc-for list="{{pg.cells}}" as="c" hint-placeholder-count="12">
 <div style="display: flex; align-items: center; justify-content: center">
-<svg width="96" height="112" viewBox="0 0 96 112" fill="none" stroke-linecap="round">
+<svg width="79" height="92" viewBox="0 0 96 112" fill="none" stroke-linecap="round">
 <rect x="14" y="12" width="72" height="88" stroke="{{c.box}}" stroke-width="{{c.bw}}" stroke-dasharray="{{c.dash}}"></rect>
 <text x="50" y="60" text-anchor="middle" font-size="10" fill="#333333">{{c.n}}</text>
 <text x="50" y="9" text-anchor="middle" font-size="10" fill="#111111" font-weight="700">{{c.w}}</text>
@@ -51,7 +51,7 @@
 <sc-if value="{{quietShow}}" hint-placeholder-val="{{false}}"><div>Есть ли «Часы тишины» в доме? {{quietYn}}</div>
 <div style="white-space: nowrap">Время: с {{quietFrom}} до {{quietTo}}</div></sc-if>
 <div style="color: #333333">При установке изделий обязуюсь предоставить доступ для проведения работ, проинформировать мастера о скрытых коммуникациях в области установки (трубы, электропроводка и т.п.)</div>
-<div><b>Стадия ремонта:</b> {{stageText}}</div>
+<div><b>Стадия ремонта:</b></div><div>{{stageRough}}</div><div>{{stageFine}}</div>
 </div>
 </sc-if>
 </div>

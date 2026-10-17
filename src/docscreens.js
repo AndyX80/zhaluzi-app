@@ -117,7 +117,7 @@
       notes: order.note || '', instYes: inst ? '☑ есть' : '☐ есть', instNo: inst ? '☐ нет' : '☑ нет',
       mount: MOUNT.map((k, i) => ({ k, v: (z.mount && z.mount[i]) || '' })).filter(m => m.v),
       quietShow: !!(q1 || q2), quietYn: (q1 || q2) ? '☑ да ☐ нет' : '☐ да ☐ нет', quietFrom: q1 || '____', quietTo: q2 || '____',
-      stageText: z.rep === 'rough' ? '☑ черновая отделка ☐ чистовая отделка' : (z.rep === 'fine' ? '☐ черновая отделка ☑ чистовая отделка' : '☐ черновая отделка ☐ чистовая отделка'),
+      stageRough: (z.rep === 'rough' ? '☑' : '☐') + ' черновая отделка', stageFine: (z.rep === 'fine' ? '☑' : '☐') + ' чистовая отделка',
       total: fmt(total), prepayText: pct + '% · ' + fmt(pre), rest: fmt(total - pre) };
   }
 
