@@ -75,7 +75,9 @@
       const rate = rnd(row['Цена_usd_м2'] * (1 - par['скидка_амиго']) * par['курс_usd']);
       zak = rnd(rate * Math.max(S, s['Мин_площадь_закупа']));
     } else if (sup === 'Интерьер' || sup === 'Уют') {
-      const rr = P.rates[prod];
+      /* Уют: дуб-серия и Абаш стоят как бамбук (прайс 2026-10-27) */
+      const prem = sup === 'Уют' && color && root.JAL_DATA && (root.JAL_DATA.UYUT_PREM || []).indexOf(String(color)) >= 0;
+      const rr = P.rates[prem ? 'Бамбук ' + lam : prod];
       const rate = rr ? rr[sup] : null;
       if (rate === null || rate === undefined) return fail('не поставляется');
       zak = rnd(rate * Math.max(S, s['Мин_площадь_закупа']));

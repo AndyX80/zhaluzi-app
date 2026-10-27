@@ -105,7 +105,10 @@
         .map(c => ({ key: c['Код'], name: c['Код'] + ' ' + c['Цвет'], ser: 'кат.' + c['Категория'] + ' · ' + c['Порода'], cat: c['Категория'], maxW: (c['Макс_ширина_см'] || 0) * 10 }));
     }
     const L = (D.COLORS_CAT[sup] || {})[prod];
-    return L ? L.map(c => ({ key: c[0] || c[1], name: c[1], ser: c[0] ? 'арт. ' + c[0] : '' })) : [];
+    const prem = sup === 'Уют' ? (D.UYUT_PREM || []) : [], lamN = prod.slice(-2);
+    return L ? L.map(c => { const o = { key: c[0] || c[1], name: c[1], ser: c[0] ? 'арт. ' + c[0] : '' };
+      if (sup === 'Уют') { const rr = P.rates[prem.indexOf(c[0]) >= 0 ? 'Бамбук ' + lamN : prod]; if (rr && rr['Уют']) o.rate = rr['Уют']; }
+      return o; }) : [];
   }
 
   function availOpts(sup, lam) {
@@ -126,7 +129,7 @@
     let res;
     try {
       res = JalCalc.calc(P, eng(cur.sup), cur.mat, cur.lam, W / 10, H / 10,
-        { color: col && (cur.sup === 'Amigo' || cur.sup === 'Foroom') ? col.key : null, opts: Object.keys(cur.opts), fix: cur.fix || null, wh: isWh() });
+        { color: col && (cur.sup === 'Amigo' || cur.sup === 'Foroom' || cur.sup === 'Уют') ? col.key : null, opts: Object.keys(cur.opts), fix: cur.fix || null, wh: isWh() });
     } catch (e) { return { ok: false, msg: String(e.message || e), opts: {}, warn: [] }; }
     if (!res.ok) return { ok: false, msg: res.msg, opts: {}, warn: [] };
     const lim = LM.sizeLimits({ sup: cur.sup, mat: cur.mat, lam: cur.lam, w: W, h: H, opts: cur.opts, ctrl: cur.ctrl, fix: cur.fix }, col, col && col.serRaw);
