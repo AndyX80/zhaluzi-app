@@ -34,7 +34,7 @@
     if (!isBl(it) || it.prod) return '';
     const chain = (it.o.opts || []).indexOf('Цепочка') >= 0 || (it.o.opts || []).indexOf('Цепочка металлическая') >= 0 || (it.o.opts || []).indexOf('Цепочка металлическая цветная') >= 0;
     const parts = [it.mat + ' ' + it.lam + ' мм', sizeTxt(it) + ' мм'].concat((it.o.opts || []).map(o => OPT[o] != null ? OPT[o] : lc(o)).filter(Boolean)).concat(it.o.fix ? [FIX[it.o.fix] || lc(it.o.fix)] : []).concat(it.au ? [it.au] : []);
-    return parts.join(', ') + '; ' + ((chain ? CHAIN : CTRL)[it.ctrl] || CTRL.TR);
+    return it.auto && it.auto.drive ? parts.join(', ') : parts.join(', ') + '; ' + ((chain ? CHAIN : CTRL)[it.ctrl] || CTRL.TR);
   }
   const nameKp = it => it.title ? it.title : 'Горизонтальные жалюзи' + (colorOf(it) ? ' «' + colorOf(it) + '»' : '');
 

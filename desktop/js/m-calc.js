@@ -162,7 +162,7 @@
     h += '<div class="fgrid fcol">' + modelRow() + '<div class="fld"><label>Коллекция</label><select class="ul" data-c="csup">' + SUPS.map(x => '<option value="' + x + '"' + (s.sup === x ? ' selected' : '') + '>' + e(cs.COLL_ALL[x] + ' (' + ru(x) + ')') + '</option>').join('') + '</select></div>' +
       '<div class="fld"><label>Тип</label><select class="ul" data-c="ctype">' + types.map(t => '<option value="' + t[0] + '"' + (t[0] === n.mat + '|' + n.lam ? ' selected' : '') + '>' + e(t[1]) + '</option>').join('') + '</select></div>' + colorFld + '</div>';
     h += '<div class="fld sz"><label>Размер, мм</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(s.w) + '" data-c="cf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(s.h) + '" data-c="cf" data-k="h"></span></div></div>';
-    h += '<div class="fld"><label>Управление' + (n.chain ? ' (цепочка)' : '') + '</label><div class="ctrls">' + n.ctrlKeys.map(k => '<button class="ctr ' + (n.ctrl === k ? 'on' : '') + '" data-a="cf" data-k="ctrl" data-v="' + k + '" title="' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[k]) + '">' + ctrlSvg(n.lam, k, n.chain, 52) + '<span>' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[k]) + '</span></button>').join('') + '</div></div>';
+    if (n.auto.drive) h += MOTNOTE; else h += '<div class="fld"><label>Управление' + (n.chain ? ' (цепочка)' : '') + '</label><div class="ctrls">' + n.ctrlKeys.map(k => '<button class="ctr ' + (n.ctrl === k ? 'on' : '') + '" data-a="cf" data-k="ctrl" data-v="' + k + '" title="' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[k]) + '">' + ctrlSvg(n.lam, k, n.chain, 52) + '<span>' + e((n.chain ? CHAIN_TXT : CTRL_TXT)[k]) + '</span></button>').join('') + '</div></div>';
     if (optSorted.length) h += '<div class="fld"><label>Опции</label><div class="ochips">' + optSorted.map(o => '<button class="oc ' + (n.opts[o] ? 'on' : '') + '" data-a="copt" data-v="' + e(o) + '">' + e(o) + (r.ok && n.opts[o] && r.optP[o] ? ' +' + fmt(r.optP[o]) : '') + '</button>').join('') + '</div></div>';
     if (n.chainCols.length > 1 || (n.chain && n.chainCols.length)) h += '<div class="fld"><label>Цвет цепочки</label><div class="ochips">' + n.chainCols.map(c => '<button class="oc ' + (n.chainCol === c ? 'on' : '') + '" data-a="cchc" data-v="' + e(c) + '">' + e(c) + '</button>').join('') + '</div></div>';
     if (n.fixNames.length) h += '<div class="fld fixf"><label>Нижняя фиксация</label><select class="ul" data-c="cfix"><option value="">Без фиксации</option>' + n.fixNames.map(f => '<option value="' + e(f) + '"' + (n.fix === f ? ' selected' : '') + '>' + e((cs.FIXLBL[f] || f) + (r.ok && n.fix === f && r.optP[f] !== undefined ? ' +' + fmt(r.optP[f]) + ' ₽' : '')) + '</option>').join('') + '</select></div>';
@@ -192,9 +192,10 @@
   /* ===== рулонные шторы Амиго: система, ткань, размер, управление, опции по группам ===== */
   const RJ = () => window.JalRolo;
   const VG = () => R.v || R.g;
+  const RMOT = () => !!(R.auto && R.auto.drive), MOTNOTE = '<div class="fld"><label>Управление</label><div class="fnote ok" style="margin:0">Электропривод: сторону управления указывать не нужно, только выход провода</div></div>';
   const RMM = () => R.rf ? 'rolo' : RM();
   const RM = () => R.mr ? R.mr : R.rf ? 'roof' : R.g ? 'gja' : R.v ? 'vert' : R.z ? 'zebra' : 'rolo';
-  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.g ? 'ГЖ алюминий' : R.v ? 'Вертикальные' : R.z ? 'Зебра' : R.mr === 'roman' ? 'Римские шторы' : R.mr === 'mirage' ? 'Мираж' : R.mr === 'plisse' ? 'Плиссе' : R.rf ? 'Рулонные шторы Roof' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, rw: R.rf ? R.rw || undefined : undefined, fab2: (R.rf && R.sys === 'ROOF-DN') || (R.mr === 'plisse' && plNeed2()) ? R.fab2 || undefined : undefined, w: +R.w || 0, h: +R.h || 0, ctrl: R.rf || R.sys === 'UNI-2П' ? '' : VG() ? (R.vf && R.vf.side === 'R' ? 'R' : R.vf && R.vf.side === 'L' ? 'L' : '') : R.ctrl, vf: VG() || R.mr === 'plisse' ? Object.assign(VF0(), R.vf) : undefined, sel: R.sel, flags: R.v ? Object.assign({}, R.flags, { 'Металлическая фурнитура': !!R.vf && R.vf.chain === 'Металл', 'Прозрачная комплектация': !!R.vf && R.vf.chain === 'Прозрачная' }) : R.flags, tubeLock: !!R.tubeLock, auto: (R.auto && (R.auto.drive || R.auto.remote)) ? { drive: R.auto.drive || '', remote: R.auto.remote || '', wire: R.auto.wire || '' } : undefined });
+  const roloItem = () => ({ prod: 'rolo', sup: 'Amigo', mat: R.g ? 'ГЖ алюминий' : R.v ? 'Вертикальные' : R.z ? 'Зебра' : R.mr === 'roman' ? 'Римские шторы' : R.mr === 'mirage' ? 'Мираж' : R.mr === 'plisse' ? 'Плиссе' : R.rf ? 'Рулонные шторы Roof' : 'Рулонные шторы', lam: 0, sys: R.sys, fab: R.fab, rw: R.rf ? R.rw || undefined : undefined, fab2: (R.rf && R.sys === 'ROOF-DN') || (R.mr === 'plisse' && plNeed2()) ? R.fab2 || undefined : undefined, w: +R.w || 0, h: +R.h || 0, ctrl: R.rf || R.sys === 'UNI-2П' || RMOT() ? '' : VG() ? (R.vf && R.vf.side === 'R' ? 'R' : R.vf && R.vf.side === 'L' ? 'L' : '') : R.ctrl, vf: VG() || R.mr === 'plisse' ? Object.assign(VF0(), R.vf, RMOT() ? { side: '', ck: '', len: '' } : {}) : undefined, sel: R.sel, flags: R.v ? Object.assign({}, R.flags, { 'Металлическая фурнитура': !!R.vf && R.vf.chain === 'Металл', 'Прозрачная комплектация': !!R.vf && R.vf.chain === 'Прозрачная' }) : R.flags, tubeLock: !!R.tubeLock, auto: (R.auto && (R.auto.drive || R.auto.remote)) ? { drive: R.auto.drive || '', remote: R.auto.remote || '', wire: R.auto.wire || '' } : undefined });
   /* автоматика Амиго под текущую систему: привод и пульт входят в цену изделия (правило: есть привод под этот тип, значит автоматика в расчёте) */
   const rAuto = () => {
     const J = JC(), sv = RJ().sysOf(R.sys) || {}, none = { drive: [], remote: [] }; if (!J.hasAuto('Amigo')) return none;
@@ -227,7 +228,7 @@
       const f2 = R.fab2 && J.fabOf(R.fab2); if (R.fab2 && (!f2 || f2.m || f2.z || f2.roof === 'нет')) R.fab2 = '';
       const w2 = J.winOf(R.rw); R.w = w2 ? String(w2.w) : ''; R.h = w2 ? String(w2.h) : '';
     }
-    if (R.g) { const vf = R.vf = Object.assign(VF0(), R.vf || {}), ck = vf.ck || (vf.side && R.flags && R.flags['Разведенное управление'] ? (vf.side === 'R' ? 'TR' : 'TL') : vf.side || ''); vf.ck = ck; vf.side = ck === 'L' || ck === 'TL' ? 'L' : ck ? 'R' : ''; const sv = J.sysOf(R.sys), razv = ck === 'TL' || ck === 'TR'; R.flags = Object.assign({}, R.flags, { 'Разведенное управление': razv, 'Совмещенное управление': !!ck && !razv && !!sv && sv.vt === '50' }); }
+    if (R.g) { const vf = R.vf = Object.assign(VF0(), R.vf || {}), ck = RMOT() ? '' : vf.ck || (vf.side && R.flags && R.flags['Разведенное управление'] ? (vf.side === 'R' ? 'TR' : 'TL') : vf.side || ''); vf.ck = ck; vf.side = ck === 'L' || ck === 'TL' ? 'L' : ck ? 'R' : ''; const sv = J.sysOf(R.sys), razv = ck === 'TL' || ck === 'TR'; R.flags = Object.assign({}, R.flags, { 'Разведенное управление': razv, 'Совмещенное управление': !!ck && !razv && !!sv && sv.vt === '50' }); }
     const o = J.opts(roloItem()); R.sel = o.sel; R.flags = o.flags;
     { const al = rAuto(), a = R.auto = Object.assign({ drive: '', remote: '', wire: '' }, R.auto); if (a.drive && !al.drive.some(f => f.key === a.drive)) a.drive = ''; if (a.remote && !al.remote.some(f => f.key === a.remote)) a.remote = ''; if (!a.drive || !JC().wireInfo({ sup: 'Amigo', auto: { drive: a.drive } })) a.wire = ''; }
     const r = JC().withAuto(roloItem(), J.calc(roloItem())); if (r.tubeSel) R.sel['Труба'] = r.tubeSel;
@@ -276,6 +277,7 @@
     if (R.rf) h += '<div class="fld sz"><label>Размер штор, мм (по модели окна)</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<b class="num">' + (R.w ? e(R.w) : '—') + '</b></span><span class="szi" title="Высота">' + ICH + '<b class="num">' + (R.h ? e(R.h) : '—') + '</b></span></div></div>';
     else h += '<div class="fld sz"><label>Размер, мм</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(R.w) + '" data-c="rf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(R.h) + '" data-c="rf" data-k="h"></span></div></div>';
     if (R.rf) { /* у Roof ручка, стороны управления нет */ }
+    else if (R.g && RMOT()) h += MOTNOTE;
     else if (R.g) {
       const vf = R.vf = Object.assign(VF0(), R.vf || {});
       const gl = +(RJ().sysOf(R.sys) || {}).vt === 50 ? 50 : 25, gk = CS().CTRL_ORDER[gl].filter(k => !/^V/.test((RJ().sysOf(R.sys) || {}).vt || '') || k === 'L' || k === 'R'); /* Венус: только слева/справа */
@@ -283,13 +285,15 @@
         '<div class="fgrid"><div class="fld"><label>Длина управления, мм</label><input class="ul num" type="number" min="0" data-c="vf" data-k="len" value="' + e(vf.len !== '' && vf.len != null ? vf.len : (+R.h ? Math.round(+R.h * 0.75) : '')) + '"></div></div>';
     } else if (R.v) {
       const vf = R.vf = Object.assign(VF0(), R.vf || {}), sel = (k, lab, opts) => '<div class="fld"><label>' + lab + '</label><select class="ul" data-c="vf" data-k="' + k + '">' + opts.map(o => '<option value="' + e(o[0]) + '"' + (vf[k] === o[0] ? ' selected' : '') + '>' + e(o[1]) + '</option>').join('') + '</select></div>';
-      h += '<div class="fgrid"><div class="fld"><label>Управление</label><div class="seg">' + [['L', 'левое'], ['R', 'правое']].map(k => '<button class="' + (vf.side === k[0] ? 'on' : '') + '" data-a="vside" data-v="' + k[0] + '">' + k[1] + '</button>').join('') + '</div></div>' +
-        '<div class="fld"><label>Длина управления, мм</label><input class="ul num" type="number" min="0" data-c="vf" data-k="len" value="' + e(vf.len !== '' && vf.len != null ? vf.len : (+R.h ? Math.max(0, +R.h - 500) : '')) + '"></div>' +
+      if (RMOT()) h += MOTNOTE;
+      h += '<div class="fgrid">' + (RMOT() ? '' : '<div class="fld"><label>Управление</label><div class="seg">' + [['L', 'левое'], ['R', 'правое']].map(k => '<button class="' + (vf.side === k[0] ? 'on' : '') + '" data-a="vside" data-v="' + k[0] + '">' + k[1] + '</button>').join('') + '</div></div>' +
+        '<div class="fld"><label>Длина управления, мм</label><input class="ul num" type="number" min="0" data-c="vf" data-k="len" value="' + e(vf.len !== '' && vf.len != null ? vf.len : (+R.h ? Math.max(0, +R.h - 500) : '')) + '"></div>') +
         sel('chain', 'Фурнитура', [['Пластиковая', 'пластиковая'], ['Металл', 'металлическая (цепь + нижняя обвязка)'], ['Прозрачная', 'прозрачная (цепь + замок)']]) +
         sel('ceil', 'Тип потолочного кронштейна', [['Обычный', 'обычный'], ['Армстронг', 'армстронг'], ['Не класть', 'не класть']]) +
         sel('ctype', 'Тип управления', [['К управлению', 'к управлению'], ['От управления', 'от управления'], ['От центра', 'от центра'], ['К центру', 'к центру']]) +
         sel('wall', 'Тип стенового кронштейна', [['7,5 см', '7,5 см'], ['10 см', '10 см'], ['Не класть', 'не класть']]) + '</div>';
     } else if (R.sys === 'UNI-2П') h += '<div class="fld"><label>Управление</label><div class="fnote ok" style="margin:0">Ручка по центру нижней планки, сторону указывать не нужно</div></div>';
+    else if (RMOT()) h += MOTNOTE;
     else     h += '<div class="fld"><label>Управление</label><div class="ctrls">' + [['L', 'цепочка слева'], ['R', 'цепочка справа']].map(k => '<button class="ctr ' + (R.ctrl === k[0] ? 'on' : '') + '" data-a="rf" data-k="ctrl" data-v="' + k[0] + '">' + ctrlSvg(50, k[0], true, 52) + '<span>' + k[1] + '</span></button>').join('') + '</div></div>';
     const choice = n.groups.filter(g => g.type === 'choice' && g.items.length > 1), flags = n.groups.filter(g => g.type === 'flag' && !(R.v && /^(Металлическая фурнитура|Прозрачная комплектация)$/.test(g.name)) && !(R.g && /^(Разведенное|Совмещенное) управление$/.test(g.name)));
     if (choice.length) h += '<div class="fgrid ropts">' + choice.map(g => '<div class="fld"><label>' + e(g.name) + '</label><select class="ul" data-c="ropt" data-k="' + e(g.name) + '">' + g.items.map(x => '<option value="' + e(x.value) + '"' + (R.sel[g.name] === x.value ? ' selected' : '') + '>' + e(x.value + (R.sel[g.name] === x.value ? '' : delta(g, x.value)) + tubeHint(g, x)) + '</option>').join('') + '</select>' + (g.name === 'Плитки' ? '<small class="mut" style="display:block;margin-top:4px;line-height:1.35">Плитка подкладочная для штапика менее 20 мм (толщина 4 мм):<br>штапик 16–20 мм — 1 пара<br>12–16 мм — 2 пары<br>8–12 мм — 3 пары<br>4–8 мм — 4 пары<br>0–4 мм — 5 пар</small>' : '') + '</div>').join('') + '</div>';
@@ -398,7 +402,8 @@
     if (pm) {
       const szH = '<div class="fld sz"><label>Размер, мм' + (pm.form === 'сложная' ? ' (габарит: макс. ширина и высота)' : '') + '</label><div class="szr"><span class="szi" title="Ширина">' + ICW + '<input class="ul num" type="number" min="0" value="' + e(R.w) + '" data-c="rf" data-k="w"></span><span class="szi" title="Высота">' + ICH + '<input class="ul num" type="number" min="0" value="' + e(R.h) + '" data-c="rf" data-k="h"></span></div></div>';
       h += '<div class="fgrid">' + fabBtn(f, 'fab', pm.n === 2 ? 'Ткань 1 (верх)' : 'Ткань') + (pm.n === 2 ? fabBtn(f2, 'fab2', 'Ткань 2 (низ)') : '') + (pm.n === 2 ? '' : szH) + '</div>' + (pm.n === 2 ? szH : '');
-      if (plCtl()) h += '<div class="fgrid"><div class="fld"><label>Сторона управления (' + e(pm.ctl) + ')</label><div class="seg">' + [['L', 'слева'], ['R', 'справа']].map(k => '<button class="' + (R.ctrl === k[0] ? 'on' : '') + '" data-a="rf" data-k="ctrl" data-v="' + k[0] + '">' + k[1] + '</button>').join('') + '</div></div>' +
+      if (plCtl() && RMOT()) h += MOTNOTE;
+      else if (plCtl()) h += '<div class="fgrid"><div class="fld"><label>Сторона управления (' + e(pm.ctl) + ')</label><div class="seg">' + [['L', 'слева'], ['R', 'справа']].map(k => '<button class="' + (R.ctrl === k[0] ? 'on' : '') + '" data-a="rf" data-k="ctrl" data-v="' + k[0] + '">' + k[1] + '</button>').join('') + '</div></div>' +
         '<div class="fld"><label>Длина управления, мм</label><input class="ul num" type="number" min="0" data-c="vf" data-k="len" value="' + e(R.vf && R.vf.len !== '' && R.vf.len != null ? R.vf.len : (+R.h ? Math.round(+R.h * 0.75) : '')) + '"></div></div>';
       const choice = n.groups.filter(g => g.type === 'choice' && g.items.length > 1), flags = n.groups.filter(g => g.type === 'flag');
       if (choice.length) h += '<div class="fgrid ropts">' + choice.map(g => '<div class="fld"><label>' + e(g.name) + '</label><select class="ul" data-c="ropt" data-k="' + e(g.name) + '">' + g.items.map(x => '<option value="' + e(x.value) + '"' + (R.sel[g.name] === x.value ? ' selected' : '') + '>' + e(x.value + (R.sel[g.name] === x.value ? '' : delta(g, x.value))) + '</option>').join('') + '</select></div>').join('') + '</div>';
@@ -434,7 +439,7 @@
     const extra = Object.keys(it.opts || {}).filter(k => it.opts[k]).map(k => (k === 'Цепочка' || k === 'Цепочка металлическая') && it.chainCol ? k + ' (' + it.chainCol.toLowerCase() + ')' : k); if (it.fix) extra.push(CS().FIXLBL[it.fix] || it.fix);
     const col = c.col ? c.col.name + (/^серия (Классик|Модерно)$/.test(c.col.ser || '') ? ' ' + c.col.ser : '') : '';
     const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая'] || it.opts['Цепочка металлическая цветная']));
-    return { title: CS().COLL_ALL[it.sup] + ' (' + ru(it.sup) + ')', sub: it.mat + ' ' + it.lam + (col ? ' · ' + col : '') + ' · ' + (chain ? CHAIN_TXT : CTRL_TXT)[it.ctrl || 'L'] + (extra.length ? ' · ' + extra.join(', ').toLowerCase() : '') };
+    return { title: CS().COLL_ALL[it.sup] + ' (' + ru(it.sup) + ')', sub: it.mat + ' ' + it.lam + (col ? ' · ' + col : '') + ' · ' + (it.auto && it.auto.drive ? 'электропривод' : (chain ? CHAIN_TXT : CTRL_TXT)[it.ctrl || 'L']) + (extra.length ? ' · ' + extra.join(', ').toLowerCase() : '') };
   }
 
   /* строка корзины: основные параметры, остальное по кнопке «подробнее» */
@@ -455,7 +460,7 @@
     } else {
       const chain = !!(it.opts && (it.opts['Цепочка'] || it.opts['Цепочка металлическая'] || it.opts['Цепочка металлическая цветная'])), opts = Object.keys(it.opts || {}).filter(k => it.opts[k]);
       d.push(['Материал', it.mat + ' ' + it.lam + ' мм'], ['Цвет', c.col ? c.col.name : '—'], ['Размеры', it.w + '×' + it.h + ' мм'], ['Площадь', sizeM2(it)],
-        ['Управление', (chain ? CHAIN_TXT : CTRL_TXT)[it.ctrl || 'L']], ['Нижняя фиксация', it.fix ? (cs.FIXLBL[it.fix] || it.fix) : 'Нет'], ['Опции', opts.length ? opts.join(', ') : 'Нет']);
+        ['Управление', it.auto && it.auto.drive ? 'электропривод' : (chain ? CHAIN_TXT : CTRL_TXT)[it.ctrl || 'L']], ['Нижняя фиксация', it.fix ? (cs.FIXLBL[it.fix] || it.fix) : 'Нет'], ['Опции', opts.length ? opts.join(', ') : 'Нет']);
       const a = it.auto || {}, al = (k, key) => ((JC().autoList(it.sup, k) || []).find(f => f.key === key) || {}).name;
       d.push(['Электропривод', a.drive ? (al('drive', a.drive) || a.drive) : 'Нет'], ['Пульт / выключатель', a.remote ? (al('remote', a.remote) || a.remote) : 'Нет']);
     }
@@ -715,8 +720,8 @@
     if (F.mode === 'rolo') {
       const pl = R.mr === 'plisse', n = pl ? normPl() : normRolo(); if (!n.r.ok) { A.toast(n.r.msg || 'Заполните форму'); return; }
       if (pl && n.m && n.m.el && !R.auto.drive) { A.toast('У электро-модели выбери комплект привода'); return; }
-      if (pl && plCtl() && !R.ctrl) { A.toast('Выбери сторону управления'); return; }
-      if (!pl && !R.rf && R.sys !== 'UNI-2П' && (VG() ? !(R.vf && R.vf.side) : !R.ctrl)) { A.toast('Выбери сторону управления'); return; }
+      if (pl && plCtl() && !RMOT() && !R.ctrl) { A.toast('Выбери сторону управления'); return; }
+      if (!pl && !R.rf && !RMOT() && R.sys !== 'UNI-2П' && (VG() ? !(R.vf && R.vf.side) : !R.ctrl)) { A.toast('Выбери сторону управления'); return; }
       if (R.auto && R.auto.drive && JC().wireInfo({ sup: 'Amigo', auto: { drive: R.auto.drive } }) && !R.auto.wire) { A.toast('Выбери, с какой стороны выходит провод привода'); return; }
       const own = R.own !== '' && !isNaN(+R.own) && +R.own >= 0 ? Math.round(+R.own) : '';
       const item = Object.assign(roloItem(), { qty: Math.max(1, +R.qty || 1), own, note: R.note, sel: Object.assign({}, R.sel), flags: Object.assign({}, R.flags) });
@@ -727,7 +732,7 @@
     if (!n.ctrl && !n.auto.drive) { A.toast('Выбери сторону управления'); return; }
     if (n.auto.drive && JC().wireInfo({ sup: F.sup, auto: { drive: n.auto.drive } }) && !n.auto.wire) { A.toast('Выбери, с какой стороны выходит провод привода'); return; }
     const own = F.own !== '' && !isNaN(+F.own) && +F.own >= 0 ? Math.round(+F.own) : '';
-    const item = { chainCol: n.chainCol || undefined, sup: F.sup, lam: n.lam, mat: n.mat, color: n.color, ctrl: n.ctrl, fix: n.fix, opts: Object.assign({}, n.opts), auto: n.auto.drive || n.auto.remote ? Object.assign({}, n.auto) : undefined, w: +F.w, h: +F.h, qty: Math.max(1, +F.qty || 1), own, note: F.note };
+    const item = { chainCol: n.chainCol || undefined, sup: F.sup, lam: n.lam, mat: n.mat, color: n.color, ctrl: n.auto.drive ? '' : n.ctrl, fix: n.fix, opts: Object.assign({}, n.opts), auto: n.auto.drive || n.auto.remote ? Object.assign({}, n.auto) : undefined, w: +F.w, h: +F.h, qty: Math.max(1, +F.qty || 1), own, note: F.note };
     if (F.edit >= 0) JC().replaceItem(F.edit, item); else JC().addItem(item);
     Object.assign(F, { qty: 1, own: '', note: '', edit: -1, auto: { drive: '', remote: '' } }); A.toast('Добавлено в корзину'); rr();
   };

@@ -533,11 +533,12 @@
     return out;
   }
 
+  const motor = it => !!(it.auto && it.auto.drive);
   function vfTxt(it) {
-    const v = it.vf; if (!v) return ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева');
+    const v = it.vf; if (!v) return motor(it) ? '' : ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева');
     const a = [];
-    if (v.side) a.push('управление ' + (v.side === 'R' ? 'правое' : 'левое'));
-    { const ln = v.len || (Number(it.h) > 500 ? Number(it.h) - 500 : 0); if (ln) a.push('длина упр. ' + ln + ' мм'); }
+    if (v.side && !motor(it)) a.push('управление ' + (v.side === 'R' ? 'правое' : 'левое'));
+    if (!motor(it)) { const ln = v.len || (Number(it.h) > 500 ? Number(it.h) - 500 : 0); if (ln) a.push('длина упр. ' + ln + ' мм'); }
     if (v.chain && v.chain !== 'Пластиковая') a.push(v.chain === 'Металл' ? 'фурнитура металлическая' : 'прозрачная комплектация');
     if (v.ceil && v.ceil !== 'Обычный') a.push('потолочный кронштейн: ' + v.ceil.toLowerCase());
     if (v.ctype && v.ctype !== 'К управлению') a.push(v.ctype.toLowerCase());
@@ -553,13 +554,13 @@
     });
     if (s && s.model === 'gja') {
       const v = it.vf || {}, ln = v.len || (Number(it.h) > 0 ? Math.round(Number(it.h) * 0.75) : 0), a = [];
-      if (v.ck) a.push(({ L: 'подъём и поворот слева', R: 'подъём и поворот справа', TL: 'поворот слева, подъём справа', TR: 'поворот справа, подъём слева' })[v.ck]); else if (v.side) a.push('управление ' + (v.side === 'R' ? 'правое' : 'левое'));
-      if (ln) a.push('длина упр. ' + ln + ' мм');
+      if (motor(it)) { /* электропривод: управления нет */ } else if (v.ck) a.push(({ L: 'подъём и поворот слева', R: 'подъём и поворот справа', TL: 'поворот слева, подъём справа', TR: 'поворот справа, подъём слева' })[v.ck]); else if (v.side) a.push('управление ' + (v.side === 'R' ? 'правое' : 'левое'));
+      if (ln && !motor(it)) a.push('длина упр. ' + ln + ' мм');
       return { title: 'Алюминиевые жалюзи ' + s.name, sub: (f ? 'лента ' + f.name : 'лента не выбрана') + (a.length ? ' · ' + a.join(', ') : '') + (parts.length ? ' · ' + parts.join(', ') : '') };
     }
     if (s && s.model === 'plisse') {
       const m = PLM[s.pm], f2 = fabOf(it.fab2), a = [];
-      if (m.ctl === 'шнур' || m.ctl === 'цепь') { a.push((m.ctl === 'цепь' ? 'цепь ' : 'шнур ') + (it.ctrl === 'R' ? 'справа' : it.ctrl === 'L' ? 'слева' : 'сторона не выбрана')); const ln = (it.vf && it.vf.len) || (Number(it.h) > 0 ? Math.round(Number(it.h) * 0.75) : 0); if (ln) a.push('длина упр. ' + ln + ' мм'); }
+      if ((m.ctl === 'шнур' || m.ctl === 'цепь') && !motor(it)) { a.push((m.ctl === 'цепь' ? 'цепь ' : 'шнур ') + (it.ctrl === 'R' ? 'справа' : it.ctrl === 'L' ? 'слева' : 'сторона не выбрана')); const ln = (it.vf && it.vf.len) || (Number(it.h) > 0 ? Math.round(Number(it.h) * 0.75) : 0); if (ln) a.push('длина упр. ' + ln + ' мм'); }
       return { title: 'Плиссе ' + m.sys + (isGofre(f) ? ' гофре' : '') + ' ' + m.code, sub: [f ? 'ткань ' + f.name.replace(/,\s*\d+\s*см$/, '') : 'ткань не выбрана', m.n === 2 ? (f2 ? 'ткань 2: ' + f2.name.replace(/,\s*\d+\s*см$/, '') : 'вторая ткань не выбрана') : ''].concat(a, parts).filter(Boolean).join(' · ') };
     }
     if (s && s.model === 'roof') {
@@ -567,10 +568,10 @@
       return { title: 'Рулонная штора Roof' + (dn ? ' день-ночь' : ''), sub: [w ? 'окно: ' + w.man + ' ' + w.mod : 'окно не выбрано', f ? 'ткань ' + f.name : 'ткань не выбрана', dn ? (f2 ? 'ткань 2: ' + f2.name : 'вторая ткань не выбрана') : ''].concat(parts).filter(Boolean).join(' · ') };
     }
     if (s && (s.model === 'mirage' || s.model === 'roman')) {
-      const oo = parts.slice(); return { title: s.model === 'mirage' ? 'Рулонная штора Мираж' : 'Римская штора', sub: [f ? 'ткань ' + f.name : 'ткань не выбрана', 'цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева')].concat(oo).join(' · ') };
+      const oo = parts.slice(); return { title: s.model === 'mirage' ? 'Рулонная штора Мираж' : 'Римская штора', sub: [f ? 'ткань ' + f.name : 'ткань не выбрана', motor(it) ? '' : 'цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева')].concat(oo).filter(Boolean).join(' · ') };
     }
     const fc = o.sel['Цвет фурнитуры'];
-    return { title: s && s.model === 'vert' ? 'Вертикальные жалюзи ' + s.name.toLowerCase() : (s && s.model === 'zebra' ? 'Штора зебра' : 'Рулонная штора') + (s ? ' ' + s.name : ''), sub: s && s.model === 'vert' ? (f ? f.name + ' · ' : '') + 'ламель 89 мм' + vfTxt(it) + (parts.length ? ' · ' + parts.join(', ') : '') : (f ? 'ткань ' + f.name : 'ткань не выбрана') + (fc ? ' · фурнитура ' + fc.toLowerCase() : '') + (s && s.code === 'UNI-2П' ? ' · управление ручкой по центру нижней планки' : ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева')) + (parts.length ? ' · ' + parts.join(', ') : '') };
+    return { title: s && s.model === 'vert' ? 'Вертикальные жалюзи ' + s.name.toLowerCase() : (s && s.model === 'zebra' ? 'Штора зебра' : 'Рулонная штора') + (s ? ' ' + s.name : ''), sub: s && s.model === 'vert' ? (f ? f.name + ' · ' : '') + 'ламель 89 мм' + vfTxt(it) + (parts.length ? ' · ' + parts.join(', ') : '') : (f ? 'ткань ' + f.name : 'ткань не выбрана') + (fc ? ' · фурнитура ' + fc.toLowerCase() : '') + (s && s.code === 'UNI-2П' ? ' · управление ручкой по центру нижней планки' : motor(it) ? '' : ' · цепочка ' + (it.ctrl === 'R' ? 'справа' : 'слева')) + (parts.length ? ' · ' + parts.join(', ') : '') };
   }
 
   window.JalRolo = {
