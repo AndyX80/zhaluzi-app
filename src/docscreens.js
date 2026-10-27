@@ -87,18 +87,20 @@
   }
   const DRAW = { 50: { L: ['M18 12v80M21 12v80M25 12v72', ''], R: ['M82 12v80M79 12v80M75 12v72', ''], TL: ['M18 12v80M21 12v80M82 12v72', ''], TR: ['M19 12v72M79 12v80M82 12v80', ''] },
     25: { L: ['M24 12v72', 'M19 12v80'], R: ['M76 12v72', 'M81 12v80'], TL: ['M82 12v72', 'M19 12v80'], TR: ['M19 12v72', 'M82 12v80'] } };
+  const STAR = { L: 'M23.0 17.0L24.2 21.0L27.9 19.1L26.0 22.8L30.0 24.0L26.0 25.2L27.9 28.9L24.2 27.0L23.0 31.0L21.8 27.0L18.1 28.9L20.0 25.2L16.0 24.0L20.0 22.8L18.1 19.1L21.8 21.0Z', R: 'M77.0 17.0L78.2 21.0L81.9 19.1L80.0 22.8L84.0 24.0L80.0 25.2L81.9 28.9L78.2 27.0L77.0 31.0L75.8 27.0L72.1 28.9L74.0 25.2L70.0 24.0L74.0 22.8L72.1 19.1L75.8 21.0Z' };
   function vmBlank(order, sig) {
     const z = order.zam || {}, items = D().itemsWithDelivery(order);
     const acc = [];
-    items.forEach(x => { const it = x.it, key = JSON.stringify([it.kind, it.title, it.sup, it.mat, it.lam, it.W, it.H, it.ctrl, it.o, x.price]); const f = acc.find(g => g.key === key); if (f) f.qty++; else acc.push({ key, it, price: x.price, qty: 1 }); });
+    items.forEach(x => { const it = x.it, key = JSON.stringify([it.kind, it.title, it.sup, it.mat, it.lam, it.W, it.H, it.ctrl, it.o, it.auto, x.price]); const f = acc.find(g => g.key === key); if (f) f.qty++; else acc.push({ key, it, price: x.price, qty: 1 }); });
     const bl = acc.filter(g => isBl(g.it)), ot = acc.filter(g => !isBl(g.it));
     const gs = bl.concat(ot);
     const lines = gs.map((g, i) => ({ name: (i + 1) + '. ' + (g.it.title || ('ГЖ ' + g.it.lam + ' ' + (SUP[g.it.sup] || g.it.sup) + (colorOf(g.it) ? ', ' + lc(colorOf(g.it)) : '') + ', ' + sizeTxt(g.it))), qty: String(g.qty), price: fmt(g.price), sum: fmt(g.price * g.qty) }));
     if (+order.disc) lines.push({ name: +order.disc > 0 ? 'Скидка' : 'Наценка', qty: '', price: '', sum: (+order.disc > 0 ? '−' : '+') + fmt(Math.abs(+order.disc)) });
     const total = D().orderTotal(order);
-    const cellOf = (g, i) => { if (!g) return { n: String(i + 1), w: '', h: '', thin: '', thick: '', opt: '', qty: '', box: '#888888', bw: '0.8', dash: '2 2' };
+    const cellOf = (g, i) => { if (!g) return { n: String(i + 1), w: '', h: '', thin: '', thick: '', star: '', opt: '', qty: '', box: '#888888', bw: '0.8', dash: '2 2' };
       const it = g.it, d = (DRAW[it.lam] || DRAW[50])[it.ctrl] || (DRAW[it.lam] || DRAW[50]).TR, opt = (it.o.fix ? '+' + lc(it.o.fix).replace('ниж. фиксация', 'ниж. фиксация') : '');
-      return { n: String(i + 1), w: String(Math.round(it.W * 10)), h: String(Math.round(it.H * 10)), thin: d[0], thick: d[1], opt, qty: g.qty > 1 ? g.qty + ' шт' : '', box: '#111111', bw: '1.4', dash: '' }; };
+      const motor = !!(it.auto && it.auto.drive), star = motor && it.auto.wire ? STAR[it.auto.wire === 'R' ? 'R' : 'L'] : '';
+      return { n: String(i + 1), w: String(Math.round(it.W * 10)), h: String(Math.round(it.H * 10)), thin: motor ? '' : d[0], thick: motor ? '' : d[1], star, opt, qty: g.qty > 1 ? g.qty + ' шт' : '', box: '#111111', bw: '1.4', dash: '' }; };
     const SK_FIRST = 12, SK_CONT = 12, ROWS_P1 = 4, ROWS_PAGE = 30, pages = [];
     const cellsFor = (from, cnt) => { const a = []; for (let i = from; i < from + cnt; i++) a.push(cellOf(bl[i], i)); return a; };
     const single = bl.length <= SK_FIRST && lines.length <= ROWS_P1;
